@@ -1,4 +1,4 @@
-def APP_NAME = 'secure-image-api'
+def APP_NAME = 'range-myra-api'
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
 def TAG_NAMES = ['dev', 'test']
@@ -37,7 +37,7 @@ node {
   stage('Build') {
     echo "Build: ${BUILD_ID}"
     // run the oc build to package the artifacts into a docker image
-    openshiftBuild bldCfg: 'secure-image-api', showBuildLogs: 'true', verbose: 'true'
+    openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'true'
 
     // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
     // Tag the images for deployment based on the image's hash
