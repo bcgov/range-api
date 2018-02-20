@@ -43,10 +43,8 @@ nconf.overrides({
   environment: env,
   host: process.env.HOST || '127.0.0.1',
   port: process.env.PORT || 8000,
-  minio: {
-    endPoint: process.env.MINIO_ENDPOINT,
-    accessKey: process.env.MINIO_ACCESS_KEY,
-    secretKey: process.env.MINIO_SECRET_KEY,
+  db: {
+    url: process.env.POSTGRES_URL,
   },
   sso: {
     certsEndpoint: process.env.SSO_CERTS_ENDPOINT,
