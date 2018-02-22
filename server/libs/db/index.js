@@ -59,14 +59,36 @@ export default class DataManager {
     // an Agreement's Zone.
     this.Agreement.belongsTo(this.Zone);
 
+    //
     // Agreements and Livestock Identifiers
+    //
+
     this.LivestockIdentifier.belongsTo(this.Agreement);
     this.Agreement.hasMany(this.LivestockIdentifier);
 
+    //
     // Agreements and Range Usage
+    //
+
     this.Agreement.hasMany(this.Usage);
 
+    //
     // Agreements and Extension
+    //
+
     this.Agreement.belongsTo(this.Extension);
+
+    //
+    // Agreements and Pasture, Plant Communities, Monitoring Sites,
+    // and Criteria.
+    //
+
+    // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
+    // or over the same area). However, from a data perspective, they are specific to
+    // a single RUP.
+    this.Agreement.hasMany(this.Pasture);
+    this.Pasture.hasMany(this.PlantCommunityAction);
+    this.PlantCommunityAction.hasMany(this.Pasture);
+    this.MonitorSite.hasMany(this.Pasture);
   }
 }

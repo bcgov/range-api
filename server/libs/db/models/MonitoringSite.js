@@ -15,55 +15,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
-//
+// Created by Jason Leach on 2018-02-22.
 
 /* eslint-env es6 */
 
 'use strict';
 
+import { PC_RANGELAND_HEALTH } from '../constants';
+
 export default (sequelize, DataTypes) => {
-  const Usage = sequelize.define('usage', {
+  const MonitolringSite = sequelize.define('MonitolringSite', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    year: {
+    location: {
       type: DataTypes.TEXT,
-      is: /^([0-9]){4}$/i,
-      allowNull: false,
     },
-    authorizedAmu: {
-      type: DataTypes.INTEGER,
-      field: 'authorized_amu',
-      allowNull: false,
+    rangelandHealth: {
+      field: 'rangeland_health',
+      type: DataTypes.TEXT,
+      values: Object.keys(PC_RANGELAND_HEALTH).map(k => PC_RANGELAND_HEALTH[k]),
     },
-    temporaryIncrease: {
-      type: DataTypes.INTEGER,
-      field: 'temporary_increase',
-      allowNull: false,
+    transectAzimuth: {
+      field: 'transect_azimuth',
+      type: DataTypes.FLOAT,
     },
-    billableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'billable_non_use',
-      default: 0,
+    latitude: {
+      type: DataTypes.FLOAT,
     },
-    nonBillableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'non_billable_non_use',
-      default: 0,
-    },
-    totalAnnualUse: {
-      type: DataTypes.INTEGER,
-      field: 'total_annual_use',
-      default: 0,
+    longitude: {
+      type: DataTypes.FLOAT,
     },
   }, {
     underscored: true,
     freezeTableName: true,
   });
 
-  return Usage;
+  return MonitolringSite;
 };

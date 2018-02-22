@@ -15,55 +15,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
-//
+// Created by Jason Leach on 2018-02-22.
 
 /* eslint-env es6 */
 
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Usage = sequelize.define('usage', {
+  const Pasture = sequelize.define('pasture', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    year: {
+    name: {
       type: DataTypes.TEXT,
-      is: /^([0-9]){4}$/i,
       allowNull: false,
     },
-    authorizedAmu: {
+    allowableAmu: {
+      field: 'allowable_amu',
       type: DataTypes.INTEGER,
-      field: 'authorized_amu',
       allowNull: false,
     },
-    temporaryIncrease: {
+    graceDays: {
+      field: 'grace_days',
       type: DataTypes.INTEGER,
-      field: 'temporary_increase',
       allowNull: false,
-    },
-    billableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'billable_non_use',
       default: 0,
     },
-    nonBillableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'non_billable_non_use',
+    pdlPercent: {
+      field: 'pdl_percent',
+      type: DataTypes.FLOAT,
+      allowNull: false,
       default: 0,
     },
-    totalAnnualUse: {
-      type: DataTypes.INTEGER,
-      field: 'total_annual_use',
-      default: 0,
+    notes: {
+      type: DataTypes.TEXT,
     },
   }, {
     underscored: true,
     freezeTableName: true,
   });
 
-  return Usage;
+  return Pasture;
 };

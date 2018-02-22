@@ -15,55 +15,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
-//
+// Created by Jason Leach on 2018-02-22.
 
 /* eslint-env es6 */
 
 'use strict';
 
+import { PC_ACTION_TYPE } from '../constants';
+
 export default (sequelize, DataTypes) => {
-  const Usage = sequelize.define('usage', {
+  const PlantCommunityAction = sequelize.define('plantCommunityAction', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    year: {
+    actionType: {
+      field: 'action_type',
       type: DataTypes.TEXT,
-      is: /^([0-9]){4}$/i,
-      allowNull: false,
+      values: Object.keys(PC_ACTION_TYPE).map(k => PC_ACTION_TYPE[k]),
     },
-    authorizedAmu: {
-      type: DataTypes.INTEGER,
-      field: 'authorized_amu',
-      allowNull: false,
+    description: {
+      type: DataTypes.TEXT,
     },
-    temporaryIncrease: {
-      type: DataTypes.INTEGER,
-      field: 'temporary_increase',
-      allowNull: false,
+    noGrazeStart: {
+      field: 'no_graze_start',
+      type: DataTypes.DATE,
     },
-    billableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'billable_non_use',
-      default: 0,
-    },
-    nonBillableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'non_billable_non_use',
-      default: 0,
-    },
-    totalAnnualUse: {
-      type: DataTypes.INTEGER,
-      field: 'total_annual_use',
-      default: 0,
+    noGrazeEnd: {
+      field: 'no_graze_end',
+      type: DataTypes.DATE,
     },
   }, {
     underscored: true,
     freezeTableName: true,
   });
 
-  return Usage;
+  return PlantCommunityAction;
 };

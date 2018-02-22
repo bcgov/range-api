@@ -15,55 +15,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
-//
+// Created by Jason Leach on 2018-02-22.
 
 /* eslint-env es6 */
 
 'use strict';
 
+import {
+  ASPECT,
+  ELEVATION,
+  PC_ACTION_PURPOSE,
+} from '../constants';
+
 export default (sequelize, DataTypes) => {
-  const Usage = sequelize.define('usage', {
+  const PlantCommuniy = sequelize.define('plantCommuniy', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    year: {
+    name: {
       type: DataTypes.TEXT,
-      is: /^([0-9]){4}$/i,
       allowNull: false,
     },
-    authorizedAmu: {
-      type: DataTypes.INTEGER,
-      field: 'authorized_amu',
-      allowNull: false,
+    aspect: {
+      type: DataTypes.TEXT,
+      values: Object.keys(ASPECT).map(k => ASPECT[k]),
     },
-    temporaryIncrease: {
-      type: DataTypes.INTEGER,
-      field: 'temporary_increase',
-      allowNull: false,
+    elevation: {
+      type: DataTypes.TEXT,
+      values: Object.keys(ELEVATION).map(k => ELEVATION[k]),
     },
-    billableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'billable_non_use',
-      default: 0,
+    actionPurpose: {
+      type: DataTypes.TEXT,
+      values: Object.keys(PC_ACTION_PURPOSE).map(k => PC_ACTION_PURPOSE[k]),
     },
-    nonBillableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'non_billable_non_use',
-      default: 0,
+    url: {
+      type: DataTypes.TEXT,
     },
-    totalAnnualUse: {
-      type: DataTypes.INTEGER,
-      field: 'total_annual_use',
-      default: 0,
+    notes: {
+      type: DataTypes.TEXT,
     },
   }, {
     underscored: true,
     freezeTableName: true,
   });
 
-  return Usage;
+  return PlantCommuniy;
 };

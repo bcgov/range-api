@@ -31,10 +31,12 @@ export default (sequelize, DataTypes) => {
     },
     requestDate: {
       type: DataTypes.DATE,
+      field: 'request_date',
       allowNull: false,
     },
     endDate: {
       type: DataTypes.DATE,
+      field: 'end_date',
       allowNull: false,
     },
     notes: {

@@ -73,10 +73,6 @@ export default (sequelize, DataTypes) => {
       field: 'non_use_billable',
       type: DataTypes.BOOLEAN,
     },
-    temporaryIncrease: {
-      field: 'temporary_increase',
-      type: DataTypes.DATE,
-    },
     primaryHolder: {
       field: 'price_holder',
       type: DataTypes.TEXT,
