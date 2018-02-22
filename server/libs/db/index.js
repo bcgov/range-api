@@ -22,6 +22,7 @@ export default class DataManager {
     this.sequelize = new Sequelize(config.get('db:url'), {
       logging: false,
       operatorsAliases: Sequelize.Op,
+      underscored: true,
     });
     // this.Constants = Constants;
     this.config = config;
@@ -44,8 +45,26 @@ export default class DataManager {
   }
 
   buildRelations() {
-    this.Zone.hasOne(this.Agreement);
-    this.District.hasMany(this.Zone, { as: 'Zones', foreignKey: 'district_id' });
+    // A District has multiple zones. This relation allows us to easily
+    // query for the Zones in a particular District.
+    this.District.belongsToMany(this.Zone, { through: 'district_zone' });
+    // One District per Zone. This relation allows us to easily query for
+    // at Zone's District.
     this.Zone.belongsTo(this.District);
+
+    // A zone can bridge one or more Agreements. This relation allows us to easily
+    // query for the Applications in particular zone.
+    this.Zone.belongsToMany(this.Agreement, { through: 'agreement_zone' });
+    // One Zone per Agreement. This relation allows us to easlily query for
+    // an Agreement's Zone.
+    this.Agreement.belongsTo(this.Zone);
+
+    // Agreements and Livestock Identifiers
+    this.LivestockIdentifier.belongsTo(this.Agreement);
+    this.Agreement.hasMany(this.LivestockIdentifier);
+
+    // Agreements and Range Usage
+    // this.Usage.belongsTo(this.Agreement);
+    this.Agreement.hasMany(this.Usage);
   }
 }

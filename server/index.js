@@ -23,7 +23,6 @@
 'use strict';
 
 import path from 'path';
-
 import fs from 'fs';
 import express from 'express';
 import cookieParser from 'cookie-parser';

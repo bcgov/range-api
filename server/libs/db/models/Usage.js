@@ -23,23 +23,43 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Zone = sequelize.define('zone', {
+  const Usage = sequelize.define('usage', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    code: {
+    year: {
       type: DataTypes.TEXT,
+      is: /^([0-9]){4}$/i,
+      allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
+    authorizedAmu: {
+      type: DataTypes.INTEGER,
+      field: 'authorized_amu',
+      allowNull: false,
+    },
+    temporaryIncrease: {
+      type: DataTypes.INTEGER,
+      field: 'temporary_increase',
+    },
+    billableNonUse: {
+      type: DataTypes.INTEGER,
+      field: 'billable_non_use',
+    },
+    nonBillableNonUse: {
+      type: DataTypes.INTEGER,
+      field: 'non_billable_non_use',
+    },
+    totalAnnualUse: {
+      type: DataTypes.INTEGER,
+      field: 'total_annual_use',
     },
   }, {
     underscored: true,
     freezeTableName: true,
   });
 
-  return Zone;
+  return Usage;
 };

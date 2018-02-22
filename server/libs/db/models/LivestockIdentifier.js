@@ -22,15 +22,30 @@
 
 'use strict';
 
+import {
+  LIVESTOCK_ID_TYPE,
+  LIVESTOCK_ID_LOCATION,
+} from '../constants';
+
 export default (sequelize, DataTypes) => {
-  const Zone = sequelize.define('zone', {
+  const LivestockIdentifier = sequelize.define('livestockIdentifier', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    code: {
+    type: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      values: Object.keys(LIVESTOCK_ID_TYPE).map(k => LIVESTOCK_ID_TYPE[k]),
+    },
+    location: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      values: Object.keys(LIVESTOCK_ID_LOCATION).map(k => LIVESTOCK_ID_LOCATION[k]),
+    },
+    image_ref: {
       type: DataTypes.TEXT,
     },
     description: {
@@ -39,7 +54,8 @@ export default (sequelize, DataTypes) => {
   }, {
     underscored: true,
     freezeTableName: true,
+    tableName: 'livestock_identifier',
   });
 
-  return Zone;
+  return LivestockIdentifier;
 };

@@ -1,16 +1,32 @@
 //
-// Copyright (c) 2016 Fullboar Creative, Corp. All rights reserved.
+// MyRA
 //
-// This software and documentation is the confidential and proprietary
-// information of Fullboar Creative, Corp.
-// ("Confidential Information"). You shall not disclose such Confidential
-// Information and shall use it only in accordance with the terms of the
-// license agreement you entered into with Fullboar Creative, Corp.
+// Copyright © 2018 Province of British Columbia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Created by Jason Leach on 2018-02-21.
 //
 
 /* eslint-env es6 */
 
 'use strict';
+
+import {
+  AGREEMENT_TYPE,
+  EXEMPTION_STATUS,
+  RUP_STATUS,
+} from '../constants';
 
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
@@ -20,14 +36,21 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    ran: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      values: Object.keys(AGREEMENT_TYPE).map(k => AGREEMENT_TYPE[k]),
+    },
     name: {
       type: DataTypes.TEXT,
+      allowNull: false,
     },
     forestFileId: {
-      field: 'forest_field_id',
-      type: DataTypes.TEXT,
-    },
-    district: {
+      field: 'forest_file_id',
       type: DataTypes.TEXT,
     },
     agreementStartDate: {
@@ -58,32 +81,18 @@ export default (sequelize, DataTypes) => {
       field: 'price_holder',
       type: DataTypes.TEXT,
     },
-    holderTemp: {
-      field: 'holder_temp',
+    tempHolder: {
+      field: 'temp_holder',
       type: DataTypes.TEXT,
     },
-    rupExempt: {
-      field: 'rup_expempt',
-      type: DataTypes.BOOLEAN,
-    },
-    storageL1: {
-      field: 'storage_l1',
+    exemptionStatus: {
+      field: 'exemption_status',
       type: DataTypes.TEXT,
-    },
-    storageL2: {
-      field: 'storage_l2',
-      type: DataTypes.TEXT,
-    },
-    storageL3: {
-      field: 'storage_l3',
-      type: DataTypes.TEXT,
-    },
-    storageL4: {
-      field: 'storage_l4',
-      type: DataTypes.TEXT,
+      values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
     },
     status: {
       type: DataTypes.TEXT,
+      values: Object.keys(RUP_STATUS).map(k => RUP_STATUS[k]),
     },
     notes: {
       type: DataTypes.TEXT,
