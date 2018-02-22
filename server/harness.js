@@ -47,6 +47,7 @@ const {
   Zone,
   LivestockIdentifier,
   Usage,
+  Extension,
 } = dm;
 
 const sync = async (force = false) => {
@@ -239,13 +240,46 @@ const agreementUsage = async () => {
     console.log(`Agreement ID = ${ag2.id}, Usage count = ${ag2.usages.length}`);
     console.log('Done');
   } catch (error) {
-    
+    console.log(error);
   }
 }
+
+const agreementExtension = async () => {
+  try {
+    const e1 = await Extension.create({
+      requestDate: new Date(),
+      endDate: new Date(),
+    });
+
+    const ag1 = await Agreement.create({
+      ran: 'RAN888',
+      type: 'E02',
+      name: 'My Amazing Other Farm',
+    });
+
+    await ag1.setExtension(e1);
+    await ag1.save();
+
+    const ag2 = await Agreement.findOne({
+      where: {
+        id: ag1.id,
+      },
+      include: [Extension],
+    });
+
+    console.log('agreementExtension Report');
+    console.log(`Agreement ID = ${ag2.id}, has extension = ${ag2.extension ? 'YES' : 'NO'}`);
+    console.log('Done');
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 sync(false);
 
 districtZone();
 applicationZones();
 agreementLivestockIdentifier1();
 agreementUsage();
+agreementExtension();
 // agreementLivestockIdentifier2(); // not working

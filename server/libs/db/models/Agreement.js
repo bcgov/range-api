@@ -102,6 +102,11 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
   });
 
+  // // Instance Method
+  // Agreement.prototype.isExtendable = function () {
+  //   return typeof this.extension === 'undefined';
+  // };
+
   return Agreement;
 };
 
