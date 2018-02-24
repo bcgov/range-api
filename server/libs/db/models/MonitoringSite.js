@@ -24,7 +24,7 @@
 import { PC_RANGELAND_HEALTH } from '../constants';
 
 export default (sequelize, DataTypes) => {
-  const MonitolringSite = sequelize.define('MonitolringSite', {
+  const MonitoringSite = sequelize.define('monitoringSite', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -52,7 +52,8 @@ export default (sequelize, DataTypes) => {
   }, {
     underscored: true,
     freezeTableName: true,
+    tableName: 'monitoring_site',
   });
 
-  return MonitolringSite;
+  return MonitoringSite;
 };

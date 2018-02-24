@@ -83,12 +83,15 @@ export default class DataManager {
     // and Criteria.
     //
 
+    this.Agreement.hasMany(this.Pasture);
+
     // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
     // or over the same area). However, from a data perspective, they are specific to
     // a single RUP.
-    this.Agreement.hasMany(this.Pasture);
-    this.Pasture.hasMany(this.PlantCommunityAction);
-    this.PlantCommunityAction.hasMany(this.Pasture);
-    this.MonitorSite.hasMany(this.Pasture);
+
+    this.Pasture.hasMany(this.PlantCommunity);
+    this.PlantCommunity.hasMany(this.PlantCommunityAction);
+    this.PlantCommunity.hasMany(this.MonitoringSite);
+    this.MonitoringSite.hasMany(this.MonitoringCriteria);
   }
 }

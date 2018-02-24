@@ -15,53 +15,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-22.
+// Created by Jason Leach on 2018-02-23.
 
 /* eslint-env es6 */
 
 'use strict';
 
-import {
-  ASPECT,
-  ELEVATION,
-  PC_ACTION_PURPOSE,
-} from '../constants';
+// import { PC_RANGELAND_HEALTH } from '../constants';
 
 export default (sequelize, DataTypes) => {
-  const PlantCommunity = sequelize.define('plantCommunity', {
+  const MonitoringCriteria = sequelize.define('monitoringCriteria', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    name: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    aspect: {
-      type: DataTypes.TEXT,
-      values: Object.keys(ASPECT).map(k => ASPECT[k]),
-    },
-    elevation: {
-      type: DataTypes.TEXT,
-      values: Object.keys(ELEVATION).map(k => ELEVATION[k]),
-    },
-    actionPurpose: {
-      type: DataTypes.TEXT,
-      values: Object.keys(PC_ACTION_PURPOSE).map(k => PC_ACTION_PURPOSE[k]),
-    },
-    url: {
-      type: DataTypes.TEXT,
-    },
-    notes: {
-      type: DataTypes.TEXT,
-    },
   }, {
     underscored: true,
     freezeTableName: true,
-    tableName: 'plant_community',
+    tableName: 'monitoring_criteria',
   });
 
-  return PlantCommunity;
+  return MonitoringCriteria;
 };

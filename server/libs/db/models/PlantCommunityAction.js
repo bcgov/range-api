@@ -50,6 +50,7 @@ export default (sequelize, DataTypes) => {
   }, {
     underscored: true,
     freezeTableName: true,
+    tableName: 'plant_community_action',
   });
 
   return PlantCommunityAction;
