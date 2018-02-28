@@ -1,7 +1,7 @@
 {
-  "name": "secimg-api",
+  "name": "myra-api",
   "version": "0.0.1",
-  "description": "Secure Image API",
+  "description": "MyRA API",
   "engine": "node 9.3.0",
   "engines": {
     "node": "9.3.0"
@@ -32,12 +32,11 @@
     "pg": "^7.4.1",
     "request": "^2.83.0",
     "rsa-pem-from-mod-exp": "^0.8.4",
-    "sequelize": "^4.34.1",
+    "sequelize": "^4.35.0",
     "uuid": "^3.1.0",
     "winston": "^2.4.0"
   },
   "devDependencies": {
-    "apidoc": "^0.17.6",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.2.2",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -77,12 +76,5 @@
   },
   "author": "Jason C. Leach <jaosn.leach@fullboar.ca>",
   "license": "Apache-2.0",
-  "homepage": "https://github.com:bcgov/secure-image-api#readme",
-  "apidoc": {
-    "name": "SecureImage API",
-    "version": "0.1.0",
-    "description": "RESTfull API for SecureImage.",
-    "title": "SecureImage API Docummentation",
-    "url": "http://localhost:8080/v1"
-  }
+  "homepage": "https://github.com:bcgov/range-api#readme"
 }
