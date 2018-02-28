@@ -93,5 +93,8 @@ export default class DataManager {
     this.PlantCommunity.hasMany(this.PlantCommunityAction);
     this.PlantCommunity.hasMany(this.MonitoringSite);
     this.MonitoringSite.hasMany(this.MonitoringCriteria);
+
+    this.Pasture.hasMany(this.PastureSchedule);
+    this.PastureSchedule.hasMany(this.PastureScheduleEntry);
   }
 }

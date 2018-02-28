@@ -38,6 +38,7 @@ import DataManager from './libs/db';
 import {
   LIVESTOCK_ID_TYPE,
   LIVESTOCK_ID_LOCATION,
+  LIVESTOCK_TYPE,
 } from './libs/db/constants';
 
 const dm = new DataManager(config);
@@ -48,6 +49,9 @@ const {
   LivestockIdentifier,
   Usage,
   Extension,
+  Pasture,
+  PastureSchedule,
+  PastureScheduleEntry
 } = dm;
 
 const sync = async (force = false) => {
@@ -60,7 +64,6 @@ const sync = async (force = false) => {
     console.log(error);
   }
 
-  console.log('DONE');
   process.exit(0);
 };
 
@@ -275,11 +278,85 @@ const agreementExtension = async () => {
   }
 }
 
-sync(false);
+// allowableAmu: {
+//   field: 'allowable_amu',
+//   type: DataTypes.INTEGER,
+//   allowNull: false,
+// },
+// graceDays: {
+//   field: 'grace_days',
+//   type: DataTypes.INTEGER,
+//   allowNull: false,
+//   default: 0,
+// },
+// pdlPercent: {
+//   field: 'pdl_percent',
+//   type: DataTypes.FLOAT,
+//   allowNull: false,
+//   default: 0,
+// },
 
-districtZone();
-applicationZones();
-agreementLivestockIdentifier1();
-agreementUsage();
-agreementExtension();
+const pastureScheduel = async () => {
+  try {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 14);
+
+    const p1 = await Pasture.create({
+      name: 'Hello Pasture',
+      allowableAmu: 300,
+      graceDays: 5,
+      pdlPercent: 0.12,
+    });
+
+    const ps1 = await PastureSchedule.create({
+      year: '2018',
+      description: 'Foo Bar',
+      pastureScheduleEntries: [{
+        startDate: new Date(),
+        endDate,
+        graceDays: 5,
+        livestockCount: 100,
+        livestockType: LIVESTOCK_TYPE.GOAT,
+      }, {
+        startDate: new Date(),
+        endDate,
+        graceDays: 10,
+        livestockCount: 10,
+        livestockType: LIVESTOCK_TYPE.COW,
+      }],
+    }, {
+      include: [PastureScheduleEntry]
+    });
+
+    await p1.addPastureSchedule(ps1);
+    await p1.save();
+
+    const p2 = await Pasture.findOne({
+      where: {
+        id: p1.id,
+      },
+      include: [{
+        model: PastureSchedule,
+        include: [PastureScheduleEntry]
+      }],
+    });
+
+    console.log('pastureScheduel Report');
+    console.log(`Pasture ID = ${p2.id}, Schedule count = ${p2.pastureSchedules.length}`);
+    console.log(`Schedule entry count = ${p2.pastureSchedules[0].pastureScheduleEntries.length}`);
+    console.log('Done');
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+sync(true);
+
+// districtZone();
+// applicationZones();
+// agreementLivestockIdentifier1();
+// agreementUsage();
+// agreementExtension();
+// pastureScheduel();
+
 // agreementLivestockIdentifier2(); // not working
