@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-26.
+// Created by Jason Leach on 2018-02-27.
 //
 
 /* eslint-env es6 */
@@ -44,9 +44,8 @@ export default (sequelize, DataTypes) => {
   }, {
     underscored: true,
     freezeTableName: true,
-    tableName: 'app_reference',
+    tableName: 'app_ref_list',
   });
 
   return Reference;
 };
-

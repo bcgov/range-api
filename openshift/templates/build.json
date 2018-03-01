@@ -137,7 +137,7 @@
       "displayName": "Git Reference",
       "description": "The git reference or branch.",
       "required": true,
-      "value": "develop"
+      "value": "dev"
     },
     {
       "name": "SOURCE_CONTEXT_DIR",
@@ -152,20 +152,6 @@
       "description": "The tag given to the built image.",
       "required": true,
       "value": "latest"
-    },
-    {
-      "name": "DOCKER_FILE_PATH",
-      "displayName": "Docker File Path",
-      "description": "The path to the docker file.",
-      "required": true,
-      "value": "Dockerfile"
-    },
-    {
-      "name": "SOURCE_IMAGE_KIND",
-      "displayName": "Source Image Kind",
-      "description": "The 'kind' (type) of the  source image; typically ImageStreamTag, or DockerImage.",
-      "required": true,
-      "value": "ImageStreamTag"
     },
     {
       "name": "SOURCE_IMAGE_NAME",
