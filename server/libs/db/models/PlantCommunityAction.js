@@ -47,8 +47,21 @@ export default (sequelize, DataTypes) => {
       field: 'no_graze_end',
       type: DataTypes.DATE,
     },
+    plantCommunityId: {
+      field: 'plant_community_id',
+      type: DataTypes.INTEGER,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+      default: new Date(),
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+      default: new Date(),
+    },
   }, {
-    underscored: true,
     freezeTableName: true,
     tableName: 'plant_community_action',
   });

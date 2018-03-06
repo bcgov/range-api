@@ -49,8 +49,21 @@ export default (sequelize, DataTypes) => {
     longitude: {
       type: DataTypes.FLOAT,
     },
+    plantCommunityId: {
+      type: DataTypes.INTEGER,
+      field: 'plant_community_id',
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+      default: new Date(),
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+      default: new Date(),
+    },
   }, {
-    underscored: true,
     freezeTableName: true,
     tableName: 'monitoring_site',
   });

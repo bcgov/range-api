@@ -60,8 +60,21 @@ export default (sequelize, DataTypes) => {
       field: 'total_annual_use',
       default: 0,
     },
+    agreementId: {
+      type: DataTypes.INTEGER,
+      field: 'agreement_id',
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+      default: new Date(),
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+      default: new Date(),
+    },
   }, {
-    underscored: true,
     freezeTableName: true,
   });
 

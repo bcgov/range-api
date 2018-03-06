@@ -31,8 +31,21 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    monitoringSiteId: {
+      type: DataTypes.INTEGER,
+      field: 'monitoring_site_id',
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+      default: new Date(),
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+      default: new Date(),
+    },
   }, {
-    underscored: true,
     freezeTableName: true,
     tableName: 'monitoring_criteria',
   });

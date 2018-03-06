@@ -37,8 +37,17 @@ export default (sequelize, DataTypes) => {
     description: {
       type: DataTypes.TEXT,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+      default: new Date(),
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+      default: new Date(),
+    },
   }, {
-    underscored: true,
     freezeTableName: true,
   });
 

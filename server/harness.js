@@ -41,17 +41,38 @@ import {
   LIVESTOCK_TYPE,
 } from './libs/db/constants';
 
+// import MonitoringCriteria from './libs/db/models/MonitoringCriteria';
+// import MonitoringSite from './libs/db/models/MonitoringSite';
+// import PlantCommunity from './libs/db/models/PlantCommunity';
+// import PlantCommunityAction from './libs/db/models/PlantCommunityAction';
+// import RangeReadinessCriteria from './libs/db/models/RangeReadinessCriteria';
+// import Readiness from './libs/db/models/Readiness';
+// import Reference from './libs/db/models/Reference';
+// import ShrubUseCriteria from './libs/db/models/ShrubUseCriteria';
+// import Species from './libs/db/models/Species';
+// import StubbleHeightCriteria from './libs/db/models/StubbleHeightCriteria';
+
 const dm = new DataManager(config);
 const {
   Agreement,
   District,
-  Zone,
-  LivestockIdentifier,
-  Usage,
   Extension,
+  LivestockIdentifier,
+  MonitoringCriteria,
+  MonitoringSite,
   Pasture,
   PastureSchedule,
-  PastureScheduleEntry
+  PastureScheduleEntry,
+  PlantCommunity,
+  PlantCommunityAction,
+  RangeReadinessCriteria,
+  Readiness,
+  Reference,
+  ShrubUseCriteria,
+  Species,
+  StubbleHeightCriteria,
+  Usage,
+  Zone,
 } = dm;
 
 const sync = async (force = false) => {
@@ -351,29 +372,105 @@ const pastureScheduel = async () => {
 }
 
 const getZonesByDistrictId = async () => {
-  console.log("getZonesByDistrictId running");
-
   try {
-    
-    // Passed districtId
-    const districtId = 1
-    const {gt, lte, lt, gte, ne, in: opIn} = dm.sequelize.Op;
-
+    const districtId = 1;
     const zones = await Zone.findAll({
       raw: true,
       where: {
-        district_id: districtId,
-        id: {
-          [opIn]: [1, 3]
-        },
-        created_at: {
-          [gt]: new Date('2018-03-02'),
-          [lt]: new Date()
-        }
+        district_id: districtId
       }
-    })
+    });
+    console.log(zones);
 
-    console.log(zones)
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const getAllAgreements = async () => {
+  try {
+    const agreements = await Agreement.findAll({
+      raw: true
+    });
+    console.log(agreements);
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const getAllDistricts = async () => {
+  try {
+    const districts = await District.findAll({
+      raw: true
+    });
+    console.log(districts);
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const checkAllTablesForColumnErrors = async () => {
+  try {
+    const agreements = await Agreement.findAll();
+    console.log("Agreement passed");
+
+    const districts = await District.findAll();
+    console.log("District passed");
+
+    const extensions = await Extension.findAll();
+    console.log("Extension passed");
+    
+    const livestockIdentifiers = await LivestockIdentifier.findAll();
+    console.log("LivestockIdentifier passed");
+    
+    const monitoringCriteria = await MonitoringCriteria.findAll();
+    console.log("MonitoringCriteria passed");
+    
+    const monitoringSites = await MonitoringSite.findAll();
+    console.log("MonitoringSite passed");
+    
+    const pastures = await Pasture.findAll();
+    console.log("Pasture passed");
+    
+    const pastureSchedules = await PastureSchedule.findAll();
+    console.log("PastureSchedule passed");
+    
+    const pastureScheduleEntries = await PastureScheduleEntry.findAll();
+    console.log("PastureScheduleEntry passed");
+    
+    const plantCommunities = await PlantCommunity.findAll();
+    console.log("PlantCommunity passed");
+    
+    const plantCommunityActions = await PlantCommunityAction.findAll();
+    console.log("PlantCommunityAction passed");
+    
+    const rangeReadinessCritera = await RangeReadinessCriteria.findAll();
+    console.log("RangeReadinessCriteria passed");
+    
+    const readiness = await Readiness.findAll();
+    console.log("Readiness passed");
+    
+    const reference = await Reference.findAll();
+    console.log("Reference passed");
+    
+    const shrubUseCriteria = await ShrubUseCriteria.findAll();
+    console.log("ShrubUseCriteria passed");
+    
+    const species = await Species.findAll();
+    console.log("Species passed");
+    
+    const stubbleHeightCriteria = await StubbleHeightCriteria.findAll();
+    console.log("StubbleHeightCriteria passed");
+    
+    const usage = await Usage.findAll();
+    console.log("Usage passed");
+    
+    const zone = await Zone.findAll();
+    console.log("Zone passed");
+
+    console.log("All tables passed");
 
   } catch (error) {
     console.log(error);
@@ -382,7 +479,11 @@ const getZonesByDistrictId = async () => {
 
 sync(false);
 
+checkAllTablesForColumnErrors();
+
 // getZonesByDistrictId();
+// getAllAgreements()
+// getAllDistricts()
 
 // districtZone();
 // applicationZones();
