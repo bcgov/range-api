@@ -69,7 +69,7 @@ const {
   Readiness,
   Reference,
   ShrubUseCriteria,
-  Species,
+  SpeciesReference,
   StubbleHeightCriteria,
   Usage,
   Zone,
@@ -458,7 +458,7 @@ const checkAllTablesForColumnErrors = async () => {
     const shrubUseCriteria = await ShrubUseCriteria.findAll();
     console.log("ShrubUseCriteria passed");
     
-    const species = await Species.findAll();
+    const species = await SpeciesReference.findAll();
     console.log("Species passed");
     
     const stubbleHeightCriteria = await StubbleHeightCriteria.findAll();
