@@ -45,7 +45,8 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       values: Object.keys(LIVESTOCK_ID_LOCATION).map(k => LIVESTOCK_ID_LOCATION[k]),
     },
-    image_ref: {
+    imageRef: {
+      field: 'image_ref',
       type: DataTypes.TEXT,
     },
     description: {

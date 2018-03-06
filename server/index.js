@@ -85,7 +85,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 dm
   .sequelize
   .sync({
-    force: true,
+    force: false,
   })
   .then(() => app.listen(port, '0.0.0.0', (err) => {
     if (err) {

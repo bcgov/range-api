@@ -350,7 +350,39 @@ const pastureScheduel = async () => {
   }
 }
 
-sync(true);
+const getZonesByDistrictId = async () => {
+  console.log("getZonesByDistrictId running");
+
+  try {
+    
+    // Passed districtId
+    const districtId = 1
+    const {gt, lte, lt, gte, ne, in: opIn} = dm.sequelize.Op;
+
+    const zones = await Zone.findAll({
+      raw: true,
+      where: {
+        district_id: districtId,
+        id: {
+          [opIn]: [1, 3]
+        },
+        created_at: {
+          [gt]: new Date('2018-03-02'),
+          [lt]: new Date()
+        }
+      }
+    })
+
+    console.log(zones)
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+sync(false);
+
+// getZonesByDistrictId();
 
 // districtZone();
 // applicationZones();
