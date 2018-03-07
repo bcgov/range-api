@@ -124,4 +124,3 @@ export default (sequelize, DataTypes) => {
 
   return Agreement;
 };
-

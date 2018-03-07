@@ -41,17 +41,6 @@ import {
   LIVESTOCK_TYPE,
 } from './libs/db/constants';
 
-// import MonitoringCriteria from './libs/db/models/MonitoringCriteria';
-// import MonitoringSite from './libs/db/models/MonitoringSite';
-// import PlantCommunity from './libs/db/models/PlantCommunity';
-// import PlantCommunityAction from './libs/db/models/PlantCommunityAction';
-// import RangeReadinessCriteria from './libs/db/models/RangeReadinessCriteria';
-// import Readiness from './libs/db/models/Readiness';
-// import Reference from './libs/db/models/Reference';
-// import ShrubUseCriteria from './libs/db/models/ShrubUseCriteria';
-// import Species from './libs/db/models/Species';
-// import StubbleHeightCriteria from './libs/db/models/StubbleHeightCriteria';
-
 const dm = new DataManager(config);
 const {
   Agreement,
@@ -478,6 +467,8 @@ const checkAllTablesForColumnErrors = async () => {
 }
 
 sync(false);
+
+// getAgreementWithZone();
 
 // checkAllTablesForColumnErrors();
 
