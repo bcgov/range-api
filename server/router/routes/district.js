@@ -15,31 +15,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-01-10.
+// Created by Jason Leach on 2018-01-18.
 //
 
 /* eslint-env es6 */
 
 'use strict';
 
-import cors from 'cors';
-import config from '../config';
+import { Router } from 'express';
+import { asyncMiddleware } from '../../libs/utils';
 
-import agreement from './routes/agreement';
-import district from './routes/district';
-import ehlo from './routes/ehlo';
-import zone from './routes/zone';
+import config from '../../config';
+import DataManager from '../../libs/db';
 
-const corsOptions = {
-  origin: config.get('appUrl'),
-  credentials: true,
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
+const dm = new DataManager(config);
+const {
+  District,
+} = dm;
 
-module.exports = (app) => {
-  app.use(cors(corsOptions));
-  app.use('/v1/agreement', agreement);
-  app.use('/v1/district', district);
-  app.use('/v1/ehlo', ehlo); // probes
-  app.use('/v1/zone', zone);
-};
+const router = new Router();
+
+// Get all
+router.get('/', asyncMiddleware(async (req, res) => {
+  try {
+    const districts = await District.findAll();
+    res.status(200).json(districts).end();
+  } catch (err) {
+    res.status(500).json({ error: err }).end();
+  }
+}));
+
+module.exports = router;
