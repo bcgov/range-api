@@ -466,25 +466,9 @@ const checkAllTablesForColumnErrors = async () => {
   }
 }
 
-const getAgreementWithZone = async () => {
-  try {
-    const id = 1
-    const agreement = Agreement.findOne({
-      raw: true,
-      where: {
-        id,
-      },
-      include: [Zone],
-    });
-    console.log(agreement);
-  } catch (err) {
-    console.log(err);
-  }
-}
-
 sync(false);
 
-getAgreementWithZone();
+// getAgreementWithZone();
 
 // checkAllTablesForColumnErrors();
 

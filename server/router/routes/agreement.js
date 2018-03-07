@@ -65,6 +65,7 @@ const includeAllChildren = [
   Extension,
 ];
 
+// All children ids in agreement object
 const childIds = ['zoneId', 'extensionId'];
 
 // Create agreement
