@@ -24,6 +24,8 @@
 
 import cors from 'cors';
 import config from '../config';
+
+import agreement from './routes/agreement';
 import ehlo from './routes/ehlo';
 
 const corsOptions = {
@@ -34,5 +36,6 @@ const corsOptions = {
 
 module.exports = (app) => {
   app.use(cors(corsOptions));
+  app.use('/v1/agreement', agreement);
   app.use('/v1/ehlo', ehlo); // probes
 };
