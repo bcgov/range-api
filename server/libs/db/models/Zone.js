@@ -36,10 +36,10 @@ export default (sequelize, DataTypes) => {
     description: {
       type: DataTypes.TEXT,
     },
-    districtId: {
-      type: DataTypes.INTEGER,
-      field: 'district_id',
-    },
+    // districtId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'district_id',
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -52,6 +52,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
   });
 
   return Zone;

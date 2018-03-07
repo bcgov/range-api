@@ -63,6 +63,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'plant_community_action',
   });
 

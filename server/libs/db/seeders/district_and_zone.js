@@ -335,14 +335,14 @@ module.exports = {
     districts.forEach((district) => {
       district.id = did;
       did += 1;
-      district.created_at = new Date();
-      district.updated_at = new Date();
+      // district.created_at = new Date();
+      // district.updated_at = new Date();
     });
     zones.forEach((zone) => {
       zone.id = zid;
       zid += 1;
-      zone.created_at = new Date();
-      zone.updated_at = new Date();
+      // zone.created_at = new Date();
+      // zone.updated_at = new Date();
     });
 
     const queries = [];

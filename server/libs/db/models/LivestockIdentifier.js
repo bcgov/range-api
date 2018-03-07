@@ -52,10 +52,10 @@ export default (sequelize, DataTypes) => {
     description: {
       type: DataTypes.TEXT,
     },
-    agreementId: {
-      type: DataTypes.INTEGER,
-      field: 'agreement_id',
-    },
+    // agreementId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'agreement_id',
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -68,6 +68,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'livestock_identifier',
   });
 

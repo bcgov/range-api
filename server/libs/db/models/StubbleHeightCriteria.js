@@ -47,6 +47,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'stubble_height_criteria',
   });
 

@@ -44,10 +44,10 @@ export default (sequelize, DataTypes) => {
     description: {
       type: DataTypes.TEXT,
     },
-    pastureId: {
-      type: DataTypes.INTEGER,
-      field: 'pasture_id',
-    },
+    // pastureId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'pasture_id',
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -60,6 +60,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'pasture_schedule',
   });
 

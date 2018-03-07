@@ -15,25 +15,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-26.
+// Created by Jason Leach on 2018-03-06.
+//
 
 /* eslint-env es6 */
 
 'use strict';
 
-// import {
-//   ASPECT,
-//   ELEVATION,
-//   PC_ACTION_PURPOSE,
-// } from '../constants';
-
 export default (sequelize, DataTypes) => {
-  const ShrubUseCriteria = sequelize.define('shrubUseCriteria', {
+  const PlantActionReference = sequelize.define('plantActionReference', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
+    },
+    name: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    active: {
+      type: DataTypes.BOOLEAN,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -49,8 +55,9 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'shrub_use_criteria',
+    tableName: 'plant_action_reference',
   });
 
-  return ShrubUseCriteria;
+  return PlantActionReference;
 };
+

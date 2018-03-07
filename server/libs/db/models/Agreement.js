@@ -93,14 +93,14 @@ export default (sequelize, DataTypes) => {
     notes: {
       type: DataTypes.TEXT,
     },
-    zoneId: {
-      type: DataTypes.INTEGER,
-      field: 'zone_id',
-    },
-    extensionId: {
-      type: DataTypes.INTEGER,
-      field: 'extension_id',
-    },
+    // zoneId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'zone_id',
+    // },
+    // extensionId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'extension_id',
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -113,6 +113,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
   });
 
   // // Instance Method

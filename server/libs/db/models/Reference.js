@@ -53,6 +53,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'app_ref_list',
   });
 

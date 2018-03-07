@@ -67,10 +67,10 @@ export default (sequelize, DataTypes) => {
       values: Object.keys(LIVESTOCK_TYPE).map(k => LIVESTOCK_TYPE[k]),
       allowNull: false,
     },
-    pastureScheduleId: {
-      field: 'pasture_schedule_id',
-      type: DataTypes.INTEGER,
-    },
+    // pastureScheduleId: {
+    //   field: 'pasture_schedule_id',
+    //   type: DataTypes.INTEGER,
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -83,6 +83,8 @@ export default (sequelize, DataTypes) => {
     },
   }, {
     freezeTableName: true,
+    timestamps: false,
+    underscored: true,
     tableName: 'pasture_schedule_entry',
   });
 
