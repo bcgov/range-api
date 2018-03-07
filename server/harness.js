@@ -113,7 +113,7 @@ const applicationZones = async () => {
       where: {
         id: ag1.id,
       },
-      include: [Zone],
+      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
     });
 
     console.log('applicationZones Report');
@@ -479,14 +479,14 @@ const checkAllTablesForColumnErrors = async () => {
 
 sync(false);
 
-checkAllTablesForColumnErrors();
+// checkAllTablesForColumnErrors();
 
 // getZonesByDistrictId();
 // getAllAgreements()
 // getAllDistricts()
 
 // districtZone();
-// applicationZones();
+applicationZones();
 // agreementLivestockIdentifier1();
 // agreementUsage();
 // agreementExtension();
