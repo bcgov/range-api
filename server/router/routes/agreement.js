@@ -67,6 +67,11 @@ const includeAllChildren = [
 
 const childIds = ['zoneId', 'extensionId'];
 
+// Create agreement
+router.post('/', asyncMiddleware(async (req, res) => {
+  res.send('Not implemented').end();
+}));
+
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
@@ -80,6 +85,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err }).end();
   }
+}));
+
+// Update agreement
+router.put('/', asyncMiddleware(async (req, res) => {
+  res.send('Not implemented').end();
 }));
 
 // Get by id
@@ -107,6 +117,11 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err }).end();
   }
+}));
+
+// Delete agreement
+router.delete('/:id', asyncMiddleware(async (req, res) => {
+  res.send('Not implemented').end();
 }));
 
 module.exports = router;
