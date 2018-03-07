@@ -466,7 +466,7 @@ const checkAllTablesForColumnErrors = async () => {
   }
 }
 
-sync(false);
+sync(true);
 
 // getAgreementWithZone();
 
@@ -477,7 +477,7 @@ sync(false);
 // getAllDistricts()
 
 // districtZone();
-applicationZones();
+// applicationZones();
 // agreementLivestockIdentifier1();
 // agreementUsage();
 // agreementExtension();

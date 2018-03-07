@@ -96,5 +96,10 @@ export default class DataManager {
 
     this.Pasture.hasMany(this.PastureSchedule);
     this.PastureSchedule.hasMany(this.PastureScheduleEntry);
+
+    //
+    // Agreements and Plant Action.
+    //
+    this.PlantActionReference.belongsToMany(this.Agreement, { through: 'agreement_plant_action' });
   }
 }

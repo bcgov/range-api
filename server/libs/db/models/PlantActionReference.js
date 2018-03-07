@@ -30,16 +30,18 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    name: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
     description: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    default: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      default: false,
+    },
     active: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -55,7 +57,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'plant_action_reference',
+    tableName: 'ref_plant_action',
   });
 
   return PlantActionReference;
