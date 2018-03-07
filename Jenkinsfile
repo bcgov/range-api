@@ -50,6 +50,8 @@ node {
   
     // Sale Schema Spy down and up will cause it to rebuild the schema documentation. This isn't the most
     // efficiant way to do this but at least its automated.
+    echo "Scaling Schema Spy to trigger refresh"
+
     script: """
     oc scale --replicas=0 dc schema-spy -n range-myra-dev && \
     oc scale --replicas=1 dc schema-spy -n range-myra-dev
