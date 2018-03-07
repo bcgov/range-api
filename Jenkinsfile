@@ -1,7 +1,7 @@
 def APP_NAME = 'range-myra-api'
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
-def TAG_NAMES = ['dev', 'test']
+def TAG_NAMES = ['dev', 'test', 'prod']
 def CMD_PREFIX = 'PATH=$PATH:$PWD/node-v8.9.4-linux-x64/bin'
 def NODE_URI = 'https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz'
 
@@ -35,26 +35,24 @@ node {
   }
 
   stage('Build') {
-    step {
-      echo "Build: ${BUILD_ID}"
-      // run the oc build to package the artifacts into a docker image
-      openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'true'
+    echo "Build: ${BUILD_ID}"
+    // run the oc build to package the artifacts into a docker image
+    openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'true'
 
-      // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
-      // Tag the images for deployment based on the image's hash
-      IMAGE_HASH = sh (
-        script: """oc get istag ${IMAGESTREAM_NAME}:latest -o template --template=\"{{.image.dockerImageReference}}\"|awk -F \":\" \'{print \$3}\'""",
-        returnStdout: true).trim()
-      echo ">> IMAGE_HASH: ${IMAGE_HASH}"
-    }
+    // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
+    // Tag the images for deployment based on the image's hash
+    IMAGE_HASH = sh (
+      script: """oc get istag ${IMAGESTREAM_NAME}:latest -o template --template=\"{{.image.dockerImageReference}}\"|awk -F \":\" \'{print \$3}\'""",
+      returnStdout: true).trim()
+    echo ">> IMAGE_HASH: ${IMAGE_HASH}"
 
-    step {
-      timeout(time: 60, unit: 'SECONDS') {
-        script: """
-        oc scale --replicas=0 dc schema-spy && \
-        oc scale --replicas=1 dc schema-spy
-        """
-      }
+    openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[0], srcStream: IMAGESTREAM_NAME, srcTag: "${IMAGE_HASH}"
+  
+    timeout(time: 60, unit: 'SECONDS') {
+      script: """
+      oc scale --replicas=0 dc schema-spy -n range-myra-dev && \
+      oc scale --replicas=1 dc schema-spy -n range-myra-dev
+      """
     }
   }
 }
