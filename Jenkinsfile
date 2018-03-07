@@ -48,11 +48,11 @@ node {
 
     openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[0], srcStream: IMAGESTREAM_NAME, srcTag: "${IMAGE_HASH}"
   
-    timeout(time: 60, unit: 'SECONDS') {
-      script: """
-      oc scale --replicas=0 dc schema-spy -n range-myra-dev && \
-      oc scale --replicas=1 dc schema-spy -n range-myra-dev
-      """
-    }
+    sleep 60
+
+    script: """
+    oc scale --replicas=0 dc schema-spy -n range-myra-dev && \
+    oc scale --replicas=1 dc schema-spy -n range-myra-dev
+    """
   }
 }
