@@ -31,28 +31,37 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     code: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(5),
+      allowNull: false,
+      validate: {
+        is: /^[a-z]+$/i,
+        len: [3, 5],
+      },
     },
     description: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(64),
+      allowNull: false,
     },
-    // districtId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'district_id',
-    // },
+    districtId: {
+      type: DataTypes.INTEGER,
+      field: 'district_id',
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
     updatedAt: {
       type: DataTypes.DATE,
       field: 'updated_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
   }, {
-    freezeTableName: true,
     timestamps: false,
+    freezeTableName: true,
     underscored: true,
   });
 

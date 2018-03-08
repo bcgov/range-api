@@ -23,7 +23,7 @@
 'use strict';
 
 import {
-  AGREEMENT_TYPE,
+  // AGREEMENT_TYPE,
   EXEMPTION_STATUS,
   RUP_STATUS,
 } from '../constants';
@@ -36,22 +36,21 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    ran: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    type: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-      values: Object.keys(AGREEMENT_TYPE).map(k => AGREEMENT_TYPE[k]),
-    },
-    name: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
     forestFileId: {
       field: 'forest_file_id',
       type: DataTypes.TEXT,
+    },
+    type: {
+      type: DataTypes.STRING(3),
+      allowNull: false,
+      validate: {
+        is: /^[a-z0-9]+$/i,
+        len: [3],
+      },
+    },
+    name: {
+      type: DataTypes.STRING(32),
+      allowNull: false,
     },
     agreementStartDate: {
       field: 'agreement_start_date',
@@ -96,24 +95,28 @@ export default (sequelize, DataTypes) => {
     // zoneId: {
     //   type: DataTypes.INTEGER,
     //   field: 'zone_id',
+    //   allowNull: false,
     // },
     // extensionId: {
     //   type: DataTypes.INTEGER,
     //   field: 'extension_id',
+    //   allowNull: false,
     // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
     updatedAt: {
       type: DataTypes.DATE,
       field: 'updated_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
   }, {
-    freezeTableName: true,
     timestamps: false,
+    freezeTableName: true,
     underscored: true,
   });
 

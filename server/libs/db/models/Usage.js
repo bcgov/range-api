@@ -67,12 +67,14 @@ export default (sequelize, DataTypes) => {
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
     updatedAt: {
       type: DataTypes.DATE,
       field: 'updated_at',
-      default: new Date(),
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
+      allowNull: false,
     },
   }, {
     freezeTableName: true,

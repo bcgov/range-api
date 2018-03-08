@@ -57,7 +57,7 @@ export default class DataManager {
     this.Zone.belongsToMany(this.Agreement, { through: 'agreement_zone' });
     // One Zone per Agreement. This relation allows us to easlily query for
     // an Agreement's Zone.
-    this.Agreement.belongsTo(this.Zone);
+    this.Agreement.belongsTo(this.Zone); // { foreignKey: { allowNull: false } }
 
     //
     // Agreements and Livestock Identifiers

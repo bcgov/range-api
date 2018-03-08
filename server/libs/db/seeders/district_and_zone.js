@@ -313,22 +313,6 @@ module.exports = {
         code: 'ALL',
         district: 'DMK',
         description: 'Mackenzie',
-      }, {
-        code: 'KAMA',
-        district: 'DKA',
-        description: 'Kamloops Zone',
-      }, {
-        code: 'KAMB',
-        district: 'DKA',
-        description: 'Kamloops Zone',
-      }, {
-        code: 'KAMC',
-        district: 'DKA',
-        description: 'Kamloops Zone',
-      }, {
-        code: 'KAMD',
-        district: 'DKA',
-        description: 'Kamloops Zone',
       },
     ];
 
