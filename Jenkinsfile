@@ -72,7 +72,7 @@ node {
       } catch (error) {
         def attachment = [:]
         attachment.fallback = 'See build log for more details'
-        attachment.title = 'Unit Testing Failed'
+        attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
         attachment.color = '#CD0000' // Red
         attachment.text = 'Their are issues with the unit tests.'
         // attachment.title_link = "${env.BUILD_URL}"
