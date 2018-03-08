@@ -4,6 +4,21 @@ def IMAGESTREAM_NAME = APP_NAME
 def TAG_NAMES = ['dev', 'test', 'prod']
 def CMD_PREFIX = 'PATH=$PATH:$PWD/node-v8.9.4-linux-x64/bin'
 def NODE_URI = 'https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz'
+def PIRATE_ICO = 'http://icons.iconarchive.com/icons/aha-soft/torrent/64/pirate-icon.png'
+def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo.png'
+def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
+
+def notifySlack(text, channel, url, attachments, icon) {
+    def slackURL = url
+    def jenkinsIcon = icon
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        icon_url: jenkinsIcon,
+        attachments: attachments
+    ])
+    sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
+}
 
 node {
   stage('Checkout') {
@@ -31,7 +46,38 @@ node {
     // Run a security check on our packages
     // sh "${CMD_PREFIX} npm run test:security"
     // Run our unit tests et al.
-    sh "${CMD_PREFIX} npm test"
+    script {
+      // Run a security check on our packages
+      try {
+        sh "${CMD_PREFIX} ./node_modules/.bin/nsp check"
+      } catch (error) {
+        // def output = readFile('nsp-report.txt').trim()
+        def attachment = [:]
+        attachment.fallback = 'See build log for more details'
+        attachment.title = 'Node Security Project Warning'
+        attachment.color = '#D73F09' // Orange
+        attachment.text = 'Their are security warnings related to your packages.'
+        attachment.title_link = "${env.BUILD_URL}"
+        // echo "${output}"
+
+        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+      }
+
+      try {
+        // Run our unit tests et al.
+        sh "${CMD_PREFIX} npm test"
+      } catch (error) {
+        def attachment = [:]
+        attachment.fallback = 'See build log for more details'
+        attachment.title = 'Unit Testing Failed'
+        attachment.color = '#CD0000' // Red
+        attachment.text = 'Their are issues with the unit tests.'
+        attachment.title_link = "${env.BUILD_URL}"
+
+        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+        sh "exit 1001"
+      }
+    }
   }
 
   stage('Build') {
@@ -56,5 +102,7 @@ node {
     oc scale --replicas=0 dc schema-spy -n range-myra-dev && \
     oc scale --replicas=1 dc schema-spy -n range-myra-dev
     """
+
+    notifySlack("${APP_NAME}, Build #${BUILD_ID}, OK>", "#secure-image-app", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], JENKINS_ICO)
   }
 }
