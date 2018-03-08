@@ -16,7 +16,6 @@ import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
 // import * as Constants from './constants';
-
 export default class DataManager {
   constructor(config) {
     this.sequelize = new Sequelize(config.get('db:url'), {
@@ -45,6 +44,28 @@ export default class DataManager {
   }
 
   buildRelations() {
+
+    //
+    // Client Type
+    //
+    this.Client.belongsTo(this.ClientType);
+
+    //
+    // Client, Agreement
+    //
+
+    // A Client can have multiple Agreements.
+    // this.Client.belongsTo(this.ClientType);
+
+    this.Agreement.belongsTo(this.Client, { as: 'primaryClient', foreignKey: 'primary_client_id' });
+    this.Client.belongsToMany(this.Agreement, { as: 'secondaryClient', through: 'agreement_client' });
+
+    //
+    // Agreement Type
+    //
+
+    this.Agreement.belongsTo(this.AgreementType);
+
     // A District has multiple zones. This relation allows us to easily
     // query for the Zones in a particular District.
     this.District.belongsToMany(this.Zone, { through: 'district_zone' });

@@ -124,15 +124,6 @@ module.exports = {
         RIGHT_LFANG: 'Right Flank',
       }),
       active: true,
-    }, {
-      name: 'AGREEMENT_TYPE',
-      value: JSON.stringify({
-        E01: 'E01',
-        E02: 'E02',
-        H01: 'H01',
-        H02: 'H02',
-      }),
-      active: true,
     },
     {
       name: 'EXEMPTION_STATUS',

@@ -22,11 +22,7 @@
 
 'use strict';
 
-import {
-  // AGREEMENT_TYPE,
-  EXEMPTION_STATUS,
-  RUP_STATUS,
-} from '../constants';
+import { EXEMPTION_STATUS } from '../constants';
 
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
@@ -38,16 +34,22 @@ export default (sequelize, DataTypes) => {
     },
     forestFileId: {
       field: 'forest_file_id',
-      type: DataTypes.TEXT,
-    },
-    type: {
-      type: DataTypes.STRING(3),
       allowNull: false,
+      type: DataTypes.STRING(9),
       validate: {
-        is: /^[a-z0-9]+$/i,
-        len: [3],
+        is: /^RAN\d{6}$/i,
+        len: [9],
       },
     },
+    // agreementType: {
+    //   type: DataTypes.STRING(3),
+    //   field: 'agreement_type',
+    //   allowNull: false,
+    //   validate: {
+    //     is: /^[a-z0-9]+$/i,
+    //     len: [3],
+    //   },
+    // },
     name: {
       type: DataTypes.STRING(32),
       allowNull: false,
@@ -72,22 +74,17 @@ export default (sequelize, DataTypes) => {
       field: 'non_use_billable',
       type: DataTypes.BOOLEAN,
     },
-    primaryHolder: {
-      field: 'price_holder',
-      type: DataTypes.TEXT,
-    },
-    tempHolder: {
-      field: 'temp_holder',
-      type: DataTypes.TEXT,
-    },
     exemptionStatus: {
       field: 'exemption_status',
       type: DataTypes.TEXT,
       values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
     },
     status: {
-      type: DataTypes.TEXT,
-      values: Object.keys(RUP_STATUS).map(k => RUP_STATUS[k]),
+      type: DataTypes.STRING(1),
+      validate: {
+        is: /^[a-z]$/i,
+        len: [1],
+      },
     },
     notes: {
       type: DataTypes.TEXT,
