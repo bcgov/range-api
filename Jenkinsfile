@@ -106,8 +106,8 @@ node {
     try {
       def attachment = [:]
       attachment.fallback = 'See build log for more details'
-      attachment.text = ':heart: :tada: Another huge sucess for the Range Team.\n A freshly minted build is being deployed and will be available shortly.'
-      attachment.title = "API Build ${BUILD_ID} OK!"
+      attachment.text = 'Another huge sucess for the Range Team.\n A freshly minted build is being deployed and will be available shortly.'
+      attachment.title = "API Build ${BUILD_ID} OK! :heart: :tada:"
       attachment.color = '#00FF00' // Lime Green
 
       notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
