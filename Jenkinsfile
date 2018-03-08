@@ -104,7 +104,7 @@ node {
     script: """oc scale --replicas=0 dc schema-spy -n range-myra-dev && oc scale --replicas=1 dc schema-spy -n range-myra-dev"""
 
     try {
-      notifySlack("${APP_NAME}, Build #${BUILD_ID}, OK>", "#secure-image-app", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], JENKINS_ICO)
+      notifySlack("${APP_NAME}, Build #${BUILD_ID}, OK>", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], JENKINS_ICO)
     } catch (error) {
       echo "Unable send update to slack, error = ${error}"
     }
