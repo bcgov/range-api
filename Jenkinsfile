@@ -104,7 +104,13 @@ node {
     script: """oc scale --replicas=0 dc schema-spy -n range-myra-dev && oc scale --replicas=1 dc schema-spy -n range-myra-dev"""
 
     try {
-      notifySlack("${APP_NAME}, Build #${BUILD_ID}, OK>", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], JENKINS_ICO)
+      def attachment = [:]
+      attachment.fallback = 'See build log for more details'
+      attachment.text = ':heart: :tada: Another huge sucess for the Range Team.\n A freshly minted build is being deployed and will be available shortly.'
+      attachment.title = "API Build ${BUILD_ID} OK!"
+      attachment.color = '#00FF00' // Lime Green
+
+      notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
     } catch (error) {
       echo "Unable send update to slack, error = ${error}"
     }
