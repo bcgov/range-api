@@ -9,6 +9,8 @@ def NODE_URI = 'https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz'
 def PIRATE_ICO = 'http://icons.iconarchive.com/icons/aha-soft/torrent/64/pirate-icon.png'
 def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo.png'
 def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
+def SCHEMA_SPY_IMAGSTREAM_NAME = 'schema-spy'
+def PROJECT_NAMESPACE_BASE = 'range-myra-'
 
 def notifySlack(text, channel, url, attachments, icon) {
     def slackURL = url
@@ -101,8 +103,12 @@ node {
     // efficiant way to do this but at least its automated.
     echo "Scaling Schema Spy to trigger refresh"
 
-    script: """oc scale --replicas=0 dc schema-spy -n range-myra-dev && oc scale --replicas=1 dc schema-spy -n range-myra-dev"""
-
+    // For this to work the Jenkins service mush have edit permissions within the deployment project.
+    // Example OC cmd to accomplish this task (it's better if you have project init scripts that do this);
+    // oc policy add-role-to-user edit system:serviceaccount:range-myra-tools:jenkins -n range-myra-dev
+    openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+    openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+    
     try {
       def attachment = [:]
       attachment.fallback = 'See build log for more details'
