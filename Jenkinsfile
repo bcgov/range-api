@@ -57,7 +57,7 @@ node {
         attachment.title = 'Node Security Project Warning'
         attachment.color = '#D73F09' // Orange
         attachment.text = 'Their are security warnings related to your packages.'
-        attachment.title_link = "${env.BUILD_URL}"
+        // attachment.title_link = "${env.BUILD_URL}"
         // echo "${output}"
 
         notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
@@ -72,7 +72,7 @@ node {
         attachment.title = 'Unit Testing Failed'
         attachment.color = '#CD0000' // Red
         attachment.text = 'Their are issues with the unit tests.'
-        attachment.title_link = "${env.BUILD_URL}"
+        // attachment.title_link = "${env.BUILD_URL}"
 
         notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         sh "exit 1001"
