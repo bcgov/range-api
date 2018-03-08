@@ -1,3 +1,5 @@
+import groovy.json.JsonOutput
+
 def APP_NAME = 'range-myra-api'
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
