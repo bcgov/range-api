@@ -60,7 +60,8 @@ node {
         // attachment.title_link = "${env.BUILD_URL}"
         // echo "${output}"
 
-        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+        // Temporarily disabled until hoek is fixed. jl.
+        // notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
       }
 
       try {
