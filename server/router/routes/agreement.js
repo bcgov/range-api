@@ -77,9 +77,15 @@ router.post('/', asyncMiddleware(async (req, res) => {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
-      include: includeAllChildren,
+      include: [{
+        model: Zone,
+        include: [District],
+        attributes: {
+          exclude: ['district_id'],
+        },
+      }],
       attributes: {
-        exclude: childIds,
+        exclude: ['primary_client_id', 'agreement_type_id', 'zone_id', 'extension_id'],
       },
     });
     res.status(200).json(agreements).end();
