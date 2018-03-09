@@ -44,7 +44,6 @@ export default class DataManager {
   }
 
   buildRelations() {
-
     //
     // Client Type
     //
