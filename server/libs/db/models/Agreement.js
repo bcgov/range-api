@@ -32,7 +32,7 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    forestFileId: {
+    agreementId: {
       field: 'forest_file_id',
       allowNull: false,
       type: DataTypes.STRING(9),
@@ -50,17 +50,20 @@ export default (sequelize, DataTypes) => {
     //     len: [3],
     //   },
     // },
-    name: {
+    rangeName: {
+      field: 'range_name',
       type: DataTypes.STRING(32),
       allowNull: false,
     },
     agreementStartDate: {
       field: 'agreement_start_date',
       type: DataTypes.DATE,
+      allowNull: false,
     },
     agreementEndDate: {
       field: 'agreement_end_date',
       type: DataTypes.DATE,
+      allowNull: false,
     },
     planStartDate: {
       field: 'plan_start_date',
@@ -69,10 +72,6 @@ export default (sequelize, DataTypes) => {
     planEndDate: {
       field: 'plan_end_date',
       type: DataTypes.DATE,
-    },
-    nonUseBillable: {
-      field: 'non_use_billable',
-      type: DataTypes.BOOLEAN,
     },
     exemptionStatus: {
       field: 'exemption_status',
