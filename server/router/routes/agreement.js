@@ -24,7 +24,7 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
-
+import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -70,7 +70,7 @@ const childIds = ['zoneId', 'extensionId'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
-  res.send('Not implemented').end();
+  res.status(501).json({ error: 'Not Implemented' }).end();
 }));
 
 // Get all
@@ -95,8 +95,31 @@ router.get('/', asyncMiddleware(async (req, res) => {
 }));
 
 // Update agreement
-router.put('/', asyncMiddleware(async (req, res) => {
-  res.send('Not implemented').end();
+router.put('/:id', asyncMiddleware(async (req, res) => {
+  const {
+    id,
+  } = req.params;
+  const {
+    body,
+  } = req;
+
+  try {
+    const count = await Agreement.update(body, {
+      where: {
+        id,
+      },
+    }).pop();
+
+    if (count === 0) {
+      // No records were updated. The ID probably does not exists.
+      return res.send(400).end(); // Bad Request
+    }
+
+    return res.status(204).end(); // No Content
+  } catch (error) {
+    logger.error(`error updating agreement ${id}`);
+    throw error;
+  }
 }));
 
 // Get by id
@@ -128,7 +151,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 
 // Delete agreement
 router.delete('/:id', asyncMiddleware(async (req, res) => {
-  res.send('Not implemented').end();
+  res.status(501).json({ error: 'Not Implemented' }).end();
 }));
 
 module.exports = router;
