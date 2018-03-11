@@ -27,38 +27,6 @@
 module.exports = {
   up: async (queryInterface) => {
     const ref = [{
-      name: 'LIVESTOCK_TYPE',
-      value: JSON.stringify({
-        ALPACA: 'Alpaca',
-        ASS: 'Ass',
-        BULL: 'Bull',
-        COW: 'COW',
-        COW_CALF: 'Cow w/ Calf',
-        GOAT: 'Goat',
-        HORSE: 'Horse',
-        LLAMA: 'Llama',
-        MULE: 'Mule',
-        SHEEP: 'Sheep',
-        YEARLING: 'Yearling',
-      }),
-      active: true,
-    }, {
-      name: 'LIVESTOCK_AUFACTOR',
-      value: JSON.stringify({
-        ALPACA: 0.1,
-        ASS: 1.25,
-        BULL: 1.5,
-        COW: 1,
-        COW_CALF: 1,
-        GOAT: 0.2,
-        HOARS: 1.25,
-        LLAMA: 0.2,
-        MULE: 1.25,
-        SHEEP: 0.2,
-        YEARLING: 0.7,
-      }),
-      active: true,
-    }, {
       name: 'PC_RANGELAND_HEALTH',
       value: JSON.stringify({
         HIGH: 'Highly at Risk',
@@ -130,14 +98,6 @@ module.exports = {
       value: JSON.stringify({
         NOT_EXEMPT: 'Not Exempt',
         PENDING_APPROVAL: 'Pending Approval',
-      }),
-      active: true,
-    }, {
-      name: 'RUP_STATUS',
-      value: JSON.stringify({
-        DRAFT: 'Draft',
-        FINAL: 'Final',
-        RETIRED: 'Retired',
       }),
       active: true,
     }, {

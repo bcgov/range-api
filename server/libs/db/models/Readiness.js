@@ -31,7 +31,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     name: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(32),
       allowNull: false,
     },
     leafStage: {
@@ -42,6 +42,7 @@ export default (sequelize, DataTypes) => {
     },
     active: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,

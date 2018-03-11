@@ -319,21 +319,18 @@ module.exports = {
     districts.forEach((district) => {
       district.id = did;
       did += 1;
-      // district.created_at = new Date();
-      // district.updated_at = new Date();
     });
+
     zones.forEach((zone) => {
       zone.id = zid;
       zid += 1;
-      // zone.created_at = new Date();
-      // zone.updated_at = new Date();
     });
 
     const queries = [];
     zones.forEach((zone) => {
       const district = districts.filter(aDistrict => aDistrict.code === zone.district).pop();
       if (district) {
-        queries.push(`UPDATE zone SET district_id=${district.id} WHERE id = ${zone.id}`);
+        zone.district_id = district.id;
         queries.push(`INSERT INTO district_zone (created_at, updated_at, district_id, zone_id)
          VALUES (current_timestamp, current_timestamp, ${district.id}, ${zone.id})`);
       }
@@ -352,6 +349,6 @@ module.exports = {
   down: async (queryInterface) => {
     await queryInterface.bulkDelete('district', null, {});
     await queryInterface.bulkDelete('zone', null, {});
-    await queryInterface.sequelize.query('DELETE FROM district_zones');
+    await queryInterface.sequelize.query('DELETE FROM district_zone');
   },
 };

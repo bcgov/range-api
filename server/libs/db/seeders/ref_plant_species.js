@@ -110,9 +110,9 @@ module.exports = {
       data.active = true;
     });
 
-    await queryInterface.bulkInsert('ref_species', ref, {});
+    await queryInterface.bulkInsert('ref_plant_species', ref, {});
   },
   down: async (queryInterface) => {
-    await queryInterface.bulkDelete('ref_species', null, {});
+    await queryInterface.bulkDelete('ref_plant_species', null, {});
   },
 };

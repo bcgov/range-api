@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-26.
+// Created by Jason Leach on 2018-03-11.
 //
 
 /* eslint-env es6 */
@@ -23,7 +23,7 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const PlantSpecies = sequelize.define('plantSpecies', {
+  const LivestockType = sequelize.define('livestockType', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -31,12 +31,11 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     name: {
-      type: DataTypes.STRING(32),
-      allowNull: false,
+      type: DataTypes.STRING(16),
     },
-    type: {
-      type: DataTypes.STRING(32),
-      allowNull: false,
+    auFactor: {
+      field: 'au_factor',
+      type: DataTypes.Float,
     },
     active: {
       type: DataTypes.BOOLEAN,
@@ -58,9 +57,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'ref_plant_species',
+    tableName: 'ref_livestock',
   });
 
-  return PlantSpecies;
+  return LivestockType;
 };
-

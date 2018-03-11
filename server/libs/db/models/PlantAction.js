@@ -23,7 +23,7 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const PlantActionReference = sequelize.define('plantActionReference', {
+  const PlantAction = sequelize.define('plantAction', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -62,6 +62,6 @@ export default (sequelize, DataTypes) => {
     tableName: 'ref_plant_action',
   });
 
-  return PlantActionReference;
+  return PlantAction;
 };
 

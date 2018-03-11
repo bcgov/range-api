@@ -62,20 +62,12 @@ const {
   StubbleHeightCriteria,
   Usage,
   Zone,
+  ClientType,
+  AgreementType,
+  AgreementStatus,
 } = dm;
 
-const sync = async (force = false) => {
-  try {
-    await dm.sequelize
-      .sync({
-        force,
-      });
-  } catch (error) {
-    console.log(error);
-  }
-
-  process.exit(0);
-};
+const sync = async (force = false) => dm.sequelize.sync({ force });
 
 const applicationZones = async () => {
   try {
@@ -86,17 +78,43 @@ const applicationZones = async () => {
       include: [District],
     });
 
-    const ag1 = await Agreement.create({
-      ran: 'RAN123',
-      type: 'E01',
-      name: 'My Amazing Farm',
+    const type = await AgreementType.findOne({
+      where: {
+        code: 'E02',
+      }
     });
 
-    await ag1.setZone(zone);
-    await ag1.save();
+    const status = await AgreementStatus.findOne({
+      where: {
+        code: 'N',
+      }
+    });
 
-    await zone.addAgreement(ag1);
-    await zone.save();
+    const ag1 = await Agreement.build({
+      agreementId: 'RAN123475',
+      rangeName: 'Big Fat Range',
+      agreementStartDate: new Date(),
+      agreementEndDate: (new Date()).setDate((new Date()).getDate() + 25*365),
+      zone_id: zone.id,
+      // zone,
+      // agreementType: type,
+      agreement_type_id: type.id,
+      status_id: status.id,
+    }, {
+      // include: [{
+      //   association: Zone,
+      // }]
+    });
+
+    // await ag1.setZone(zone);
+    // await ag1.setAgreementType(type);
+    // await ag1.setStatus(status);
+
+    await ag1.save();
+    
+    // return;
+    // await zone.addAgreement(ag1);
+    // await zone.save();
 
     const ag2 = await Agreement.findOne({
       where: {
@@ -109,6 +127,42 @@ const applicationZones = async () => {
     console.log(`Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`);
     console.log(`Created Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`);
     console.log(`Fetched Agreement ID = ${ag2.id}, zone = ${ag2.zone.code}`);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const changeApplicationZones = async () => {
+  try {
+    const zone = await Zone.findOne({
+      where: {
+        code: 'LONE',
+      },
+      include: [District],
+    });
+
+    const ag1 = await Agreement.findOne({
+      where: {
+        id: 1,
+      },
+      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
+    });
+
+    console.log('applicationZones Report');
+    console.log(`Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`);
+    console.log(`Fetched Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`);
+
+    await ag1.setZone(zone);
+    await ag1.save();
+    
+    const ag2 = await Agreement.findOne({
+      where: {
+        id: ag1.id,
+      },
+      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
+    });
+
+    console.log(`Updated Agreement ID = ${ag2.id}, zone = ${ag2.zone.code}`);
   } catch (err) {
     console.log(err);
   }
@@ -466,21 +520,31 @@ const checkAllTablesForColumnErrors = async () => {
   }
 }
 
-sync(true);
+//
+// MAIN
+//
 
-// getAgreementWithZone();
+const main = async () => {
+  // await sync(false)
+  // getAgreementWithZone();
+  
+  // checkAllTablesForColumnErrors();
+  
+  // getZonesByDistrictId();
+  // getAllAgreements()
+  // getAllDistricts()
+  
+  // districtZone();
+  // await applicationZones();
+  await changeApplicationZones();
+  // agreementLivestockIdentifier1();
+  // agreementUsage();
+  // agreementExtension();
+  // pastureScheduel();
+  
+  // agreementLivestockIdentifier2(); // not working
 
-// checkAllTablesForColumnErrors();
+  process.exit(0);
+};
 
-// getZonesByDistrictId();
-// getAllAgreements()
-// getAllDistricts()
-
-// districtZone();
-// applicationZones();
-// agreementLivestockIdentifier1();
-// agreementUsage();
-// agreementExtension();
-// pastureScheduel();
-
-// agreementLivestockIdentifier2(); // not working
+main();

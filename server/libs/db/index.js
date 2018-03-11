@@ -54,16 +54,17 @@ export default class DataManager {
     //
 
     // A Client can have multiple Agreements.
-    // this.Client.belongsTo(this.ClientType);
+    this.Client.belongsTo(this.ClientType);
 
     this.Agreement.belongsTo(this.Client, { as: 'primaryClient', foreignKey: 'primary_client_id' });
-    this.Client.belongsToMany(this.Agreement, { as: 'secondaryClient', through: 'agreement_client' });
+    this.Client.belongsToMany(this.Agreement, { as: 'secondaryClient', through: 'client_agreement' });
 
     //
-    // Agreement Type
+    // Agreement Type, Agreement Status
     //
 
     this.Agreement.belongsTo(this.AgreementType);
+    this.Agreement.belongsTo(this.AgreementStatus, { as: 'status' });
 
     // A District has multiple zones. This relation allows us to easily
     // query for the Zones in a particular District.
@@ -74,52 +75,52 @@ export default class DataManager {
 
     // A zone can bridge one or more Agreements. This relation allows us to easily
     // query for the Applications in particular zone.
-    this.Zone.belongsToMany(this.Agreement, { through: 'agreement_zone' });
+    // this.Zone.belongsToMany(this.Agreement, { through: 'agreement_zone' });
     // One Zone per Agreement. This relation allows us to easlily query for
     // an Agreement's Zone.
     this.Agreement.belongsTo(this.Zone); // { foreignKey: { allowNull: false } }
 
-    //
-    // Agreements and Livestock Identifiers
-    //
+    // //
+    // // Agreements and Livestock Identifiers
+    // //
 
-    this.LivestockIdentifier.belongsTo(this.Agreement);
-    this.Agreement.hasMany(this.LivestockIdentifier);
+    // this.LivestockIdentifier.belongsTo(this.Agreement);
+    // this.Agreement.hasMany(this.LivestockIdentifier);
 
-    //
-    // Agreements and Range Usage
-    //
+    // //
+    // // Agreements and Range Usage
+    // //
 
-    this.Agreement.hasMany(this.Usage);
+    // this.Agreement.hasMany(this.Usage);
 
-    //
-    // Agreements and Extension
-    //
+    // //
+    // // Agreements and Extension
+    // //
 
-    this.Agreement.belongsTo(this.Extension);
+    // this.Agreement.belongsTo(this.Extension);
 
-    //
-    // Agreements and Pasture, Plant Communities, Monitoring Sites,
-    // and Criteria.
-    //
+    // //
+    // // Agreements and Pasture, Plant Communities, Monitoring Sites,
+    // // and Criteria.
+    // //
 
-    this.Agreement.hasMany(this.Pasture);
+    // this.Agreement.hasMany(this.Pasture);
 
-    // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
-    // or over the same area). However, from a data perspective, they are specific to
-    // a single RUP.
+    // // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
+    // // or over the same area). However, from a data perspective, they are specific to
+    // // a single RUP.
 
-    this.Pasture.hasMany(this.PlantCommunity);
-    this.PlantCommunity.hasMany(this.PlantCommunityAction);
-    this.PlantCommunity.hasMany(this.MonitoringSite);
-    this.MonitoringSite.hasMany(this.MonitoringCriteria);
+    // this.Pasture.hasMany(this.PlantCommunity);
+    // this.PlantCommunity.hasMany(this.PlantCommunityAction);
+    // this.PlantCommunity.hasMany(this.MonitoringSite);
+    // this.MonitoringSite.hasMany(this.MonitoringCriteria);
 
-    this.Pasture.hasMany(this.PastureSchedule);
-    this.PastureSchedule.hasMany(this.PastureScheduleEntry);
+    // this.Pasture.hasMany(this.PastureSchedule);
+    // this.PastureSchedule.hasMany(this.PastureScheduleEntry);
 
-    //
-    // Agreements and Plant Action.
-    //
-    this.PlantActionReference.belongsToMany(this.Agreement, { through: 'agreement_plant_action' });
+    // //
+    // // Agreements and Plant Action.
+    // //
+    // this.PlantActionReference.belongsToMany(this.Agreement, { through: 'agreement_plant_action' });
   }
 }

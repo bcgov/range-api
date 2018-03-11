@@ -41,15 +41,6 @@ export default (sequelize, DataTypes) => {
         len: [9],
       },
     },
-    // agreementType: {
-    //   type: DataTypes.STRING(3),
-    //   field: 'agreement_type',
-    //   allowNull: false,
-    //   validate: {
-    //     is: /^[a-z0-9]+$/i,
-    //     len: [3],
-    //   },
-    // },
     rangeName: {
       field: 'range_name',
       type: DataTypes.STRING(32),
@@ -78,13 +69,13 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
     },
-    status: {
-      type: DataTypes.STRING(1),
-      validate: {
-        is: /^[a-z]$/i,
-        len: [1],
-      },
-    },
+    // status: {
+    //   type: DataTypes.STRING(1),
+    //   validate: {
+    //     is: /^[a-z]$/i,
+    //     len: [1],
+    //   },
+    // },
     notes: {
       type: DataTypes.TEXT,
     },
@@ -115,6 +106,10 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     underscored: true,
   });
+
+  // Agreement.associate = (models) => {
+  //   // associations can be defined here
+  // };
 
   // // Instance Method
   // Agreement.prototype.isExtendable = function () {

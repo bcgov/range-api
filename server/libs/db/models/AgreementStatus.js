@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-26.
+// Created by Jason Leach on 2018-03-10.
 //
 
 /* eslint-env es6 */
@@ -23,19 +23,23 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const PlantSpecies = sequelize.define('plantSpecies', {
+  const AgreementStatus = sequelize.define('agreementStatus', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    name: {
-      type: DataTypes.STRING(32),
-      allowNull: false,
+    code: {
+      unique: true,
+      type: DataTypes.STRING(1),
+      validate: {
+        is: /^[a-z]$/i,
+        len: [1],
+      },
     },
-    type: {
-      type: DataTypes.STRING(32),
+    name: {
+      type: DataTypes.STRING(16),
       allowNull: false,
     },
     active: {
@@ -58,9 +62,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'ref_plant_species',
+    tableName: 'agreement_status',
   });
 
-  return PlantSpecies;
+  return AgreementStatus;
 };
-

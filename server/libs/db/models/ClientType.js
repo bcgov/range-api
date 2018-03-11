@@ -33,9 +33,19 @@ export default (sequelize, DataTypes) => {
     code: {
       unique: true,
       type: DataTypes.STRING(1),
+      allowNull: false,
+      validate: {
+        is: /^[a-z]{1}$/i,
+        len: [1],
+      },
     },
     description: {
       type: DataTypes.STRING(32),
+      allowNull: false,
+      validate: {
+        is: /^[a-z]{32}$/i,
+        len: [32],
+      },
     },
     active: {
       type: DataTypes.BOOLEAN,

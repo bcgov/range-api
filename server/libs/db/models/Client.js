@@ -27,7 +27,6 @@ export default (sequelize, DataTypes) => {
     id: {
       type: DataTypes.STRING(8),
       allowNull: false,
-      // autoIncrement: true,
       primaryKey: true,
     },
     location: {
