@@ -46,6 +46,13 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(32),
       allowNull: false,
     },
+    alternateBusinessName: {
+      field: 'alternate_business_name',
+      type: DataTypes.STRING(64),
+      validate: {
+        len: [0, 64],
+      },
+    },
     agreementStartDate: {
       field: 'agreement_start_date',
       type: DataTypes.DATE,

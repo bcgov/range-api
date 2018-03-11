@@ -23,30 +23,42 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'client_agreement';
+const table = 'ref_client';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const { sequelize } = queryInterface;
 
     await queryInterface.createTable(table, {
-      agreement_id: {
+      id: {
+        type: Sequelize.STRING(8),
+        allowNull: false,
+        primaryKey: true,
+      },
+      location: {
+        type: Sequelize.STRING(2),
+        allowNull: false,
+      },
+      name: {
+        type: Sequelize.STRING(64),
+        allowNull: false,
+      },
+      client_type_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'agreement',
+          model: 'ref_client_type',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
-      client_id: {
-        type: Sequelize.STRING(8),
-        allowNull: false,
-        references: {
-          model: 'client',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
+      clientStartDate: {
+        field: 'client_start_date',
+        type: Sequelize.DATE,
+      },
+      clientEndDate: {
+        field: 'client_end_date',
+        type: Sequelize.DATE,
       },
       created_at: {
         type: Sequelize.DATE,

@@ -33,13 +33,13 @@ to run this script:
 
 'use strict';
 
-import config from './config';
-import DataManager from './libs/db';
-import {
-  LIVESTOCK_ID_TYPE,
-  LIVESTOCK_ID_LOCATION,
-  LIVESTOCK_TYPE,
-} from './libs/db/constants';
+import config from '../server/config';
+import DataManager from '../server/libs/db';
+// import {
+//   LIVESTOCK_ID_TYPE,
+//   LIVESTOCK_ID_LOCATION,
+//   LIVESTOCK_TYPE,
+// } from './libs/db/constants';
 
 const dm = new DataManager(config);
 const {

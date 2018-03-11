@@ -35,7 +35,7 @@ export default (sequelize, DataTypes) => {
     },
     auFactor: {
       field: 'au_factor',
-      type: DataTypes.Float,
+      type: DataTypes.FLOAT,
     },
     active: {
       type: DataTypes.BOOLEAN,

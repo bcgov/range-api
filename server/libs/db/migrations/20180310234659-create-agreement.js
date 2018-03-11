@@ -43,6 +43,9 @@ module.exports = {
         type: Sequelize.STRING(32),
         allowNull: false,
       },
+      alternate_business_name: {
+        type: Sequelize.STRING(64),
+      },
       agreement_start_date: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -73,6 +76,15 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'ref_agreement_type',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
+      primary_agreement_holder_id: {
+        type: Sequelize.STRING(8),
+        allowNull: false,
+        references: {
+          model: 'ref_client',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

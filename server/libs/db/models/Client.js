@@ -28,6 +28,10 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(8),
       allowNull: false,
       primaryKey: true,
+      validate: {
+        is: /^[0-9]{8}$/,
+        len: [8],
+      },
     },
     location: {
       allowNull: false,
@@ -36,8 +40,8 @@ export default (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING(64),
       validate: {
-        is: /^[0-9]+$/,
-        len: [2],
+        // is: /^[a-z]+$/i,
+        len: [0, 64],
       },
     },
     clientStartDate: {
@@ -64,6 +68,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
+    tableName: 'ref_client',
   });
 
   return Client;

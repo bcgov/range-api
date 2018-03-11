@@ -50,6 +50,7 @@
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-filenames": "^1.2.0",
     "eslint-plugin-import": "^2.9.0",
+    "faker": "^4.1.0",
     "gulp": "^3.9.1",
     "gulp-apidoc": "^0.2.7",
     "gulp-babel": "^7.0.0",

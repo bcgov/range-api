@@ -42,11 +42,11 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(64),
       allowNull: false,
     },
-    districtId: {
-      type: DataTypes.INTEGER,
-      field: 'district_id',
-      allowNull: false,
-    },
+    // districtId: {
+    //   type: DataTypes.INTEGER,
+    //   field: 'district_id',
+    //   allowNull: false,
+    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
