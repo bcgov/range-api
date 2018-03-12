@@ -105,7 +105,6 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       },
     });
 
-    console.log(count);
     if (count === 0) {
       // No records were updated. The ID probably does not exists.
       return res.send(400).end(); // Bad Request
