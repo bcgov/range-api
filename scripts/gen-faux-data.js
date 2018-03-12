@@ -117,6 +117,10 @@ const createAgreement = async (clientId) => {
   }
 };
 
+const createUsage = async (agreementId) => {
+
+}
+
 const test = async (agreementId) => {
   try {
     const agreement = await Agreement.findById(agreementId, {

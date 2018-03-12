@@ -31,7 +31,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     year: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(4),
       is: /^([0-9]){4}$/i,
       allowNull: false,
     },
@@ -45,14 +45,9 @@ export default (sequelize, DataTypes) => {
       field: 'temporary_increase',
       allowNull: false,
     },
-    billableNonUse: {
+    totalNonUse: {
       type: DataTypes.INTEGER,
-      field: 'billable_non_use',
-      default: 0,
-    },
-    nonBillableNonUse: {
-      type: DataTypes.INTEGER,
-      field: 'non_billable_non_use',
+      field: 'total_non_use',
       default: 0,
     },
     totalAnnualUse: {

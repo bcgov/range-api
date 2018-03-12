@@ -23,32 +23,21 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const LivestockIdentifier = sequelize.define('livestockIdentifier', {
+  const LivestockIdentifier = sequelize.define('livestockIdentifierLocation', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    type: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    location: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    imageRef: {
-      field: 'image_ref',
-      type: DataTypes.TEXT,
-    },
     description: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(32),
+      allowNull: false,
     },
-    // agreementId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'agreement_id',
-    // },
+    active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -65,7 +54,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'livestock_identifier',
+    tableName: 'ref_livestock_identifier_location',
   });
 
   return LivestockIdentifier;
