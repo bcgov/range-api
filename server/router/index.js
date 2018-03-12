@@ -28,6 +28,7 @@ import config from '../config';
 import agreement from './routes/agreement';
 import district from './routes/district';
 import ehlo from './routes/ehlo';
+import reference from './routes/reference';
 import zone from './routes/zone';
 
 const corsOptions = {
@@ -41,5 +42,6 @@ module.exports = (app) => {
   app.use('/v1/agreement', agreement);
   app.use('/v1/district', district);
   app.use('/v1/ehlo', ehlo); // probes
+  app.use('/v1/reference', reference);
   app.use('/v1/zone', zone);
 };
