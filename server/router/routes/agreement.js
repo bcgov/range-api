@@ -24,6 +24,7 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
+
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -59,14 +60,14 @@ const includeAllChildren = [
     model: Zone,
     include: [District],
     attributes: {
-      exclude: ['districtId'],
+      exclude: ['district_id'],
     },
   },
   Extension,
 ];
 
 // All children ids in agreement object
-const childIds = ['zoneId', 'extensionId'];
+const childIds = ['primary_client_id', 'agreement_type_id', 'zone_id', 'extension_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
@@ -77,15 +78,9 @@ router.post('/', asyncMiddleware(async (req, res) => {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
-      include: [{
-        model: Zone,
-        include: [District],
-        attributes: {
-          exclude: ['district_id'],
-        },
-      }],
+      include: includeAllChildren,
       attributes: {
-        exclude: ['primary_client_id', 'agreement_type_id', 'zone_id', 'extension_id'],
+        exclude: childIds,
       },
     });
     res.status(200).json(agreements).end();
@@ -148,11 +143,6 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err }).end();
   }
-}));
-
-// Delete agreement
-router.delete('/:id', asyncMiddleware(async (req, res) => {
-  res.status(501).json({ error: 'Not Implemented' }).end();
 }));
 
 module.exports = router;
