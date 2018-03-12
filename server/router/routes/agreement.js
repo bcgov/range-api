@@ -24,7 +24,6 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
-
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -33,7 +32,7 @@ const dm = new DataManager(config);
 const {
   Agreement,
   District,
-  Extension,
+  // Extension,
   // LivestockIdentifier,
   // MonitoringCriteria,
   // MonitoringSite,
@@ -55,19 +54,14 @@ const {
 const router = new Router();
 
 // Includes all nested json data for Agreement
-const includeAllChildren = [
-  {
-    model: Zone,
-    include: [District],
-    attributes: {
-      exclude: ['district_id'],
-    },
+const allAgreementChildren = [{
+  model: Zone,
+  include: [District],
+  attributes: {
+    exclude: ['district_id'],
   },
-  Extension,
-];
-
-// All children ids in agreement object
-const childIds = ['primary_client_id', 'agreement_type_id', 'zone_id', 'extension_id'];
+}];
+const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'status_id', 'primary_agreement_holder_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
@@ -78,11 +72,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
-      include: includeAllChildren,
+      include: allAgreementChildren,
       attributes: {
-        exclude: childIds,
+        exclude: excludedAgreementAttributes,
       },
     });
+
     res.status(200).json(agreements).end();
   } catch (err) {
     res.status(500).json({ error: err }).end();
@@ -114,9 +109,9 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: includeAllChildren,
+      include: allAgreementChildren,
       attributes: {
-        exclude: childIds,
+        exclude: excludedAgreementAttributes,
       },
     });
 
@@ -138,9 +133,9 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: includeAllChildren,
+      include: allAgreementChildren,
       attributes: {
-        exclude: childIds,
+        exclude: excludedAgreementAttributes,
       },
     });
 
