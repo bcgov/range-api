@@ -89,7 +89,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
-// Update agreement
+// Update
 router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
@@ -105,12 +105,22 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       },
     });
 
-    if (count === 0) {
+    if (count[0] === 0) {
       // No records were updated. The ID probably does not exists.
       return res.send(400).end(); // Bad Request
     }
 
-    return res.status(204).end(); // No Content
+    const agreement = await Agreement.findOne({
+      where: {
+        id,
+      },
+      include: includeAllChildren,
+      attributes: {
+        exclude: childIds,
+      },
+    });
+
+    return res.status(200).json(agreement).end();
   } catch (error) {
     logger.error(`error updating agreement ${id}`);
     throw error;
