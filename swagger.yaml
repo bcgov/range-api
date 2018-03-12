@@ -1,0 +1,1385 @@
+---
+swagger: "2.0"
+info:
+  description: "Used in MyRA"
+  version: "1.0.0"
+  title: "MyRA API"
+  contact:
+    email: "bcdevexchange@gov.bc.ca"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "virtserver.swaggerhub.com"
+basePath: "/AidanLaing/myra_api/1.0.0"
+tags:
+- name: "Agreement"
+- name: "District"
+- name: "Zones"
+- name: "Reference"
+- name: "System"
+schemes:
+- "https"
+paths:
+  /v1/agreement:
+    get:
+      tags:
+      - "Agreement"
+      summary: "Returns array of all agreements"
+      description: "Returns all agreements unless a query parameter is provided."
+      operationId: "getAgreements"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Sucessfully returned zones matching query params"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Agreement"
+      security:
+      - bearer_auth: []
+    post:
+      tags:
+      - "Agreement"
+      summary: "Creates an agreement"
+      description: "Creates an agreement and returns the created object."
+      operationId: "createAgreement"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Agreement object needed to create agreement"
+        required: true
+        schema:
+          $ref: "#/definitions/Agreement"
+      responses:
+        201:
+          description: "Agreement successfully created"
+          schema:
+            $ref: "#/definitions/Agreement"
+        400:
+          description: "Bad or no body sent"
+      security:
+      - bearer_auth: []
+  /v1/agreement/{agreement_id}:
+    get:
+      tags:
+      - "Agreement"
+      summary: "Returns agreement matching id"
+      description: "Returns the agreement matching the id with all associated data."
+      operationId: "getAgreementById"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "agreement_id"
+        in: "path"
+        description: "Id of agreement to return"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Successfully returned agreement matching id"
+          schema:
+            $ref: "#/definitions/Agreement"
+        400:
+          description: "Invalid id supplied"
+        404:
+          description: "Agreement not found"
+      security:
+      - bearer_auth: []
+    put:
+      tags:
+      - "Agreement"
+      summary: "Update an existing agreement"
+      description: ""
+      operationId: "updateAgreement"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "agreement_id"
+        in: "path"
+        description: "Id of agreement to update"
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "body"
+        description: "Agreement object to update exisitng agreement"
+        required: true
+        schema:
+          $ref: "#/definitions/Agreement"
+      responses:
+        200:
+          description: "Successfully updated object"
+          schema:
+            $ref: "#/definitions/Agreement"
+        400:
+          description: "Invalid id supplied"
+        404:
+          description: "Agreement not found"
+        405:
+          description: "Not authorized to update agreement"
+      security:
+      - bearer_auth: []
+  /v1/district:
+    get:
+      tags:
+      - "District"
+      summary: "Returns array of districts"
+      description: "Returns an array of all districts."
+      operationId: "getDistricts"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Sucessfully returned zones matching query params"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/District"
+        400:
+          description: "Bad query params passed"
+      security:
+      - bearer_auth: []
+  /v1/zone:
+    get:
+      tags:
+      - "Zones"
+      summary: "Returns array of zones"
+      description: "Returns an array of zones based on query params. Passing no query\
+        \ params will result in all zones being returned."
+      operationId: "getZones"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "district_id"
+        in: "query"
+        description: "Pass an optional district id to get all zones within that district"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Sucessfully returned zones matching query params"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Zone"
+        400:
+          description: "Bad query params passed"
+      security:
+      - bearer_auth: []
+  /v1/reference:
+    get:
+      tags:
+      - "Reference"
+      summary: "Returns array of constant values."
+      description: "Returns array of constant values used in the database."
+      operationId: "getReference"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Sucessfully returned reference values"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Zone"
+      security:
+      - bearer_auth: []
+  /v1/ehlo:
+    get:
+      tags:
+      - "System"
+      summary: "Determine if server is running"
+      description: "Returns a success if the server is running. Primarily used for\
+        \ Open Shift to determine if server is running."
+      operationId: "ehlo"
+      parameters: []
+      responses:
+        204:
+          description: "Server is running"
+securityDefinitions:
+  bearer_auth:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+definitions:
+  Agreement:
+    type: "object"
+    required:
+    - "id"
+    - "name"
+    - "ran"
+    - "type"
+    properties:
+      id:
+        type: "integer"
+        example: 1982698152
+      ran:
+        type: "string"
+        example: "RAN123456246226"
+      type:
+        type: "string"
+        example: "E01"
+      name:
+        type: "string"
+        example: "Test"
+      forestFileId:
+        type: "string"
+        example: "TODO Update"
+      agreementStartDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      agreementEndDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      planStartDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      planEndDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      nonUseBillable:
+        type: "boolean"
+        example: true
+      exemptionStatus:
+        type: "string"
+        example: "Pending Approval"
+      status:
+        type: "string"
+        example: "Draft"
+      notes:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      zone:
+        $ref: "#/definitions/Zone"
+      livestockIdentifiers:
+        type: "array"
+        items:
+          $ref: "#/definitions/LivestockIdentifier"
+      usages:
+        type: "array"
+        items:
+          $ref: "#/definitions/Usage"
+      extensions:
+        type: "array"
+        items:
+          $ref: "#/definitions/Extension"
+      pastures:
+        type: "array"
+        items:
+          $ref: "#/definitions/Pasture"
+    example:
+      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      livestockIdentifiers:
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        location: "Left Ear"
+        id: 1875901
+        imageRef: "http://imageref.com"
+        type: "Brand"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        location: "Left Ear"
+        id: 1875901
+        imageRef: "http://imageref.com"
+        type: "Brand"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      pastures:
+      - allowableAmu: 174981
+        pdlPercent: 42.56
+        createdAt: "2018-03-06 21:28:37.424+00"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        graceDays: 12
+        plantCommunities:
+        - elevation: "<500"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          actionPurpose: "Establish"
+          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          monitoringSites:
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          aspect: "North"
+          name: "Fauna"
+          id: 190212
+          actions:
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          url: "http://ashfkajsh.com"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - elevation: "<500"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          actionPurpose: "Establish"
+          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          monitoringSites:
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          aspect: "North"
+          name: "Fauna"
+          id: 190212
+          actions:
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          url: "http://ashfkajsh.com"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        schedules:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          entries:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          year: 2018
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 1092741
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          entries:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          year: 2018
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 1092741
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        name: "Barrington"
+        id: 126498
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - allowableAmu: 174981
+        pdlPercent: 42.56
+        createdAt: "2018-03-06 21:28:37.424+00"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        graceDays: 12
+        plantCommunities:
+        - elevation: "<500"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          actionPurpose: "Establish"
+          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          monitoringSites:
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          aspect: "North"
+          name: "Fauna"
+          id: 190212
+          actions:
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          url: "http://ashfkajsh.com"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - elevation: "<500"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          actionPurpose: "Establish"
+          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          monitoringSites:
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - transectAzimuth: 128.124
+            createdAt: "2018-03-06 21:28:37.424+00"
+            criteria:
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            - createdAt: "2018-03-06 21:28:37.424+00"
+              id: 1228512
+              updatedAt: "2018-03-06 21:28:37.424+00"
+            rangelandHealth: "Moderatly at Risk"
+            latitude: 48.123
+            location: "Barrington"
+            id: 102974
+            longitude: -123.123
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          aspect: "North"
+          name: "Fauna"
+          id: 190212
+          actions:
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - actionType: "Herding"
+            createdAt: "2018-03-06 21:28:37.424+00"
+            noGrazeStart: "2018-03-06 21:28:37.424+00"
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            id: 129214
+            noGrazeEnd: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          url: "http://ashfkajsh.com"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        schedules:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          entries:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          year: 2018
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 1092741
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          entries:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            livestockCount: 27
+            endDate: "2018-03-06 21:28:37.424+00"
+            graceDays: 12
+            livestockType: "COW"
+            id: 129482
+            startDate: "2018-03-06 21:28:37.424+00"
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          year: 2018
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 1092741
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        name: "Barrington"
+        id: 126498
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      type: "E01"
+      createdAt: "2018-03-06 21:28:37.424+00"
+      extensions:
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        endDate: "2018-03-06 21:28:37.424+00"
+        requestDate: "2018-03-06 21:28:37.424+00"
+        id: 1294812
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        endDate: "2018-03-06 21:28:37.424+00"
+        requestDate: "2018-03-06 21:28:37.424+00"
+        id: 1294812
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      zone:
+        createdAt: "2018-03-06 21:28:37.424+00"
+        code: "Kelowna"
+        districtId: 124124
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        id: 1531095
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      agreementStartDate: "2018-03-06 21:28:37.424+00"
+      name: "Test"
+      forestFileId: "TODO Update"
+      agreementEndDate: "2018-03-06 21:28:37.424+00"
+      id: 1982698152
+      usages:
+      - temporaryIncrease: 129082
+        createdAt: "2018-03-06 21:28:37.424+00"
+        authorizedAmu: 141872
+        totalAnnualUse: 12740912512
+        year: 2018
+        nonBillableNonUse: 127412
+        id: 9185412
+        billableNonUse: 121848
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - temporaryIncrease: 129082
+        createdAt: "2018-03-06 21:28:37.424+00"
+        authorizedAmu: 141872
+        totalAnnualUse: 12740912512
+        year: 2018
+        nonBillableNonUse: 127412
+        id: 9185412
+        billableNonUse: 121848
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      planStartDate: "2018-03-06 21:28:37.424+00"
+      planEndDate: "2018-03-06 21:28:37.424+00"
+      exemptionStatus: "Pending Approval"
+      ran: "RAN123456246226"
+      nonUseBillable: true
+      status: "Draft"
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  District:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 1928124
+      code:
+        type: "string"
+        example: "BEAV"
+      description:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      code: "BEAV"
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      id: 1928124
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  Zone:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 1531095
+      code:
+        type: "string"
+        example: "Kelowna"
+      description:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      districtId:
+        type: "integer"
+        example: 124124
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      code: "Kelowna"
+      districtId: 124124
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      id: 1531095
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  LivestockIdentifier:
+    type: "object"
+    required:
+    - "id"
+    - "location"
+    - "type"
+    properties:
+      id:
+        type: "integer"
+        example: 1875901
+      type:
+        type: "string"
+        example: "Brand"
+      location:
+        type: "string"
+        example: "Left Ear"
+      imageRef:
+        type: "string"
+        format: "url"
+        example: "http://imageref.com"
+      description:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      location: "Left Ear"
+      id: 1875901
+      imageRef: "http://imageref.com"
+      type: "Brand"
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  Usage:
+    type: "object"
+    required:
+    - "authorizedAmu"
+    - "id"
+    - "temporaryIncrease"
+    - "year"
+    properties:
+      id:
+        type: "integer"
+        example: 9185412
+      year:
+        type: "integer"
+        example: 2018
+      authorizedAmu:
+        type: "integer"
+        example: 141872
+      temporaryIncrease:
+        type: "integer"
+        example: 129082
+      billableNonUse:
+        type: "integer"
+        example: 121848
+      nonBillableNonUse:
+        type: "integer"
+        example: 127412
+      totalAnnualUse:
+        type: "integer"
+        example: 12740912512
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      temporaryIncrease: 129082
+      createdAt: "2018-03-06 21:28:37.424+00"
+      authorizedAmu: 141872
+      totalAnnualUse: 12740912512
+      year: 2018
+      nonBillableNonUse: 127412
+      id: 9185412
+      billableNonUse: 121848
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  Extension:
+    type: "object"
+    required:
+    - "endDate"
+    - "id"
+    - "requestDate"
+    properties:
+      id:
+        type: "integer"
+        example: 1294812
+      requestDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      endDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      notes:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      endDate: "2018-03-06 21:28:37.424+00"
+      requestDate: "2018-03-06 21:28:37.424+00"
+      id: 1294812
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  Pasture:
+    type: "object"
+    required:
+    - "allowableAmu"
+    - "graceDays"
+    - "id"
+    - "name"
+    - "pdlPercent"
+    properties:
+      id:
+        type: "integer"
+        example: 126498
+      name:
+        type: "string"
+        example: "Barrington"
+      allowableAmu:
+        type: "integer"
+        example: 174981
+      graceDays:
+        type: "integer"
+        example: 12
+      pdlPercent:
+        type: "number"
+        format: "float"
+        example: 42.56
+      notes:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      plantCommunities:
+        type: "array"
+        items:
+          $ref: "#/definitions/PlantCommunity"
+      schedules:
+        type: "array"
+        items:
+          $ref: "#/definitions/PastureSchedule"
+    example:
+      allowableAmu: 174981
+      pdlPercent: 42.56
+      createdAt: "2018-03-06 21:28:37.424+00"
+      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      graceDays: 12
+      plantCommunities:
+      - elevation: "<500"
+        createdAt: "2018-03-06 21:28:37.424+00"
+        actionPurpose: "Establish"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        monitoringSites:
+        - transectAzimuth: 128.124
+          createdAt: "2018-03-06 21:28:37.424+00"
+          criteria:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          rangelandHealth: "Moderatly at Risk"
+          latitude: 48.123
+          location: "Barrington"
+          id: 102974
+          longitude: -123.123
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - transectAzimuth: 128.124
+          createdAt: "2018-03-06 21:28:37.424+00"
+          criteria:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          rangelandHealth: "Moderatly at Risk"
+          latitude: 48.123
+          location: "Barrington"
+          id: 102974
+          longitude: -123.123
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        aspect: "North"
+        name: "Fauna"
+        id: 190212
+        actions:
+        - actionType: "Herding"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          noGrazeStart: "2018-03-06 21:28:37.424+00"
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 129214
+          noGrazeEnd: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - actionType: "Herding"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          noGrazeStart: "2018-03-06 21:28:37.424+00"
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 129214
+          noGrazeEnd: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        url: "http://ashfkajsh.com"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - elevation: "<500"
+        createdAt: "2018-03-06 21:28:37.424+00"
+        actionPurpose: "Establish"
+        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        monitoringSites:
+        - transectAzimuth: 128.124
+          createdAt: "2018-03-06 21:28:37.424+00"
+          criteria:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          rangelandHealth: "Moderatly at Risk"
+          latitude: 48.123
+          location: "Barrington"
+          id: 102974
+          longitude: -123.123
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - transectAzimuth: 128.124
+          createdAt: "2018-03-06 21:28:37.424+00"
+          criteria:
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          - createdAt: "2018-03-06 21:28:37.424+00"
+            id: 1228512
+            updatedAt: "2018-03-06 21:28:37.424+00"
+          rangelandHealth: "Moderatly at Risk"
+          latitude: 48.123
+          location: "Barrington"
+          id: 102974
+          longitude: -123.123
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        aspect: "North"
+        name: "Fauna"
+        id: 190212
+        actions:
+        - actionType: "Herding"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          noGrazeStart: "2018-03-06 21:28:37.424+00"
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 129214
+          noGrazeEnd: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - actionType: "Herding"
+          createdAt: "2018-03-06 21:28:37.424+00"
+          noGrazeStart: "2018-03-06 21:28:37.424+00"
+          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          id: 129214
+          noGrazeEnd: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        url: "http://ashfkajsh.com"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      schedules:
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        entries:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          livestockCount: 27
+          endDate: "2018-03-06 21:28:37.424+00"
+          graceDays: 12
+          livestockType: "COW"
+          id: 129482
+          startDate: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          livestockCount: 27
+          endDate: "2018-03-06 21:28:37.424+00"
+          graceDays: 12
+          livestockType: "COW"
+          id: 129482
+          startDate: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        year: 2018
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        id: 1092741
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        entries:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          livestockCount: 27
+          endDate: "2018-03-06 21:28:37.424+00"
+          graceDays: 12
+          livestockType: "COW"
+          id: 129482
+          startDate: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          livestockCount: 27
+          endDate: "2018-03-06 21:28:37.424+00"
+          graceDays: 12
+          livestockType: "COW"
+          id: 129482
+          startDate: "2018-03-06 21:28:37.424+00"
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        year: 2018
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        id: 1092741
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      name: "Barrington"
+      id: 126498
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  PlantCommunity:
+    type: "object"
+    required:
+    - "id"
+    - "name"
+    properties:
+      id:
+        type: "integer"
+        example: 190212
+      name:
+        type: "string"
+        example: "Fauna"
+      aspect:
+        type: "string"
+        example: "North"
+      elevation:
+        type: "string"
+        example: "<500"
+      actionPurpose:
+        type: "string"
+        example: "Establish"
+      url:
+        type: "string"
+        format: "url"
+        example: "http://ashfkajsh.com"
+      notes:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      actions:
+        type: "array"
+        items:
+          $ref: "#/definitions/PlantCommunityAction"
+      monitoringSites:
+        type: "array"
+        items:
+          $ref: "#/definitions/MonitoringSite"
+    example:
+      elevation: "<500"
+      createdAt: "2018-03-06 21:28:37.424+00"
+      actionPurpose: "Establish"
+      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      monitoringSites:
+      - transectAzimuth: 128.124
+        createdAt: "2018-03-06 21:28:37.424+00"
+        criteria:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          id: 1228512
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          id: 1228512
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        rangelandHealth: "Moderatly at Risk"
+        latitude: 48.123
+        location: "Barrington"
+        id: 102974
+        longitude: -123.123
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - transectAzimuth: 128.124
+        createdAt: "2018-03-06 21:28:37.424+00"
+        criteria:
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          id: 1228512
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        - createdAt: "2018-03-06 21:28:37.424+00"
+          id: 1228512
+          updatedAt: "2018-03-06 21:28:37.424+00"
+        rangelandHealth: "Moderatly at Risk"
+        latitude: 48.123
+        location: "Barrington"
+        id: 102974
+        longitude: -123.123
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      aspect: "North"
+      name: "Fauna"
+      id: 190212
+      actions:
+      - actionType: "Herding"
+        createdAt: "2018-03-06 21:28:37.424+00"
+        noGrazeStart: "2018-03-06 21:28:37.424+00"
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        id: 129214
+        noGrazeEnd: "2018-03-06 21:28:37.424+00"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - actionType: "Herding"
+        createdAt: "2018-03-06 21:28:37.424+00"
+        noGrazeStart: "2018-03-06 21:28:37.424+00"
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        id: 129214
+        noGrazeEnd: "2018-03-06 21:28:37.424+00"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      url: "http://ashfkajsh.com"
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  PlantCommunityAction:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 129214
+      actionType:
+        type: "string"
+        example: "Herding"
+      description:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      noGrazeStart:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      noGrazeEnd:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      actionType: "Herding"
+      createdAt: "2018-03-06 21:28:37.424+00"
+      noGrazeStart: "2018-03-06 21:28:37.424+00"
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      id: 129214
+      noGrazeEnd: "2018-03-06 21:28:37.424+00"
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  MonitoringSite:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 102974
+      location:
+        type: "string"
+        example: "Barrington"
+      rangelandHealth:
+        type: "string"
+        example: "Moderatly at Risk"
+      transectAzimuth:
+        type: "number"
+        format: "float"
+        example: 128.124
+      latitude:
+        type: "number"
+        format: "float"
+        example: 48.123
+      longitude:
+        type: "number"
+        format: "float"
+        example: -123.123
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      criteria:
+        type: "array"
+        items:
+          $ref: "#/definitions/MonitoringCriteria"
+    example:
+      transectAzimuth: 128.124
+      createdAt: "2018-03-06 21:28:37.424+00"
+      criteria:
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        id: 1228512
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        id: 1228512
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      rangelandHealth: "Moderatly at Risk"
+      latitude: 48.123
+      location: "Barrington"
+      id: 102974
+      longitude: -123.123
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  MonitoringCriteria:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 1228512
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      id: 1228512
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  PastureSchedule:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 1092741
+      year:
+        type: "integer"
+        example: 2018
+      description:
+        type: "string"
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      entries:
+        type: "array"
+        items:
+          $ref: "#/definitions/PastureScheduleEntry"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      entries:
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        livestockCount: 27
+        endDate: "2018-03-06 21:28:37.424+00"
+        graceDays: 12
+        livestockType: "COW"
+        id: 129482
+        startDate: "2018-03-06 21:28:37.424+00"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      - createdAt: "2018-03-06 21:28:37.424+00"
+        livestockCount: 27
+        endDate: "2018-03-06 21:28:37.424+00"
+        graceDays: 12
+        livestockType: "COW"
+        id: 129482
+        startDate: "2018-03-06 21:28:37.424+00"
+        updatedAt: "2018-03-06 21:28:37.424+00"
+      year: 2018
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      id: 1092741
+      updatedAt: "2018-03-06 21:28:37.424+00"
+  PastureScheduleEntry:
+    type: "object"
+    required:
+    - "endDate"
+    - "id"
+    - "startDate"
+    properties:
+      id:
+        type: "integer"
+        example: 129482
+      startDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      endDate:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      graceDays:
+        type: "integer"
+        example: 12
+      livestockCount:
+        type: "integer"
+        example: 27
+      livestockType:
+        type: "string"
+        example: "COW"
+      createdAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+      updatedAt:
+        type: "string"
+        format: "date-time"
+        example: "2018-03-06 21:28:37.424+00"
+    example:
+      createdAt: "2018-03-06 21:28:37.424+00"
+      livestockCount: 27
+      endDate: "2018-03-06 21:28:37.424+00"
+      graceDays: 12
+      livestockType: "COW"
+      id: 129482
+      startDate: "2018-03-06 21:28:37.424+00"
+      updatedAt: "2018-03-06 21:28:37.424+00"
