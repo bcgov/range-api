@@ -98,6 +98,12 @@ export default class DataManager {
 
     // this.Agreement.belongsTo(this.Extension);
 
+    //
+    // Agreements and Grazing Schedule
+    //
+
+    this.Agreement.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
+
     // //
     // // Agreements and Pasture, Plant Communities, Monitoring Sites,
     // // and Criteria.
@@ -114,8 +120,6 @@ export default class DataManager {
     // this.PlantCommunity.hasMany(this.MonitoringSite);
     // this.MonitoringSite.hasMany(this.MonitoringCriteria);
 
-    // this.Pasture.hasMany(this.PastureSchedule);
-    // this.PastureSchedule.hasMany(this.PastureScheduleEntry);
 
     // //
     // // Agreements and Plant Action.

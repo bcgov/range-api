@@ -48,6 +48,7 @@ const {
   Zone,
   Client,
   ClientType,
+  GrazingSchedule,
 } = dm;
 
 const sync = async (force = false) => dm.sequelize.sync({ force });
@@ -117,9 +118,27 @@ const createAgreement = async (clientId) => {
   }
 };
 
+const createGrazingSchedule = async (agreementId) => {
+  try {
+    const gs = await GrazingSchedule.create({
+      year: '2018',
+      description: 'This is a grazing schedule description.',
+    })
+
+    const agreement = await Agreement.findById(agreementId);
+
+    await agreement.addGrazingSchedule(gs);
+    // await agreement.save();
+
+    return gs.id;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const createUsage = async (agreementId) => {
 
-}
+};
 
 const test = async (agreementId) => {
   try {
@@ -130,6 +149,10 @@ const test = async (agreementId) => {
           attributes: {
             exclude: ['district_id'],
           },
+        }, 
+        {
+          model: GrazingSchedule,
+          // as: 'grazingSchedule',
         },
         {
           model: Client,
@@ -148,15 +171,16 @@ const test = async (agreementId) => {
     assert(agreement.zone);
     assert(agreement.zone.district);
     assert(agreement.primaryAgreementHolder);
+    assert(agreement.grazingSchedules.length > 0);
   } catch (error) {
-    console.log(`test error`);
+    console.log(`test error, ${error}`);
   }
 };
 
 const main = async () => {
-
   const clientId = await createClient();
   const agreementId = await createAgreement(clientId);
+  const grazingScheduleId = await createGrazingSchedule(agreementId);
 
   await test(agreementId);
 
