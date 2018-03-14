@@ -84,7 +84,9 @@ export default class DataManager {
     //
 
     // this.LivestockIdentifier.belongsTo(this.Agreement);
-    // this.Agreement.hasMany(this.LivestockIdentifier);
+    this.LivestockIdentifier.belongsTo(this.LivestockIdentifierType);
+    this.LivestockIdentifier.belongsTo(this.LivestockIdentifierLocation);
+    this.Agreement.hasMany(this.LivestockIdentifier);
 
     //
     // Agreements and Range Usage
