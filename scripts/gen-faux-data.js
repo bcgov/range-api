@@ -49,6 +49,9 @@ const {
   Client,
   ClientType,
   LivestockType,
+  LivestockIdentifier,
+  LivestockIdentifierLocation,
+  LivestockIdentifierType,
   Pasture,
   GrazingSchedule,
   GrazingScheduleEntry,
@@ -97,7 +100,7 @@ const createAgreement = async (clientId) => {
 
     const status = await AgreementStatus.findOne({
       where: {
-        code: 'N',
+        code: 'S',
       }
     });
 
@@ -216,6 +219,32 @@ const createUsage = async (agreementId) => {
   }
 };
 
+const createLivestockIdentifier = async (agreementId) => {
+  try {
+    const lil1 = await LivestockIdentifierLocation.findById(1); //tag loc
+    const lil2 = await LivestockIdentifierLocation.findById(3); //brand loc
+
+    const lit1 = await LivestockIdentifierType.findById(1); // brand
+    const lit2 = await LivestockIdentifierType.findById(2); // gag
+
+    const li1 = await LivestockIdentifier.create({
+      livestock_identifier_location_id: lil2.id,
+      livestock_identifier_type_id: lit1.id,
+      agreement_id: agreementId,
+    });
+
+    const li2 = await LivestockIdentifier.create({
+      livestock_identifier_location_id: lil1.id,
+      livestock_identifier_type_id: lit2.id,
+      agreement_id: agreementId
+    });
+
+    return [li1.id, li2.id];
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 const test = async (agreementId) => {
   try {
     const agreement = await Agreement.findById(agreementId, {
@@ -224,6 +253,13 @@ const test = async (agreementId) => {
             include: [District],
             attributes: {
               exclude: ['district_id'],
+            },
+          },
+          {
+            model: LivestockIdentifier,
+            include: [LivestockIdentifierLocation, LivestockIdentifierType],
+            attributes: {
+              exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
             },
           },
           {
@@ -259,7 +295,8 @@ const test = async (agreementId) => {
         },
       });
 
-    // console.log(agreement.get({plain: true}));
+    // const ag = agreement.get({plain: true});
+    // console.log(ag.livestockIdentifiers);
 
     assert(agreement);
     assert(agreement.id === agreementId);
@@ -267,6 +304,9 @@ const test = async (agreementId) => {
     assert(agreement.zone.district);
     assert(agreement.pastures.length >= 2);
     assert(agreement.primaryAgreementHolder);
+    assert(agreement.livestockIdentifiers.length >= 2);
+    assert(agreement.livestockIdentifiers[0].livestockIdentifierLocation);
+    assert(agreement.livestockIdentifiers[0].livestockIdentifierType);
     assert(agreement.grazingSchedules.length > 0);
     assert(agreement.grazingSchedules[0].grazingScheduleEntries.length === 2);
     assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].livestockType);
@@ -285,6 +325,7 @@ const main = async () => {
   const pastureIds = await createPasture(agreementId);
   const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
   const usageId = await createUsage(agreementId);
+  const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
 
   await test(agreementId);
 
