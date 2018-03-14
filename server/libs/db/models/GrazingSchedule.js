@@ -44,10 +44,6 @@ export default (sequelize, DataTypes) => {
     description: {
       type: DataTypes.TEXT,
     },
-    // pastureId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'pasture_id',
-    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

@@ -79,22 +79,22 @@ export default class DataManager {
     // an Agreement's Zone.
     this.Agreement.belongsTo(this.Zone); // { foreignKey: { allowNull: false } }
 
-    // //
-    // // Agreements and Livestock Identifiers
-    // //
+    //
+    // Agreements and Livestock Identifiers
+    //
 
     // this.LivestockIdentifier.belongsTo(this.Agreement);
     // this.Agreement.hasMany(this.LivestockIdentifier);
 
-    // //
-    // // Agreements and Range Usage
-    // //
+    //
+    // Agreements and Range Usage
+    //
 
     this.Agreement.hasMany(this.Usage, { as: 'usage' });
 
-    // //
-    // // Agreements and Extension
-    // //
+    //
+    // Agreements and Extension
+    //
 
     // this.Agreement.belongsTo(this.Extension);
 
@@ -110,13 +110,14 @@ export default class DataManager {
 
     this.GrazingSchedule.hasMany(this.GrazingScheduleEntry);
     this.GrazingScheduleEntry.belongsTo(this.LivestockType);
+    this.GrazingScheduleEntry.belongsTo(this.Pasture);
 
-    // //
-    // // Agreements and Pasture, Plant Communities, Monitoring Sites,
-    // // and Criteria.
-    // //
+    //
+    // Agreements and Pasture, Plant Communities, Monitoring Sites,
+    // and Criteria.
+    //
 
-    // this.Agreement.hasMany(this.Pasture);
+    this.Agreement.hasMany(this.Pasture);
 
     // // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
     // // or over the same area). However, from a data perspective, they are specific to
@@ -131,6 +132,7 @@ export default class DataManager {
     // //
     // // Agreements and Plant Action.
     // //
-    // this.PlantActionReference.belongsToMany(this.Agreement, { through: 'agreement_plant_action' });
+    // this.PlantActionReference.belongsToMany(this.Agreement,
+    // { through: 'agreement_plant_action' });
   }
 }

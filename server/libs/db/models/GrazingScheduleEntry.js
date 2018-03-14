@@ -61,15 +61,6 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    // livestockType: {
-    //   field: 'livestock_type',
-    //   type: DataTypes.TEXT,
-    //   allowNull: false,
-    // },
-    // pastureScheduleId: {
-    //   field: 'pasture_schedule_id',
-    //   type: DataTypes.INTEGER,
-    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
