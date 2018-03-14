@@ -48,7 +48,10 @@ const {
   Zone,
   Client,
   ClientType,
+  LivestockType,
   GrazingSchedule,
+  GrazingScheduleEntry,
+  Usage,
 } = dm;
 
 const sync = async (force = false) => dm.sequelize.sync({ force });
@@ -120,11 +123,31 @@ const createAgreement = async (clientId) => {
 
 const createGrazingSchedule = async (agreementId) => {
   try {
+
+    const lty1 = await LivestockType.findById(1); // Alpaca
+    const lty2 = await LivestockType.findById(2); // Alpaca
+
     const gs = await GrazingSchedule.create({
       year: '2018',
       description: 'This is a grazing schedule description.',
-    })
+    });
 
+    const gse1 = await GrazingScheduleEntry.create({
+      startDate: new Date(),
+      endDate: new Date(),
+      livestockCount: 100,
+      livestock_type_id: lty1.id,
+      grazing_schedule_id: gs.id,
+    });
+
+    const gse2 = await GrazingScheduleEntry.create({
+      startDate: new Date(),
+      endDate: new Date(),
+      livestockCount: 200,
+      livestock_type_id: lty2.id,
+      grazing_schedule_id: gs.id,
+    });
+    
     const agreement = await Agreement.findById(agreementId);
 
     await agreement.addGrazingSchedule(gs);
@@ -137,32 +160,58 @@ const createGrazingSchedule = async (agreementId) => {
 };
 
 const createUsage = async (agreementId) => {
+  try {
+    const usage = await Usage.build({
+      year: '2018',
+      authorizedAmu: 'This is a grazing schedule description.',
+      authorizedAum: 1400,
+      agreement_id: agreementId,
+    })
 
+    await usage.save();
+
+    return usage.id;
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 const test = async (agreementId) => {
   try {
     const agreement = await Agreement.findById(agreementId, {
       include: [{
-          model: Zone,
-          include: [District],
-          attributes: {
-            exclude: ['district_id'],
+            model: Zone,
+            include: [District],
+            attributes: {
+              exclude: ['district_id'],
+            },
           },
-        }, 
-        {
-          model: GrazingSchedule,
-          // as: 'grazingSchedule',
+          {
+            model: GrazingSchedule,
+            include: [{
+              model: GrazingScheduleEntry,
+              include: [LivestockType],
+              attributes: {
+                exclude: ['grazing_schedule_id', 'livestock_type_id'],
+              },
+            }],
+          },
+          {
+            model: Client,
+            as: 'primaryAgreementHolder',
+          },
+          {
+            model: Usage,
+            as: 'usage',
+            attributes: {
+              exclude: ['agreement_id'],
+            },
+          }
+        ],
+        attributes: {
+          exclude: ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id', 'extension_id', 'status_id'],
         },
-        {
-          model: Client,
-          as: 'primaryAgreementHolder',
-        }
-      ],
-      attributes: {
-        exclude: ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id', 'extension_id', 'status_id'],
-      },
-    });
+      });
 
     // console.log(agreement.get({plain: true}));
 
@@ -172,6 +221,11 @@ const test = async (agreementId) => {
     assert(agreement.zone.district);
     assert(agreement.primaryAgreementHolder);
     assert(agreement.grazingSchedules.length > 0);
+    assert(agreement.grazingSchedules[0].grazingScheduleEntries.length === 2);
+    assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].livestockType);
+    assert(agreement.usage.length > 0);
+
+    console.log('TEST OK!');
   } catch (error) {
     console.log(`test error, ${error}`);
   }
@@ -181,6 +235,7 @@ const main = async () => {
   const clientId = await createClient();
   const agreementId = await createAgreement(clientId);
   const grazingScheduleId = await createGrazingSchedule(agreementId);
+  const usageId = await createUsage(agreementId);
 
   await test(agreementId);
 

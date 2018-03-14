@@ -90,7 +90,7 @@ export default class DataManager {
     // // Agreements and Range Usage
     // //
 
-    // this.Agreement.hasMany(this.Usage);
+    this.Agreement.hasMany(this.Usage, { as: 'usage' });
 
     // //
     // // Agreements and Extension
@@ -103,6 +103,13 @@ export default class DataManager {
     //
 
     this.Agreement.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
+
+    //
+    // GrazingScheduleEntry, Grazing Schedule, LivestockType
+    //
+
+    this.GrazingSchedule.hasMany(this.GrazingScheduleEntry);
+    this.GrazingScheduleEntry.belongsTo(this.LivestockType);
 
     // //
     // // Agreements and Pasture, Plant Communities, Monitoring Sites,

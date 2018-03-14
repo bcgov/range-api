@@ -35,25 +35,28 @@ export default (sequelize, DataTypes) => {
       is: /^([0-9]){4}$/i,
       allowNull: false,
     },
-    authorizedAmu: {
+    authorizedAum: {
       type: DataTypes.INTEGER,
-      field: 'authorized_amu',
+      field: 'authorized_aum',
       allowNull: false,
     },
     temporaryIncrease: {
       type: DataTypes.INTEGER,
       field: 'temporary_increase',
       allowNull: false,
+      defaultValue: 0,
     },
     totalNonUse: {
       type: DataTypes.INTEGER,
       field: 'total_non_use',
-      default: 0,
+      allowNull: false,
+      defaultValue: 0,
     },
     totalAnnualUse: {
       type: DataTypes.INTEGER,
       field: 'total_annual_use',
-      default: 0,
+      allowNull: false,
+      defaultValue: 0,
     },
     // agreementId: {
     //   type: DataTypes.INTEGER,

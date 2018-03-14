@@ -48,6 +48,7 @@ const {
   // SpeciesReference,
   // StubbleHeightCriteria,
   // Usage,
+  GrazingSchedule,
   Zone,
 } = dm;
 
@@ -59,6 +60,11 @@ const allAgreementChildren = [{
   include: [District],
   attributes: {
     exclude: ['district_id'],
+  },
+}, {
+  model: GrazingSchedule,
+  attributes: {
+    exclude: ['agreement_grazing_schedule'],
   },
 }];
 const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'status_id', 'primary_agreement_holder_id'];
