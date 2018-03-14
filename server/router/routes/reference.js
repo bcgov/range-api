@@ -24,26 +24,44 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
+import config from '../../config';
+import DataManager from '../../libs/db';
 
-// import config from '../../config';
-// import DataManager from '../../libs/db';
-
-// const dm = new DataManager(config);
-// const {
-//   Reference,
-// } = dm;
+const dm = new DataManager(config);
+const {
+  AgreementStatus,
+  AgreementType,
+  LivestockType,
+} = dm;
 
 const router = new Router();
 
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    // const reference = await Reference.findAll();
-    // res.status(200).json(reference).end();
-    res.status(501).json({ error: 'Not Implemented' }).end();
+    const opts = {
+      where: {
+        active: true,
+      },
+      attributes: {
+        exclude: ['updatedAt', 'createdAt', 'active'],
+      },
+    };
+
+    const ags = await AgreementStatus.findAll(opts);
+    const agt = await AgreementType.findAll(opts);
+    const lty = await LivestockType.findAll(opts);
+
+    const response = {
+      AGREEMENT_STATUS: ags || { error: 'Unable to fetch reference data' },
+      AGREEMENT_TYPE: agt,
+      LIVESTOCK_TYPE: lty,
+    };
+
+    res.status(200).json(response);
   } catch (err) {
     res.status(500).json({ error: err }).end();
   }
 }));
 
-module.exports = router;
+export default router;
