@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'livestock_identifier';
+const table = 'ref_livestock_identifier_type';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,38 +36,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      type: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      location: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      imageRef: {
-        field: 'image_ref',
-        type: Sequelize.TEXT,
-      },
       description: {
-        type: Sequelize.TEXT,
-      },
-      agreement_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(32),
         allowNull: false,
-        references: {
-          model: 'agreement',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
-      location_id: {
-        type: Sequelize.INTEGER,
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        references: {
-          model: 'ref_livestock_identifier_location',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
       created_at: {
         type: Sequelize.DATE,
