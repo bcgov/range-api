@@ -30,25 +30,18 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    type: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    location: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
     imageRef: {
       field: 'image_ref',
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(256),
     },
     description: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(64),
     },
-    // agreementId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'agreement_id',
-    // },
+    accepted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
