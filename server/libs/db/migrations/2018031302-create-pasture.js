@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-13.
+// Created by Jason Leach on 2018-03-14.
 //
 
 /* eslint-env es6 */
@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'grazing_schedule_entry';
+const table = 'pasture';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,37 +36,32 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      start_date: {
-        type: Sequelize.DATE,
+      name: {
+        type: Sequelize.STRING(64),
         allowNull: false,
       },
-      end_date: {
-        type: Sequelize.DATE,
+      allowable_aum: {
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
       grace_days: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 0,
+        default: 0,
       },
-      livestock_count: {
-        type: Sequelize.INTEGER,
+      pdl_percent: {
+        type: Sequelize.FLOAT,
         allowNull: false,
+        default: 0,
       },
-      livestock_type_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'ref_livestock',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
+      notes: {
+        type: Sequelize.TEXT,
       },
-      grazing_schedule_id: {
+      agreement_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'grazing_schedule',
+          model: 'agreement',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
