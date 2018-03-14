@@ -49,6 +49,7 @@ const {
   Client,
   ClientType,
   LivestockType,
+  Pasture,
   GrazingSchedule,
   GrazingScheduleEntry,
   Usage,
@@ -83,7 +84,7 @@ const createAgreement = async (clientId) => {
   try {
     const zone = await Zone.findOne({
       where: {
-        code: 'BEAV',
+        id: Math.floor(Math.random()*(-56)+57),
       },
       include: [District],
     });
@@ -121,9 +122,47 @@ const createAgreement = async (clientId) => {
   }
 };
 
-const createGrazingSchedule = async (agreementId) => {
+const createPasture = async (agreementId) => {
+  try {
+    // Just testing transactions here. Its not required.
+    const t = await dm.sequelize.transaction();
+
+    const ag = await Agreement.findById(agreementId, {transaction: t});
+
+    const p1 = await Pasture.create({
+      name: faker.address.streetName(),
+      allowableAum: 400,
+      graceDays: 10,
+      pdlPercent: 0.10,
+      agreement_id: ag.id,
+    }, {transaction: t});
+
+    const p2 = await Pasture.create({
+      name: faker.address.streetName(),
+      allowableAum: 400,
+      graceDays: 10,
+      pdlPercent: 0.10,
+      agreement_id: ag.id,
+    }, {transaction: t});
+
+    // await ag.addPasture(p1, {transaction: t});
+    // await ag.addPasture(ag, {transaction: t});
+
+    // await p1.save()
+    // await p2.save()
+
+    await t.commit();
+
+    return [p1.id, p2.id];
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+const createGrazingSchedule = async (agreementId, pastureIds) => {
   try {
 
+    const [ pid1, pid2 ] = pastureIds;
     const lty1 = await LivestockType.findById(1); // Alpaca
     const lty2 = await LivestockType.findById(2); // Alpaca
 
@@ -138,6 +177,7 @@ const createGrazingSchedule = async (agreementId) => {
       livestockCount: 100,
       livestock_type_id: lty1.id,
       grazing_schedule_id: gs.id,
+      pasture_id: pid1,
     });
 
     const gse2 = await GrazingScheduleEntry.create({
@@ -146,12 +186,12 @@ const createGrazingSchedule = async (agreementId) => {
       livestockCount: 200,
       livestock_type_id: lty2.id,
       grazing_schedule_id: gs.id,
+      pasture_id: pid2,
     });
     
     const agreement = await Agreement.findById(agreementId);
 
     await agreement.addGrazingSchedule(gs);
-    // await agreement.save();
 
     return gs.id;
   } catch (err) {
@@ -187,18 +227,24 @@ const test = async (agreementId) => {
             },
           },
           {
+            model: Pasture,
+          },
+          {
             model: GrazingSchedule,
             include: [{
               model: GrazingScheduleEntry,
-              include: [LivestockType],
+              include: [LivestockType, Pasture],
               attributes: {
-                exclude: ['grazing_schedule_id', 'livestock_type_id'],
+                exclude: ['grazing_schedule_id', 'livestock_type_id', 'agreement_grazing_schedule'],
               },
             }],
           },
           {
             model: Client,
             as: 'primaryAgreementHolder',
+            attributes: {
+              exclude: ['client_type_id'],
+            }
           },
           {
             model: Usage,
@@ -219,22 +265,25 @@ const test = async (agreementId) => {
     assert(agreement.id === agreementId);
     assert(agreement.zone);
     assert(agreement.zone.district);
+    assert(agreement.pastures.length >= 2);
     assert(agreement.primaryAgreementHolder);
     assert(agreement.grazingSchedules.length > 0);
     assert(agreement.grazingSchedules[0].grazingScheduleEntries.length === 2);
     assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].livestockType);
+    assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].pasture);
     assert(agreement.usage.length > 0);
 
     console.log('TEST OK!');
-  } catch (error) {
-    console.log(`test error, ${error}`);
+  } catch (err) {
+    console.log(`test error, ${err}`);
   }
 };
 
 const main = async () => {
   const clientId = await createClient();
   const agreementId = await createAgreement(clientId);
-  const grazingScheduleId = await createGrazingSchedule(agreementId);
+  const pastureIds = await createPasture(agreementId);
+  const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
   const usageId = await createUsage(agreementId);
 
   await test(agreementId);
