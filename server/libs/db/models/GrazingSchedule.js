@@ -41,7 +41,7 @@ export default (sequelize, DataTypes) => {
       is: /^([0-9]){4}$/i,
       allowNull: false,
     },
-    description: {
+    narative: {
       type: DataTypes.TEXT,
     },
     createdAt: {

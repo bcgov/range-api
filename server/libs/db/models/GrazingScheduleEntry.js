@@ -61,8 +61,15 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
+    dateIn: {
+      type: DataTypes.DATE,
+      field: 'date_in',
+      allowNull: false,
+    },
+    dateOut: {
+      type: DataTypes.DATE,
+      field: 'date_out',
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,

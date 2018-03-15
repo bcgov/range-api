@@ -62,7 +62,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'agreement_status',
+    tableName: 'ref_agreement_status',
   });
 
   return AgreementStatus;
