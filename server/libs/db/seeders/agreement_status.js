@@ -44,9 +44,9 @@ module.exports = {
       },
     ];
 
-    await queryInterface.bulkInsert('agreement_status', status, {});
+    await queryInterface.bulkInsert('ref_agreement_status', status, {});
   },
   down: async (queryInterface) => {
-    await queryInterface.bulkDelete('agreement_status', null, {});
+    await queryInterface.bulkDelete('ref_agreement_status', null, {});
   },
 };
