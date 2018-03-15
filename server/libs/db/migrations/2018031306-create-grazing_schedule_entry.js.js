@@ -53,8 +53,13 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      description: {
-        type: Sequelize.TEXT,
+      date_in: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      date_out: {
+        type: Sequelize.DATE,
+        allowNull: false,
       },
       livestock_type_id: {
         type: Sequelize.INTEGER,

@@ -40,7 +40,7 @@ module.exports = {
         type: Sequelize.STRING(4),
         allowNull: false,
       },
-      description: {
+      narative: {
         type: Sequelize.TEXT,
       },
       created_at: {
