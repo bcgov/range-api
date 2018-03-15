@@ -24,13 +24,13 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
-
 import config from '../../config';
 import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
   Client,
+  ClientType,
 } = dm;
 
 const router = new Router();
@@ -38,10 +38,17 @@ const router = new Router();
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const clients = await Client.findAll();
+    const clients = await Client.findAll({
+      include: [ClientType],
+      atrributes: {
+        exclude: ['client_type_id'],
+      },
+    });
     res.status(200).json(clients).end();
   } catch (err) {
-    res.status(500).json({ error: err }).end();
+    res.status(500).json({
+      error: err,
+    }).end();
   }
 }));
 
@@ -53,6 +60,10 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     } = req.params;
 
     const client = await Client.findOne({
+      include: [ClientType],
+      atrributes: {
+        exclude: ['client_type_id'],
+      },
       where: {
         id,
       },
