@@ -30,44 +30,69 @@ import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
+  Client,
+  Usage,
   Agreement,
-  District,
-  // Extension,
-  // LivestockIdentifier,
-  // MonitoringCriteria,
-  // MonitoringSite,
-  // Pasture,
-  // PastureSchedule,
-  // PastureScheduleEntry,
-  // PlantCommunity,
-  // PlantCommunityAction,
-  // RangeReadinessCriteria,
-  // Readiness,
-  // Reference,
-  // ShrubUseCriteria,
-  // SpeciesReference,
-  // StubbleHeightCriteria,
-  // Usage,
-  GrazingSchedule,
   Zone,
+  District,
+  LivestockIdentifier,
+  LivestockIdentifierLocation,
+  LivestockIdentifierType,
+  Pasture,
+  GrazingSchedule,
+  GrazingScheduleEntry,
+  LivestockType,
 } = dm;
 
 const router = new Router();
 
 // Includes all nested json data for Agreement
-const allAgreementChildren = [{
-  model: Zone,
-  include: [District],
-  attributes: {
-    exclude: ['district_id'],
+
+const allAgreementChildren = [
+  {
+    model: Zone,
+    include: [District],
+    attributes: {
+      exclude: ['district_id'],
+    },
   },
-}, {
-  model: GrazingSchedule,
-  attributes: {
-    exclude: ['agreement_grazing_schedule'],
+  {
+    model: LivestockIdentifier,
+    include: [LivestockIdentifierLocation, LivestockIdentifierType],
+    attributes: {
+      exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
+    },
   },
-}];
-const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'status_id', 'primary_agreement_holder_id'];
+  {
+    model: Pasture,
+  },
+  {
+    model: GrazingSchedule,
+    include: [{
+      model: GrazingScheduleEntry,
+      include: [LivestockType, Pasture],
+      attributes: {
+        exclude: ['grazing_schedule_id', 'livestock_type_id', 'agreement_grazing_schedule'],
+      },
+    }],
+  },
+  {
+    model: Client,
+    as: 'primaryAgreementHolder',
+    attributes: {
+      exclude: ['client_type_id'],
+    },
+  },
+  {
+    model: Usage,
+    as: 'usage',
+    attributes: {
+      exclude: ['agreement_id'],
+    },
+  },
+];
+const excludedAgreementAttributes = ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id',
+  'extension_id', 'status_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
