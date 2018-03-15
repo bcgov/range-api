@@ -42,7 +42,6 @@ module.exports = {
       },
       allowable_aum: {
         type: Sequelize.INTEGER,
-        allowNull: false,
       },
       grace_days: {
         type: Sequelize.INTEGER,
