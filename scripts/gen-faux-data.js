@@ -176,8 +176,10 @@ const createGrazingSchedule = async (agreementId, pastureIds) => {
 
     const gse1 = await GrazingScheduleEntry.create({
       startDate: new Date(),
-      endDate: new Date(),
+      endDate: (new Date()).setDate((new Date()).getDate() + 1*365),
       livestockCount: 100,
+      dateIn: new Date(),
+      dateOut: (new Date()).setDate((new Date()).getDate() + 30),
       livestock_type_id: lty1.id,
       grazing_schedule_id: gs.id,
       pasture_id: pid1,
@@ -185,8 +187,10 @@ const createGrazingSchedule = async (agreementId, pastureIds) => {
 
     const gse2 = await GrazingScheduleEntry.create({
       startDate: new Date(),
-      endDate: new Date(),
+      endDate: (new Date()).setDate((new Date()).getDate() + 1*365),
       livestockCount: 200,
+      dateIn: new Date(),
+      dateOut: (new Date()).setDate((new Date()).getDate() + 30),
       livestock_type_id: lty2.id,
       grazing_schedule_id: gs.id,
       pasture_id: pid2,
