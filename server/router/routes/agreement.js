@@ -23,7 +23,10 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs/utils';
+import {
+  asyncMiddleware,
+  errorWithCode,
+} from '../../libs/utils';
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -33,6 +36,7 @@ const {
   Client,
   Usage,
   Agreement,
+  AgreementStatus,
   Zone,
   District,
   LivestockIdentifier,
@@ -180,4 +184,37 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
   }
 }));
 
-module.exports = router;
+//
+// Agreement Status
+//
+
+router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) => {
+  const {
+    agreementId,
+    statusId,
+  } = req.params;
+
+  try {
+    if (!agreementId && !statusId) {
+      throw errorWithCode('Both agreementId and statusId must be provided', 400);
+    }
+
+    const agreement = await Agreement.findById(agreementId);
+    if (!agreement) {
+      throw errorWithCode(`No Agreement with ID ${agreementId}`, 400);
+    }
+
+    const status = await AgreementStatus.findById(statusId);
+    if (!status) {
+      throw errorWithCode(`No Status with ID ${statusId}`, 400);
+    }
+
+    const updatedAgreement = await agreement.setStatus(status);
+
+    return res.status(200).json(updatedAgreement).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+export default router;
