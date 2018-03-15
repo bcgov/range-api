@@ -61,6 +61,9 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    description: {
+      type: DataTypes.TEXT,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

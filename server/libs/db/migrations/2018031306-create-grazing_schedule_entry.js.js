@@ -53,6 +53,9 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      description: {
+        type: Sequelize.TEXT,
+      },
       livestock_type_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
