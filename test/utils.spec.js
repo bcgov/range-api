@@ -25,6 +25,7 @@
 import jest from 'jest';
 import {
   isValid,
+  isNumeric,
   errorWithCode,
 } from '../server/libs/utils'
 
@@ -58,5 +59,13 @@ describe('utility helpers', function() {
         expect(error).toBeDefined();
         expect(error.message).toEqual(message);
         expect(error.code).toEqual(code); 
+    });
+
+    test('isNumeric corectly deals with strings', async () => {
+        const notAnumber = 'A';
+        const isAnumber = '1';
+
+        expect(isNumeric(notAnumber)).toBe(false);
+        expect(isNumeric(isAnumber)).toBe(true);
     });
 });
