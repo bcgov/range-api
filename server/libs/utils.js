@@ -63,4 +63,4 @@ export const errorWithCode = (message, code) => {
  * @param {String} str The string to be validated
  * @returns true if the string is a number, false otherwise
  */
-export const isNumeric = str => str && /^[\d]+$/.test(str);
+export const isNumeric = str => str && /^\d+$/.test(str);
