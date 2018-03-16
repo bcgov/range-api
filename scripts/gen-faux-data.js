@@ -43,20 +43,26 @@ const {
   Agreement,
   AgreementType,
   AgreementStatus,
-  ExemptionStatus,
-  District,
-  Extension,
-  Zone,
   Client,
   ClientType,
+  District,
+  ExemptionStatus,
+  Extension,
+  GrazingSchedule,
+  GrazingScheduleEntry,
   LivestockType,
   LivestockIdentifier,
   LivestockIdentifierLocation,
   LivestockIdentifierType,
   Pasture,
-  GrazingSchedule,
-  GrazingScheduleEntry,
+  PlantCommunity,
+  PlantCommunityAction,
+  PlantCommunityActionPurpose,
+  PlantCommunityActionType,
+  PlantCommunityAspect,
+  PlantCommunityElevation,
   Usage,
+  Zone,
 } = dm;
 
 const sync = async (force = false) => dm.sequelize.sync({ force });
@@ -252,7 +258,46 @@ const createLivestockIdentifier = async (agreementId) => {
   } catch (err) {
     console.log(err);
   }
-}
+};
+
+const createPlantCommunity = async (pastureId) => {
+  try {
+    const aspect = await PlantCommunityAspect.findById(1);
+    const elevation = await PlantCommunityElevation.findById(1);
+    // const actiontype = await PlantCommunityActionType.findById(1);
+  
+    const pc = await PlantCommunity.create({
+      name: faker.address.streetName(),
+      aspectId: aspect.id,
+      elevationId: elevation.id,
+      pastureId,
+    });
+
+    return pc.id;
+  } catch (err) {
+    console.log(err);
+  }
+
+  return;
+};
+
+const createPlantCommunityAction = async (plantCommunityId) => {
+  try {
+    const pap = await PlantCommunityActionPurpose.findById(1);
+    const pat = await PlantCommunityActionType.findById(1);
+
+    const pa = await PlantCommunityAction.create({
+      description: 'This is a description',
+      actionTypeId: pat.id,
+      purposeId: pap.id,
+      plantCommunityId,
+    });
+
+    return pa.id;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 const test = async (agreementId) => {
   try {
@@ -273,6 +318,35 @@ const test = async (agreementId) => {
           },
           {
             model: Pasture,
+            include: [{
+              model: PlantCommunity,
+              attributes: {
+                exclude: ['aspect_id', 'elevation_id', 'pasture_id'],
+              },
+              include: [{
+                  model: PlantCommunityAspect,
+                  as: 'aspect'
+                }, {
+                  model: PlantCommunityElevation,
+                  as: 'elevation'
+                },
+                {
+                  model: PlantCommunityAction,
+                  as: 'actions',
+                  attributes: {
+                    exclude: ['plant_community_id'],
+                  },
+                  include: [{
+                    model: PlantCommunityActionPurpose,
+                    as: 'actionPurpose'
+                  },
+                  {
+                    model: PlantCommunityActionType,
+                    as: 'actionType'
+                  }],
+                }
+              ],
+            }],
           },
           {
             model: GrazingSchedule,
@@ -306,12 +380,19 @@ const test = async (agreementId) => {
 
     // const ag = agreement.get({plain: true});
     // console.log(ag.livestockIdentifiers);
-
+    // console.log(agreement.pastures[1].get({plain: true}));
+    //   return ;
     assert(agreement);
     assert(agreement.id === agreementId);
     assert(agreement.zone);
     assert(agreement.zone.district);
     assert(agreement.pastures.length >= 2);
+    assert(agreement.pastures[1].plantCommunities.length >= 1);
+    assert(agreement.pastures[1].plantCommunities[0].aspect);
+    assert(agreement.pastures[1].plantCommunities[0].elevation);
+    assert(agreement.pastures[1].plantCommunities[0].actions.length >= 1);
+    assert(agreement.pastures[1].plantCommunities[0].actions[0].actionPurpose);
+    assert(agreement.pastures[1].plantCommunities[0].actions[0].actionType);
     assert(agreement.primaryAgreementHolder);
     assert(agreement.livestockIdentifiers.length >= 2);
     assert(agreement.livestockIdentifiers[0].livestockIdentifierLocation);
@@ -335,6 +416,8 @@ const main = async () => {
   const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
   const usageId = await createUsage(agreementId);
   const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
+  const plantCommunityId = await createPlantCommunity(pastureIds[0]);
+  const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
 
   await test(agreementId);
 
