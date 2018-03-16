@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
-// import * as Constants from './constants';
+
 export default class DataManager {
   constructor(config) {
     this.sequelize = new Sequelize(config.get('db:url'), {
@@ -126,8 +126,13 @@ export default class DataManager {
     // // or over the same area). However, from a data perspective, they are specific to
     // // a single RUP.
 
-    // this.Pasture.hasMany(this.PlantCommunity);
-    // this.PlantCommunity.hasMany(this.PlantCommunityAction);
+    this.Pasture.hasMany(this.PlantCommunity);
+    this.PlantCommunity.hasMany(this.PlantCommunityAction, { as: 'actions' });
+    this.PlantCommunity.belongsTo(this.PlantCommunityAspect, { as: 'aspect' }); // x
+    this.PlantCommunity.belongsTo(this.PlantCommunityElevation, { as: 'elevation' }); // x
+    this.PlantCommunityAction.belongsTo(this.PlantCommunityActionPurpose, { as: 'actionPurpose' });
+    this.PlantCommunityAction.belongsTo(this.PlantCommunityActionType, { as: 'actionType' });
+
     // this.PlantCommunity.hasMany(this.MonitoringSite);
     // this.MonitoringSite.hasMany(this.MonitoringCriteria);
 
