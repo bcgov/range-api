@@ -37,7 +37,7 @@ export default (sequelize, DataTypes) => {
     rangelandHealth: {
       field: 'rangeland_health',
       type: DataTypes.TEXT,
-      values: Object.keys(PC_RANGELAND_HEALTH).map(k => PC_RANGELAND_HEALTH[k]),
+      // values: Object.keys(PC_RANGELAND_HEALTH).map(k => PC_RANGELAND_HEALTH[k]),
     },
     transectAzimuth: {
       field: 'transect_azimuth',

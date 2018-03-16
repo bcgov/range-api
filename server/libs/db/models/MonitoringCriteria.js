@@ -21,8 +21,6 @@
 
 'use strict';
 
-// import { PC_RANGELAND_HEALTH } from '../constants';
-
 export default (sequelize, DataTypes) => {
   const MonitoringCriteria = sequelize.define('monitoringCriteria', {
     id: {

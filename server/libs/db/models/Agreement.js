@@ -22,8 +22,6 @@
 
 'use strict';
 
-import { EXEMPTION_STATUS } from '../constants';
-
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
     id: {
