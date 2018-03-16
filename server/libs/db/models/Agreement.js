@@ -71,31 +71,9 @@ export default (sequelize, DataTypes) => {
       field: 'plan_end_date',
       type: DataTypes.DATE,
     },
-    exemptionStatus: {
-      field: 'exemption_status',
-      type: DataTypes.TEXT,
-      values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
-    },
-    // status: {
-    //   type: DataTypes.STRING(1),
-    //   validate: {
-    //     is: /^[a-z]$/i,
-    //     len: [1],
-    //   },
-    // },
     notes: {
       type: DataTypes.TEXT,
     },
-    // zoneId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'zone_id',
-    //   allowNull: false,
-    // },
-    // extensionId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'extension_id',
-    //   allowNull: false,
-    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

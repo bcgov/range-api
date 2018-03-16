@@ -39,9 +39,11 @@ module.exports = {
       code: {
         unique: true,
         type: Sequelize.STRING(4),
+        allowNull: false,
       },
       description: {
         type: Sequelize.STRING(32),
+        allowNull: false,
       },
       active: {
         type: Sequelize.BOOLEAN,

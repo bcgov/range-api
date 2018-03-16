@@ -33,9 +33,11 @@ export default (sequelize, DataTypes) => {
     code: {
       unique: true,
       type: DataTypes.STRING(4),
+      allowNull: false,
     },
     description: {
       type: DataTypes.STRING(32),
+      allowNull: false,
     },
     active: {
       type: DataTypes.BOOLEAN,

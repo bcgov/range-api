@@ -58,10 +58,6 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: 0,
     },
-    // agreementId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'agreement_id',
-    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -78,6 +74,30 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
+  });
+
+  //
+  // Instance Method
+  //
+
+  /* eslint-disable func-names, arrow-body-style */
+
+  Usage.prototype.calculateTotalAnnualUse = function () {
+    return (this.authorizedAum + this.temporaryIncrease) - this.totalNonUse;
+  };
+
+  //
+  // Hooks
+  //
+
+  Usage.beforeCreate((usage) => {
+    /* eslint-disable-next-line no-param-reassign */
+    usage.totalAnnualUse = usage.calculateTotalAnnualUse();
+  });
+
+  Usage.beforeUpdate((usage) => {
+    /* eslint-disable-next-line no-param-reassign */
+    usage.totalAnnualUse = usage.calculateTotalAnnualUse();
   });
 
   return Usage;

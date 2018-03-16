@@ -60,11 +60,18 @@ module.exports = {
       plan_end_date: {
         type: Sequelize.DATE,
       },
-      exemption_status: {
-        type: Sequelize.TEXT,
+      exemption_status_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_agreement_exemption_status',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
       },
       status_id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         references: {
           model: 'ref_agreement_status',
           key: 'id',

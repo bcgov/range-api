@@ -59,7 +59,6 @@ module.exports = {
       },
       livestock_identifier_location_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
         references: {
           model: 'ref_livestock_identifier_location',
           key: 'id',

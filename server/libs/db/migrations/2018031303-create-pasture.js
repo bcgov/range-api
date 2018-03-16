@@ -46,12 +46,12 @@ module.exports = {
       grace_days: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        default: 0,
+        defaultValue: 3,
       },
-      pdl_percent: {
+      pld_percent: {
         type: Sequelize.FLOAT,
         allowNull: false,
-        default: 0,
+        defaultValue: 0,
       },
       notes: {
         type: Sequelize.TEXT,

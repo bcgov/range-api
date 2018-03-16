@@ -15,43 +15,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-22.
+// Created by Jason Leach on 2018-03-16.
+//
 
 /* eslint-env es6 */
 
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Pasture = sequelize.define('pasture', {
+  const ExemptionStatus = sequelize.define('exemptionStatus', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    code: {
+      unique: true,
+      type: DataTypes.STRING(1),
+      validate: {
+        is: /^[a-z]$/i,
+        len: [1],
+      },
+    },
     name: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.STRING(16),
       allowNull: false,
     },
-    allowableAum: {
-      field: 'allowable_aum',
-      type: DataTypes.INTEGER,
+    active: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-    },
-    graceDays: {
-      field: 'grace_days',
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    pldPercent: {
-      field: 'pld_percent',
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      defaultValue: 0,
-    },
-    notes: {
-      type: DataTypes.TEXT,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -69,7 +62,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
+    tableName: 'ref_agreement_exemption_status',
   });
 
-  return Pasture;
+  return ExemptionStatus;
 };

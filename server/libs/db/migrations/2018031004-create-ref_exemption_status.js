@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'usage';
+const table = 'ref_agreement_exemption_status';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,39 +36,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      year: {
+      code: {
+        unique: true,
         type: Sequelize.STRING(4),
-        is: /^([0-9]){4}$/i,
+      },
+      name: {
+        type: Sequelize.STRING(32),
+      },
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-      },
-      authorizedAum: {
-        type: Sequelize.INTEGER,
-        field: 'authorized_aum',
-        allowNull: false,
-      },
-      temporaryIncrease: {
-        type: Sequelize.INTEGER,
-        field: 'temporary_increase',
-        defaultValue: 0,
-      },
-      totalNonUse: {
-        type: Sequelize.INTEGER,
-        field: 'total_non_use',
-        defaultValue: 0,
-      },
-      totalAnnualUse: {
-        type: Sequelize.INTEGER,
-        field: 'total_annual_use',
-        defaultValue: 0,
-      },
-      agreement_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'agreement',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
       created_at: {
         type: Sequelize.DATE,
