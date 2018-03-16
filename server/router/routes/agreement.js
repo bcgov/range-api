@@ -26,6 +26,7 @@ import { Router } from 'express';
 import {
   asyncMiddleware,
   errorWithCode,
+  isNumeric,
 } from '../../libs/utils';
 import { logger } from '../../libs/logger';
 import config from '../../config';
@@ -188,30 +189,38 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 // Agreement Status
 //
 
+// Update the status of an agreement
 router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     statusId,
   } = req.params;
 
-  try {
-    if (!agreementId && !statusId) {
-      throw errorWithCode('Both agreementId and statusId must be provided', 400);
-    }
+  if ((!agreementId || !statusId) || (!isNumeric(agreementId) || !isNumeric(statusId))) {
+    throw errorWithCode('Both agreementId and statusId must be provided and be numeric', 400);
+  }
 
+  try {
     const agreement = await Agreement.findById(agreementId);
     if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId}`, 400);
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
     }
 
-    const status = await AgreementStatus.findById(statusId);
+    const status = await AgreementStatus.findOne({
+      where: {
+        id: statusId,
+      },
+      attributes: {
+        exclude: ['updatedAt', 'createdAt', 'active'],
+      },
+    });
     if (!status) {
-      throw errorWithCode(`No Status with ID ${statusId}`, 400);
+      throw errorWithCode(`No Status with ID ${statusId} exists`, 400);
     }
 
-    const updatedAgreement = await agreement.setStatus(status);
+    await agreement.setStatus(status);
 
-    return res.status(200).json(updatedAgreement).end();
+    return res.status(200).json(status).end();
   } catch (err) {
     throw err;
   }
