@@ -43,6 +43,7 @@ const {
   Agreement,
   AgreementType,
   AgreementStatus,
+  ExemptionStatus,
   District,
   Extension,
   Zone,
@@ -104,6 +105,8 @@ const createAgreement = async (clientId) => {
       }
     });
 
+    const exemption = await ExemptionStatus.findById(1); // Default
+
     const ag1 = await Agreement.build({
       agreementId: `RAN123${Math.floor(Math.random()*(999-100+1)+100)}`,
       rangeName: faker.company.companyName(),
@@ -113,6 +116,7 @@ const createAgreement = async (clientId) => {
       agreement_type_id: type.id,
       status_id: status.id,
       primary_agreement_holder_id: clientId,
+      exemption_status_id: exemption.id,
     });
 
     const agreement = await ag1.save();
@@ -210,10 +214,11 @@ const createUsage = async (agreementId) => {
   try {
     const usage = await Usage.build({
       year: '2018',
-      authorizedAmu: 'This is a grazing schedule description.',
-      authorizedAum: 1400,
+      authorizedAum: 1000,
+      temporaryIncrease: 500,
+      totalNonUse: 250,
       agreement_id: agreementId,
-    })
+    });
 
     await usage.save();
 
