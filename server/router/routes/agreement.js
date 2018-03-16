@@ -275,12 +275,42 @@ router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
 //
 
 // create a livestock identifier in an agreement
-router.post('/:agreementId?/livestockIdentifier', asyncMiddleware(async (req, res) => {
-  res.status(501).json({ error: 'Not Implemented' }).end();
+router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
+  res.status(501).json({ error: 'not implemented yet' }).end();
+  
+  const {
+    id,
+  } = req.params;
+  
+  if (!isNumeric(id)) {
+    throw errorWithCode('agreementId must be provided and be numaric', 400);
+  }
+
+  const {
+    body,
+  } = req;
+
+  //TODO: validate fields in body
+  try {
+    const agreement = await Agreement.findOne({
+      where: {
+        id,
+      },
+    });
+
+    const livestockIdentifier = await LivestockIdentifier.create(body);
+
+    await agreement.addLivestockIdentifier(livestockIdentifier);
+    await agreement.save();
+    
+    res.status(200).json(livestockIdentifier).end();
+  } catch (err) {
+    throw err;
+  }
 }));
 
 // get all livestock identifiers of an agreement
-router.get('/:agreementId?/livestockIdentifier', asyncMiddleware(async (req, res) => {
+router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
   } = req.params;
@@ -302,7 +332,7 @@ router.get('/:agreementId?/livestockIdentifier', asyncMiddleware(async (req, res
   }
 }));
 
-router.put('/:agreementId?/livestockIdentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     livestockIdentifierId,
