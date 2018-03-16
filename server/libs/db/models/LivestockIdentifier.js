@@ -30,6 +30,11 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    agreementId: {
+      type: DataTypes.INTEGER,
+      field: 'agreement_id',
+      allowNull: false,
+    },
     imageRef: {
       field: 'image_ref',
       type: DataTypes.STRING(256),
