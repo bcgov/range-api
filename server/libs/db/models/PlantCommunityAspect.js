@@ -22,35 +22,25 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const PlantCommunityAction = sequelize.define('plantCommunityAction', {
+  const PlantCommunityAspect = sequelize.define('plantCommunityAspect', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    code: {
+      unique: true,
+      type: DataTypes.STRING(2),
+      allowNull: false,
+    },
     description: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(32),
+      allowNull: false,
     },
-    noGrazeStart: {
-      field: 'no_graze_start',
-      type: DataTypes.DATE,
-    },
-    noGrazeEnd: {
-      field: 'no_graze_end',
-      type: DataTypes.DATE,
-    },
-    plantCommunityId: {
-      field: 'plant_community_id',
-      type: DataTypes.INTEGER,
-    },
-    actionTypeId: {
-      field: 'action_type_id',
-      type: DataTypes.INTEGER,
-    },
-    purposeId: {
-      field: 'action_purpose_id',
-      type: DataTypes.INTEGER,
+    active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -68,8 +58,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'plant_community_action',
+    tableName: 'ref_plant_community_aspect',
   });
 
-  return PlantCommunityAction;
+  return PlantCommunityAspect;
 };

@@ -15,52 +15,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-22.
+// Created by Jason Leach on 2018-03-16.
 
 /* eslint-env es6 */
 
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const PlantCommunityAction = sequelize.define('plantCommunityAction', {
+  const PlantCommunityElevation = sequelize.define('plantCommunityElevation', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
+    code: {
+      unique: true,
+      type: DataTypes.STRING(4),
+    },
     description: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(32),
+      allowNull: false,
     },
-    noGrazeStart: {
-      field: 'no_graze_start',
+    active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
+    created_at: {
       type: DataTypes.DATE,
-    },
-    noGrazeEnd: {
-      field: 'no_graze_end',
-      type: DataTypes.DATE,
-    },
-    plantCommunityId: {
-      field: 'plant_community_id',
-      type: DataTypes.INTEGER,
-    },
-    actionTypeId: {
-      field: 'action_type_id',
-      type: DataTypes.INTEGER,
-    },
-    purposeId: {
-      field: 'action_purpose_id',
-      type: DataTypes.INTEGER,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      field: 'created_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
-    updatedAt: {
+    updated_at: {
       type: DataTypes.DATE,
-      field: 'updated_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
@@ -68,8 +55,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'plant_community_action',
+    tableName: 'ref_plant_community_elevation',
   });
 
-  return PlantCommunityAction;
+  return PlantCommunityElevation;
 };
