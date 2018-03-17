@@ -24,7 +24,11 @@ RUN yum repolist > /dev/null && \
     yum-config-manager --enable rhel-7-server-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
     yum-config-manager --enable rhel-7-server-fastrack-rpms && \
-    yum install postgis2_96 postgis2_96-client
+    # yum install postgis2_96 postgis2_96-client
+
+RUN yum search postgis
+RUN yum list post\*
+
   # RUN yum install -y --setopt=tsflags=nodocs wget curl openssl&& \
   #   rpm -V wget curl openssl && \
   #   yum clean all -y
