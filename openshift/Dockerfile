@@ -29,12 +29,6 @@ RUN yum repolist > /dev/null && \
     yum -y localinstall pgdg-redhat96-9.6-3.noarch.rpm && \
     rm -f pgdg-redhat96-9.6-3.noarch.rpm
 
-
-
-RUN yum search postgis
 RUN yum list post\*
 
-RUN yum-config-manager --add-repo
-  # RUN yum install -y --setopt=tsflags=nodocs wget curl openssl&& \
-  #   rpm -V wget curl openssl && \
-  #   yum clean all -y
+RUN yum install postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64
