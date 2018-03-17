@@ -41,4 +41,15 @@ RUN yum list epel\* && \
     yum -y install epel-release postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64 && \
     yum clean all
 
-USER 1001
+# The install does not put them in the same place as the other PostgreSQL exteions
+# so lets move them.
+
+RUN diff --brief -r \
+    /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension \
+    /usr/pgsql-9.6/share/extension | \
+    grep '/usr/pgsql-9.6/share/extension' | \
+    awk '{ print $4 }' | xargs cp -vt /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension
+
+# PostgreSQL user
+
+USER 26
