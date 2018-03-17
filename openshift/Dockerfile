@@ -23,14 +23,22 @@ RUN yum repolist > /dev/null && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
+    yum-config-manager --enable rhel-7-server-extras-rpms && \
     yum-config-manager --enable rhel-7-server-fastrack-rpms && \
     yum install curl && \
     curl -O https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
-    yum -y localinstall pgdg-redhat96-9.6-3.noarch.rpm && \
-    rm -f pgdg-redhat96-9.6-3.noarch.rpm
-
-RUN yum list post\*
+    curl -O https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum -y localinstall pgdg-redhat96-9.6-3.noarch.rpm epel-release-latest-7.noarch.rpm && \
+    yum -y update && \
+    rm -f pgdg-redhat96-9.6-3.noarch.rpm && \
+    rm -f epel-release-latest-7.noarch.rpm
 
 # The RHEL Extra Packages for Enterprise Linux (EPEL) package `epel-release` 
 # is required gdal-libs dependencies. 
-RUN yum install epel-release postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64
+
+RUN yum list epel\* && \
+    yum list post\* && \
+    yum -y install epel-release postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64 && \
+    yum clean all
+
+USER 1001
