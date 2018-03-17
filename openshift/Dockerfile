@@ -48,7 +48,9 @@ RUN diff --brief -r \
     /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension \
     /usr/pgsql-9.6/share/extension | \
     grep '/usr/pgsql-9.6/share/extension' | \
-    awk '{ print $4 }' | xargs cp -vt /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension
+    tr ':' '/' |  \
+    awk '{ print $3 $4 }' \
+    xargs cp -vt /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension
 
 # PostgreSQL user
 
