@@ -24,11 +24,17 @@ RUN yum repolist > /dev/null && \
     yum-config-manager --enable rhel-7-server-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
     yum-config-manager --enable rhel-7-server-fastrack-rpms && \
-    # yum install postgis2_96 postgis2_96-client
+    yum install curl && \
+    curl -O https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
+    yum -y localinstall pgdg-redhat96-9.6-3.noarch.rpm && \
+    rm -f pgdg-redhat96-9.6-3.noarch.rpm
+
+
 
 RUN yum search postgis
 RUN yum list post\*
 
+RUN yum-config-manager --add-repo
   # RUN yum install -y --setopt=tsflags=nodocs wget curl openssl&& \
   #   rpm -V wget curl openssl && \
   #   yum clean all -y
