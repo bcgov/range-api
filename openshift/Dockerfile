@@ -31,4 +31,6 @@ RUN yum repolist > /dev/null && \
 
 RUN yum list post\*
 
-RUN yum install postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64
+# The RHEL Extra Packages for Enterprise Linux (EPEL) package `epel-release` 
+# is required gdal-libs dependencies. 
+RUN yum install epel-release postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64
