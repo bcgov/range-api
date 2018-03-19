@@ -51,7 +51,8 @@ RUN diff --brief -r \
     tr ':' '/' |  \
     awk '{ print $3 $4 }' | \
     xargs cp -vt /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension && \
-    cp -a /usr/pgsql-9.6/share/contrib/* /opt/rh/rh-postgresql96/root/usr/share/pgsql/contrib/
+    cp -a /usr/pgsql-9.6/share/contrib/* /opt/rh/rh-postgresql96/root/usr/share/pgsql/contrib/ && \
+    cp -a /usr/pgsql-9.6/lib/postgis* /opt/rh/rh-postgresql96/root/usr/lib64/pgsql/
     #rm -rf /usr/pgsql-9.6
 
 # PostgreSQL user
