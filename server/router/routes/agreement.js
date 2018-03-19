@@ -23,6 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
+import deepDiff from 'deep-diff';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -132,22 +133,12 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
   } = req.params;
+
   const {
     body,
   } = req;
 
   try {
-    const count = await Agreement.update(body, {
-      where: {
-        id,
-      },
-    });
-
-    if (count[0] === 0) {
-      // No records were updated. The ID probably does not exists.
-      return res.send(400).end(); // Bad Request
-    }
-
     const agreement = await Agreement.findOne({
       where: {
         id,
@@ -158,7 +149,27 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       },
     });
 
-    return res.status(200).json(agreement).end();
+    if (!agreement) {
+      res.status(404).end();
+    }
+
+    // const changes = deepDiff.diff(agreement.get({ plain: true }), agreement2.get({ plain: true }));
+    // if (changes) {
+    //   res.status(200).json([agreement, agreement2, changes]).end();
+    // }
+
+    const count = await Agreement.update(body, {
+      where: {
+        id,
+      },
+    });
+
+    if (count[0] === 0) {
+      // No records were updated. The ID probably does not exists.
+      res.send(400).json().end(); // Bad Request
+    }
+
+    res.status(200).json(agreement).end();
   } catch (error) {
     logger.error(`error updating agreement ${id}`);
     throw error;
