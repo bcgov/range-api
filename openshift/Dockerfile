@@ -1,18 +1,23 @@
 FROM registry.access.redhat.com/rhscl/postgresql-96-rhel7:latest
 
+# The base image exposes port 5432, we just need to take it and
+# and apply our changes on top of it.
+
 USER 0
 
 ENV PATH=$HOME/.local/bin/:$PATH \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8
    
-ENV SUMMARY="PostgreSQL 9.6 with PostGIS extension." \
-    DESCRIPTION="PostgreSQL 9.6 with PostGIS extension."
+ENV SUMMARY="PostgreSQL 9.6 with PostGIS 2.4 extension." \
+    DESCRIPTION="This image extends the RHEL7 base PostgreSQL 9.6 \
+image by adding PostGIS 2.4 from postgresql.org and dependencies \
+from fedoraproeject.org needed to support GDAL."
 
 LABEL summary="$SUMMARY" \
   description="$DESCRIPTION" \
   io.k8s.description="$DESCRIPTION" \
-  io.k8s.display-name="PostgreSQL-9_6-PostGIS" \
+  io.k8s.display-name="PostgreSQL 9.6 with PostGIS 2.4" \
   io.openshift.expose-services="5432:http" \
   io.openshift.tags="postgres,postgis" \
   release="1"
@@ -55,9 +60,10 @@ RUN diff --brief -r \
     grep -v '/opt/rh/rh-postgresql96/root/usr/lib64/pgsql' | \
     tr ':' '/' |  \
     awk '{ print $3 $4 }' | \
-    xargs cp -vt /opt/rh/rh-postgresql96/root/usr/lib64/pgsql
-    #rm -rf /usr/pgsql-9.6
+    xargs cp -vt /opt/rh/rh-postgresql96/root/usr/lib64/pgsql && \
+    cp -a /usr/pgsql-9.6/bin/pgsql2shp /usr/pgsql-9.6/bin/raster2pgsql \
+    /usr/pgsql-9.6/bin/shp2pgsql /opt/rh/rh-postgresql96/root/usr/bin/ && \
+    rm -rf /usr/pgsql-9.6
 
-# PostgreSQL user
-
+# PostgreSQL user in /etc/passwd
 USER 26
