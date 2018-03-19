@@ -44,7 +44,7 @@ RUN yum repolist > /dev/null && \
 RUN yum list epel\* && \
     yum list post\* && \
     yum -y install epel-release postgis2_96.x86_64 postgis2_96-client.x86_64 postgis2_96-utils.x86_64 && \
-    yum clean all
+    yum clean all -y
 
 # The install does not put them in the same place as the other PostgreSQL exteions
 # so lets move them.
