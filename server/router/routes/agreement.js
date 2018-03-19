@@ -23,16 +23,12 @@
 'use strict';
 
 import { Router } from 'express';
-<<<<<<< HEAD
 import deepDiff from 'deep-diff';
-import { asyncMiddleware } from '../../libs/utils';
-=======
 import {
   asyncMiddleware,
   errorWithCode,
   isNumeric,
 } from '../../libs/utils';
->>>>>>> f9ab97f58538c65053a70d9abe25901240163f06
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
