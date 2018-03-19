@@ -30,11 +30,11 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     name: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(64),
       allowNull: false,
     },
-    allowableAmu: {
-      field: 'allowable_amu',
+    allowableAum: {
+      field: 'allowable_aum',
       type: DataTypes.INTEGER,
       allowNull: false,
     },

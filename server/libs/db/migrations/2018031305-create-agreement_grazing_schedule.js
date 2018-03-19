@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-10.
+// Created by Jason Leach on 2018-03-13.
 //
 
 /* eslint-env es6 */
@@ -23,34 +23,13 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'livestock_identifier';
+const table = 'agreement_grazing_schedule';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const { sequelize } = queryInterface;
 
     await queryInterface.createTable(table, {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER,
-      },
-      type: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      location: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      imageRef: {
-        field: 'image_ref',
-        type: Sequelize.TEXT,
-      },
-      description: {
-        type: Sequelize.TEXT,
-      },
       agreement_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -60,11 +39,11 @@ module.exports = {
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
-      location_id: {
+      grazing_schedule_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'ref_livestock_identifier_location',
+          model: 'grazing_schedule',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

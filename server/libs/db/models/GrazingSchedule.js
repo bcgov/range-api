@@ -29,7 +29,7 @@
 */
 
 export default (sequelize, DataTypes) => {
-  const PastureSchedule = sequelize.define('pastureSchedule', {
+  const GrazingSchedule = sequelize.define('grazingSchedule', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -37,17 +37,13 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     year: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(4),
       is: /^([0-9]){4}$/i,
       allowNull: false,
     },
-    description: {
+    narative: {
       type: DataTypes.TEXT,
     },
-    // pastureId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'pasture_id',
-    // },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -64,8 +60,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'pasture_schedule',
+    tableName: 'grazing_schedule',
   });
 
-  return PastureSchedule;
+  return GrazingSchedule;
 };

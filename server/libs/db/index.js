@@ -79,31 +79,47 @@ export default class DataManager {
     // an Agreement's Zone.
     this.Agreement.belongsTo(this.Zone); // { foreignKey: { allowNull: false } }
 
-    // //
-    // // Agreements and Livestock Identifiers
-    // //
+    //
+    // Agreements and Livestock Identifiers
+    //
 
     // this.LivestockIdentifier.belongsTo(this.Agreement);
-    // this.Agreement.hasMany(this.LivestockIdentifier);
+    this.LivestockIdentifier.belongsTo(this.LivestockIdentifierType);
+    this.LivestockIdentifier.belongsTo(this.LivestockIdentifierLocation);
+    this.Agreement.hasMany(this.LivestockIdentifier);
 
-    // //
-    // // Agreements and Range Usage
-    // //
+    //
+    // Agreements and Range Usage
+    //
 
-    // this.Agreement.hasMany(this.Usage);
+    this.Agreement.hasMany(this.Usage, { as: 'usage' });
 
-    // //
-    // // Agreements and Extension
-    // //
+    //
+    // Agreements and Extension
+    //
 
     // this.Agreement.belongsTo(this.Extension);
 
-    // //
-    // // Agreements and Pasture, Plant Communities, Monitoring Sites,
-    // // and Criteria.
-    // //
+    //
+    // Agreements and Grazing Schedule
+    //
 
-    // this.Agreement.hasMany(this.Pasture);
+    this.Agreement.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
+
+    //
+    // GrazingScheduleEntry, Grazing Schedule, LivestockType
+    //
+
+    this.GrazingSchedule.hasMany(this.GrazingScheduleEntry);
+    this.GrazingScheduleEntry.belongsTo(this.LivestockType);
+    this.GrazingScheduleEntry.belongsTo(this.Pasture);
+
+    //
+    // Agreements and Pasture, Plant Communities, Monitoring Sites,
+    // and Criteria.
+    //
+
+    this.Agreement.hasMany(this.Pasture);
 
     // // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
     // // or over the same area). However, from a data perspective, they are specific to
@@ -114,12 +130,11 @@ export default class DataManager {
     // this.PlantCommunity.hasMany(this.MonitoringSite);
     // this.MonitoringSite.hasMany(this.MonitoringCriteria);
 
-    // this.Pasture.hasMany(this.PastureSchedule);
-    // this.PastureSchedule.hasMany(this.PastureScheduleEntry);
 
     // //
     // // Agreements and Plant Action.
     // //
-    // this.PlantActionReference.belongsToMany(this.Agreement, { through: 'agreement_plant_action' });
+    // this.PlantActionReference.belongsToMany(this.Agreement,
+    // { through: 'agreement_plant_action' });
   }
 }

@@ -23,46 +23,86 @@
 'use strict';
 
 import { Router } from 'express';
+<<<<<<< HEAD
 import deepDiff from 'deep-diff';
 import { asyncMiddleware } from '../../libs/utils';
+=======
+import {
+  asyncMiddleware,
+  errorWithCode,
+  isNumeric,
+} from '../../libs/utils';
+>>>>>>> f9ab97f58538c65053a70d9abe25901240163f06
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
+  Client,
+  Usage,
   Agreement,
-  District,
-  // Extension,
-  // LivestockIdentifier,
-  // MonitoringCriteria,
-  // MonitoringSite,
-  // Pasture,
-  // PastureSchedule,
-  // PastureScheduleEntry,
-  // PlantCommunity,
-  // PlantCommunityAction,
-  // RangeReadinessCriteria,
-  // Readiness,
-  // Reference,
-  // ShrubUseCriteria,
-  // SpeciesReference,
-  // StubbleHeightCriteria,
-  // Usage,
+  AgreementStatus,
   Zone,
+  District,
+  LivestockIdentifier,
+  LivestockIdentifierLocation,
+  LivestockIdentifierType,
+  Pasture,
+  GrazingSchedule,
+  GrazingScheduleEntry,
+  LivestockType,
 } = dm;
 
 const router = new Router();
 
 // Includes all nested json data for Agreement
-const allAgreementChildren = [{
-  model: Zone,
-  include: [District],
-  attributes: {
-    exclude: ['district_id'],
+
+const allAgreementChildren = [
+  {
+    model: Zone,
+    include: [District],
+    attributes: {
+      exclude: ['district_id'],
+    },
   },
-}];
-const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'status_id', 'primary_agreement_holder_id'];
+  {
+    model: LivestockIdentifier,
+    include: [LivestockIdentifierLocation, LivestockIdentifierType],
+    attributes: {
+      exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
+    },
+  },
+  {
+    model: Pasture,
+  },
+  {
+    model: GrazingSchedule,
+    include: [{
+      model: GrazingScheduleEntry,
+      include: [LivestockType, Pasture],
+      attributes: {
+        exclude: ['grazing_schedule_id', 'livestock_type_id', 'agreement_grazing_schedule'],
+      },
+    }],
+  },
+  {
+    model: Client,
+    as: 'primaryAgreementHolder',
+    attributes: {
+      exclude: ['client_type_id'],
+    },
+  },
+  {
+    model: Usage,
+    as: 'usage',
+    attributes: {
+      exclude: ['agreement_id'],
+    },
+  },
+];
+const excludedAgreementAttributes = ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id',
+  'extension_id', 'status_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
@@ -160,4 +200,45 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
   }
 }));
 
-module.exports = router;
+//
+// Agreement Status
+//
+
+// Update the status of an agreement
+router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) => {
+  const {
+    agreementId,
+    statusId,
+  } = req.params;
+
+  if ((!agreementId || !statusId) || (!isNumeric(agreementId) || !isNumeric(statusId))) {
+    throw errorWithCode('Both agreementId and statusId must be provided and be numeric', 400);
+  }
+
+  try {
+    const agreement = await Agreement.findById(agreementId);
+    if (!agreement) {
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
+    }
+
+    const status = await AgreementStatus.findOne({
+      where: {
+        id: statusId,
+      },
+      attributes: {
+        exclude: ['updatedAt', 'createdAt', 'active'],
+      },
+    });
+    if (!status) {
+      throw errorWithCode(`No Status with ID ${statusId} exists`, 400);
+    }
+
+    await agreement.setStatus(status);
+
+    return res.status(200).json(status).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+export default router;

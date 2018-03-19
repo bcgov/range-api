@@ -23,7 +23,7 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const LivestockIdentifier = sequelize.define('livestockIdentifierLocation', {
+  const LivestockIdentifierLocation = sequelize.define('livestockIdentifierLocation', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -57,5 +57,5 @@ export default (sequelize, DataTypes) => {
     tableName: 'ref_livestock_identifier_location',
   });
 
-  return LivestockIdentifier;
+  return LivestockIdentifierLocation;
 };

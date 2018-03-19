@@ -66,7 +66,7 @@ module.exports = {
       status_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'agreement_status',
+          model: 'ref_agreement_status',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

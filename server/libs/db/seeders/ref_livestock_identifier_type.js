@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
+// Created by Jason Leach on 2018-03-14.
 //
 
 /* eslint-env es6 */
@@ -26,27 +26,19 @@
 
 module.exports = {
   up: async (queryInterface) => {
-    const status = [
+    const ref = [
       {
-        code: 'S',
-        name: 'Submitted',
+        description: 'Brand',
         active: true,
       },
       {
-        code: 'C',
-        name: 'Completed',
+        description: 'Tag',
         active: true,
-      },
-      {
-        code: 'P',
-        name: 'Pending',
-        active: true,
-      },
-    ];
+      }];
 
-    await queryInterface.bulkInsert('ref_agreement_status', status, {});
+    await queryInterface.bulkInsert('ref_livestock_identifier_type', ref, {});
   },
   down: async (queryInterface) => {
-    await queryInterface.bulkDelete('ref_agreement_status', null, {});
+    await queryInterface.bulkDelete('ref_livestock_identifier_type', null, {});
   },
 };

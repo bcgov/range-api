@@ -80,31 +80,10 @@ module.exports = {
       active: true,
     },
     {
-      name: 'LIVESTOCK_ID_LOCATION', // BASE
-      value: JSON.stringify({
-        LEFT_EAR: 'Left Ear',
-        RIGHT_EAR: 'Right Ear',
-        LEFT_SHOLDER: 'Left Sholder',
-        RIGHT_SHOLDER: 'Right Sholder',
-        LEFT_HIND: 'Left Hind',
-        RIGHT_HIND: 'Right Hind',
-        LEFT_FLANK: 'Left Flank',
-        RIGHT_LFANG: 'Right Flank',
-      }),
-      active: true,
-    },
-    {
       name: 'EXEMPTION_STATUS',
       value: JSON.stringify({
         NOT_EXEMPT: 'Not Exempt',
         PENDING_APPROVAL: 'Pending Approval',
-      }),
-      active: true,
-    }, {
-      name: 'LIVESTOCK_ID_TYPE', // BASE
-      value: JSON.stringify({
-        BRAND: 'Brand',
-        TAG: 'Tag',
       }),
       active: true,
     }];

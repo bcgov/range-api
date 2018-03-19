@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'agreement_status';
+const table = 'grazing_schedule';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,16 +36,12 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      code: {
-        unique: true,
-        type: Sequelize.STRING(1),
-      },
-      name: {
-        type: Sequelize.STRING(32),
-      },
-      active: {
-        type: Sequelize.BOOLEAN,
+      year: {
+        type: Sequelize.STRING(4),
         allowNull: false,
+      },
+      narative: {
+        type: Sequelize.TEXT,
       },
       created_at: {
         type: Sequelize.DATE,

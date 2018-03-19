@@ -35,10 +35,32 @@ export const asyncMiddleware = fn =>
       .catch(next);
   };
 
-  /**
+/**
  * Check if a string consits of [Aa-Az], [0-9], -, _, and %.
  *
- * @param {String} str The string to be tested
+ * @param {String} str The string to be validated
  * @returns true if the string is valid, false otherwise
  */
 export const isValid = str => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
+
+/**
+ * Check if a string consits of [Aa-Az], [0-9], -, _, and %.
+ *
+ * @param {String} message The error message
+ * @param {Number} code    The error code (property)
+ * @returns An `Error` object with the message and code set
+ */
+export const errorWithCode = (message, code) => {
+  const error = new Error(message);
+  error.code = code;
+
+  return error;
+};
+
+/**
+ * Check if a string consits of [0-9].
+ *
+ * @param {String} str The string to be validated
+ * @returns true if the string is a number, false otherwise
+ */
+export const isNumeric = str => str && /^\d+$/.test(str);

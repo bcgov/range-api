@@ -23,7 +23,7 @@
 'use strict';
 
 import {
-  LIVESTOCK_TYPE,
+//   LIVESTOCK_TYPE,
   LIVESTOCK_AUFACTOR,
   AVERAGE_DAYS_PER_MONTH,
 } from '../constants';
@@ -35,7 +35,7 @@ import {
 */
 
 export default (sequelize, DataTypes) => {
-  const PastureScheduleEntry = sequelize.define('pastureScheduleEntry', {
+  const GrazingScheduleEntry = sequelize.define('grazingScheduleEntry', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -61,16 +61,16 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    livestockType: {
-      field: 'livestock_type',
-      type: DataTypes.TEXT,
-      values: Object.keys(LIVESTOCK_TYPE).map(k => LIVESTOCK_TYPE[k]),
+    dateIn: {
+      type: DataTypes.DATE,
+      field: 'date_in',
       allowNull: false,
     },
-    // pastureScheduleId: {
-    //   field: 'pasture_schedule_id',
-    //   type: DataTypes.INTEGER,
-    // },
+    dateOut: {
+      type: DataTypes.DATE,
+      field: 'date_out',
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
@@ -87,7 +87,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'pasture_schedule_entry',
+    tableName: 'grazing_schedule_entry',
   });
 
 
@@ -97,17 +97,17 @@ export default (sequelize, DataTypes) => {
 
   /* eslint-disable func-names */
 
-  PastureScheduleEntry.prototype.totalDays = function () {
+  GrazingScheduleEntry.prototype.totalDays = function () {
     return Math.round((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
   };
 
   // Private Land Deduction (AMU)
-  PastureScheduleEntry.prototype.pdlAum = function (pldPercent) {
+  GrazingScheduleEntry.prototype.pdlAum = function (pldPercent) {
     return Math.round(this.crownAum() * pldPercent * 100) / 100;
   };
 
   // AUMs = (Number of Animals * Days * Animal Class Proportion) / Days per month
-  PastureScheduleEntry.prototype.crownAum = function () {
+  GrazingScheduleEntry.prototype.crownAum = function () {
     const aufactor = LIVESTOCK_AUFACTOR[this.livestockType];
     const aum = (this.livestockCount * this.totalDays() * aufactor) / AVERAGE_DAYS_PER_MONTH;
     return Math.round(aum * 100) / 100;
@@ -115,11 +115,11 @@ export default (sequelize, DataTypes) => {
 
   // Because livestock only graze during months when vegetation is growing
   // the start date and end date will always be within the same calendar year.
-  PastureScheduleEntry.prototype.year = function () {
+  GrazingScheduleEntry.prototype.year = function () {
     return this.endDate.getFullYear();
   };
 
   /* eslint-enable func-names */
 
-  return PastureScheduleEntry;
+  return GrazingScheduleEntry;
 };
