@@ -45,14 +45,17 @@ RUN yum list epel\* && \
 # so lets move them.
 
 RUN diff --brief -r \
-    /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension \
-    /usr/pgsql-9.6/share/extension | \
+    /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension /usr/pgsql-9.6/share/extension | \
     grep '/usr/pgsql-9.6/share/extension' | \
     tr ':' '/' |  \
     awk '{ print $3 $4 }' | \
     xargs cp -vt /opt/rh/rh-postgresql96/root/usr/share/pgsql/extension && \
     cp -a /usr/pgsql-9.6/share/contrib/* /opt/rh/rh-postgresql96/root/usr/share/pgsql/contrib/ && \
-    cp -a /usr/pgsql-9.6/lib/postgis* /opt/rh/rh-postgresql96/root/usr/lib64/pgsql/
+    diff --brief /usr/pgsql-9.6/lib /opt/rh/rh-postgresql96/root/usr/lib64/pgsql | \
+    grep -v '/opt/rh/rh-postgresql96/root/usr/lib64/pgsql' | \
+    tr ':' '/' |  \
+    awk '{ print $3 $4 }' | \
+    xargs cp -vt /opt/rh/rh-postgresql96/root/usr/lib64/pgsql
     #rm -rf /usr/pgsql-9.6
 
 # PostgreSQL user
