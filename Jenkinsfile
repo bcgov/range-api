@@ -79,7 +79,7 @@ node {
         attachment.text = 'Their are issues with the unit tests.'
         // attachment.title_link = "${env.BUILD_URL}"
 
-        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+        // notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         sh "exit 1001"
       }
     }
@@ -106,8 +106,8 @@ node {
     // For this to work the Jenkins service mush have edit permissions within the deployment project.
     // Example OC cmd to accomplish this task (it's better if you have project init scripts that do this);
     // oc policy add-role-to-user edit system:serviceaccount:range-myra-tools:jenkins -n range-myra-dev
-    openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
-    openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+    // openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+    // openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
     
     try {
       def attachment = [:]
@@ -116,7 +116,7 @@ node {
       attachment.title = "API Build ${BUILD_ID} OK! :heart: :tada:"
       attachment.color = '#00FF00' // Lime Green
 
-      notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+      // notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
     } catch (error) {
       echo "Unable send update to slack, error = ${error}"
     }
