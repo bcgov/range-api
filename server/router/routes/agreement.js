@@ -154,14 +154,14 @@ router.put('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
       res.status(404).end();
     }
 
-    // const changes = deepDiff.diff(
-    //   agreement.get({ plain: true }),
-    //   agreement2.get({ plain: true })
-    // );
+    /* const changes = deepDiff.diff(
+      agreement.get({ plain: true }),
+      agreement2.get({ plain: true })
+    );
 
-    // if (changes) {
-    //   res.status(200).json([agreement, agreement2, changes]).end();
-    // }
+    if (changes) {
+      res.status(200).json([agreement, agreement2, changes]).end();
+    } */
 
     const count = await Agreement.update(body, {
       where: {
