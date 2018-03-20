@@ -24,6 +24,7 @@
 
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
+import { isAuthenticated } from '../../libs/auth';
 
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -36,7 +37,7 @@ const {
 const router = new Router();
 
 // Get
-router.get('/', asyncMiddleware(async (req, res) => {
+router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     districtId,
   } = req.query;

@@ -24,6 +24,7 @@
 
 import { Router } from 'express';
 import deepDiff from 'deep-diff';
+import { isAuthenticated } from '../../libs/auth';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -101,12 +102,12 @@ const excludedAgreementAttributes = ['primary_agreement_holder_id', 'agreement_t
   'extension_id', 'status_id'];
 
 // Create agreement
-router.post('/', asyncMiddleware(async (req, res) => {
+router.post('/', isAuthenticated, asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'Not Implemented' }).end();
 }));
 
 // Get all
-router.get('/', asyncMiddleware(async (req, res) => {
+router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
       include: allAgreementChildren,
@@ -122,7 +123,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
 }));
 
 // Update
-router.put('/:id', asyncMiddleware(async (req, res) => {
+router.put('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     id,
   } = req.params;
@@ -170,7 +171,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
 }));
 
 // Get by id
-router.get('/:id', asyncMiddleware(async (req, res) => {
+router.get('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
   try {
     const {
       id,
@@ -201,7 +202,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 //
 
 // Update the status of an agreement
-router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId/status/:statusId', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     statusId,
