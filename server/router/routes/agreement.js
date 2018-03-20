@@ -208,10 +208,12 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 //
 
 // Update the status of an agreement
-router.put('/:agreementId?/status/:statusId?', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/status', asyncMiddleware(async (req, res) => {
+  const {
+    statusId,
+  } = req.body;
   const {
     agreementId,
-    statusId,
   } = req.params;
 
   if ((!agreementId || !statusId) || (!isNumeric(agreementId) || !isNumeric(statusId))) {
@@ -221,7 +223,7 @@ router.put('/:agreementId?/status/:statusId?', asyncMiddleware(async (req, res) 
   try {
     const agreement = await Agreement.findById(agreementId);
     if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
 
     const status = await AgreementStatus.findOne({
@@ -233,7 +235,7 @@ router.put('/:agreementId?/status/:statusId?', asyncMiddleware(async (req, res) 
       },
     });
     if (!status) {
-      throw errorWithCode(`No Status with ID ${statusId} exists`, 400);
+      throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
     }
 
     await agreement.setStatus(status);
@@ -249,10 +251,12 @@ router.put('/:agreementId?/status/:statusId?', asyncMiddleware(async (req, res) 
 //
 
 // Update the zone of an agreement
-router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
+  const {
+    zoneId,
+  } = req.body;
   const {
     agreementId,
-    zoneId,
   } = req.params;
 
   if (!agreementId || !zoneId || !isNumeric(agreementId) || !isNumeric(zoneId)) {
@@ -262,7 +266,7 @@ router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
   try {
     const agreement = await Agreement.findById(agreementId);
     if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
 
     const zone = await Zone.findOne({
@@ -273,6 +277,9 @@ router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
         exclude: ['updatedAt', 'createdAt'],
       },
     });
+    if (!zone) {
+      throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
+    }
 
     await agreement.setZone(zone);
     return res.status(200).json(zone).end();
