@@ -23,7 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
-import deepDiff from 'deep-diff';
+// import deepDiff from 'deep-diff';
 import { isAuthenticated } from '../../libs/auth';
 import {
   asyncMiddleware,
@@ -154,7 +154,11 @@ router.put('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
       res.status(404).end();
     }
 
-    // const changes = deepDiff.diff(agreement.get({ plain: true }), agreement2.get({ plain: true }));
+    // const changes = deepDiff.diff(
+    //   agreement.get({ plain: true }),
+    //   agreement2.get({ plain: true })
+    // );
+
     // if (changes) {
     //   res.status(200).json([agreement, agreement2, changes]).end();
     // }
@@ -250,7 +254,7 @@ router.put('/:agreementId?/status/:statusId?', isAuthenticated, asyncMiddleware(
 //
 
 // Update the zone of an agreement
-router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/zone/:zoneId?', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     zoneId,
@@ -287,7 +291,7 @@ router.put('/:agreementId?/zone/:zoneId?', asyncMiddleware(async (req, res) => {
 //
 
 // create a livestock identifier in an agreement
-router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
+router.post('/:id?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'not implemented yet' }).end();
 
   const {
@@ -322,7 +326,7 @@ router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
 }));
 
 // get all livestock identifiers of an agreement
-router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
+router.get('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     agreementId,
   } = req.params;
@@ -344,7 +348,7 @@ router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res
   }
 }));
 
-router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     livestockIdentifierId,
@@ -354,7 +358,12 @@ router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMi
     body,
   } = req;
 
-  if (!agreementId || !livestockIdentifierId || !isNumeric(agreementId) || !isNumeric(livestockIdentifierId)) {
+  if (
+    !agreementId
+    || !livestockIdentifierId
+    || !isNumeric(agreementId)
+    || !isNumeric(livestockIdentifierId)
+  ) {
     throw errorWithCode('agreementId and livestockIdentifierId must be provided and be numaric', 400);
   }
 
@@ -384,4 +393,5 @@ router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMi
     throw err;
   }
 }));
+
 export default router;
