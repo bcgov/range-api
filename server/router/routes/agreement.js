@@ -308,7 +308,7 @@ router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
     body,
   } = req;
 
-  //TODO: validate fields in body
+  // TODO: validate fields in body
   try {
     const agreement = await Agreement.findOne({
       where: {
