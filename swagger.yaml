@@ -38,6 +38,8 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Agreement"
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
     post:
@@ -64,6 +66,8 @@ paths:
             $ref: "#/definitions/Agreement"
         400:
           description: "Bad or no body sent."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}:
@@ -88,6 +92,8 @@ paths:
             $ref: "#/definitions/Agreement"
         400:
           description: "Invalid id supplied"
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement not found"
       security:
@@ -121,10 +127,10 @@ paths:
             $ref: "#/definitions/Agreement"
         400:
           description: "Invalid id supplied."
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement not found."
-        405:
-          description: "Not authorized to update agreement."
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/status:
@@ -157,6 +163,8 @@ paths:
             $ref: "#/definitions/AgreementStatus"
         400:
           description: "Both agreementId and statusId must be provided and be numeric."
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement or status not found."
       security:
@@ -191,6 +199,8 @@ paths:
             $ref: "#/definitions/Zone"
         400:
           description: "Both agreementId and zoneId must be provided and be numeric."
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement or Zone not found."
       security:
@@ -219,6 +229,8 @@ paths:
             $ref: "#/definitions/LivestockIdentifier"
         400:
           description: "Invalid id supplied."
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement livestock identifier not found."
       security:
@@ -253,6 +265,8 @@ paths:
             $ref: "#/definitions/LivestockIdentifier"
         400:
           description: "Bad or no body sent."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/livestockidentifier/{livestockIdentifierId}:
@@ -291,6 +305,8 @@ paths:
             $ref: "#/definitions/LivestockIdentifier"
         400:
           description: "Bad or no body sent."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/extension:
@@ -315,6 +331,8 @@ paths:
             $ref: "#/definitions/Extension"
         400:
           description: "Invalid id supplied."
+        401:
+          description: "Not authorized."
         404:
           description: "Agreement not found."
       security:
@@ -348,6 +366,8 @@ paths:
             $ref: "#/definitions/Extension"
         400:
           description: "Bad or no body sent."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
     put:
@@ -379,6 +399,8 @@ paths:
             $ref: "#/definitions/Extension"
         400:
           description: "Bad or no body sent."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/client:
@@ -398,6 +420,8 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Client"
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/client/{clientId}:
@@ -420,6 +444,8 @@ paths:
           description: "Successfully returned client extension matching id."
           schema:
             $ref: "#/definitions/Client"
+        401:
+          description: "Not authorized."
         404:
           description: "Client not found."
       security:
@@ -443,6 +469,8 @@ paths:
               $ref: "#/definitions/District"
         400:
           description: "Bad query params passed."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/reference:
@@ -458,6 +486,8 @@ paths:
       responses:
         200:
           description: "Sucessfully returned reference values."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/zone:
@@ -485,6 +515,8 @@ paths:
               $ref: "#/definitions/Zone"
         400:
           description: "Bad query params passed."
+        401:
+          description: "Not authorized."
       security:
       - bearerAuth: []
   /v1/ehlo:
