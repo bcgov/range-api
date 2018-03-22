@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
+// Created by Jason Leach on 2018-03-21.
 //
 
 /* eslint-env es6 */
@@ -23,41 +23,44 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Zone = sequelize.define('zone', {
+  const Plan = sequelize.define('plan', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    code: {
-      type: DataTypes.STRING(5),
-      allowNull: false,
-      validate: {
-        is: /^[a-z]+$/i,
-        len: [3, 5],
-      },
-    },
-    description: {
-      type: DataTypes.STRING(64),
+    rangeName: {
+      field: 'range_name',
+      type: DataTypes.STRING(32),
       allowNull: false,
     },
-    contactName: {
-      field: 'contact_name',
-      type: DataTypes.STRING(32),
+    planStartDate: {
+      field: 'plan_start_date',
+      type: DataTypes.DATE,
     },
-    contactPhoneNumber: {
-      field: 'contact_phone',
-      type: DataTypes.STRING(16),
+    planEndDate: {
+      field: 'plan_end_date',
+      type: DataTypes.DATE,
     },
-    contactEmail: {
-      field: 'contact_email',
-      type: DataTypes.STRING(32),
+    // status: {
+    //   type: DataTypes.STRING(1),
+    //   validate: {
+    //     is: /^[a-z]$/i,
+    //     len: [1],
+    //   },
+    // },
+    notes: {
+      type: DataTypes.TEXT,
     },
-    districtId: {
+    agreementId: {
+      type: DataTypes.STRING(9),
+      field: 'agreement_id',
+      allowNull: false,
+    },
+    extensionId: {
+      field: 'extension_id',
       type: DataTypes.INTEGER,
-      field: 'district_id',
-      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -77,5 +80,14 @@ export default (sequelize, DataTypes) => {
     underscored: true,
   });
 
-  return Zone;
+  // Agreement.associate = (models) => {
+  //   // associations can be defined here
+  // };
+
+  // // Instance Method
+  // Agreement.prototype.isExtendable = function () {
+  //   return typeof this.extension === 'undefined';
+  // };
+
+  return Plan;
 };

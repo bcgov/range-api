@@ -26,15 +26,10 @@ import { EXEMPTION_STATUS } from '../constants';
 
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER,
-    },
     agreementId: {
       field: 'forest_file_id',
       allowNull: false,
+      primaryKey: true,
       type: DataTypes.STRING(9),
       validate: {
         is: /^RAN\d{6}$/i,

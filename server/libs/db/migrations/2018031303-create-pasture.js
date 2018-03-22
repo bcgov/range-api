@@ -56,11 +56,11 @@ module.exports = {
       notes: {
         type: Sequelize.TEXT,
       },
-      agreement_id: {
+      plan_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'agreement',
+          model: 'plan',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

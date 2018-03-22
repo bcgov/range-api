@@ -31,11 +31,11 @@ module.exports = {
 
     await queryInterface.createTable(table, {
       agreement_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(9),
         allowNull: false,
         references: {
-          model: 'agreement',
-          key: 'id',
+          model: 'ref_agreement',
+          key: 'forest_file_id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },

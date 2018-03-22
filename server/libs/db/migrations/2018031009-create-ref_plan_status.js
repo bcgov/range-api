@@ -22,62 +22,39 @@
 
 'use strict';
 
-/* eslint-disable no-unused-vars,arrow-body-style,no-global-assign */
-
-const table = 'ref_agreement';
+/* eslint-disable no-unused-vars,arrow-body-style */
+const table = 'ref_plan_status';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    const { sequelize } = queryInterface;
+
     await queryInterface.createTable(table, {
-      forest_file_id: {
+      id: {
         allowNull: false,
+        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.STRING(9),
-      },
-      agreement_start_date: {
-        type: Sequelize.DATE,
-        allowNull: false,
-      },
-      agreement_end_date: {
-        type: Sequelize.DATE,
-        allowNull: false,
-      },
-      agreement_type_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'ref_agreement_type',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
-      primary_agreement_holder_id: {
-        type: Sequelize.STRING(8),
-        allowNull: false,
-        references: {
-          model: 'ref_client',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
+      code: {
+        unique: true,
+        type: Sequelize.STRING(1),
       },
-      zoneId: {
-        type: Sequelize.INTEGER,
-        field: 'zone_id',
+      name: {
+        type: Sequelize.STRING(32),
+      },
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        references: {
-          model: 'zone',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
         allowNull: false,
       },
       updated_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
         allowNull: false,
       },
     });
@@ -89,8 +66,7 @@ module.exports = {
 
     await queryInterface.sequelize.query(query);
   },
-
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable(table);
+  down: (queryInterface, Sequelize) => {
+    return queryInterface.dropTable(table);
   },
 };

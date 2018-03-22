@@ -30,11 +30,11 @@ module.exports = {
     const { sequelize } = queryInterface;
 
     await queryInterface.createTable(table, {
-      agreement_id: {
+      plan_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'agreement',
+          model: 'plan',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

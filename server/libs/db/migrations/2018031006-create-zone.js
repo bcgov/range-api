@@ -44,6 +44,18 @@ module.exports = {
         type: Sequelize.STRING(64),
         allowNull: false,
       },
+      contactName: {
+        field: 'contact_name',
+        type: Sequelize.STRING(32),
+      },
+      contactPhoneNumber: {
+        field: 'contact_phone',
+        type: Sequelize.STRING(16),
+      },
+      contactEmail: {
+        field: 'contact_email',
+        type: Sequelize.STRING(32),
+      },
       district_id: {
         type: Sequelize.INTEGER,
         allowNull: false,

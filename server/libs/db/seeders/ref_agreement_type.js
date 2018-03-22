@@ -34,17 +34,17 @@ module.exports = {
       },
       {
         code: 'E02',
-        description: 'Unknown Name',
+        description: 'Grazing Permit',
         active: true,
       },
       {
         code: 'H01',
-        description: 'Unknown Name',
+        description: 'Haycutting Licence',
         active: true,
       },
       {
         code: 'H02',
-        description: 'Unknown Name',
+        description: 'Haycutting Permit',
         active: true,
       },
     ];

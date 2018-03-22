@@ -95,6 +95,12 @@ export default class DataManager {
     this.Agreement.hasMany(this.Usage, { as: 'usage' });
 
     //
+    // Agreement and Plan
+    //
+
+    this.Agreement.hasMany(this.Plan);
+
+    //
     // Agreements and Extension
     //
 
@@ -104,7 +110,7 @@ export default class DataManager {
     // Agreements and Grazing Schedule
     //
 
-    this.Agreement.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
+    this.Plan.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
 
     //
     // GrazingScheduleEntry, Grazing Schedule, LivestockType
@@ -119,7 +125,7 @@ export default class DataManager {
     // and Criteria.
     //
 
-    this.Agreement.hasMany(this.Pasture);
+    this.Plan.hasMany(this.Pasture);
 
     // // Spatially a pasture could be large and occur in multiple RUPs (either adjacent
     // // or over the same area). However, from a data perspective, they are specific to
