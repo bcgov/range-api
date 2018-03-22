@@ -338,17 +338,17 @@ module.exports = {
       delete zone.district;
     });
 
-    await queryInterface.bulkInsert('district', districts, {});
-    await queryInterface.sequelize.query(`ALTER SEQUENCE district_id_seq RESTART WITH ${did + 1};`);
+    await queryInterface.bulkInsert('ref_district', districts, {});
+    await queryInterface.sequelize.query(`ALTER SEQUENCE ref_district_id_seq RESTART WITH ${did + 1};`);
 
-    await queryInterface.bulkInsert('zone', zones, {});
-    await queryInterface.sequelize.query(`ALTER SEQUENCE zone_id_seq RESTART WITH ${zid + 1};`);
+    await queryInterface.bulkInsert('ref_zone', zones, {});
+    await queryInterface.sequelize.query(`ALTER SEQUENCE ref_zone_id_seq RESTART WITH ${zid + 1};`);
 
     await Promise.all(queries.map(string => queryInterface.sequelize.query(string)));
   },
   down: async (queryInterface) => {
-    await queryInterface.bulkDelete('district', null, {});
-    await queryInterface.bulkDelete('zone', null, {});
+    await queryInterface.bulkDelete('ref_district', null, {});
+    await queryInterface.bulkDelete('ref_zone', null, {});
     await queryInterface.sequelize.query('DELETE FROM district_zone');
   },
 };

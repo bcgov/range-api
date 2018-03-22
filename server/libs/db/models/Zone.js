@@ -75,6 +75,7 @@ export default (sequelize, DataTypes) => {
     timestamps: false,
     freezeTableName: true,
     underscored: true,
+    tableName: 'ref_zone',
   });
 
   return Zone;

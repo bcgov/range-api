@@ -73,7 +73,7 @@ module.exports = {
         field: 'zone_id',
         allowNull: false,
         references: {
-          model: 'zone',
+          model: 'ref_zone',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

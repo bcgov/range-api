@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'district';
+const table = 'ref_district';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {

@@ -53,6 +53,7 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
+    tableName: 'ref_district',
   });
 
   return District;

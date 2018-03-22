@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'zone';
+const table = 'ref_zone';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -60,7 +60,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'district',
+          model: 'ref_district',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
