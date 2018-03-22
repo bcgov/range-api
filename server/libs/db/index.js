@@ -63,7 +63,7 @@ export default class DataManager {
     //
 
     this.Agreement.belongsTo(this.AgreementType);
-    this.Agreement.belongsTo(this.AgreementStatus, { as: 'status' });
+    this.Agreement.belongsTo(this.AgreementExemptionStatus, { as: 'exemptionStatus' });
 
     // A District has multiple zones. This relation allows us to easily
     // query for the Zones in a particular District.
@@ -99,6 +99,7 @@ export default class DataManager {
     //
 
     this.Agreement.hasMany(this.Plan);
+    this.Plan.belongsTo(this.PlanStatus, { as: 'status' });
 
     //
     // Agreements and Extension

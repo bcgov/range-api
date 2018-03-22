@@ -23,7 +23,7 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const AgreementStatus = sequelize.define('agreementStatus', {
+  const PlanStatus = sequelize.define('planStatus', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -62,8 +62,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'ref_agreement_status',
+    tableName: 'ref_plan_status',
   });
 
-  return AgreementStatus;
+  return PlanStatus;
 };

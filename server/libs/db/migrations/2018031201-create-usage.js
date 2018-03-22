@@ -65,7 +65,7 @@ module.exports = {
         type: Sequelize.STRING(9),
         allowNull: false,
         references: {
-          model: 'ref_agreement',
+          model: 'agreement',
           key: 'forest_file_id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

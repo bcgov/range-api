@@ -24,7 +24,7 @@
 
 /* eslint-disable no-unused-vars,arrow-body-style,no-global-assign */
 
-const table = 'ref_agreement';
+const table = 'agreement';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -42,6 +42,15 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
+      agreement_exemption_status_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_agreement_exemption_status',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
       agreement_type_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -53,7 +62,6 @@ module.exports = {
       },
       primary_agreement_holder_id: {
         type: Sequelize.STRING(8),
-        allowNull: false,
         references: {
           model: 'ref_client',
           key: 'id',

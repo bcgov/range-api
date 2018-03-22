@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-10.
+// Created by Jason Leach on 2018-03-22.
 //
 
 /* eslint-env es6 */
@@ -24,7 +24,7 @@
 
 /* eslint-disable no-unused-vars,arrow-body-style,no-global-assign */
 
-const table = 'plan';
+const table = 'ref_agreement_exemption_status';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -35,44 +35,18 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      range_name: {
+      code: {
+        unique: true,
+        type: Sequelize.STRING(2),
+        allowNull: false,
+      },
+      description: {
         type: Sequelize.STRING(32),
         allowNull: false,
       },
-      plan_start_date: {
-        type: Sequelize.DATE,
-      },
-      plan_end_date: {
-        type: Sequelize.DATE,
-      },
-      status_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'ref_plan_status',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      notes: {
-        type: Sequelize.TEXT,
-      },
-      agreement_id: {
-        type: Sequelize.STRING(9),
-        field: 'agreement_id',
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        references: {
-          model: 'agreement',
-          key: 'forest_file_id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      extension_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'extension',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
       created_at: {
         type: Sequelize.DATE,

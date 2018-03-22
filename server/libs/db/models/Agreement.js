@@ -22,8 +22,6 @@
 
 'use strict';
 
-import { EXEMPTION_STATUS } from '../constants';
-
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
     agreementId: {
@@ -36,18 +34,18 @@ export default (sequelize, DataTypes) => {
         len: [9],
       },
     },
-    rangeName: {
-      field: 'range_name',
-      type: DataTypes.STRING(32),
-      allowNull: false,
-    },
-    alternateBusinessName: {
-      field: 'alternate_business_name',
-      type: DataTypes.STRING(64),
-      validate: {
-        len: [0, 64],
-      },
-    },
+    // rangeName: {
+    //   field: 'range_name',
+    //   type: DataTypes.STRING(32),
+    //   allowNull: false,
+    // },
+    // alternateBusinessName: {
+    //   field: 'alternate_business_name',
+    //   type: DataTypes.STRING(64),
+    //   validate: {
+    //     len: [0, 64],
+    //   },
+    // },
     agreementStartDate: {
       field: 'agreement_start_date',
       type: DataTypes.DATE,
@@ -58,19 +56,19 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false,
     },
-    planStartDate: {
-      field: 'plan_start_date',
-      type: DataTypes.DATE,
-    },
-    planEndDate: {
-      field: 'plan_end_date',
-      type: DataTypes.DATE,
-    },
-    exemptionStatus: {
-      field: 'exemption_status',
-      type: DataTypes.TEXT,
-      values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
-    },
+    // planStartDate: {
+    //   field: 'plan_start_date',
+    //   type: DataTypes.DATE,
+    // },
+    // planEndDate: {
+    //   field: 'plan_end_date',
+    //   type: DataTypes.DATE,
+    // },
+    // exemptionStatus: {
+    //   field: 'exemption_status',
+    //   type: DataTypes.TEXT,
+    //   values: Object.keys(EXEMPTION_STATUS).map(k => EXEMPTION_STATUS[k]),
+    // },
     // status: {
     //   type: DataTypes.STRING(1),
     //   validate: {
@@ -81,16 +79,21 @@ export default (sequelize, DataTypes) => {
     notes: {
       type: DataTypes.TEXT,
     },
-    // zoneId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'zone_id',
-    //   allowNull: false,
-    // },
-    // extensionId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'extension_id',
-    //   allowNull: false,
-    // },
+    zoneId: {
+      type: DataTypes.INTEGER,
+      field: 'zone_id',
+      allowNull: false,
+    },
+    typeId: {
+      type: DataTypes.INTEGER,
+      field: 'agreement_type_id',
+      allowNull: false,
+    },
+    exemptionStatusId: {
+      type: DataTypes.INTEGER,
+      field: 'agreement_exemption_status_id',
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
