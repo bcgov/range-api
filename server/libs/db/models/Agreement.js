@@ -24,7 +24,7 @@
 
 export default (sequelize, DataTypes) => {
   const Agreement = sequelize.define('agreement', {
-    agreementId: {
+    id: {
       field: 'forest_file_id',
       allowNull: false,
       primaryKey: true,
@@ -76,9 +76,9 @@ export default (sequelize, DataTypes) => {
     //     len: [1],
     //   },
     // },
-    notes: {
-      type: DataTypes.TEXT,
-    },
+    // notes: {
+    //   type: DataTypes.TEXT,
+    // },
     zoneId: {
       type: DataTypes.INTEGER,
       field: 'zone_id',

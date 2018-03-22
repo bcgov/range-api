@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'usage';
+const table = 'ref_usage';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {

@@ -34,7 +34,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(5),
       allowNull: false,
       validate: {
-        is: /^[a-z]+$/i,
+        is: /^[a-z\d]+$/i,
         len: [3, 5],
       },
     },
