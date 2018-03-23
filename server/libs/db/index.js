@@ -18,12 +18,20 @@ import Sequelize from 'sequelize';
 
 export default class DataManager {
   constructor(config) {
-    this.sequelize = new Sequelize(config.get('db:url'), {
+    this.sequelize = new Sequelize(config.get('db:database'), config.get('db:user'), config.get('db:password'), {
+      host: config.get('db:host'),
+      dialect: 'postgres',
       logging: false,
-      operatorsAliases: Sequelize.Op,
       underscored: true,
+      operatorsAliases: Sequelize.Op,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
     });
-    // this.Constants = Constants;
+
     this.config = config;
     this.loadModels();
     this.buildRelations();
