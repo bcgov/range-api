@@ -23,7 +23,11 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs/utils';
+import {
+  asyncMiddleware,
+  errorWithCode,
+} from '../../libs/utils';
+import { logger } from '../../libs/logger';
 
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -40,18 +44,20 @@ router.get('/', asyncMiddleware(async (req, res) => {
   const {
     districtId,
   } = req.query;
+
   try {
-    const whereStatement = {};
+    const where = {};
     if (districtId) {
-      whereStatement.districtId = districtId;
+      where.districtId = districtId;
     }
 
     const zones = await Zone.findAll({
-      where: whereStatement,
+      where,
     });
     res.status(200).json(zones).end();
-  } catch (err) {
-    res.status(500).json({ error: err }).end();
+  } catch (error) {
+    logger.error('error occured when getting zones');
+    throw error;
   }
 }));
 

@@ -23,6 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
+import deepDiff from 'deep-diff';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -95,6 +96,13 @@ const allAgreementChildren = [
       exclude: ['agreement_id'],
     },
   },
+  {
+    model: AgreementStatus,
+    as: 'status',
+    attributes: {
+      exclude: ['active'],
+    },
+  },
 ];
 const excludedAgreementAttributes = ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id',
   'extension_id', 'status_id'];
@@ -116,7 +124,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
     res.status(200).json(agreements).end();
   } catch (err) {
-    res.status(500).json({ error: err }).end();
+    throw err;
   }
 }));
 
@@ -125,22 +133,12 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
   } = req.params;
+
   const {
     body,
   } = req;
 
   try {
-    const count = await Agreement.update(body, {
-      where: {
-        id,
-      },
-    });
-
-    if (count[0] === 0) {
-      // No records were updated. The ID probably does not exists.
-      return res.send(400).end(); // Bad Request
-    }
-
     const agreement = await Agreement.findOne({
       where: {
         id,
@@ -151,7 +149,27 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       },
     });
 
-    return res.status(200).json(agreement).end();
+    if (!agreement) {
+      res.status(404).end();
+    }
+
+    // const changes = deepDiff.diff(agreement.get({ plain: true }), agreement2.get({ plain: true }));
+    // if (changes) {
+    //   res.status(200).json([agreement, agreement2, changes]).end();
+    // }
+
+    const count = await Agreement.update(body, {
+      where: {
+        id,
+      },
+    });
+
+    if (count[0] === 0) {
+      // No records were updated. The ID probably does not exists.
+      res.send(400).json().end(); // Bad Request
+    }
+
+    res.status(200).json(agreement).end();
   } catch (error) {
     logger.error(`error updating agreement ${id}`);
     throw error;
@@ -181,7 +199,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       res.status(404).json({ error: 'Not found' }).end();
     }
   } catch (err) {
-    res.status(500).json({ error: err }).end();
+    throw err;
   }
 }));
 
@@ -190,10 +208,12 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 //
 
 // Update the status of an agreement
-router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/status', asyncMiddleware(async (req, res) => {
+  const {
+    statusId,
+  } = req.body;
   const {
     agreementId,
-    statusId,
   } = req.params;
 
   if ((!agreementId || !statusId) || (!isNumeric(agreementId) || !isNumeric(statusId))) {
@@ -203,7 +223,7 @@ router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) =>
   try {
     const agreement = await Agreement.findById(agreementId);
     if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
 
     const status = await AgreementStatus.findOne({
@@ -215,7 +235,7 @@ router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) =>
       },
     });
     if (!status) {
-      throw errorWithCode(`No Status with ID ${statusId} exists`, 400);
+      throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
     }
 
     await agreement.setStatus(status);
@@ -226,4 +246,148 @@ router.put('/:agreementId/status/:statusId', asyncMiddleware(async (req, res) =>
   }
 }));
 
+//
+// Agreement Zone
+//
+
+// Update the zone of an agreement
+router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
+  const {
+    zoneId,
+  } = req.body;
+  const {
+    agreementId,
+  } = req.params;
+
+  if (!agreementId || !zoneId || !isNumeric(agreementId) || !isNumeric(zoneId)) {
+    throw errorWithCode('Both agreementId and zoneId must be provided and be numaric', 400);
+  }
+
+  try {
+    const agreement = await Agreement.findById(agreementId);
+    if (!agreement) {
+      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
+    }
+
+    const zone = await Zone.findOne({
+      where: {
+        id: zoneId,
+      },
+      attributes: {
+        exclude: ['updatedAt', 'createdAt'],
+      },
+    });
+    if (!zone) {
+      throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
+    }
+
+    await agreement.setZone(zone);
+    return res.status(200).json(zone).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+//
+// Agreement Livestock Identifier
+//
+
+// create a livestock identifier in an agreement
+router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
+  res.status(501).json({ error: 'not implemented yet' }).end();
+  
+  const {
+    id,
+  } = req.params;
+  
+  if (!isNumeric(id)) {
+    throw errorWithCode('agreementId must be provided and be numaric', 400);
+  }
+
+  const {
+    body,
+  } = req;
+
+  // TODO: validate fields in body
+  try {
+    const agreement = await Agreement.findOne({
+      where: {
+        id,
+      },
+    });
+
+    const livestockIdentifier = await LivestockIdentifier.create(body);
+
+    await agreement.addLivestockIdentifier(livestockIdentifier);
+    await agreement.save();
+    
+    res.status(200).json(livestockIdentifier).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// get all livestock identifiers of an agreement
+router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
+  const {
+    agreementId,
+  } = req.params;
+
+  if (!agreementId || !isNumeric(agreementId)) {
+    throw errorWithCode('agreementId must be provided and be numaric', 400);
+  }
+
+  try {
+    const livestockIdentifiers = await LivestockIdentifier.findAll({
+      where: {
+        agreementId,
+      },
+    });
+
+    return res.status(200).json(livestockIdentifiers).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
+  const {
+    agreementId,
+    livestockIdentifierId,
+  } = req.params;
+
+  const {
+    body,
+  } = req;
+
+  if (!agreementId || !livestockIdentifierId || !isNumeric(agreementId) || !isNumeric(livestockIdentifierId)) {
+    throw errorWithCode('agreementId and livestockIdentifierId must be provided and be numaric', 400);
+  }
+
+  try {
+    const [affectedCount] = await LivestockIdentifier.update(body, {
+      where: {
+        agreementId,
+        id: livestockIdentifierId,
+      },
+    });
+
+    if (!affectedCount) {
+      throw errorWithCode(`No livestock identifier with ID ${livestockIdentifierId} exists`, 400);
+    }
+
+    const livestockIdentifier = await LivestockIdentifier.findOne({
+      where: {
+        id: livestockIdentifierId,
+      },
+      attributes: {
+        exclude: ['updatedAt', 'createdAt'],
+      },
+    });
+
+    return res.status(200).json(livestockIdentifier);
+  } catch (err) {
+    throw err;
+  }
+}));
 export default router;
