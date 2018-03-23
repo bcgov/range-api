@@ -155,6 +155,8 @@ const createPlan = async (agreementId) => {
       agreementId: ag.id,
     })
 
+    console.log(`Created Plan with ID = ${plan.id}`);
+
     return plan.id;
   } catch (error) {
     console.log(error);
@@ -167,8 +169,6 @@ const createPasture = async (planId) => {
     const t = await dm.sequelize.transaction();
 
     const plan = await Plan.findById(planId, {transaction: t});
-
-    console.log(plan);
 
     const p1 = await Pasture.create({
       name: faker.address.streetName(),
@@ -193,6 +193,8 @@ const createPasture = async (planId) => {
     // await p2.save()
 
     await t.commit();
+
+    console.log(`Created Pasture's with ID = ${p1.id} ${p2.id}`);
 
     return [p1.id, p2.id];
   } catch (err) {
@@ -428,11 +430,21 @@ const test = async (agreementId) => {
 };
 
 const main = async () => {
-  const agreementId = 'RAN077054'
+  const agreements = ['RAN077054']
 
-  const clientId = await createClient();
-  const planId = await createPlan(agreementId);
-  const pastureIds = await createPasture(planId);
+  try {
+  for (let i = 0; i < agreements.length; i++ ) {
+    const agreementId = agreements[i];
+
+    console.log(`Generating faux data for agreement ${agreementId}`);
+
+    const clientId = await createClient();
+    const planId = await createPlan(agreementId);
+    const pastureIds = await createPasture(planId);
+
+    await test(agreementId);
+  }
+
   // const agreementId = await createAgreement(clientId);
   // const pastureIds = await createPasture(agreementId);
   // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
@@ -446,9 +458,9 @@ const main = async () => {
   // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
   // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
   // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
-
-  await test(agreementId);
-
+  } catch (error) {
+    console.log(`Error = ${error.message}`)
+  }
   process.exit(0);
 };
 
