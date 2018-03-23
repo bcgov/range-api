@@ -48,7 +48,6 @@ nconf.overrides({
     password: process.env.POSTGRESQL_USER,
     database: process.env.POSTGRESQL_DATABASE,
     host: process.env.POSTGRESQL_HOST,
-    url: process.env.POSTGRES_URL,
   },
   sso: {
     certsEndpoint: process.env.SSO_CERTS_ENDPOINT,
