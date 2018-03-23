@@ -43,15 +43,13 @@ export default (sequelize, DataTypes) => {
       field: 'plan_end_date',
       type: DataTypes.DATE,
     },
-    // status: {
-    //   type: DataTypes.STRING(1),
-    //   validate: {
-    //     is: /^[a-z]$/i,
-    //     len: [1],
-    //   },
-    // },
     notes: {
       type: DataTypes.TEXT,
+    },
+    statusId: {
+      type: DataTypes.INTEGER,
+      field: 'status_id',
+      allowNull: false,
     },
     agreementId: {
       type: DataTypes.STRING(9),

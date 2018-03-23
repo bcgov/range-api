@@ -53,10 +53,10 @@ export default (sequelize, DataTypes) => {
     notes: {
       type: DataTypes.TEXT,
     },
-    // agreementId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'agreement_id',
-    // },
+    planId: {
+      type: DataTypes.INTEGER,
+      field: 'plan_id',
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

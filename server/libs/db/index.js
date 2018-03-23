@@ -111,7 +111,7 @@ export default class DataManager {
     // Agreements and Grazing Schedule
     //
 
-    this.Plan.belongsToMany(this.GrazingSchedule, { through: 'agreement_grazing_schedule' });
+    this.Plan.belongsToMany(this.GrazingSchedule, { through: 'plan_grazing_schedule' });
 
     //
     // GrazingScheduleEntry, Grazing Schedule, LivestockType
@@ -132,7 +132,7 @@ export default class DataManager {
     // // or over the same area). However, from a data perspective, they are specific to
     // // a single RUP.
 
-    // this.Pasture.hasMany(this.PlantCommunity);
+    this.Pasture.hasMany(this.PlantCommunity);
     // this.PlantCommunity.hasMany(this.PlantCommunityAction);
     // this.PlantCommunity.hasMany(this.MonitoringSite);
     // this.MonitoringSite.hasMany(this.MonitoringCriteria);

@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'agreement_grazing_schedule';
+const table = 'plan_grazing_schedule';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
