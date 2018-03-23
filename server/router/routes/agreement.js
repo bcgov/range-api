@@ -78,7 +78,7 @@ const allAgreementChildren = [
       model: GrazingScheduleEntry,
       include: [LivestockType, Pasture],
       attributes: {
-        exclude: ['grazing_schedule_id', 'livestock_type_id', 'agreement_grazing_schedule'],
+        exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
       },
     }],
   },
