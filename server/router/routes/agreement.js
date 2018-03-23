@@ -23,7 +23,6 @@
 'use strict';
 
 import { Router } from 'express';
-import deepDiff from 'deep-diff';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -45,6 +44,7 @@ const {
   LivestockIdentifierLocation,
   LivestockIdentifierType,
   Pasture,
+  Plan,
   GrazingSchedule,
   GrazingScheduleEntry,
   LivestockType,
@@ -70,17 +70,56 @@ const allAgreementChildren = [
     },
   },
   {
-    model: Pasture,
-  },
-  {
-    model: GrazingSchedule,
+    model: Plan,
+    attributes: {
+      exclude: ['status_id'],
+    },
     include: [{
-      model: GrazingScheduleEntry,
-      include: [LivestockType, Pasture],
+      model: Pasture,
       attributes: {
-        exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+        exclude: ['plan_id'],
       },
-    }],
+      // include: [{
+      //   model: PlantCommunity,
+      //   attributes: {
+      //     exclude: ['aspect_id', 'elevation_id', 'pasture_id'],
+      //   },
+      //   include: [{
+      //       model: PlantCommunityAspect,
+      //       as: 'aspect'
+      //     }, {
+      //       model: PlantCommunityElevation,
+      //       as: 'elevation'
+      //     },
+      //     {
+      //       model: PlantCommunityAction,
+      //       as: 'actions',
+      //       attributes: {
+      //         exclude: ['plant_community_id'],
+      //       },
+      //       include: [{
+      //         model: PlantCommunityActionPurpose,
+      //         as: 'actionPurpose'
+      //       },
+      //       {
+      //         model: PlantCommunityActionType,
+      //         as: 'actionType'
+      //       }],
+      //     }
+      //   ],
+      // }],
+    },
+    {
+      model: GrazingSchedule,
+      include: [{
+        model: GrazingScheduleEntry,
+        include: [LivestockType, Pasture],
+        attributes: {
+          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+        },
+      }],
+    },
+    ],
   },
   {
     model: Client,
@@ -96,16 +135,8 @@ const allAgreementChildren = [
       exclude: ['agreement_id'],
     },
   },
-  {
-    model: AgreementStatus,
-    as: 'status',
-    attributes: {
-      exclude: ['active'],
-    },
-  },
 ];
-const excludedAgreementAttributes = ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id',
-  'extension_id', 'status_id'];
+const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'agreement_exemption_status_id', 'primary_agreement_holder_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
@@ -152,11 +183,6 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
     if (!agreement) {
       res.status(404).end();
     }
-
-    // const changes = deepDiff.diff(agreement.get({ plain: true }), agreement2.get({ plain: true }));
-    // if (changes) {
-    //   res.status(200).json([agreement, agreement2, changes]).end();
-    // }
 
     const count = await Agreement.update(body, {
       where: {
@@ -295,11 +321,11 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
 // create a livestock identifier in an agreement
 router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'not implemented yet' }).end();
-  
+
   const {
     id,
   } = req.params;
-  
+
   if (!isNumeric(id)) {
     throw errorWithCode('agreementId must be provided and be numaric', 400);
   }
@@ -320,7 +346,7 @@ router.post('/:id?/livestockidentifier', asyncMiddleware(async (req, res) => {
 
     await agreement.addLivestockIdentifier(livestockIdentifier);
     await agreement.save();
-    
+
     res.status(200).json(livestockIdentifier).end();
   } catch (err) {
     throw err;
@@ -360,7 +386,8 @@ router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMi
     body,
   } = req;
 
-  if (!agreementId || !livestockIdentifierId || !isNumeric(agreementId) || !isNumeric(livestockIdentifierId)) {
+  if (!agreementId || !livestockIdentifierId || !isNumeric(agreementId) ||
+   !isNumeric(livestockIdentifierId)) {
     throw errorWithCode('agreementId and livestockIdentifierId must be provided and be numaric', 400);
   }
 
