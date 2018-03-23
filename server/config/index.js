@@ -44,8 +44,8 @@ nconf.overrides({
   host: process.env.HOST || '127.0.0.1',
   port: process.env.PORT || 8000,
   db: {
-    user: process.env.POSTGRESQL_PASSWORD,
-    password: process.env.POSTGRESQL_USER,
+    user: process.env.POSTGRESQL_USER,
+    password: process.env.POSTGRESQL_PASSWORD,
     database: process.env.POSTGRESQL_DATABASE,
     host: process.env.POSTGRESQL_HOST,
   },
