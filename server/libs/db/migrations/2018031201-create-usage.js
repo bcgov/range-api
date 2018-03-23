@@ -49,17 +49,17 @@ module.exports = {
       temporaryIncrease: {
         type: Sequelize.INTEGER,
         field: 'temporary_increase',
-        allowNull: false,
+        defaultValue: 0,
       },
       totalNonUse: {
         type: Sequelize.INTEGER,
         field: 'total_non_use',
-        default: 0,
+        defaultValue: 0,
       },
       totalAnnualUse: {
         type: Sequelize.INTEGER,
         field: 'total_annual_use',
-        default: 0,
+        defaultValue: 0,
       },
       agreement_id: {
         type: Sequelize.STRING(9),

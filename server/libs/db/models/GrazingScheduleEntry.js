@@ -22,11 +22,9 @@
 
 'use strict';
 
-import {
-//   LIVESTOCK_TYPE,
-  LIVESTOCK_AUFACTOR,
-  AVERAGE_DAYS_PER_MONTH,
-} from '../constants';
+// import {
+//   AVERAGE_DAYS_PER_MONTH,
+// } from '../constants';
 
 /*
   This is a “Grazing Schedule” for E01 and E02 (grazing) agreements and
@@ -101,17 +99,17 @@ export default (sequelize, DataTypes) => {
     return Math.round((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
   };
 
-  // Private Land Deduction (AMU)
-  GrazingScheduleEntry.prototype.pdlAum = function (pldPercent) {
-    return Math.round(this.crownAum() * pldPercent * 100) / 100;
-  };
+  // // Private Land Deduction (AMU)
+  // GrazingScheduleEntry.prototype.pdlAum = function (pldPercent) {
+  //   return Math.round(this.crownAum() * pldPercent * 100) / 100;
+  // };
 
-  // AUMs = (Number of Animals * Days * Animal Class Proportion) / Days per month
-  GrazingScheduleEntry.prototype.crownAum = function () {
-    const aufactor = LIVESTOCK_AUFACTOR[this.livestockType];
-    const aum = (this.livestockCount * this.totalDays() * aufactor) / AVERAGE_DAYS_PER_MONTH;
-    return Math.round(aum * 100) / 100;
-  };
+  // // AUMs = (Number of Animals * Days * Animal Class Proportion) / Days per month
+  // GrazingScheduleEntry.prototype.crownAum = function () {
+  //   const aufactor = LIVESTOCK_AUFACTOR[this.livestockType];
+  //   const aum = (this.livestockCount * this.totalDays() * aufactor) / AVERAGE_DAYS_PER_MONTH;
+  //   return Math.round(aum * 100) / 100;
+  // };
 
   // Because livestock only graze during months when vegetation is growing
   // the start date and end date will always be within the same calendar year.

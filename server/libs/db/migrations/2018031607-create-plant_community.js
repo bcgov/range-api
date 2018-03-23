@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-14.
+// Created by Jason Leach on 2018-03-16.
 //
 
 /* eslint-env es6 */
@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'pasture';
+const table = 'plant_community';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -37,33 +37,41 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       name: {
-        type: Sequelize.STRING(64),
+        type: Sequelize.STRING(32),
         allowNull: false,
       },
-      allowable_aum: {
-        type: Sequelize.INTEGER,
-      },
-      grace_days: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 3,
-      },
-      pld_percent: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      notes: {
-        type: Sequelize.TEXT,
-      },
-      plan_id: {
+      aspect_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'plan',
+          model: 'ref_plant_community_aspect',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
+      },
+      elevation_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_plant_community_elevation',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
+      pasture_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'pasture',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
+      url: {
+        type: Sequelize.STRING(256),
+      },
+      notes: {
+        type: Sequelize.TEXT,
       },
       created_at: {
         type: Sequelize.DATE,

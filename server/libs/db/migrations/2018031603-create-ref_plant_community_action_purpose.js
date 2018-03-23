@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-14.
+// Created by Jason Leach on 2018-03-10.
 //
 
 /* eslint-env es6 */
@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'pasture';
+const table = 'ref_plant_community_action_purpose';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,34 +36,18 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      name: {
-        type: Sequelize.STRING(64),
+      code: {
+        unique: true,
+        type: Sequelize.STRING(2),
         allowNull: false,
       },
-      allowable_aum: {
-        type: Sequelize.INTEGER,
-      },
-      grace_days: {
-        type: Sequelize.INTEGER,
+      description: {
+        type: Sequelize.STRING(32),
         allowNull: false,
-        defaultValue: 3,
       },
-      pld_percent: {
-        type: Sequelize.FLOAT,
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: 0,
-      },
-      notes: {
-        type: Sequelize.TEXT,
-      },
-      plan_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'plan',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
       },
       created_at: {
         type: Sequelize.DATE,

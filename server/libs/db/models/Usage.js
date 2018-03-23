@@ -81,5 +81,29 @@ export default (sequelize, DataTypes) => {
     tableName: 'ref_usage',
   });
 
+  //
+  // Instance Method
+  //
+
+  /* eslint-disable func-names, arrow-body-style */
+
+  Usage.prototype.calculateTotalAnnualUse = function () {
+    return (this.authorizedAum + this.temporaryIncrease) - this.totalNonUse;
+  };
+
+  //
+  // Hooks
+  //
+
+  Usage.beforeCreate((usage) => {
+    /* eslint-disable-next-line no-param-reassign */
+    usage.totalAnnualUse = usage.calculateTotalAnnualUse();
+  });
+
+  Usage.beforeUpdate((usage) => {
+    /* eslint-disable-next-line no-param-reassign */
+    usage.totalAnnualUse = usage.calculateTotalAnnualUse();
+  });
+
   return Usage;
 };

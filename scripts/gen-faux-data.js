@@ -57,12 +57,12 @@ const {
   Pasture,
   Plan,
   PlanStatus,
-  // PlantCommunity,
-  // PlantCommunityAction,
-  // PlantCommunityActionPurpose,
-  // PlantCommunityActionType,
-  // PlantCommunityAspect,
-  // PlantCommunityElevation,
+  PlantCommunity,
+  PlantCommunityAction,
+  PlantCommunityActionPurpose,
+  PlantCommunityActionType,
+  PlantCommunityAspect,
+  PlantCommunityElevation,
   Usage,
   Zone,
 } = dm;
@@ -433,6 +433,13 @@ const main = async () => {
   const clientId = await createClient();
   const planId = await createPlan(agreementId);
   const pastureIds = await createPasture(planId);
+  // const agreementId = await createAgreement(clientId);
+  // const pastureIds = await createPasture(agreementId);
+  // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
+  // const usageId = await createUsage(agreementId);
+  // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
+  // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
+  // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
 
   // const agreementId = await createAgreement(clientId);
   // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);

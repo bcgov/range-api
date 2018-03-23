@@ -1,7 +1,25 @@
 
-## Example Readme
+# About My Range Application (MyRA) API
 
-This readme serves as an example readme for a government open source project. A brief description of your project would go here.
+The Range Mobile Pathfinder project is developing a suite of applications to support the sustainable management of rangelands in British Columbia. [Learn more about the Range Program](https://www.for.gov.bc.ca/hra/)
+
+## Goals/Roadmap
+
+The goal is to move important crown land management documents from paper to digital, and to make this information accessible in the field through disconnected mobile devices. This also supports a new and consistent process for Range staff across the province to support decision making processes.
+
+An Agile Scrum team is developing the Alpha product to test basic fuctions after March 31, 2018. Future releases will lead towards an application that can be used by staff and public range use agreement holders, on multiple platforms.
+
+- [For the latest product vision and feature roadmap, please see our RealtimeBoard](https://realtimeboard.com/app/board/o9J_kzhjVKg=/) 
+
+For the Alpha Release, the **API** documented here are supporting both the MyRa iOS application and the Myra Web Application functions. 
+
+### Related MyRA Documentation
+
+- [MyRA iOS application Github Repository](https://github.com/bcgov/range-ios)
+- [MyRA Web application Github Repository](https://github.com/bcgov/range-web)
+- [MyRa API Github Repository](https://github.com/bcgov/range-api)
+- [Our current Sprint Backlog is visible on Trello](https://trello.com/b/YxiYOPGU)
+- [See the database Schema on Schema-Spy](http://schema-spy-range-myra-dev.pathfinder.gov.bc.ca/)
 
 ## Features
 
@@ -12,8 +30,6 @@ This readme serves as an example readme for a government open source project. A 
 ## Installation
 
 ## Project Status
-
-## Goals/Roadmap
 
 ## Getting Help or Reporting an Issue
 

@@ -42,13 +42,13 @@ export default (sequelize, DataTypes) => {
       field: 'grace_days',
       type: DataTypes.INTEGER,
       allowNull: false,
-      default: 0,
+      defaultValue: 0,
     },
-    pdlPercent: {
-      field: 'pdl_percent',
+    pldPercent: {
+      field: 'pld_percent',
       type: DataTypes.FLOAT,
       allowNull: false,
-      default: 0,
+      defaultValue: 0,
     },
     notes: {
       type: DataTypes.TEXT,

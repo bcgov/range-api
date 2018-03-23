@@ -15,15 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-08.
-//
+// Created by Jason Leach on 2018-03-16.
 
 /* eslint-env es6 */
 
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const AgreementType = sequelize.define('agreementType', {
+  const PlantCommunityElevation = sequelize.define('plantCommunityElevation', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -33,7 +32,6 @@ export default (sequelize, DataTypes) => {
     code: {
       unique: true,
       type: DataTypes.STRING(4),
-      allowNull: false,
     },
     description: {
       type: DataTypes.STRING(32),
@@ -43,15 +41,13 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
-      field: 'created_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
-    updatedAt: {
+    updated_at: {
       type: DataTypes.DATE,
-      field: 'updated_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
@@ -59,8 +55,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'ref_agreement_type',
+    tableName: 'ref_plant_community_elevation',
   });
 
-  return AgreementType;
+  return PlantCommunityElevation;
 };

@@ -44,7 +44,10 @@ nconf.overrides({
   host: process.env.HOST || '127.0.0.1',
   port: process.env.PORT || 8000,
   db: {
-    url: process.env.POSTGRES_URL,
+    user: process.env.POSTGRESQL_USER,
+    password: process.env.POSTGRESQL_PASSWORD,
+    database: process.env.POSTGRESQL_DATABASE,
+    host: process.env.POSTGRESQL_HOST,
   },
   sso: {
     certsEndpoint: process.env.SSO_CERTS_ENDPOINT,

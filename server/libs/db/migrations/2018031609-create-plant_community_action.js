@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-14.
+// Created by Jason Leach on 2018-03-16.
 //
 
 /* eslint-env es6 */
@@ -23,7 +23,7 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'pasture';
+const table = 'plant_community_action';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -36,31 +36,44 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      name: {
-        type: Sequelize.STRING(64),
-        allowNull: false,
-      },
-      allowable_aum: {
-        type: Sequelize.INTEGER,
-      },
-      grace_days: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 3,
-      },
-      pld_percent: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      notes: {
+      description: {
         type: Sequelize.TEXT,
       },
-      plan_id: {
+      noGrazeStart: {
+        field: 'no_graze_start',
+        type: Sequelize.DATE,
+      },
+      noGrazeEnd: {
+        field: 'no_graze_end',
+        type: Sequelize.DATE,
+      },
+      // actionPurpose: {
+      //   type: DataTypes.TEXT,
+      //   values: Object.keys(PC_ACTION_PURPOSE).map(k => PC_ACTION_PURPOSE[k]),
+      // },
+      plant_community_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'plan',
+          model: 'plant_community',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
+      action_type_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_plant_community_action_type',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
+      action_purpose_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_plant_community_action_purpose',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },

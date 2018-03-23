@@ -21,8 +21,6 @@
 
 'use strict';
 
-import { PC_ACTION_TYPE } from '../constants';
-
 export default (sequelize, DataTypes) => {
   const PlantCommunityAction = sequelize.define('plantCommunityAction', {
     id: {
@@ -30,11 +28,6 @@ export default (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
-    },
-    actionType: {
-      field: 'action_type',
-      type: DataTypes.TEXT,
-      values: Object.keys(PC_ACTION_TYPE).map(k => PC_ACTION_TYPE[k]),
     },
     description: {
       type: DataTypes.TEXT,
@@ -49,6 +42,14 @@ export default (sequelize, DataTypes) => {
     },
     plantCommunityId: {
       field: 'plant_community_id',
+      type: DataTypes.INTEGER,
+    },
+    actionTypeId: {
+      field: 'action_type_id',
+      type: DataTypes.INTEGER,
+    },
+    purposeId: {
+      field: 'action_purpose_id',
       type: DataTypes.INTEGER,
     },
     createdAt: {

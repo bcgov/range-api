@@ -15,15 +15,23 @@
 import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
-// import * as Constants from './constants';
+
 export default class DataManager {
   constructor(config) {
-    this.sequelize = new Sequelize(config.get('db:url'), {
+    this.sequelize = new Sequelize(config.get('db:database'), config.get('db:user'), config.get('db:password'), {
+      host: config.get('db:host'),
+      dialect: 'postgres',
       logging: false,
-      operatorsAliases: Sequelize.Op,
       underscored: true,
+      operatorsAliases: Sequelize.Op,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
     });
-    // this.Constants = Constants;
+
     this.config = config;
     this.loadModels();
     this.buildRelations();
@@ -133,7 +141,12 @@ export default class DataManager {
     // // a single RUP.
 
     this.Pasture.hasMany(this.PlantCommunity);
-    // this.PlantCommunity.hasMany(this.PlantCommunityAction);
+    this.PlantCommunity.hasMany(this.PlantCommunityAction, { as: 'actions' });
+    this.PlantCommunity.belongsTo(this.PlantCommunityAspect, { as: 'aspect' }); // x
+    this.PlantCommunity.belongsTo(this.PlantCommunityElevation, { as: 'elevation' }); // x
+    this.PlantCommunityAction.belongsTo(this.PlantCommunityActionPurpose, { as: 'actionPurpose' });
+    this.PlantCommunityAction.belongsTo(this.PlantCommunityActionType, { as: 'actionType' });
+
     // this.PlantCommunity.hasMany(this.MonitoringSite);
     // this.MonitoringSite.hasMany(this.MonitoringCriteria);
 

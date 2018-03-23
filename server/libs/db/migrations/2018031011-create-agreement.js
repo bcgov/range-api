@@ -68,7 +68,7 @@ module.exports = {
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
-      zoneId: {
+      zone_id: {
         type: Sequelize.INTEGER,
         field: 'zone_id',
         allowNull: false,

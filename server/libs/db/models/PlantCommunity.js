@@ -21,12 +21,6 @@
 
 'use strict';
 
-import {
-  ASPECT,
-  ELEVATION,
-  PC_ACTION_PURPOSE,
-} from '../constants';
-
 export default (sequelize, DataTypes) => {
   const PlantCommunity = sequelize.define('plantCommunity', {
     id: {
@@ -36,31 +30,27 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     name: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(32),
       allowNull: false,
     },
-    aspect: {
-      type: DataTypes.TEXT,
-      values: Object.keys(ASPECT).map(k => ASPECT[k]),
-    },
-    elevation: {
-      type: DataTypes.TEXT,
-      values: Object.keys(ELEVATION).map(k => ELEVATION[k]),
-    },
-    actionPurpose: {
-      type: DataTypes.TEXT,
-      values: Object.keys(PC_ACTION_PURPOSE).map(k => PC_ACTION_PURPOSE[k]),
-    },
     url: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(256),
     },
     notes: {
       type: DataTypes.TEXT,
     },
-    // pastureId: {
-    //   type: DataTypes.INTEGER,
-    //   field: 'pasture_id',
-    // },
+    aspectId: {
+      type: DataTypes.INTEGER,
+      field: 'aspect_id',
+    },
+    elevationId: {
+      type: DataTypes.INTEGER,
+      field: 'elevation_id',
+    },
+    pastureId: {
+      type: DataTypes.INTEGER,
+      field: 'pasture_id',
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
