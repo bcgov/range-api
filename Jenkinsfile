@@ -116,7 +116,7 @@ node('master') {
       attachment.text = 'Another huge sucess for the Range Team.\nA freshly minted build is being deployed and will be available shortly.'
       attachment.color = '#00FF00' // Lime Green
 
-      // notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+      notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
     } catch (error) {
       echo "Unable send update to slack, error = ${error}"
     }
