@@ -43,7 +43,8 @@ podTemplate(label: 'nodejs-build', name: 'nodejs-build', serviceAccount: 'jenkin
     //   ]
   )
 ]) {
-    node('master') {
+    node('nodejs-build') {
+    // node('master') {
     stage('Checkout') {
       echo "Checking out source"
       checkout scm
