@@ -24,25 +24,25 @@ def notifySlack(text, channel, url, attachments, icon) {
     sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
-// podTemplate(label: 'nodejs-build', name: 'nodejs-build', serviceAccount: 'jenkins', cloud: 'openshift', containers: [
-//   containerTemplate(
-//     name: 'jnlp',
-//     image: '172.50.0.2:5000/openshift/nodejs:6',
-//     resourceRequestCpu: '1500m',
-//     resourceLimitCpu: '2000m',
-//     resourceRequestMemory: '1Gi',
-//     resourceLimitMemory: '3Gi',
-//     workingDir: '/tmp',
-//     command: '',
-//     args: '${computer.jnlpmac} ${computer.name}',
-//     alwaysPullImage: true
-//     // envVars: [
-//     //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
-//     //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
-//     //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
-//     //   ]
-//   )
-// ]) {
+podTemplate(label: 'nodejs-build', name: 'nodejs-build', serviceAccount: 'jenkins', cloud: 'openshift', containers: [
+  containerTemplate(
+    name: 'jnlp',
+    image: '172.50.0.2:5000/openshift/nodejs:6',
+    resourceRequestCpu: '1500m',
+    resourceLimitCpu: '2000m',
+    resourceRequestMemory: '1Gi',
+    resourceLimitMemory: '3Gi',
+    workingDir: '/tmp',
+    command: '',
+    args: '${computer.jnlpmac} ${computer.name}',
+    alwaysPullImage: true
+    // envVars: [
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
+    //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
+    //   ]
+  )
+]) {
     node('master') {
     stage('Checkout') {
       echo "Checking out source"
@@ -141,4 +141,4 @@ def notifySlack(text, channel, url, attachments, icon) {
       }
     }
   }
-// }
+}
