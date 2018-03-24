@@ -88,6 +88,7 @@ module.exports = {
     update_changetimestamp_column();`;
 
     await queryInterface.sequelize.query(query);
+    await queryInterface.addIndex(table, ['agreement_id']);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(table);

@@ -96,6 +96,7 @@ module.exports = {
     update_changetimestamp_column();`;
 
     await queryInterface.sequelize.query(query);
+    await queryInterface.addIndex(table, ['forest_file_id']);
   },
 
   down: async (queryInterface, Sequelize) => {
