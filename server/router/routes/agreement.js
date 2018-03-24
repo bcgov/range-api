@@ -136,7 +136,7 @@ const allAgreementChildren = [
     },
   },
 ];
-const excludedAgreementAttributes = ['zone_id', 'agreement_type_id', 'agreement_exemption_status_id', 'primary_agreement_holder_id'];
+const excludedAgreementAttributes = ['agreement_type_id', 'agreement_exemption_status_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
@@ -147,6 +147,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
+      limit: 100,
       include: allAgreementChildren,
       attributes: {
         exclude: excludedAgreementAttributes,
