@@ -254,8 +254,12 @@ router.put('/:agreementId?/status', asyncMiddleware(async (req, res) => {
     agreementId,
   } = req.params;
 
-  if ((!agreementId || !statusId) || (!isNumeric(agreementId) || !isNumeric(statusId))) {
-    throw errorWithCode('Both agreementId and statusId must be provided and be numeric', 400);
+  if (!statusId || !isNumeric(statusId)) {
+    throw errorWithCode('statusId must be provided in body and be numeric', 400);
+  }
+
+  if (!agreementId) {
+    throw errorWithCode('Agreement id must be provided in path', 400);
   }
 
   try {
@@ -297,8 +301,12 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
     agreementId,
   } = req.params;
 
-  if (!agreementId || !zoneId || !isNumeric(agreementId) || !isNumeric(zoneId)) {
-    throw errorWithCode('Both agreementId and zoneId must be provided and be numaric', 400);
+  if (!zoneId || !isNumeric(zoneId)) {
+    throw errorWithCode('zoneId must be provided in body and be numeric', 400);
+  }
+
+  if (!agreementId) {
+    throw errorWithCode('agreementId must be provided in path', 400);
   }
 
   try {
@@ -331,15 +339,15 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
 //
 
 // create a livestock identifier in an agreement
-router.post('/:id?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.post('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'not implemented yet' }).end();
 
   const {
-    id,
+    agreementId,
   } = req.params;
 
-  if (!isNumeric(id)) {
-    throw errorWithCode('agreementId must be provided and be numaric', 400);
+  if (!agreementId) {
+    throw errorWithCode('agreementId must be provided in path', 400);
   }
 
   const {
@@ -350,7 +358,7 @@ router.post('/:id?/livestockidentifier', isAuthenticated, asyncMiddleware(async 
   try {
     const agreement = await Agreement.findOne({
       where: {
-        id,
+        agreementId,
       },
     });
 
@@ -371,8 +379,8 @@ router.get('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddlewar
     agreementId,
   } = req.params;
 
-  if (!agreementId || !isNumeric(agreementId)) {
-    throw errorWithCode('agreementId must be provided and be numaric', 400);
+  if (!agreementId) {
+    throw errorWithCode('agreementId must be provided in path', 400);
   }
 
   try {
@@ -398,13 +406,12 @@ router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', isAuthe
     body,
   } = req;
 
-  if (
-    !agreementId
-    || !livestockIdentifierId
-    || !isNumeric(agreementId)
-    || !isNumeric(livestockIdentifierId)
-  ) {
-    throw errorWithCode('agreementId and livestockIdentifierId must be provided and be numaric', 400);
+  if (!livestockIdentifierId || !isNumeric(livestockIdentifierId)) {
+    throw errorWithCode('livestockIdentifierId must be provided and be numeric', 400);
+  }
+
+  if (!agreementId) {
+    throw errorWithCode('agreementId must be provided in path', 400);
   }
 
   try {
