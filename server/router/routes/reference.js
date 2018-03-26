@@ -30,9 +30,10 @@ import { isAuthenticated } from '../../libs/auth';
 
 const dm = new DataManager(config);
 const {
-  AgreementStatus,
   AgreementType,
+  AgreementExemptionStatus,
   LivestockType,
+  PlanStatus,
 } = dm;
 
 const router = new Router();
@@ -49,19 +50,21 @@ router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
       },
     };
 
-    const ags = await AgreementStatus.findAll(opts);
-    const agt = await AgreementType.findAll(opts);
-    const lty = await LivestockType.findAll(opts);
+    const agreementType = await AgreementType.findAll(opts);
+    const agreementExemptionStatus = await AgreementExemptionStatus.findAll(opts);
+    const livestockType = await LivestockType.findAll(opts);
+    const planStatus = await PlanStatus.findAll(opts);
 
     const response = {
-      AGREEMENT_STATUS: ags || { error: 'Unable to fetch reference data' },
-      AGREEMENT_TYPE: agt,
-      LIVESTOCK_TYPE: lty,
+      AGREEMENT_TYPE: agreementType || { error: 'Unable to fetch reference data' },
+      AGREEMENT_EXEMPTION_STATUS: agreementExemptionStatus || { error: 'Unable to fetch reference data' },
+      LIVESTOCK_TYPE: livestockType || { error: 'Unable to fetch reference data' },
+      PLAN_STATUS: planStatus || { error: 'Unable to fetch reference data' },
     };
 
     res.status(200).json(response);
   } catch (err) {
-    res.status(500).json({ error: err }).end();
+    res.status(500).json({ error: err.message }).end();
   }
 }));
 
