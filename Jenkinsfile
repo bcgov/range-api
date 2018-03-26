@@ -75,7 +75,7 @@ node('master') {
 
       try {
         // Run our unit tests et al.
-        sh "${CMD_PREFIX} npm test:lint"
+        sh "${CMD_PREFIX} npm run test:lint"
       } catch (error) {
         def attachment = [:]
         attachment.fallback = 'See build log for more details'
