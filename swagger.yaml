@@ -1,1575 +1,1808 @@
 ---
-swagger: "2.0"
+swagger: 2.0
 info:
-  description: "Used in MyRA"
-  version: "1.0.0"
-  title: "MyRA API"
+  description: Used in MyRA
+  version: 1.0.0
+  title: MyRA API
   contact:
-    email: "bcdevexchange@gov.bc.ca"
+    email: bcdevexchange@gov.bc.ca
   license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "virtserver.swaggerhub.com"
-basePath: "/AidanLaing/myra_api/1.0.0"
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+host: virtserver.swaggerhub.com
+basePath: /AidanLaing/myra_api/1.0.0
 tags:
-- name: "Agreement"
-- name: "Client"
-- name: "District"
-- name: "Reference"
-- name: "Zones"
-- name: "System"
+- name: Agreement
+- name: Client
+- name: District
+- name: Reference
+- name: Zones
+- name: System
 schemes:
-- "https"
+- https
 paths:
   /v1/agreement:
     get:
       tags:
-      - "Agreement"
-      summary: "Returns array of all agreements"
-      description: "Returns all agreements with all child data."
-      operationId: "readAgreements"
+      - Agreement
+      summary: Returns array of all agreements
+      description: Returns all agreements with all child data.
+      operationId: readAgreements
       produces:
-      - "application/json"
+      - application/json
       parameters: []
       responses:
         200:
-          description: "Sucessfully returned agreements"
+          description: Sucessfully returned agreements
           schema:
-            type: "array"
+            type: array
             items:
-              $ref: "#/definitions/Agreement"
+              $ref: '#/definitions/Agreement'
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
     post:
       tags:
-      - "Agreement"
-      summary: "Creates an agreement"
-      description: "Creates an agreement and returns the created object."
-      operationId: "createAgreement"
+      - Agreement
+      summary: Creates an agreement
+      description: Creates an agreement and returns the created object.
+      operationId: createAgreement
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - in: "body"
-        name: "body"
-        description: "Agreement object needed to create agreement."
+      - in: body
+        name: body
+        description: Agreement object needed to create agreement.
         required: true
         schema:
-          $ref: "#/definitions/Agreement"
+          $ref: '#/definitions/Agreement'
       responses:
         200:
-          description: "Agreement successfully created."
+          description: Agreement successfully created.
           schema:
-            $ref: "#/definitions/Agreement"
+            $ref: '#/definitions/Agreement'
         400:
-          description: "Bad or no body sent."
+          description: Bad or no body sent.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}:
     get:
       tags:
-      - "Agreement"
-      summary: "Returns agreement matching id"
-      description: "Returns the agreement matching the id with all child data."
-      operationId: "readAgreement"
+      - Agreement
+      summary: Returns agreement matching id
+      description: Returns the agreement matching the id with all child data.
+      operationId: readAgreement
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to return"
+      - name: agreementId
+        in: path
+        description: Id of agreement to return
         required: true
-        type: "integer"
+        type: string
       responses:
         200:
-          description: "Successfully returned agreement matching id."
+          description: Successfully returned agreement matching id.
           schema:
-            $ref: "#/definitions/Agreement"
+            $ref: '#/definitions/Agreement'
         400:
-          description: "Invalid id supplied"
+          description: Invalid id supplied
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement not found"
+          description: Agreement not found
       security:
       - bearerAuth: []
     put:
       tags:
-      - "Agreement"
-      summary: "Update an agreement"
-      description: "Updates an existing agreement and returns updated agreement."
-      operationId: "updateAgreement"
+      - Agreement
+      summary: Update an agreement
+      description: Updates an existing agreement and returns updated agreement.
+      operationId: updateAgreement
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to update."
+      - name: agreementId
+        in: path
+        description: Id of agreement to update.
         required: true
-        type: "integer"
-      - in: "body"
-        name: "body"
-        description: "Agreement object to update existing agreement."
+        type: string
+      - in: body
+        name: body
+        description: Agreement object to update existing agreement.
         required: true
         schema:
-          $ref: "#/definitions/Agreement"
+          $ref: '#/definitions/Agreement'
       responses:
         200:
-          description: "Successfully updated agreement."
+          description: Successfully updated agreement.
           schema:
-            $ref: "#/definitions/Agreement"
+            $ref: '#/definitions/Agreement'
         400:
-          description: "Invalid id supplied."
+          description: Invalid id supplied.
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement not found."
+          description: Agreement not found.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/status:
     put:
       tags:
-      - "Agreement"
-      summary: "Update agreement status"
-      description: "Uses the sent statusId to update the agreement's status."
-      operationId: "updateAgreementStatus"
+      - Agreement
+      summary: Update agreement status
+      description: Uses the sent statusId to update the agreement's status.
+      operationId: updateAgreementStatus
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - in: "body"
-        name: "statusId"
-        description: "Status id that agreement will be updated to."
+      - in: body
+        name: statusId
+        description: Status id that agreement will be updated to.
         required: true
         schema:
-          $ref: "#/definitions/statusId"
-      - name: "agreementId"
-        in: "path"
-        description: "Id of parent agreement."
+          $ref: '#/definitions/statusId'
+      - name: agreementId
+        in: path
+        description: Id of parent agreement.
         required: true
-        type: "integer"
+        type: string
       responses:
         200:
-          description: "Status updated successfully."
+          description: Status updated successfully.
           schema:
-            $ref: "#/definitions/AgreementStatus"
+            $ref: '#/definitions/AgreementStatus'
         400:
-          description: "Both agreementId and statusId must be provided and be numeric."
+          description: Both agreementId and statusId must be provided
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement or status not found."
+          description: Agreement or status not found.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/zone:
     put:
       tags:
-      - "Agreement"
-      summary: "Update an agreement zone"
-      description: "Uses the zoneId from body to update the agreement zone."
-      operationId: "updateAgreementZone"
+      - Agreement
+      summary: Update an agreement zone
+      description: Uses the zoneId from body to update the agreement zone.
+      operationId: updateAgreementZone
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - in: "body"
-        name: "zoneId"
-        description: "Zone id that agreement will be updated to."
+      - in: body
+        name: zoneId
+        description: Zone id that agreement will be updated to.
         required: true
         schema:
-          $ref: "#/definitions/zoneId"
-      - name: "agreementId"
-        in: "path"
-        description: "Id of parent agreement."
+          $ref: '#/definitions/zoneId'
+      - name: agreementId
+        in: path
+        description: Id of parent agreement.
         required: true
-        type: "integer"
+        type: string
       responses:
         200:
-          description: "Zone updated successfully"
+          description: Zone updated successfully
           schema:
-            $ref: "#/definitions/Zone"
+            $ref: '#/definitions/Zone'
         400:
-          description: "Both agreementId and zoneId must be provided and be numeric."
+          description: Both agreementId and zoneId must be provided.
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement or Zone not found."
+          description: Agreement or Zone not found.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/livestockidentifier:
     get:
       tags:
-      - "Agreement"
-      summary: "Return livestock identifier"
-      description: "Returns the livestock identifier matching the associated agreement\
-        \ id."
-      operationId: "readAgreementLivestockIdentifier"
+      - Agreement
+      summary: Return livestock identifier
+      description: Returns the livestock identifier matching the associated agreement id.
+      operationId: readAgreementLivestockIdentifier
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to return."
+      - name: agreementId
+        in: path
+        description: Id of agreement to return.
         required: true
-        type: "integer"
+        type: string
       responses:
         200:
-          description: "Successfully returned agreement livestock identifier matching\
-            \ id."
+          description: Successfully returned agreement livestock identifier matching id.
           schema:
-            $ref: "#/definitions/LivestockIdentifier"
+            $ref: '#/definitions/LivestockIdentifier'
         400:
-          description: "Invalid id supplied."
+          description: Invalid id supplied.
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement livestock identifier not found."
+          description: Agreement livestock identifier not found.
       security:
       - bearerAuth: []
     post:
       tags:
-      - "Agreement"
-      summary: "Create agreement livestock identifier"
-      description: "Creates an agreement livestock identifier and returns the created\
-        \ object."
-      operationId: "createAgreementLivestockIdentifier"
+      - Agreement
+      summary: Create agreement livestock identifier
+      description: Creates an agreement livestock identifier and returns the created object.
+      operationId: createAgreementLivestockIdentifier
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of parent agreement."
+      - name: agreementId
+        in: path
+        description: Id of parent agreement.
         required: true
-        type: "integer"
-      - in: "body"
-        name: "body"
-        description: "Livestock object needed to create livestock agreement."
+        type: string
+      - in: body
+        name: body
+        description: Livestock object needed to create livestock agreement.
         required: true
         schema:
-          $ref: "#/definitions/LivestockIdentifier"
+          $ref: '#/definitions/LivestockIdentifier'
       responses:
         200:
-          description: "Agreement livestock identifier successfully created."
+          description: Agreement livestock identifier successfully created.
           schema:
-            $ref: "#/definitions/LivestockIdentifier"
+            $ref: '#/definitions/LivestockIdentifier'
         400:
-          description: "Bad or no body sent."
+          description: Bad or no body sent.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/livestockidentifier/{livestockIdentifierId}:
     put:
       tags:
-      - "Agreement"
-      summary: "Update an agreement livestock identifier"
-      description: "Updates an agreement livestock identifier and returns the updated\
-        \ object."
-      operationId: "updateAgreementLivestockIdentifier"
+      - Agreement
+      summary: Update an agreement livestock identifier
+      description: Updates an agreement livestock identifier and returns the updated object.
+      operationId: updateAgreementLivestockIdentifier
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to update."
+      - name: agreementId
+        in: path
+        description: Id of agreement to update.
         required: true
-        type: "integer"
-      - name: "livestockIdentifierId"
-        in: "path"
-        description: "Id of agreement livestock identifier to update."
+        type: string
+      - name: livestockIdentifierId
+        in: path
+        description: Id of agreement livestock identifier to update.
         required: true
-        type: "integer"
-      - in: "body"
-        name: "body"
-        description: "Livestock Identifier object needed to update agreement."
+        type: integer
+      - in: body
+        name: body
+        description: Livestock Identifier object needed to update agreement.
         required: true
         schema:
-          $ref: "#/definitions/LivestockIdentifier"
+          $ref: '#/definitions/LivestockIdentifier'
       responses:
         200:
-          description: "Agreement livestock identifier successfully created."
+          description: Agreement livestock identifier successfully created.
           schema:
-            $ref: "#/definitions/LivestockIdentifier"
+            $ref: '#/definitions/LivestockIdentifier'
         400:
-          description: "Bad or no body sent."
+          description: Bad or no body sent.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/extension:
     get:
       tags:
-      - "Agreement"
-      summary: "Returns agreement extension"
-      description: "Returns the extension matching the associated agreement id."
-      operationId: "readAgreementExtension"
+      - Agreement
+      summary: Returns agreement extension
+      description: Returns the extension matching the associated agreement id.
+      operationId: readAgreementExtension
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to return."
+      - name: agreementId
+        in: path
+        description: Id of agreement to return.
         required: true
-        type: "integer"
+        type: string
       responses:
         200:
-          description: "Successfully returned agreement extension matching id."
+          description: Successfully returned agreement extension matching id.
           schema:
-            $ref: "#/definitions/Extension"
+            $ref: '#/definitions/Extension'
         400:
-          description: "Invalid id supplied."
+          description: Invalid id supplied.
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Agreement not found."
+          description: Agreement not found.
       security:
       - bearerAuth: []
     post:
       tags:
-      - "Agreement"
-      summary: "Create an agreement extension"
-      description: "Creates an agreement extension and returns the created object."
-      operationId: "createAgreementExtension"
+      - Agreement
+      summary: Create an agreement extension
+      description: Creates an agreement extension and returns the created object.
+      operationId: createAgreementExtension
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of parent agreement."
+      - name: agreementId
+        in: path
+        description: Id of parent agreement.
         required: true
-        type: "integer"
-      - in: "body"
-        name: "body"
-        description: "Extension object needed to create agreement extension."
+        type: string
+      - in: body
+        name: body
+        description: Extension object needed to create agreement extension.
         required: true
         schema:
-          $ref: "#/definitions/Extension"
+          $ref: '#/definitions/Extension'
       responses:
         201:
-          description: "Agreement extension successfully created."
+          description: Agreement extension successfully created.
           schema:
-            $ref: "#/definitions/Extension"
+            $ref: '#/definitions/Extension'
         400:
-          description: "Bad or no body sent."
+          description: Bad or no body sent.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
     put:
       tags:
-      - "Agreement"
-      summary: "Update an agreement extension"
-      description: "Updates an agreement extension and returns the updated object."
-      operationId: "updateAgreementExtension"
+      - Agreement
+      summary: Update an agreement extension
+      description: Updates an agreement extension and returns the updated object.
+      operationId: updateAgreementExtension
       consumes:
-      - "application/json"
+      - application/json
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "agreementId"
-        in: "path"
-        description: "Id of agreement to update."
+      - name: agreementId
+        in: path
+        description: Id of agreement to update.
         required: true
-        type: "integer"
-      - in: "body"
-        name: "body"
-        description: "Agreement object needed to update agreement."
+        type: string
+      - in: body
+        name: body
+        description: Agreement object needed to update agreement.
         required: true
         schema:
-          $ref: "#/definitions/Extension"
+          $ref: '#/definitions/Extension'
       responses:
         201:
-          description: "Agreement extension successfully updated."
+          description: Agreement extension successfully updated.
           schema:
-            $ref: "#/definitions/Extension"
+            $ref: '#/definitions/Extension'
         400:
-          description: "Bad or no body sent."
+          description: Bad or no body sent.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/client:
     get:
       tags:
-      - "Client"
-      summary: "Get all clients"
-      description: "Returns an array of all clients."
-      operationId: "readAllClients"
+      - Client
+      summary: Get all clients
+      description: Returns an array of all clients.
+      operationId: readAllClients
       produces:
-      - "application/json"
+      - application/json
       parameters: []
       responses:
         200:
-          description: "Successfully returned all clients."
+          description: Successfully returned all clients.
           schema:
-            type: "array"
+            type: array
             items:
-              $ref: "#/definitions/Client"
+              $ref: '#/definitions/Client'
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/client/{clientId}:
     get:
       tags:
-      - "Client"
-      summary: "Read client by id"
-      description: "Returns the client matching the associated client id."
-      operationId: "readClient"
+      - Client
+      summary: Read client by id
+      description: Returns the client matching the associated client id.
+      operationId: readClient
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "clientId"
-        in: "path"
-        description: "Id of client to return."
+      - name: clientId
+        in: path
+        description: Id of client to return.
         required: true
-        type: "integer"
+        type: integer
       responses:
         200:
-          description: "Successfully returned client extension matching id."
+          description: Successfully returned client extension matching id.
           schema:
-            $ref: "#/definitions/Client"
+            $ref: '#/definitions/Client'
         401:
-          description: "Not authorized."
+          description: Not authorized.
         404:
-          description: "Client not found."
+          description: Client not found.
       security:
       - bearerAuth: []
   /v1/district:
     get:
       tags:
-      - "District"
-      summary: "Returns all districts"
-      description: "Returns an array of all districts."
-      operationId: "readDistricts"
+      - District
+      summary: Returns all districts
+      description: Returns an array of all districts.
+      operationId: readDistricts
       produces:
-      - "application/json"
+      - application/json
       parameters: []
       responses:
         200:
-          description: "Sucessfully returned zones matching query params."
+          description: Sucessfully returned zones matching query params.
           schema:
-            type: "array"
+            type: array
             items:
-              $ref: "#/definitions/District"
+              $ref: '#/definitions/District'
         400:
-          description: "Bad query params passed."
+          description: Bad query params passed.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/reference:
     get:
       tags:
-      - "Reference"
-      summary: "Returns reference values"
-      description: "Returns array of constant reference values used in the database."
-      operationId: "readReference"
+      - Reference
+      summary: Returns reference values
+      description: Returns array of constant reference values used in the database.
+      operationId: readReference
       produces:
-      - "application/json"
+      - application/json
       parameters: []
       responses:
         200:
-          description: "Sucessfully returned reference values."
+          description: Sucessfully returned reference values.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/zone:
     get:
       tags:
-      - "Zones"
-      summary: "Returns zones"
-      description: "Returns an array of zones based on query params. Passing no query\
-        \ params will result in all zones being returned."
-      operationId: "readZones"
+      - Zones
+      summary: Returns zones
+      description: Returns an array of zones based on query params. Passing no query params will result in all zones being returned.
+      operationId: readZones
       produces:
-      - "application/json"
+      - application/json
       parameters:
-      - name: "districtId"
-        in: "query"
-        description: "Pass an optional district id to get all zones within that district."
+      - name: districtId
+        in: query
+        description: Pass an optional district id to get all zones within that district.
         required: false
-        type: "string"
+        type: string
       responses:
         200:
-          description: "Sucessfully returned zones matching query params."
+          description: Sucessfully returned zones matching query params.
           schema:
-            type: "array"
+            type: array
             items:
-              $ref: "#/definitions/Zone"
+              $ref: '#/definitions/Zone'
         400:
-          description: "Bad query params passed."
+          description: Bad query params passed.
         401:
-          description: "Not authorized."
+          description: Not authorized.
       security:
       - bearerAuth: []
   /v1/ehlo:
     get:
       tags:
-      - "System"
-      summary: "Determine if server is running"
-      description: "Returns a success if the server is running. Primarily used for\
-        \ Open Shift to determine if server is running."
-      operationId: "ehlo"
+      - System
+      summary: Determine if server is running
+      description: Returns a success if the server is running. Primarily used for Open Shift to determine if server is running.
+      operationId: ehlo
       parameters: []
       responses:
         204:
-          description: "Server is running."
+          description: Server is running.
 securityDefinitions:
   bearerAuth:
-    type: "apiKey"
-    name: "Authorization"
-    in: "header"
+    type: apiKey
+    name: Authorization
+    in: header
 definitions:
   Agreement:
-    type: "object"
+    type: object
     required:
-    - "agreementEndDate"
-    - "agreementId"
-    - "agreementStartDate"
-    - "createdAt"
-    - "id"
-    - "rangeName"
-    - "updatedAt"
+    - agreementEndDate
+    - agreementStartDate
+    - createdAt
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
-        example: 1982698152
-      agreementId:
-        type: "string"
-        example: "RAN123323"
-      rangeName:
-        type: "string"
-        example: "Mann - Beahan"
-      alternateBusinessName:
-        type: "string"
-        example: "Alternate name"
+        type: string
+        example: RAN072542
       agreementStartDate:
-        type: "string"
-        example: "2018-03-15T16:52:36.961Z"
+        type: string
+        example: 2018-03-15T16:52:36.961Z
       agreementEndDate:
-        type: "string"
-        example: "2043-03-09T16:52:36.961Z"
-      planStartDate:
-        type: "string"
-        example: "2018-04-20T07:00:00.000Z"
-      planEndDate:
-        type: "string"
-        example: "2018-04-20T07:00:00.000Z"
-      exemptionStatus:
-        type: "string"
-        example: "TODO Example"
-      notes:
-        type: "string"
-        example: "This is an example notes sentence."
+        type: string
+        example: 2043-03-09T16:52:36.961Z
+      zoneId:
+        type: integer
+        example: 29
+      typeId:
+        type: integer
+        example: 1
+      exemptionStatusId:
+        type: integer
+        example: 1
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:36.983Z"
+        type: string
+        example: 2018-03-15T16:52:36.983Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:36.983Z"
+        type: string
+        example: 2018-03-15T16:52:36.983Z
       zone:
-        $ref: "#/definitions/Zone"
+        $ref: '#/definitions/Zone'
       livestockIdentifiers:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/LivestockIdentifier"
-      pastures:
-        type: "array"
+          $ref: '#/definitions/LivestockIdentifier'
+      plans:
+        type: array
         items:
-          $ref: "#/definitions/Pasture"
-      grazingSchedules:
-        type: "array"
-        items:
-          $ref: "#/definitions/GrazingSchedule"
+          $ref: '#/definitions/Plan'
       primaryAgreementHolder:
-        $ref: "#/definitions/Client"
+        $ref: '#/definitions/Client'
       usage:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/Usage"
-      status:
-        $ref: "#/definitions/AgreementStatus"
+          $ref: '#/definitions/Usage'
     example:
-      notes: "This is an example notes sentence."
+      exemptionStatusId: 1
       usage:
-      - temporaryIncrease: 129082
-        createdAt: "2018-03-15T16:52:37.658Z"
-        authorizedAum: 141872
-        totalAnnualUse: 12740912512
-        year: 2018
-        totalNonUse: 127412
-        id: 9185412
-        billableNonUse: 121848
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      - temporaryIncrease: 129082
-        createdAt: "2018-03-15T16:52:37.658Z"
-        authorizedAum: 141872
-        totalAnnualUse: 12740912512
-        year: 2018
-        totalNonUse: 127412
-        id: 9185412
-        billableNonUse: 121848
-        updatedAt: "2018-03-15T16:52:37.658Z"
+      - temporaryIncrease: 0
+        createdAt: 2018-03-15T16:52:37.658Z
+        authorizedAum: 125
+        totalAnnualUse: 125
+        year: 2013
+        agreementId: RAN077054
+        totalNonUse: 0
+        id: 7756
+        updatedAt: 2018-03-15T16:52:37.658Z
+      - temporaryIncrease: 0
+        createdAt: 2018-03-15T16:52:37.658Z
+        authorizedAum: 125
+        totalAnnualUse: 125
+        year: 2013
+        agreementId: RAN077054
+        totalNonUse: 0
+        id: 7756
+        updatedAt: 2018-03-15T16:52:37.658Z
       livestockIdentifiers:
-      - createdAt: "2018-03-15T16:52:37.658Z"
+      - createdAt: 2018-03-15T16:52:37.658Z
         livestockIdentifierType:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          description: "Tag"
+          createdAt: 2018-03-15T16:52:37.658Z
+          description: Tag
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
+          updatedAt: 2018-03-15T16:52:37.658Z
         livestockIdentifierLocation:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          description: "Left Ear"
+          createdAt: 2018-03-15T16:52:37.658Z
+          description: Left Ear
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        agreementId: 429212
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          updatedAt: 2018-03-15T16:52:37.658Z
+        agreementId: RAN1902841
+        description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         accepted: true
         id: 127412
-        imageRef: "TODO"
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      - createdAt: "2018-03-15T16:52:37.658Z"
+        imageRef: TODO
+        updatedAt: 2018-03-15T16:52:37.658Z
+      - createdAt: 2018-03-15T16:52:37.658Z
         livestockIdentifierType:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          description: "Tag"
+          createdAt: 2018-03-15T16:52:37.658Z
+          description: Tag
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
+          updatedAt: 2018-03-15T16:52:37.658Z
         livestockIdentifierLocation:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          description: "Left Ear"
+          createdAt: 2018-03-15T16:52:37.658Z
+          description: Left Ear
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        agreementId: 429212
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+          updatedAt: 2018-03-15T16:52:37.658Z
+        agreementId: RAN1902841
+        description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         accepted: true
         id: 127412
-        imageRef: "TODO"
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      pastures:
-      - allowableAmu: 174981
-        pdlPercent: 42.56
-        createdAt: "2018-03-15T16:52:37.658Z"
-        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        graceDays: 12
-        name: "Barrington"
-        id: 126498
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      - allowableAmu: 174981
-        pdlPercent: 42.56
-        createdAt: "2018-03-15T16:52:37.658Z"
-        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        graceDays: 12
-        name: "Barrington"
-        id: 126498
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      createdAt: "2018-03-15T16:52:36.983Z"
-      grazingSchedules:
-      - createdAt: "2018-03-15T16:52:37.658Z"
-        year: 2018
-        narrative: "TODO example"
-        id: 1092741
-        updatedAt: "2018-03-15T16:52:37.658Z"
-        grazingScheduleEntries:
-        - createdAt: "2018-03-15T16:52:37.658Z"
-          dateIn: "2018-03-15T16:52:37.658Z"
-          livestockCount: 27
-          endDate: "2018-03-15T16:52:37.658Z"
-          graceDays: 12
-          dateOut: "2018-03-15T16:52:37.658Z"
-          livestockType:
-            auFactor: 0.1
-            createdAt: "2018-03-15T16:52:37.658Z"
-            name: "Alpaca"
-            active: true
-            id: 127412
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          id: 129482
-          pasture:
-            allowableAmu: 174981
-            pdlPercent: 42.56
-            createdAt: "2018-03-15T16:52:37.658Z"
-            notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            graceDays: 12
-            name: "Barrington"
-            id: 126498
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          startDate: "2018-03-15T16:52:37.658Z"
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        - createdAt: "2018-03-15T16:52:37.658Z"
-          dateIn: "2018-03-15T16:52:37.658Z"
-          livestockCount: 27
-          endDate: "2018-03-15T16:52:37.658Z"
-          graceDays: 12
-          dateOut: "2018-03-15T16:52:37.658Z"
-          livestockType:
-            auFactor: 0.1
-            createdAt: "2018-03-15T16:52:37.658Z"
-            name: "Alpaca"
-            active: true
-            id: 127412
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          id: 129482
-          pasture:
-            allowableAmu: 174981
-            pdlPercent: 42.56
-            createdAt: "2018-03-15T16:52:37.658Z"
-            notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            graceDays: 12
-            name: "Barrington"
-            id: 126498
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          startDate: "2018-03-15T16:52:37.658Z"
-          updatedAt: "2018-03-15T16:52:37.658Z"
-      - createdAt: "2018-03-15T16:52:37.658Z"
-        year: 2018
-        narrative: "TODO example"
-        id: 1092741
-        updatedAt: "2018-03-15T16:52:37.658Z"
-        grazingScheduleEntries:
-        - createdAt: "2018-03-15T16:52:37.658Z"
-          dateIn: "2018-03-15T16:52:37.658Z"
-          livestockCount: 27
-          endDate: "2018-03-15T16:52:37.658Z"
-          graceDays: 12
-          dateOut: "2018-03-15T16:52:37.658Z"
-          livestockType:
-            auFactor: 0.1
-            createdAt: "2018-03-15T16:52:37.658Z"
-            name: "Alpaca"
-            active: true
-            id: 127412
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          id: 129482
-          pasture:
-            allowableAmu: 174981
-            pdlPercent: 42.56
-            createdAt: "2018-03-15T16:52:37.658Z"
-            notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            graceDays: 12
-            name: "Barrington"
-            id: 126498
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          startDate: "2018-03-15T16:52:37.658Z"
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        - createdAt: "2018-03-15T16:52:37.658Z"
-          dateIn: "2018-03-15T16:52:37.658Z"
-          livestockCount: 27
-          endDate: "2018-03-15T16:52:37.658Z"
-          graceDays: 12
-          dateOut: "2018-03-15T16:52:37.658Z"
-          livestockType:
-            auFactor: 0.1
-            createdAt: "2018-03-15T16:52:37.658Z"
-            name: "Alpaca"
-            active: true
-            id: 127412
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          id: 129482
-          pasture:
-            allowableAmu: 174981
-            pdlPercent: 42.56
-            createdAt: "2018-03-15T16:52:37.658Z"
-            notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            graceDays: 12
-            name: "Barrington"
-            id: 126498
-            updatedAt: "2018-03-15T16:52:37.658Z"
-          startDate: "2018-03-15T16:52:37.658Z"
-          updatedAt: "2018-03-15T16:52:37.658Z"
+        imageRef: TODO
+        updatedAt: 2018-03-15T16:52:37.658Z
+      createdAt: 2018-03-15T16:52:36.983Z
       zone:
-        createdAt: "2018-03-15T16:52:37.658Z"
-        code: "LASO"
+        createdAt: 2018-03-15T16:52:37.658Z
+        code: DOS3
         districtId: 124124
+        contactEmail: robjimmy@gov.bc.ca
+        contactName: Rob Jimmy
         district:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          code: "BEAV"
-          description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-          id: 1928124
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        description: "Lakes TSA South of Francois Lake"
-        id: 1531095
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      alternateBusinessName: "Alternate name"
-      agreementStartDate: "2018-03-15T16:52:36.961Z"
-      agreementId: "RAN123323"
-      rangeName: "Mann - Beahan"
-      agreementEndDate: "2043-03-09T16:52:36.961Z"
-      id: 1982698152
-      planStartDate: "2018-04-20T07:00:00.000Z"
-      planEndDate: "2018-04-20T07:00:00.000Z"
-      exemptionStatus: "TODO Example"
+          createdAt: 2018-03-15T16:52:37.658Z
+          code: BEAV
+          description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          id: 15
+          updatedAt: 2018-03-15T16:52:37.658Z
+        description: Lakes TSA South of Francois Lake
+        contactPhoneNumber: 1234567890
+        id: 58
+        updatedAt: 2018-03-15T16:52:37.658Z
+      plans:
+      - extension:
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          endDate: 2018-03-15T16:52:37.658Z
+          requestDate: 2018-03-15T16:52:37.658Z
+          id: 1294812
+          updatedAt: 2018-03-15T16:52:37.658Z
+        notes: Example string of notes.
+        pastures:
+        - allowableAum: 400
+          pdlPercent: 42.56
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          graceDays: 12
+          name: Sauer Mountain
+          planId: 1
+          id: 1
+          updatedAt: 2018-03-15T16:52:37.658Z
+        - allowableAum: 400
+          pdlPercent: 42.56
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          graceDays: 12
+          name: Sauer Mountain
+          planId: 1
+          id: 1
+          updatedAt: 2018-03-15T16:52:37.658Z
+        createdAt: 2043-03-09T16:52:36.961Z
+        grazingSchedules:
+        - createdAt: 2018-03-15T16:52:37.658Z
+          year: 2018
+          narrative: TODO example
+          id: 1092741
+          updatedAt: 2018-03-15T16:52:37.658Z
+          grazingScheduleEntries:
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+        - createdAt: 2018-03-15T16:52:37.658Z
+          year: 2018
+          narrative: TODO example
+          id: 1092741
+          updatedAt: 2018-03-15T16:52:37.658Z
+          grazingScheduleEntries:
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+        statusId: 123456
+        rangeName: Hudson, Barrows and Effertz
+        agreementId: RAN077054
+        id: 1
+        planStartDate: 2043-03-09T16:52:36.961Z
+        planEndDate: 2043-03-09T16:52:36.961Z
+        extensionId: 123456
+        updatedAt: 2043-03-09T16:52:36.961Z
+        status:
+          code: D
+          name: Draft
+          active: true
+          id: 123982
+      - extension:
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          endDate: 2018-03-15T16:52:37.658Z
+          requestDate: 2018-03-15T16:52:37.658Z
+          id: 1294812
+          updatedAt: 2018-03-15T16:52:37.658Z
+        notes: Example string of notes.
+        pastures:
+        - allowableAum: 400
+          pdlPercent: 42.56
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          graceDays: 12
+          name: Sauer Mountain
+          planId: 1
+          id: 1
+          updatedAt: 2018-03-15T16:52:37.658Z
+        - allowableAum: 400
+          pdlPercent: 42.56
+          createdAt: 2018-03-15T16:52:37.658Z
+          notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          graceDays: 12
+          name: Sauer Mountain
+          planId: 1
+          id: 1
+          updatedAt: 2018-03-15T16:52:37.658Z
+        createdAt: 2043-03-09T16:52:36.961Z
+        grazingSchedules:
+        - createdAt: 2018-03-15T16:52:37.658Z
+          year: 2018
+          narrative: TODO example
+          id: 1092741
+          updatedAt: 2018-03-15T16:52:37.658Z
+          grazingScheduleEntries:
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+        - createdAt: 2018-03-15T16:52:37.658Z
+          year: 2018
+          narrative: TODO example
+          id: 1092741
+          updatedAt: 2018-03-15T16:52:37.658Z
+          grazingScheduleEntries:
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+          - createdAt: 2018-03-15T16:52:37.658Z
+            dateIn: 2018-03-15T16:52:37.658Z
+            livestockCount: 27
+            endDate: 2018-03-15T16:52:37.658Z
+            graceDays: 12
+            dateOut: 2018-03-15T16:52:37.658Z
+            livestockType:
+              auFactor: 0.1
+              createdAt: 2018-03-15T16:52:37.658Z
+              name: Alpaca
+              active: true
+              id: 127412
+              updatedAt: 2018-03-15T16:52:37.658Z
+            id: 129482
+            startDate: 2018-03-15T16:52:37.658Z
+            updatedAt: 2018-03-15T16:52:37.658Z
+        statusId: 123456
+        rangeName: Hudson, Barrows and Effertz
+        agreementId: RAN077054
+        id: 1
+        planStartDate: 2043-03-09T16:52:36.961Z
+        planEndDate: 2043-03-09T16:52:36.961Z
+        extensionId: 123456
+        updatedAt: 2043-03-09T16:52:36.961Z
+        status:
+          code: D
+          name: Draft
+          active: true
+          id: 123982
+      agreementStartDate: 2018-03-15T16:52:36.961Z
+      agreementEndDate: 2043-03-09T16:52:36.961Z
+      zoneId: 29
+      typeId: 1
+      id: RAN072542
       primaryAgreementHolder:
-        createdAt: "2018-03-15T16:52:37.658Z"
+        createdAt: 2018-03-15T16:52:37.658Z
         clientType:
-          createdAt: "2018-03-15T16:52:37.658Z"
-          code: "A"
-          description: "Licensee"
+          createdAt: 2018-03-15T16:52:37.658Z
+          code: A
+          description: Licensee
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        clientEndDate: "2018-03-15T16:52:37.658Z"
-        name: "Eriberto Fisher V"
-        location: "XX"
+          updatedAt: 2018-03-15T16:52:37.658Z
+        clientEndDate: 2018-03-15T16:52:37.658Z
+        name: Eriberto Fisher V
+        location: XX
         id: 127412
-        clientStartDate: "2018-03-15T16:52:37.658Z"
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      updatedAt: "2018-03-15T16:52:36.983Z"
+        clientStartDate: 2018-03-15T16:52:37.658Z
+        updatedAt: 2018-03-15T16:52:37.658Z
+      updatedAt: 2018-03-15T16:52:36.983Z
+  Plan:
+    type: object
+    required:
+    - agreementId
+    - createdAt
+    - id
+    - rangeName
+    - statusId
+    - updatedAt
+    properties:
+      id:
+        type: integer
+        example: 1
+      rangeName:
+        type: string
+        example: Hudson, Barrows and Effertz
+      planStartDate:
+        type: string
+        example: 2043-03-09T16:52:36.961Z
+      planEndDate:
+        type: string
+        example: 2043-03-09T16:52:36.961Z
+      notes:
+        type: string
+        example: Example string of notes.
+      statusId:
+        type: integer
+        example: 123456
+      agreementId:
+        type: string
+        example: RAN077054
+      extensionId:
+        type: integer
+        example: 123456
+      createdAt:
+        type: string
+        example: 2043-03-09T16:52:36.961Z
+      updatedAt:
+        type: string
+        example: 2043-03-09T16:52:36.961Z
       status:
-        code: "D"
-        name: "Draft"
+        $ref: '#/definitions/AgreementStatus'
+      extension:
+        $ref: '#/definitions/Extension'
+      grazingSchedules:
+        type: array
+        items:
+          $ref: '#/definitions/GrazingSchedule'
+      pastures:
+        type: array
+        items:
+          $ref: '#/definitions/Pasture'
+    example:
+      extension:
+        createdAt: 2018-03-15T16:52:37.658Z
+        notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        endDate: 2018-03-15T16:52:37.658Z
+        requestDate: 2018-03-15T16:52:37.658Z
+        id: 1294812
+        updatedAt: 2018-03-15T16:52:37.658Z
+      notes: Example string of notes.
+      pastures:
+      - allowableAum: 400
+        pdlPercent: 42.56
+        createdAt: 2018-03-15T16:52:37.658Z
+        notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        graceDays: 12
+        name: Sauer Mountain
+        planId: 1
+        id: 1
+        updatedAt: 2018-03-15T16:52:37.658Z
+      - allowableAum: 400
+        pdlPercent: 42.56
+        createdAt: 2018-03-15T16:52:37.658Z
+        notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        graceDays: 12
+        name: Sauer Mountain
+        planId: 1
+        id: 1
+        updatedAt: 2018-03-15T16:52:37.658Z
+      createdAt: 2043-03-09T16:52:36.961Z
+      grazingSchedules:
+      - createdAt: 2018-03-15T16:52:37.658Z
+        year: 2018
+        narrative: TODO example
+        id: 1092741
+        updatedAt: 2018-03-15T16:52:37.658Z
+        grazingScheduleEntries:
+        - createdAt: 2018-03-15T16:52:37.658Z
+          dateIn: 2018-03-15T16:52:37.658Z
+          livestockCount: 27
+          endDate: 2018-03-15T16:52:37.658Z
+          graceDays: 12
+          dateOut: 2018-03-15T16:52:37.658Z
+          livestockType:
+            auFactor: 0.1
+            createdAt: 2018-03-15T16:52:37.658Z
+            name: Alpaca
+            active: true
+            id: 127412
+            updatedAt: 2018-03-15T16:52:37.658Z
+          id: 129482
+          startDate: 2018-03-15T16:52:37.658Z
+          updatedAt: 2018-03-15T16:52:37.658Z
+        - createdAt: 2018-03-15T16:52:37.658Z
+          dateIn: 2018-03-15T16:52:37.658Z
+          livestockCount: 27
+          endDate: 2018-03-15T16:52:37.658Z
+          graceDays: 12
+          dateOut: 2018-03-15T16:52:37.658Z
+          livestockType:
+            auFactor: 0.1
+            createdAt: 2018-03-15T16:52:37.658Z
+            name: Alpaca
+            active: true
+            id: 127412
+            updatedAt: 2018-03-15T16:52:37.658Z
+          id: 129482
+          startDate: 2018-03-15T16:52:37.658Z
+          updatedAt: 2018-03-15T16:52:37.658Z
+      - createdAt: 2018-03-15T16:52:37.658Z
+        year: 2018
+        narrative: TODO example
+        id: 1092741
+        updatedAt: 2018-03-15T16:52:37.658Z
+        grazingScheduleEntries:
+        - createdAt: 2018-03-15T16:52:37.658Z
+          dateIn: 2018-03-15T16:52:37.658Z
+          livestockCount: 27
+          endDate: 2018-03-15T16:52:37.658Z
+          graceDays: 12
+          dateOut: 2018-03-15T16:52:37.658Z
+          livestockType:
+            auFactor: 0.1
+            createdAt: 2018-03-15T16:52:37.658Z
+            name: Alpaca
+            active: true
+            id: 127412
+            updatedAt: 2018-03-15T16:52:37.658Z
+          id: 129482
+          startDate: 2018-03-15T16:52:37.658Z
+          updatedAt: 2018-03-15T16:52:37.658Z
+        - createdAt: 2018-03-15T16:52:37.658Z
+          dateIn: 2018-03-15T16:52:37.658Z
+          livestockCount: 27
+          endDate: 2018-03-15T16:52:37.658Z
+          graceDays: 12
+          dateOut: 2018-03-15T16:52:37.658Z
+          livestockType:
+            auFactor: 0.1
+            createdAt: 2018-03-15T16:52:37.658Z
+            name: Alpaca
+            active: true
+            id: 127412
+            updatedAt: 2018-03-15T16:52:37.658Z
+          id: 129482
+          startDate: 2018-03-15T16:52:37.658Z
+          updatedAt: 2018-03-15T16:52:37.658Z
+      statusId: 123456
+      rangeName: Hudson, Barrows and Effertz
+      agreementId: RAN077054
+      id: 1
+      planStartDate: 2043-03-09T16:52:36.961Z
+      planEndDate: 2043-03-09T16:52:36.961Z
+      extensionId: 123456
+      updatedAt: 2043-03-09T16:52:36.961Z
+      status:
+        code: D
+        name: Draft
         active: true
         id: 123982
-  District:
-    type: "object"
-    required:
-    - "createdAt"
-    - "id"
-    - "updatedAt"
-    properties:
-      id:
-        type: "integer"
-        example: 1928124
-      code:
-        type: "string"
-        example: "BEAV"
-      description:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-      createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
-      updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
-    example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      code: "BEAV"
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-      id: 1928124
-      updatedAt: "2018-03-15T16:52:37.658Z"
   Zone:
-    type: "object"
+    type: object
     required:
-    - "code"
-    - "createdAt"
-    - "description"
-    - "districtId"
-    - "id"
-    - "updatedAt"
+    - code
+    - createdAt
+    - description
+    - districtId
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
-        example: 1531095
+        type: integer
+        example: 58
       code:
-        type: "string"
-        example: "LASO"
+        type: string
+        example: DOS3
       description:
-        type: "string"
-        example: "Lakes TSA South of Francois Lake"
+        type: string
+        example: Lakes TSA South of Francois Lake
+      contactName:
+        type: string
+        example: Rob Jimmy
+      contactPhoneNumber:
+        type: string
+        example: 1234567890
+      contactEmail:
+        type: string
+        example: robjimmy@gov.bc.ca
       districtId:
-        type: "integer"
+        type: integer
         example: 124124
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       district:
-        $ref: "#/definitions/District"
+        $ref: '#/definitions/District'
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      code: "LASO"
+      createdAt: 2018-03-15T16:52:37.658Z
+      code: DOS3
       districtId: 124124
+      contactEmail: robjimmy@gov.bc.ca
+      contactName: Rob Jimmy
       district:
-        createdAt: "2018-03-15T16:52:37.658Z"
-        code: "BEAV"
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        id: 1928124
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      description: "Lakes TSA South of Francois Lake"
-      id: 1531095
-      updatedAt: "2018-03-15T16:52:37.658Z"
-  Usage:
-    type: "object"
+        createdAt: 2018-03-15T16:52:37.658Z
+        code: BEAV
+        description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        id: 15
+        updatedAt: 2018-03-15T16:52:37.658Z
+      description: Lakes TSA South of Francois Lake
+      contactPhoneNumber: 1234567890
+      id: 58
+      updatedAt: 2018-03-15T16:52:37.658Z
+  District:
+    type: object
     required:
-    - "authorizedAum"
-    - "createdAt"
-    - "id"
-    - "temporaryIncrease"
-    - "totalAnnualUse"
-    - "totalNonUse"
-    - "updatedAt"
-    - "year"
+    - createdAt
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
-        example: 9185412
-      year:
-        type: "integer"
-        example: 2018
-      authorizedAum:
-        type: "integer"
-        example: 141872
-      temporaryIncrease:
-        type: "integer"
-        example: 129082
-      billableNonUse:
-        type: "integer"
-        example: 121848
-      totalNonUse:
-        type: "integer"
-        example: 127412
-      totalAnnualUse:
-        type: "integer"
-        example: 12740912512
+        type: integer
+        example: 15
+      code:
+        type: string
+        example: BEAV
+      description:
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      temporaryIncrease: 129082
-      createdAt: "2018-03-15T16:52:37.658Z"
-      authorizedAum: 141872
-      totalAnnualUse: 12740912512
-      year: 2018
-      totalNonUse: 127412
-      id: 9185412
-      billableNonUse: 121848
-      updatedAt: "2018-03-15T16:52:37.658Z"
-  Extension:
-    type: "object"
+      createdAt: 2018-03-15T16:52:37.658Z
+      code: BEAV
+      description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      id: 15
+      updatedAt: 2018-03-15T16:52:37.658Z
+  Usage:
+    type: object
     required:
-    - "endDate"
-    - "id"
-    - "requestDate"
+    - authorizedAum
+    - createdAt
+    - id
+    - temporaryIncrease
+    - totalAnnualUse
+    - totalNonUse
+    - updatedAt
+    - year
     properties:
       id:
-        type: "integer"
+        type: integer
+        example: 7756
+      year:
+        type: integer
+        example: 2013
+      authorizedAum:
+        type: integer
+        example: 125
+      temporaryIncrease:
+        type: integer
+        example: 0
+      totalNonUse:
+        type: integer
+        example: 0
+      totalAnnualUse:
+        type: integer
+        example: 125
+      agreementId:
+        type: string
+        example: RAN077054
+      createdAt:
+        type: string
+        example: 2018-03-15T16:52:37.658Z
+      updatedAt:
+        type: string
+        example: 2018-03-15T16:52:37.658Z
+    example:
+      temporaryIncrease: 0
+      createdAt: 2018-03-15T16:52:37.658Z
+      authorizedAum: 125
+      totalAnnualUse: 125
+      year: 2013
+      agreementId: RAN077054
+      totalNonUse: 0
+      id: 7756
+      updatedAt: 2018-03-15T16:52:37.658Z
+  Extension:
+    type: object
+    required:
+    - endDate
+    - id
+    - requestDate
+    properties:
+      id:
+        type: integer
         example: 1294812
       requestDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       endDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       notes:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-      endDate: "2018-03-15T16:52:37.658Z"
-      requestDate: "2018-03-15T16:52:37.658Z"
+      createdAt: 2018-03-15T16:52:37.658Z
+      notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      endDate: 2018-03-15T16:52:37.658Z
+      requestDate: 2018-03-15T16:52:37.658Z
       id: 1294812
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
   Pasture:
-    type: "object"
+    type: object
     required:
-    - "allowableAmu"
-    - "createdAt"
-    - "graceDays"
-    - "id"
-    - "name"
-    - "pdlPercent"
-    - "updatedAt"
+    - allowableAum
+    - createdAt
+    - graceDays
+    - id
+    - name
+    - pdlPercent
+    - updatedAt
     properties:
       id:
-        type: "integer"
-        example: 126498
+        type: integer
+        example: 1
       name:
-        type: "string"
-        example: "Barrington"
-      allowableAmu:
-        type: "integer"
-        example: 174981
+        type: string
+        example: Sauer Mountain
+      allowableAum:
+        type: integer
+        example: 400
       graceDays:
-        type: "integer"
+        type: integer
         example: 12
       pdlPercent:
-        type: "number"
-        format: "float"
+        type: number
+        format: float
         example: 42.56
       notes:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      planId:
+        type: integer
+        example: 1
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      allowableAmu: 174981
+      allowableAum: 400
       pdlPercent: 42.56
-      createdAt: "2018-03-15T16:52:37.658Z"
-      notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      createdAt: 2018-03-15T16:52:37.658Z
+      notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       graceDays: 12
-      name: "Barrington"
-      id: 126498
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      name: Sauer Mountain
+      planId: 1
+      id: 1
+      updatedAt: 2018-03-15T16:52:37.658Z
   PlantCommunity:
-    type: "object"
+    type: object
     required:
-    - "id"
-    - "name"
+    - id
+    - name
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 190212
       name:
-        type: "string"
-        example: "Fauna"
+        type: string
+        example: Fauna
       aspect:
-        type: "string"
-        example: "North"
+        type: string
+        example: North
       elevation:
-        type: "string"
-        example: "<500"
+        type: string
+        example: <500
       actionPurpose:
-        type: "string"
-        example: "Establish"
+        type: string
+        example: Establish
       url:
-        type: "string"
-        format: "url"
-        example: "http://ashfkajsh.com"
+        type: string
+        format: url
+        example: http://ashfkajsh.com
       notes:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       actions:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/PlantCommunityAction"
+          $ref: '#/definitions/PlantCommunityAction'
       monitoringSites:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/MonitoringSite"
+          $ref: '#/definitions/MonitoringSite'
   PlantCommunityAction:
-    type: "object"
+    type: object
     required:
-    - "id"
+    - id
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 129214
       actionType:
-        type: "string"
-        example: "Herding"
+        type: string
+        example: Herding
       description:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       noGrazeStart:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       noGrazeEnd:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
   MonitoringSite:
-    type: "object"
+    type: object
     required:
-    - "id"
+    - id
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 102974
       location:
-        type: "string"
-        example: "Barrington"
+        type: string
+        example: Barrington
       rangelandHealth:
-        type: "string"
-        example: "Moderatly at Risk"
+        type: string
+        example: Moderatly at Risk
       transectAzimuth:
-        type: "number"
-        format: "float"
+        type: number
+        format: float
         example: 128.124
       latitude:
-        type: "number"
-        format: "float"
+        type: number
+        format: float
         example: 48.123
       longitude:
-        type: "number"
-        format: "float"
+        type: number
+        format: float
         example: -123.123
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       criteria:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/MonitoringCriteria"
+          $ref: '#/definitions/MonitoringCriteria'
   MonitoringCriteria:
-    type: "object"
+    type: object
     required:
-    - "id"
+    - id
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 1228512
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
   GrazingSchedule:
-    type: "object"
+    type: object
     required:
-    - "createdAt"
-    - "id"
-    - "updatedAt"
-    - "year"
+    - createdAt
+    - id
+    - updatedAt
+    - year
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 1092741
       year:
-        type: "integer"
+        type: integer
         example: 2018
       narrative:
-        type: "string"
-        example: "TODO example"
+        type: string
+        example: TODO example
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       grazingScheduleEntries:
-        type: "array"
+        type: array
         items:
-          $ref: "#/definitions/GrazingScheduleEntry"
+          $ref: '#/definitions/GrazingScheduleEntry'
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
+      createdAt: 2018-03-15T16:52:37.658Z
       year: 2018
-      narrative: "TODO example"
+      narrative: TODO example
       id: 1092741
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
       grazingScheduleEntries:
-      - createdAt: "2018-03-15T16:52:37.658Z"
-        dateIn: "2018-03-15T16:52:37.658Z"
+      - createdAt: 2018-03-15T16:52:37.658Z
+        dateIn: 2018-03-15T16:52:37.658Z
         livestockCount: 27
-        endDate: "2018-03-15T16:52:37.658Z"
+        endDate: 2018-03-15T16:52:37.658Z
         graceDays: 12
-        dateOut: "2018-03-15T16:52:37.658Z"
+        dateOut: 2018-03-15T16:52:37.658Z
         livestockType:
           auFactor: 0.1
-          createdAt: "2018-03-15T16:52:37.658Z"
-          name: "Alpaca"
+          createdAt: 2018-03-15T16:52:37.658Z
+          name: Alpaca
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
+          updatedAt: 2018-03-15T16:52:37.658Z
         id: 129482
-        pasture:
-          allowableAmu: 174981
-          pdlPercent: 42.56
-          createdAt: "2018-03-15T16:52:37.658Z"
-          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-          graceDays: 12
-          name: "Barrington"
-          id: 126498
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        startDate: "2018-03-15T16:52:37.658Z"
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      - createdAt: "2018-03-15T16:52:37.658Z"
-        dateIn: "2018-03-15T16:52:37.658Z"
+        startDate: 2018-03-15T16:52:37.658Z
+        updatedAt: 2018-03-15T16:52:37.658Z
+      - createdAt: 2018-03-15T16:52:37.658Z
+        dateIn: 2018-03-15T16:52:37.658Z
         livestockCount: 27
-        endDate: "2018-03-15T16:52:37.658Z"
+        endDate: 2018-03-15T16:52:37.658Z
         graceDays: 12
-        dateOut: "2018-03-15T16:52:37.658Z"
+        dateOut: 2018-03-15T16:52:37.658Z
         livestockType:
           auFactor: 0.1
-          createdAt: "2018-03-15T16:52:37.658Z"
-          name: "Alpaca"
+          createdAt: 2018-03-15T16:52:37.658Z
+          name: Alpaca
           active: true
           id: 127412
-          updatedAt: "2018-03-15T16:52:37.658Z"
+          updatedAt: 2018-03-15T16:52:37.658Z
         id: 129482
-        pasture:
-          allowableAmu: 174981
-          pdlPercent: 42.56
-          createdAt: "2018-03-15T16:52:37.658Z"
-          notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-          graceDays: 12
-          name: "Barrington"
-          id: 126498
-          updatedAt: "2018-03-15T16:52:37.658Z"
-        startDate: "2018-03-15T16:52:37.658Z"
-        updatedAt: "2018-03-15T16:52:37.658Z"
+        startDate: 2018-03-15T16:52:37.658Z
+        updatedAt: 2018-03-15T16:52:37.658Z
   GrazingScheduleEntry:
-    type: "object"
+    type: object
     required:
-    - "createdAt"
-    - "dateIn"
-    - "dateOut"
-    - "endDate"
-    - "id"
-    - "livestockCount"
-    - "startDate"
-    - "updatedAt"
+    - createdAt
+    - dateIn
+    - dateOut
+    - endDate
+    - id
+    - livestockCount
+    - startDate
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 129482
       startDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       endDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       graceDays:
-        type: "integer"
+        type: integer
         example: 12
       livestockCount:
-        type: "integer"
+        type: integer
         example: 27
       dateIn:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       dateOut:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       livestockType:
-        $ref: "#/definitions/LivestockType"
-      pasture:
-        $ref: "#/definitions/Pasture"
+        $ref: '#/definitions/LivestockType'
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      dateIn: "2018-03-15T16:52:37.658Z"
+      createdAt: 2018-03-15T16:52:37.658Z
+      dateIn: 2018-03-15T16:52:37.658Z
       livestockCount: 27
-      endDate: "2018-03-15T16:52:37.658Z"
+      endDate: 2018-03-15T16:52:37.658Z
       graceDays: 12
-      dateOut: "2018-03-15T16:52:37.658Z"
+      dateOut: 2018-03-15T16:52:37.658Z
       livestockType:
         auFactor: 0.1
-        createdAt: "2018-03-15T16:52:37.658Z"
-        name: "Alpaca"
+        createdAt: 2018-03-15T16:52:37.658Z
+        name: Alpaca
         active: true
         id: 127412
-        updatedAt: "2018-03-15T16:52:37.658Z"
+        updatedAt: 2018-03-15T16:52:37.658Z
       id: 129482
-      pasture:
-        allowableAmu: 174981
-        pdlPercent: 42.56
-        createdAt: "2018-03-15T16:52:37.658Z"
-        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        graceDays: 12
-        name: "Barrington"
-        id: 126498
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      startDate: "2018-03-15T16:52:37.658Z"
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      startDate: 2018-03-15T16:52:37.658Z
+      updatedAt: 2018-03-15T16:52:37.658Z
   AgreementStatus:
-    type: "object"
+    type: object
     required:
-    - "active"
-    - "code"
-    - "id"
-    - "name"
+    - active
+    - code
+    - id
+    - name
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 123982
       code:
-        type: "string"
-        example: "D"
+        type: string
+        example: D
       name:
-        type: "string"
-        example: "Draft"
+        type: string
+        example: Draft
       active:
-        type: "boolean"
+        type: boolean
         example: true
     example:
-      code: "D"
-      name: "Draft"
+      code: D
+      name: Draft
       active: true
       id: 123982
   LivestockIdentifier:
-    type: "object"
+    type: object
     required:
-    - "accepted"
-    - "agreementId"
-    - "createdAt"
-    - "id"
-    - "updatedAt"
+    - accepted
+    - agreementId
+    - createdAt
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       agreementId:
-        type: "integer"
-        example: 429212
+        type: string
+        example: RAN1902841
       imageRef:
-        type: "string"
-        example: "TODO"
+        type: string
+        example: TODO
       description:
-        type: "string"
-        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        type: string
+        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       accepted:
-        type: "boolean"
+        type: boolean
         example: true
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       livestockIdentifierLocation:
-        $ref: "#/definitions/LivestockIdentifierLocation"
+        $ref: '#/definitions/LivestockIdentifierLocation'
       livestockIdentifierType:
-        $ref: "#/definitions/LivestockIdentifierType"
+        $ref: '#/definitions/LivestockIdentifierType'
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
+      createdAt: 2018-03-15T16:52:37.658Z
       livestockIdentifierType:
-        createdAt: "2018-03-15T16:52:37.658Z"
-        description: "Tag"
+        createdAt: 2018-03-15T16:52:37.658Z
+        description: Tag
         active: true
         id: 127412
-        updatedAt: "2018-03-15T16:52:37.658Z"
+        updatedAt: 2018-03-15T16:52:37.658Z
       livestockIdentifierLocation:
-        createdAt: "2018-03-15T16:52:37.658Z"
-        description: "Left Ear"
+        createdAt: 2018-03-15T16:52:37.658Z
+        description: Left Ear
         active: true
         id: 127412
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      agreementId: 429212
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        updatedAt: 2018-03-15T16:52:37.658Z
+      agreementId: RAN1902841
+      description: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       accepted: true
       id: 127412
-      imageRef: "TODO"
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      imageRef: TODO
+      updatedAt: 2018-03-15T16:52:37.658Z
   LivestockIdentifierLocation:
-    type: "object"
+    type: object
     required:
-    - "active"
-    - "createdAt"
-    - "description"
-    - "id"
-    - "updatedAt"
+    - active
+    - createdAt
+    - description
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       description:
-        type: "string"
-        example: "Left Ear"
+        type: string
+        example: Left Ear
       active:
-        type: "boolean"
+        type: boolean
         example: true
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      description: "Left Ear"
+      createdAt: 2018-03-15T16:52:37.658Z
+      description: Left Ear
       active: true
       id: 127412
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
   LivestockIdentifierType:
-    type: "object"
+    type: object
     required:
-    - "active"
-    - "createdAt"
-    - "description"
-    - "id"
-    - "updatedAt"
+    - active
+    - createdAt
+    - description
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       description:
-        type: "string"
-        example: "Tag"
+        type: string
+        example: Tag
       active:
-        type: "boolean"
+        type: boolean
         example: true
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      description: "Tag"
+      createdAt: 2018-03-15T16:52:37.658Z
+      description: Tag
       active: true
       id: 127412
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
   LivestockType:
-    type: "object"
+    type: object
     required:
-    - "active"
-    - "createdAt"
-    - "id"
-    - "updatedAt"
+    - active
+    - createdAt
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       name:
-        type: "string"
-        example: "Alpaca"
+        type: string
+        example: Alpaca
       auFactor:
-        type: "number"
+        type: number
         example: 0.1
       active:
-        type: "boolean"
+        type: boolean
         example: true
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
       auFactor: 0.1
-      createdAt: "2018-03-15T16:52:37.658Z"
-      name: "Alpaca"
+      createdAt: 2018-03-15T16:52:37.658Z
+      name: Alpaca
       active: true
       id: 127412
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
   Client:
-    type: "object"
+    type: object
     required:
-    - "createdAt"
-    - "id"
-    - "location"
-    - "updatedAt"
+    - createdAt
+    - id
+    - location
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       location:
-        type: "string"
-        example: "XX"
+        type: string
+        example: XX
       name:
-        type: "string"
-        example: "Eriberto Fisher V"
+        type: string
+        example: Eriberto Fisher V
       clientStartDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       clientEndDate:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       clientType:
-        $ref: "#/definitions/ClientType"
+        $ref: '#/definitions/ClientType'
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
+      createdAt: 2018-03-15T16:52:37.658Z
       clientType:
-        createdAt: "2018-03-15T16:52:37.658Z"
-        code: "A"
-        description: "Licensee"
+        createdAt: 2018-03-15T16:52:37.658Z
+        code: A
+        description: Licensee
         active: true
         id: 127412
-        updatedAt: "2018-03-15T16:52:37.658Z"
-      clientEndDate: "2018-03-15T16:52:37.658Z"
-      name: "Eriberto Fisher V"
-      location: "XX"
+        updatedAt: 2018-03-15T16:52:37.658Z
+      clientEndDate: 2018-03-15T16:52:37.658Z
+      name: Eriberto Fisher V
+      location: XX
       id: 127412
-      clientStartDate: "2018-03-15T16:52:37.658Z"
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      clientStartDate: 2018-03-15T16:52:37.658Z
+      updatedAt: 2018-03-15T16:52:37.658Z
   ClientType:
-    type: "object"
+    type: object
     required:
-    - "active"
-    - "code"
-    - "createdAt"
-    - "description"
-    - "id"
-    - "updatedAt"
+    - active
+    - code
+    - createdAt
+    - description
+    - id
+    - updatedAt
     properties:
       id:
-        type: "integer"
+        type: integer
         example: 127412
       code:
-        type: "string"
-        example: "A"
+        type: string
+        example: A
       description:
-        type: "string"
-        example: "Licensee"
+        type: string
+        example: Licensee
       active:
-        type: "boolean"
+        type: boolean
         example: true
       createdAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
       updatedAt:
-        type: "string"
-        example: "2018-03-15T16:52:37.658Z"
+        type: string
+        example: 2018-03-15T16:52:37.658Z
     example:
-      createdAt: "2018-03-15T16:52:37.658Z"
-      code: "A"
-      description: "Licensee"
+      createdAt: 2018-03-15T16:52:37.658Z
+      code: A
+      description: Licensee
       active: true
       id: 127412
-      updatedAt: "2018-03-15T16:52:37.658Z"
+      updatedAt: 2018-03-15T16:52:37.658Z
   statusId:
-    type: "object"
+    type: object
     properties:
       statusId:
-        type: "integer"
+        type: integer
         example: 1
   zoneId:
-    type: "object"
+    type: object
     properties:
       zoneId:
-        type: "integer"
+        type: integer
         example: 1
