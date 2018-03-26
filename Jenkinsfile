@@ -24,6 +24,13 @@ def notifySlack(text, channel, url, attachments, icon) {
     sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
+GIT_COMMIT_SHORT_HASH = sh (
+  script: """git describe --always""",
+  returnStdout: true).trim()
+GIT_COMMIT_AUTHOR = sh (
+  script: """git show -s --pretty=%an""",
+  returnStdout: true).trim()
+
 // podTemplate(label: 'nodejs-build', name: 'nodejs-build', serviceAccount: 'jenkins', cloud: 'openshift', containers: [
 //   containerTemplate(
 //     name: 'jnlp',
@@ -96,7 +103,7 @@ def notifySlack(text, channel, url, attachments, icon) {
           attachment.fallback = 'See build log for more details'
           attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
           attachment.color = '#CD0000' // Red
-          attachment.text = 'Their are issues with the unit tests.'
+          attachment.text = 'Their are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}'
           // attachment.title_link = "${env.BUILD_URL}"
 
           notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
@@ -130,13 +137,6 @@ def notifySlack(text, channel, url, attachments, icon) {
       openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
       
       try {
-        GIT_COMMIT_SHORT_HASH = sh (
-          script: """git describe --always""",
-          returnStdout: true).trim()
-        GIT_COMMIT_AUTHOR = sh (
-          script: """git show -s --pretty=%an""",
-          returnStdout: true).trim()
-
         def attachment = [:]
         attachment.title = "API Build ${BUILD_ID} OK! :heart: :tada:"
         attachment.fallback = 'See build log for more details'
