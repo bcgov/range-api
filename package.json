@@ -12,7 +12,7 @@
     "babel-runtime": "^6.26.0",
     "body-parser": "^1.18.2",
     "chalk": "^2.3.0",
-    "compression": "^1.7.1",
+    "compression": "^1.7.2",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
@@ -72,7 +72,10 @@
     "test": "cross-env NODE_ENV=test jest __tests__",
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
-    "test:lint": "eslint --env node --ext .js server"
+    "test:lint": "./node_modules/.bin/eslint --max-warnings 3 - src",
+    "test:lint": "eslint --env node --ext .js server",
+    "db:migrate": "sequelize --url $POSTGRES_URL db:migrate",
+    "db:seed": "sequelize --url $POSTGRES_URL db:seed:all"
   },
   "repository": {
     "type": "git",

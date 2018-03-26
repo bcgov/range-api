@@ -25,7 +25,7 @@ export default class DataManager {
       underscored: true,
       operatorsAliases: Sequelize.Op,
       pool: {
-        max: 5,
+        max: 3,
         min: 0,
         acquire: 30000,
         idle: 10000,

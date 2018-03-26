@@ -1,11 +1,11 @@
 {
 	"temporaryUploadPath": "uploads",
 	"archiveFileBaseName": "IMG_",
-	"minio": {
-		"bucket": "secure-image-dv",
-		"endPoint": "127.0.0.1",
-		"port": 443,
-		"secure": true,
-		"expiry": 604800
-	}
+	"sso": {
+		"clientId": "range-test",
+		"callback": "/v1/auth/callback",
+		"authUrl": "https://dev-sso.pathfinder.gov.bc.ca/auth/realms/mobile/protocol/openid-connect/auth",
+		"tokenUrl": "https://dev-sso.pathfinder.gov.bc.ca/auth/realms/mobile/protocol/openid-connect/token",
+		"certsUrl": "https://dev-sso.pathfinder.gov.bc.ca/auth/realms/mobile/protocol/openid-connect/certs"
+  }
 }
