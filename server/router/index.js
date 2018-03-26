@@ -28,8 +28,10 @@ import agreement from './routes/agreement';
 import client from './routes/client';
 import district from './routes/district';
 import ehlo from './routes/ehlo';
+import plan from './routes/plan';
 import reference from './routes/reference';
 import zone from './routes/zone';
+import { isAuthenticated } from '../libs/auth';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -39,10 +41,12 @@ const corsOptions = {
 
 module.exports = (app) => {
   app.use(cors(corsOptions));
+  app.use('/v1/ehlo', ehlo); // probes
+  app.use(isAuthenticated);
   app.use('/v1/agreement', agreement);
   app.use('/v1/client', client);
   app.use('/v1/district', district);
-  app.use('/v1/ehlo', ehlo); // probes
+  app.use('/v1/plan', plan);
   app.use('/v1/reference', reference);
   app.use('/v1/zone', zone);
 };
