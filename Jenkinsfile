@@ -130,10 +130,13 @@ def notifySlack(text, channel, url, attachments, icon) {
       openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
       
       try {
+        GIT_COMMIT_SHORT_HASH = "sh (git describe --always)"
+        GIT_COMMIT_AUTHOR = "sh (git show -s --pretty=%an)"
+
         def attachment = [:]
         attachment.title = "API Build ${BUILD_ID} OK! :heart: :tada:"
         attachment.fallback = 'See build log for more details'
-        attachment.text = 'Another huge sucess for the Range Team.\nA freshly minted build is being deployed and will be available shortly.'
+        attachment.text = "Another huge sucess for the Range Team.\nA freshly minted build is being deployed and will be available shortly.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
         attachment.color = '#00FF00' // Lime Green
 
         notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
