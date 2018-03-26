@@ -70,7 +70,7 @@ node('master') {
         attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
         // Temporarily disabled until hoek is fixed. jl.
-        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+        // notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
       }
 
       try {
