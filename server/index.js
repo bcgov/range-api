@@ -22,6 +22,7 @@
 
 'use strict';
 
+import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import express from 'express';
@@ -60,6 +61,7 @@ fs.access(docpath, fs.constants.R_OK, (err) => {
   app.use('/doc', express.static(docpath));
 });
 
+app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({
   extended: true,
