@@ -50,7 +50,7 @@ nconf.overrides({
     host: process.env.POSTGRESQL_HOST,
   },
   sso: {
-    certsEndpoint: process.env.SSO_CERTS_ENDPOINT,
+    clientSecret: process.env.SSO_CLIENT_SECRET,
   },
 });
 
