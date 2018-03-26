@@ -24,7 +24,6 @@
 
 import { Router } from 'express';
 // import deepDiff from 'deep-diff';
-import { isAuthenticated } from '../../libs/auth';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -39,7 +38,6 @@ const {
   Client,
   Usage,
   Agreement,
-  AgreementStatus,
   Zone,
   District,
   LivestockIdentifier,
@@ -141,12 +139,12 @@ const allAgreementChildren = [
 const excludedAgreementAttributes = ['agreement_type_id', 'agreement_exemption_status_id'];
 
 // Create agreement
-router.post('/', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.post('/', asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'Not Implemented' }).end();
 }));
 
 // Get all
-router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
       limit: 100,
@@ -163,7 +161,7 @@ router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
 }));
 
 // Update
-router.put('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
   } = req.params;
@@ -215,7 +213,7 @@ router.put('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
 }));
 
 // Get by id
-router.get('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/:id', asyncMiddleware(async (req, res) => {
   try {
     const {
       id,
@@ -236,53 +234,6 @@ router.get('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
     } else {
       res.status(404).json({ error: 'Not found' }).end();
     }
-  } catch (err) {
-    throw err;
-  }
-}));
-
-//
-// Agreement Status
-//
-
-// Update the status of an agreement
-router.put('/:agreementId?/status', asyncMiddleware(async (req, res) => {
-  const {
-    statusId,
-  } = req.body;
-  const {
-    agreementId,
-  } = req.params;
-
-  if (!statusId || !isNumeric(statusId)) {
-    throw errorWithCode('statusId must be provided in body and be numeric', 400);
-  }
-
-  if (!agreementId) {
-    throw errorWithCode('Agreement id must be provided in path', 400);
-  }
-
-  try {
-    const agreement = await Agreement.findById(agreementId);
-    if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
-    }
-
-    const status = await AgreementStatus.findOne({
-      where: {
-        id: statusId,
-      },
-      attributes: {
-        exclude: ['updatedAt', 'createdAt', 'active'],
-      },
-    });
-    if (!status) {
-      throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
-    }
-
-    await agreement.setStatus(status);
-
-    return res.status(200).json(status).end();
   } catch (err) {
     throw err;
   }
@@ -339,7 +290,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
 //
 
 // create a livestock identifier in an agreement
-router.post('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.post('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
   res.status(501).json({ error: 'not implemented yet' }).end();
 
   const {
@@ -374,7 +325,7 @@ router.post('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddlewa
 }));
 
 // get all livestock identifiers of an agreement
-router.get('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
   } = req.params;
@@ -396,7 +347,7 @@ router.get('/:agreementId?/livestockidentifier', isAuthenticated, asyncMiddlewar
   }
 }));
 
-router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
     livestockIdentifierId,

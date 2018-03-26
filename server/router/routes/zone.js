@@ -23,12 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
-import { isAuthenticated } from '../../libs/auth';
-import {
-  asyncMiddleware,
-  errorWithCode,
-} from '../../libs/utils';
-import { logger } from '../../libs/logger';
+import { asyncMiddleware } from '../../libs/utils';
 
 import config from '../../config';
 import DataManager from '../../libs/db';
@@ -41,7 +36,7 @@ const {
 const router = new Router();
 
 // Get
-router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/', asyncMiddleware(async (req, res) => {
   const {
     districtId,
   } = req.query;
@@ -57,7 +52,6 @@ router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
     });
     res.status(200).json(zones).end();
   } catch (error) {
-    logger.error('error occured when getting zones');
     throw error;
   }
 }));

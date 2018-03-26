@@ -27,7 +27,6 @@ import { asyncMiddleware } from '../../libs/utils';
 
 import config from '../../config';
 import DataManager from '../../libs/db';
-import { isAuthenticated } from '../../libs/auth';
 
 const dm = new DataManager(config);
 const {
@@ -37,7 +36,7 @@ const {
 const router = new Router();
 
 // Get all
-router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const districts = await District.findAll();
     res.status(200).json(districts).end();
