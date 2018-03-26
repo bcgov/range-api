@@ -72,7 +72,6 @@
     "test": "cross-env NODE_ENV=test jest __tests__",
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
-    "test:lint": "./node_modules/.bin/eslint --max-warnings 3 - src",
     "test:lint": "eslint --env node --ext .js server",
     "db:migrate": "sequelize --url $POSTGRES_URL db:migrate",
     "db:seed": "sequelize --url $POSTGRES_URL db:seed:all"
