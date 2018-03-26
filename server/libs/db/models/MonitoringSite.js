@@ -21,8 +21,6 @@
 
 'use strict';
 
-import { PC_RANGELAND_HEALTH } from '../constants';
-
 export default (sequelize, DataTypes) => {
   const MonitoringSite = sequelize.define('monitoringSite', {
     id: {
@@ -37,7 +35,6 @@ export default (sequelize, DataTypes) => {
     rangelandHealth: {
       field: 'rangeland_health',
       type: DataTypes.TEXT,
-      // values: Object.keys(PC_RANGELAND_HEALTH).map(k => PC_RANGELAND_HEALTH[k]),
     },
     transectAzimuth: {
       field: 'transect_azimuth',

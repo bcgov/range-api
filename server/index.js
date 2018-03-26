@@ -98,8 +98,7 @@ dm
     }
     return logger.info(`Production server running on port: ${port}`);
   })).catch((err) => {
-    console.log(err);
-    logger.log(err).error('There was a problem starting the server');
+    logger.log(err.message).error('There was a problem starting the server');
   });
 
 module.exports = app;

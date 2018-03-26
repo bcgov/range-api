@@ -67,12 +67,24 @@ node('master') {
         attachment.fallback = 'See build log for more details'
         attachment.title = 'Node Security Project Warning'
         attachment.color = '#D73F09' // Orange
-        attachment.text = 'Their are security warnings related to your packages.'
-        // attachment.title_link = "${env.BUILD_URL}"
-        // echo "${output}"
+        attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
         // Temporarily disabled until hoek is fixed. jl.
-        // notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+      }
+
+      try {
+        // Run our unit tests et al.
+        sh "${CMD_PREFIX} npm test:lint"
+      } catch (error) {
+        def attachment = [:]
+        attachment.fallback = 'See build log for more details'
+        attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
+        attachment.color = '#CD0000' // Red
+        attachment.text = "There are issues with the code quality.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
+        // attachment.title_link = "${env.BUILD_URL}"
+
+        notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
       }
 
       try {
@@ -83,7 +95,7 @@ node('master') {
         attachment.fallback = 'See build log for more details'
         attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
         attachment.color = '#CD0000' // Red
-        attachment.text = 'Their are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}'
+        attachment.text = "There are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
         // attachment.title_link = "${env.BUILD_URL}"
 
         notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
