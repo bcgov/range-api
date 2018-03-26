@@ -66,7 +66,7 @@ node('master') {
         def attachment = [:]
         attachment.fallback = 'See build log for more details'
         attachment.title = 'Node Security Project Warning'
-        attachment.color = '#D73F09' // Orange
+        attachment.color = '#FFA500' // Orange
         attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
         // Temporarily disabled until hoek is fixed. jl.
