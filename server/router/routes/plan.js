@@ -47,16 +47,10 @@ router.post('/', asyncMiddleware(async (req, res) => {
   } = req;
 
   const {
-    id,
     rangeName,
     statusId,
     agreementId,
-    extensionId,
   } = body;
-
-  if (!id) {
-    throw errorWithCode('id is required in body', 400);
-  }
 
   if (!rangeName) {
     throw errorWithCode('rangeName is required in body', 400);
@@ -68,10 +62,6 @@ router.post('/', asyncMiddleware(async (req, res) => {
 
   if (!agreementId) {
     throw errorWithCode('agreementId is required in body', 400);
-  }
-
-  if (!extensionId) {
-    throw errorWithCode('extensionId is required in body', 400);
   }
 
   try {
@@ -96,19 +86,13 @@ router.put('/:planId', asyncMiddleware(async (req, res) => {
   } = req.params;
 
   const {
-    id,
     rangeName,
     statusId,
     agreementId,
-    extensionId,
   } = req.body;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
-  }
-
-  if (!id) {
-    throw errorWithCode('id is required in body', 400);
   }
 
   if (!rangeName) {
@@ -123,14 +107,10 @@ router.put('/:planId', asyncMiddleware(async (req, res) => {
     throw errorWithCode('agreementId is required in body', 400);
   }
 
-  if (!extensionId) {
-    throw errorWithCode('extensionId is required in body', 400);
-  }
-
   try {
     const [affectedCount] = await Plan.update(req.body, {
       where: {
-        planId,
+        id: planId,
       },
     });
 
