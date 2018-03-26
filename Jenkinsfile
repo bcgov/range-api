@@ -130,8 +130,12 @@ def notifySlack(text, channel, url, attachments, icon) {
       openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
       
       try {
-        GIT_COMMIT_SHORT_HASH = sh "git describe --always"
-        GIT_COMMIT_AUTHOR = sh "git show -s --pretty=%an"
+        GIT_COMMIT_SHORT_HASH = sh (
+          script: """git describe --always""",
+          returnStdout: true).trim()
+        GIT_COMMIT_AUTHOR = sh (
+          script: """git show -s --pretty=%an""",
+          returnStdout: true).trim()
 
         def attachment = [:]
         attachment.title = "API Build ${BUILD_ID} OK! :heart: :tada:"
