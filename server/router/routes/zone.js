@@ -26,7 +26,7 @@ import { Router } from 'express';
 import { isAuthenticated } from '../../libs/auth';
 import {
   asyncMiddleware,
-  errorWithCode,
+  // errorWithCode,
 } from '../../libs/utils';
 import { logger } from '../../libs/logger';
 
