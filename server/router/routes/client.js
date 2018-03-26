@@ -26,7 +26,6 @@ import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
 import config from '../../config';
 import DataManager from '../../libs/db';
-import { isAuthenticated } from '../../libs/auth';
 
 const dm = new DataManager(config);
 const {
@@ -37,7 +36,7 @@ const {
 const router = new Router();
 
 // Get all
-router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const clients = await Client.findAll({
       include: [ClientType],
@@ -54,7 +53,7 @@ router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
 }));
 
 // Get by id
-router.get('/:id', isAuthenticated, asyncMiddleware(async (req, res) => {
+router.get('/:id', asyncMiddleware(async (req, res) => {
   try {
     const {
       id,

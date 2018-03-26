@@ -13,6 +13,7 @@ host: virtserver.swaggerhub.com
 basePath: /AidanLaing/myra_api/1.0.0
 tags:
 - name: Agreement
+- name: Plan
 - name: Client
 - name: District
 - name: Reference
@@ -26,7 +27,7 @@ paths:
       tags:
       - Agreement
       summary: Returns array of all agreements
-      description: Returns all agreements with all child data.
+      description: Returns all agreements with nested data.
       operationId: readAgreements
       produces:
       - application/json
@@ -75,7 +76,7 @@ paths:
       tags:
       - Agreement
       summary: Returns agreement matching id
-      description: Returns the agreement matching the id with all child data.
+      description: Returns the agreement matching the id with nested data.
       operationId: readAgreement
       produces:
       - application/json
@@ -102,7 +103,7 @@ paths:
       tags:
       - Agreement
       summary: Update an agreement
-      description: Updates an existing agreement and returns updated agreement.
+      description: Updates an existing agreement and returns updated object.
       operationId: updateAgreement
       consumes:
       - application/json
@@ -133,40 +134,105 @@ paths:
           description: Agreement not found.
       security:
       - bearerAuth: []
-  /v1/agreement/{agreementId}/status:
-    put:
+  /v1/plan:
+    post:
       tags:
-      - Agreement
-      summary: Update agreement status
-      description: Uses the sent statusId to update the agreement's status.
-      operationId: updateAgreementStatus
+      - Plan
+      summary: Create a plan
+      description: Creates a plan and returns the created object.
+      operationId: createPlan
       consumes:
       - application/json
       produces:
       - application/json
       parameters:
       - in: body
-        name: statusId
-        description: Status id that agreement will be updated to.
+        name: body
+        description: Plan object to create plan.
         required: true
         schema:
-          $ref: '#/definitions/statusId'
-      - name: agreementId
-        in: path
-        description: Id of parent agreement.
-        required: true
-        type: string
+          $ref: '#/definitions/Plan'
       responses:
         200:
-          description: Status updated successfully.
+          description: Successfully created plan.
           schema:
-            $ref: '#/definitions/AgreementStatus'
+            $ref: '#/definitions/Plan'
         400:
-          description: Both agreementId and statusId must be provided
+          description: Invalid path or body.
+        401:
+          description: Not authorized.
+      security:
+      - bearerAuth: []
+  /v1/plan/{planId}:
+    put:
+      tags:
+      - Plan
+      summary: Update a plan
+      description: Updates an existing plan and returns the updated object.
+      operationId: updatePlan
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: planId
+        in: path
+        description: Id of plan to update.
+        required: true
+        type: string
+      - in: body
+        name: body
+        description: Plan object to update existing plan.
+        required: true
+        schema:
+          $ref: '#/definitions/Plan'
+      responses:
+        200:
+          description: Zone updated successfully
+          schema:
+            $ref: '#/definitions/Zone'
+        400:
+          description: Bady body or path.
         401:
           description: Not authorized.
         404:
-          description: Agreement or status not found.
+          description: Plan not found.
+      security:
+      - bearerAuth: []
+  /v1/plan/{planId}/status:
+    put:
+      tags:
+      - Plan
+      summary: Update a plan status
+      description: Updates a plan's status and returns the updated status.
+      operationId: updatePlanStatus
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: planId
+        in: path
+        description: Id of plan to update.
+        required: true
+        type: string
+      - in: body
+        name: statusId
+        description: Status id that the plan will be updated to.
+        required: true
+        schema:
+          $ref: '#/definitions/statusId'
+      responses:
+        200:
+          description: Zone updated successfully
+          schema:
+            $ref: '#/definitions/Zone'
+        400:
+          description: Bady body or path.
+        401:
+          description: Not authorized.
+        404:
+          description: Plan not found.
       security:
       - bearerAuth: []
   /v1/agreement/{agreementId}/zone:
@@ -209,7 +275,7 @@ paths:
     get:
       tags:
       - Agreement
-      summary: Return livestock identifier
+      summary: Returns livestock identifier for agreement id
       description: Returns the livestock identifier matching the associated agreement id.
       operationId: readAgreementLivestockIdentifier
       produces:
@@ -424,7 +490,7 @@ paths:
     get:
       tags:
       - Client
-      summary: Read client by id
+      summary: Returns client matching id
       description: Returns the client matching the associated client id.
       operationId: readClient
       produces:
@@ -536,9 +602,7 @@ definitions:
     required:
     - agreementEndDate
     - agreementStartDate
-    - createdAt
     - id
-    - updatedAt
     properties:
       id:
         type: string
@@ -919,11 +983,8 @@ definitions:
     type: object
     required:
     - agreementId
-    - createdAt
-    - id
     - rangeName
     - statusId
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1090,11 +1151,8 @@ definitions:
     type: object
     required:
     - code
-    - createdAt
     - description
     - districtId
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1143,10 +1201,6 @@ definitions:
       updatedAt: 2018-03-15T16:52:37.658Z
   District:
     type: object
-    required:
-    - createdAt
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1173,12 +1227,9 @@ definitions:
     type: object
     required:
     - authorizedAum
-    - createdAt
-    - id
     - temporaryIncrease
     - totalAnnualUse
     - totalNonUse
-    - updatedAt
     - year
     properties:
       id:
@@ -1222,7 +1273,6 @@ definitions:
     type: object
     required:
     - endDate
-    - id
     - requestDate
     properties:
       id:
@@ -1254,12 +1304,9 @@ definitions:
     type: object
     required:
     - allowableAum
-    - createdAt
     - graceDays
-    - id
     - name
     - pdlPercent
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1302,7 +1349,6 @@ definitions:
   PlantCommunity:
     type: object
     required:
-    - id
     - name
     properties:
       id:
@@ -1343,8 +1389,6 @@ definitions:
           $ref: '#/definitions/MonitoringSite'
   PlantCommunityAction:
     type: object
-    required:
-    - id
     properties:
       id:
         type: integer
@@ -1369,8 +1413,6 @@ definitions:
         example: 2018-03-15T16:52:37.658Z
   MonitoringSite:
     type: object
-    required:
-    - id
     properties:
       id:
         type: integer
@@ -1405,8 +1447,6 @@ definitions:
           $ref: '#/definitions/MonitoringCriteria'
   MonitoringCriteria:
     type: object
-    required:
-    - id
     properties:
       id:
         type: integer
@@ -1420,9 +1460,6 @@ definitions:
   GrazingSchedule:
     type: object
     required:
-    - createdAt
-    - id
-    - updatedAt
     - year
     properties:
       id:
@@ -1486,14 +1523,11 @@ definitions:
   GrazingScheduleEntry:
     type: object
     required:
-    - createdAt
     - dateIn
     - dateOut
     - endDate
-    - id
     - livestockCount
     - startDate
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1571,9 +1605,6 @@ definitions:
     required:
     - accepted
     - agreementId
-    - createdAt
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1624,10 +1655,7 @@ definitions:
     type: object
     required:
     - active
-    - createdAt
     - description
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1654,10 +1682,7 @@ definitions:
     type: object
     required:
     - active
-    - createdAt
     - description
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1684,9 +1709,6 @@ definitions:
     type: object
     required:
     - active
-    - createdAt
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1716,10 +1738,7 @@ definitions:
   Client:
     type: object
     required:
-    - createdAt
-    - id
     - location
-    - updatedAt
     properties:
       id:
         type: integer
@@ -1764,10 +1783,7 @@ definitions:
     required:
     - active
     - code
-    - createdAt
     - description
-    - id
-    - updatedAt
     properties:
       id:
         type: integer
