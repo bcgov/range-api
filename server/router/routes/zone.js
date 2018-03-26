@@ -23,6 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
+import { isAuthenticated } from '../../libs/auth';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -40,7 +41,7 @@ const {
 const router = new Router();
 
 // Get
-router.get('/', asyncMiddleware(async (req, res) => {
+router.get('/', isAuthenticated, asyncMiddleware(async (req, res) => {
   const {
     districtId,
   } = req.query;
