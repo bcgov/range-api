@@ -25,7 +25,6 @@
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
-const apidoc = require('gulp-apidoc');
 
 gulp.task('clean', () => gulp.src('build', { read: false })
   .pipe(clean({
@@ -42,14 +41,9 @@ gulp.task('copy-config', ['clean'], () => gulp.src('server/config/*.json')
 gulp.task('copy-node-config', ['clean'], () => gulp.src(['apidoc.json', 'package.json', 'package-lock.json'])
   .pipe(gulp.dest('build')));
 
-gulp.task('apidoc', ['clean', 'transpile', 'copy-node-config'], done => apidoc({
-  src: 'build/',
-  dest: 'build/public/doc/api',
-  encoding: 'utf8',
-  silent: true,
-  includeFilters: ['server/.*\\.js$'],
-}, done));
+gulp.task('copy-tools', [], () =>
+  gulp.src(['wkhtmltopdf'], { dot: true })
+    .pipe(gulp.dest('build/server')));
 
 gulp.task('default', ['clean', 'transpile', 'copy-config',
-  'copy-node-config', 'apidoc',
-]);
+  'copy-node-config', 'copy-tools']);

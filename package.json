@@ -35,7 +35,8 @@
     "rsa-pem-from-mod-exp": "^0.8.4",
     "sequelize": "^4.35.2",
     "uuid": "^3.1.0",
-    "winston": "^2.4.0"
+    "winston": "^2.4.0",
+    "wkhtmltopdf": "^0.3.4"
   },
   "devDependencies": {
     "@std/esm": "^0.25.4",
@@ -55,7 +56,6 @@
     "eslint-plugin-import": "^2.9.0",
     "faker": "^4.1.0",
     "gulp": "^3.9.1",
-    "gulp-apidoc": "^0.2.7",
     "gulp-babel": "^7.0.0",
     "gulp-clean": "^0.4.0",
     "jest": "^22.4.2",
