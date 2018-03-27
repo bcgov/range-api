@@ -186,7 +186,7 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
   try {
     const plan = await Plan.findById(planId);
-    const pasture = await Pasture.create(body);
+    const pasture = await Pasture.create(Object.assign(body, { planId }));
 
     await plan.addPasture(pasture);
 
