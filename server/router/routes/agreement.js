@@ -38,6 +38,7 @@ const {
   Client,
   Usage,
   Agreement,
+  AgreementExemptionStatus,
   Zone,
   District,
   LivestockIdentifier,
@@ -56,6 +57,12 @@ const router = new Router();
 // Includes all nested json data for Agreement
 
 const allAgreementChildren = [
+  {
+    model: AgreementExemptionStatus,
+    attributes: {
+      exclude: ['active', 'createdAt', 'updatedAt'],
+    },
+  },
   {
     model: Zone,
     include: [District],
@@ -140,7 +147,7 @@ const allAgreementChildren = [
     },
   },
 ];
-const excludedAgreementAttributes = ['agreement_type_id', 'agreement_exemption_status_id'];
+const excludedAgreementAttributes = ['agreement_type_id', 'agreement_exemption_status_id', 'zone_id'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
