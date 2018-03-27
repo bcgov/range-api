@@ -158,7 +158,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const agreements = await Agreement.findAll({
-      limit: 100,
+      limit: 10,
       include: allAgreementChildren,
       attributes: {
         exclude: excludedAgreementAttributes,
