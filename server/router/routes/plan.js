@@ -37,20 +37,19 @@ const {
   Plan,
   PlanStatus,
   Agreement,
+  GrazingSchedule,
+  GrazingScheduleEntry,
+  LivestockType,
 } = dm;
 
 const router = new Router();
 
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
-    body,
-  } = req;
-
-  const {
     rangeName,
     statusId,
     agreementId,
-  } = body;
+  } = req.body;
 
   if (!rangeName) {
     throw errorWithCode('rangeName is required in body', 400);
@@ -70,7 +69,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
       throw errorWithCode('agreement not found', 404);
     }
 
-    const plan = await Plan.create(body);
+    const plan = await Plan.create(req.body);
     await agreement.addPlan(plan);
     await agreement.save();
 
@@ -80,7 +79,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
-router.put('/:planId', asyncMiddleware(async (req, res) => {
+router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const {
     planId,
   } = req.params;
@@ -163,6 +162,61 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     await plan.setStatus(status);
 
     return res.status(200).json(status).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+
+  const {
+    year,
+    grazingScheduleEntries,
+  } = req.body;
+
+  if (!planId) {
+    throw errorWithCode('planId is required in path', 400);
+  }
+
+  if (!year) {
+    throw errorWithCode('year is required in body', 400);
+  }
+
+  if (!grazingScheduleEntries) {
+    throw errorWithCode('grazingScheduleEntries is required in body', 400);
+  }
+
+  for (let i = 0; i < grazingScheduleEntries.length; i += 1) {
+    if (!grazingScheduleEntries[i].livestockTypeId) {
+      throw errorWithCode('grazingScheduleEntries must have livestockType');
+    }
+  }
+
+  try {
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      throw errorWithCode('plan not found', 404);
+    }
+
+    const schedule = await GrazingSchedule.create(req.body);
+
+    const promises = [];
+    for (let i = 0; i < grazingScheduleEntries.length; i += 1) {
+      const entry = grazingScheduleEntries[i];
+      entry.grazingScheduleId = schedule.id;
+      promises.push(GrazingScheduleEntry.create(grazingScheduleEntries[i]));
+    }
+
+    const createdEntries = await Promise.all(promises);
+
+    await schedule.addGrazingScheduleEntries(createdEntries);
+    await plan.addGrazingSchedule(schedule);
+    await plan.save();
+
+    return res.status(200).json(schedule).end();
   } catch (err) {
     throw err;
   }
