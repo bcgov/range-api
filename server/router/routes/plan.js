@@ -222,11 +222,11 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
     throw errorWithCode('grazingScheduleEntries is required in body', 400);
   }
 
-  for (let i = 0; i < grazingScheduleEntries.length; i += 1) {
-    if (!grazingScheduleEntries[i].livestockTypeId) {
+  grazingScheduleEntries.forEach((entry) => {
+    if (!entry.livestockTypeId) {
       throw errorWithCode('grazingScheduleEntries must have livestockType');
     }
-  }
+  });
 
   try {
     const plan = await Plan.findById(planId);
@@ -235,13 +235,9 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
     }
 
     const schedule = await GrazingSchedule.create(req.body);
-
-    const promises = [];
-    for (let i = 0; i < grazingScheduleEntries.length; i += 1) {
-      const entry = grazingScheduleEntries[i];
-      entry.grazingScheduleId = schedule.id;
-      promises.push(GrazingScheduleEntry.create(grazingScheduleEntries[i]));
-    }
+    const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
+      return GrazingScheduleEntry.create(Object.assign(entry, { grazingScheduleId: schedule.id }));
+    });
 
     const createdEntries = await Promise.all(promises);
 

@@ -147,7 +147,7 @@ const allAgreementChildren = [
     },
   },
 ];
-const excludedAgreementAttributes = ['agreement_type_id', 'agreement_exemption_status_id', 'zone_id'];
+const excludedAgreementAttributes = ['agreementTypeId', 'agreementExemptionStatusId', 'zoneId'];
 
 // Create agreement
 router.post('/', asyncMiddleware(async (req, res) => {
