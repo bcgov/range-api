@@ -34,12 +34,13 @@ import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
+  Pasture,
   Plan,
   PlanStatus,
   Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
-  LivestockType,
+  // LivestockType,
 } = dm;
 
 const router = new Router();
@@ -166,6 +167,38 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     throw err;
   }
 }));
+
+//
+// Pasture
+//
+
+router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
+  const {
+    body,
+  } = req;
+  const {
+    planId,
+  } = req.params;
+
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+
+  try {
+    const plan = await Plan.findById(planId);
+    const pasture = await Pasture.create(body);
+
+    await plan.addPasture(pasture);
+
+    return res.status(200).json(pasture).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+//
+// Schedule
+//
 
 router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
   const {
