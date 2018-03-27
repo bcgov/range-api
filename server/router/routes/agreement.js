@@ -45,6 +45,7 @@ const {
   LivestockIdentifierType,
   Pasture,
   Plan,
+  PlanStatus,
   GrazingSchedule,
   GrazingScheduleEntry,
   LivestockType,
@@ -75,6 +76,9 @@ const allAgreementChildren = [
       exclude: ['status_id'],
     },
     include: [{
+      model: PlanStatus,
+      as: 'status',
+    }, {
       model: Pasture,
       attributes: {
         exclude: ['plan_id'],
