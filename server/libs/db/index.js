@@ -61,10 +61,9 @@ export default class DataManager {
     // Client, Agreement
     //
 
-    // A Client can have multiple Agreements.
-    this.Agreement.belongsTo(this.Client, { as: 'primaryAgreementHolder', foreignKey: 'primary_agreement_holder_id' });
-    // this.Client.belongsToMany(this.Agreement, { as: 'secondaryClient',
-    // through: 'client_agreement' });
+    // A Client can have multiple Agreements, and an Agreement can have multiple clients.
+    this.Agreement.belongsToMany(this.Client, { through: 'client_agreement' });
+    this.Client.belongsToMany(this.Agreement, { through: 'client_agreement' });
 
     //
     // Agreement Type, Agreement Status

@@ -60,14 +60,14 @@ module.exports = {
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
-      primary_agreement_holder_id: {
-        type: Sequelize.STRING(8),
-        references: {
-          model: 'ref_client',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
+      // primary_agreement_holder_id: {
+      //   type: Sequelize.STRING(8),
+      //   references: {
+      //     model: 'ref_client',
+      //     key: 'client_number',
+      //     deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+      //   },
+      // },
       zone_id: {
         type: Sequelize.INTEGER,
         field: 'zone_id',

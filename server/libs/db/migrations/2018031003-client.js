@@ -30,12 +30,12 @@ module.exports = {
     const { sequelize } = queryInterface;
 
     await queryInterface.createTable(table, {
-      id: {
+      client_number: {
         type: Sequelize.STRING(8),
         allowNull: false,
         primaryKey: true,
       },
-      location: {
+      location_code: {
         type: Sequelize.STRING(2),
         allowNull: false,
       },
@@ -52,12 +52,12 @@ module.exports = {
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
-      clientStartDate: {
-        field: 'client_start_date',
+      start_date: {
+        field: 'licensee_start_date',
         type: Sequelize.DATE,
       },
-      clientEndDate: {
-        field: 'client_end_date',
+      end_date: {
+        field: 'licensee_end_date',
         type: Sequelize.DATE,
       },
       created_at: {
@@ -78,6 +78,7 @@ module.exports = {
     update_changetimestamp_column();`;
 
     await queryInterface.sequelize.query(query);
+    await queryInterface.addIndex(table, ['client_number']);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(table);

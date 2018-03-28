@@ -44,7 +44,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'ref_client',
-          key: 'id',
+          key: 'client_number',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
@@ -66,6 +66,7 @@ module.exports = {
     update_changetimestamp_column();`;
 
     await queryInterface.sequelize.query(query);
+    await queryInterface.addIndex(table, ['agreement_id', 'client_id']);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(table);
