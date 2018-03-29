@@ -205,7 +205,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
         [Op.or]: [
           {
             id: {
-              [Op.like]: `%${id}%`,
+              [Op.like]: `%${id || ''}%`,
             },
           },
         ],

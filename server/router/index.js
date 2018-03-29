@@ -42,7 +42,7 @@ const corsOptions = {
 module.exports = (app) => {
   app.use(cors(corsOptions));
   app.use('/v1/ehlo', ehlo); // probes
-  app.use(isAuthenticated);
+  // app.use(isAuthenticated);
   app.use('/v1/agreement', agreement);
   app.use('/v1/client', client);
   app.use('/v1/district', district);
