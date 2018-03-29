@@ -362,9 +362,9 @@ const main = async () => {
     //   LEGAL_EFFECTIVE_DT: '1/1/14',
     //   INITIAL_EXPIRY_DT: '12/31/23'
     // }
-    // await updateDistrict(licensee)
-    // await updateZone(licensee)
-    // await updateAgreement(licensee)
+    await updateDistrict(licensee)
+    await updateZone(licensee)
+    await updateAgreement(licensee)
 
     const usage = await loadFile(USAGE); 
     // {
@@ -377,7 +377,7 @@ const main = async () => {
     //   TEMP_INCREASE: '0',
     //   TOTAL_ANNUAL_USE: '6'
     // }
-    // await updateUsage(usage)
+    await updateUsage(usage)
 
     const client = await loadFile(CLIENT); 
     // {
