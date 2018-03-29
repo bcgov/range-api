@@ -173,7 +173,7 @@ const excludedAgreementAttributes = ['agreementTypeId', 'zoneId', 'agreementExem
 const transformClient = (agreement, clientTypes) => {
   const clients = agreement.clients.map((c) => {
     const client = c.get({ plain: true });
-    const ctype = clientTypes.filter(t => t.id === c.clientAgreement.clientTypeId).pop();
+    const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
     delete client.clientAgreement;
     return Object.assign(client, { clientTypeCode: ctype.code });
   });
