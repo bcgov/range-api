@@ -24,6 +24,7 @@
 
 import { Router } from 'express';
 // import deepDiff from 'deep-diff';
+import { Op } from 'sequelize';
 import {
   asyncMiddleware,
   errorWithCode,
@@ -98,6 +99,9 @@ const allAgreementChildren = [
     attributes: {
       exclude: ['status_id'],
     },
+    order: [
+      ['create_at', 'DESC'],
+    ],
     include: [{
       model: PlanStatus,
       as: 'status',
@@ -187,6 +191,8 @@ const transformClient = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
+  const { id } = req.query;
+
   try {
     const clientTypes = await ClientType.findAll();
     const results = await Agreement.findAll({
@@ -194,6 +200,15 @@ router.get('/', asyncMiddleware(async (req, res) => {
       include: allAgreementChildren,
       attributes: {
         exclude: excludedAgreementAttributes,
+      },
+      where: {
+        [Op.or]: [
+          {
+            id: {
+              [Op.like]: `%${id}%`,
+            },
+          },
+        ],
       },
     });
 
@@ -444,5 +459,4 @@ router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMi
     throw err;
   }
 }));
-
 export default router;
