@@ -37,6 +37,7 @@ const dm = new DataManager(config);
 const {
   Client,
   ClientType,
+  ClientAgreement,
   Usage,
   Agreement,
   AgreementExemptionStatus,
@@ -61,13 +62,10 @@ const allAgreementChildren = [
   {
     model: Client,
     through: {
-      attributes: [],
+      model: ClientAgreement,
+      // include: [ClientType],
+      attributes: ['clientTypeId'],
     },
-    include: [
-      {
-        model: ClientType,
-        attributes: ['id', 'code', 'description'],
-      }],
     attributes: ['id', 'name', 'locationCode', 'startDate'],
   },
   {
@@ -158,17 +156,57 @@ const allAgreementChildren = [
     },
   },
 ];
+
 const excludedAgreementAttributes = ['agreementTypeId', 'zoneId', 'agreementExemptionStatusId'];
 
-// Create agreement
-router.post('/', asyncMiddleware(async (req, res) => {
-  res.status(501).json({ error: 'Not Implemented' }).end();
-}));
+//
+// Helpers
+//
 
-// Get all
+/**
+ * Transform a client object to the format apropriate for the API spec
+ *
+ * @param {[Client]} clients The agreement object containing the clients
+ * @param {[ClientType]} clientTypes The client type reference objects
+ * @returns Array of plain (JSON) client objects
+ */
+const transformClients = (clients, clientTypes) => {
+  const results = clients
+    .map((c) => {
+      const client = c.get({ plain: true });
+      const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
+      delete client.clientAgreement;
+      return Object.assign(client, { clientTypeCode: ctype.code });
+    })
+    .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
+
+  return results;
+};
+
+/**
+ * Transform the structure of an Agreement to match the API spec
+ *
+ * @param {Agreement} agreement The agreement object containing the clients
+ * @param {[ClientType]} clientTypes The client type reference objects
+ * @returns A plain (JSON) Agreement object
+ */
+const transformAgreement = (agreement, clientTypes) => {
+  const transformedClients = transformClients(agreement.clients, clientTypes);
+  const agreementAsJSON = agreement.get({ plain: true });
+  agreementAsJSON.clients = transformedClients;
+
+  return agreementAsJSON;
+};
+
+//
+// Routes
+//
+
+// Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const agreements = await Agreement.findAll({
+    const clientTypes = await ClientType.findAll();
+    const results = await Agreement.findAll({
       limit: 10,
       include: allAgreementChildren,
       attributes: {
@@ -176,7 +214,39 @@ router.get('/', asyncMiddleware(async (req, res) => {
       },
     });
 
+    // apply and transforms to the data structure.
+    const agreements = results.map(result => transformAgreement(result, clientTypes));
+
     res.status(200).json(agreements).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// Get a single agreement by id
+router.get('/:id', asyncMiddleware(async (req, res) => {
+  try {
+    const {
+      id,
+    } = req.params;
+
+    const clientTypes = await ClientType.findAll();
+    const agreement = await Agreement.findOne({
+      where: {
+        id,
+      },
+      include: allAgreementChildren,
+      attributes: {
+        exclude: excludedAgreementAttributes,
+      },
+    });
+
+    if (agreement) {
+      const plainAgreement = transformAgreement(agreement, clientTypes);
+      res.status(200).json(plainAgreement).end();
+    } else {
+      res.status(404).json({ error: 'Not found' }).end();
+    }
   } catch (err) {
     throw err;
   }
@@ -193,6 +263,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
   } = req;
 
   try {
+    const clientTypes = await ClientType.findAll();
     const agreement = await Agreement.findOne({
       where: {
         id,
@@ -207,15 +278,6 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       res.status(404).end();
     }
 
-    /* const changes = deepDiff.diff(
-      agreement.get({ plain: true }),
-      agreement2.get({ plain: true })
-    );
-
-    if (changes) {
-      res.status(200).json([agreement, agreement2, changes]).end();
-    } */
-
     const count = await Agreement.update(body, {
       where: {
         id,
@@ -227,40 +289,12 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       res.send(400).json().end(); // Bad Request
     }
 
-    res.status(200).json(agreement).end();
+    const plainAgreement = transformAgreement(agreement, clientTypes);
+
+    res.status(200).json(plainAgreement).end();
   } catch (error) {
     logger.error(`error updating agreement ${id}`);
     throw error;
-  }
-}));
-
-// Get by id
-router.get('/:id', asyncMiddleware(async (req, res) => {
-  try {
-    const {
-      id,
-    } = req.params;
-
-    const agreement = await Agreement.findOne({
-      where: {
-        id,
-      },
-      // through: {
-      //   attributes: [],
-      // },
-      include: allAgreementChildren,
-      attributes: {
-        exclude: excludedAgreementAttributes,
-      },
-    });
-
-    if (agreement != null) {
-      res.status(200).json(agreement).end();
-    } else {
-      res.status(404).json({ error: 'Not found' }).end();
-    }
-  } catch (err) {
-    throw err;
   }
 }));
 

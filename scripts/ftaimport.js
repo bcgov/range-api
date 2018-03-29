@@ -40,6 +40,7 @@ const {
   // PlanStatus,
   Client,
   ClientType,
+  ClientAgreement,
   District,
   // Extension,
   // GrazingSchedule,
@@ -319,20 +320,21 @@ const updateClient = async data => {
           name: record.CLIENT_NAME || 'Unknown Name',
           locationCode: record.CLIENT_LOCN_CODE,
           startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
-          typeId: ctype.id,
         });
       } else {
         client.name = record.CLIENT_NAME || 'Unknown Name';
         client.locationCode = record.CLIENT_LOCN_CODE;
         client.startDate = record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null;
 
-        client.setClientType(ctype);
         await client.save();
       }
 
       const agreement = await Agreement.findById(record.FOREST_FILE_ID);
       if (agreement) {
-        await agreement.addClient(client);
+        const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+        VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
+
+        await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.UPDATE });
       }
 
       console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.FOREST_FILE_ID}`);
