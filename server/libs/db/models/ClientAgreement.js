@@ -23,7 +23,7 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const ClientType = sequelize.define('clientAgreement', {
+  const ClientAgreement = sequelize.define('clientAgreement', {
     agreementId: {
       type: DataTypes.STRING(9),
       allowNull: false,
@@ -58,5 +58,5 @@ export default (sequelize, DataTypes) => {
     tableName: 'client_agreement',
   });
 
-  return ClientType;
+  return ClientAgreement;
 };
