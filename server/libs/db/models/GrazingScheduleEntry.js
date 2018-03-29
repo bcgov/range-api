@@ -40,16 +40,6 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    startDate: {
-      field: 'start_date',
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    endDate: {
-      field: 'end_date',
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
     graceDays: {
       field: 'grace_days',
       type: DataTypes.INTEGER,
