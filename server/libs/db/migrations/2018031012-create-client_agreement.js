@@ -48,6 +48,15 @@ module.exports = {
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
+      client_type_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'ref_client_type',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
       created_at: {
         type: Sequelize.DATE,
         defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),

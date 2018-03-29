@@ -55,7 +55,7 @@ export default class DataManager {
     //
     // Client Type
     //
-    this.Client.belongsTo(this.ClientType);
+    // this.Client.belongsTo(this.ClientType);
 
     //
     // Client, Agreement

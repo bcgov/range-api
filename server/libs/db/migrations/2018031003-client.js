@@ -43,15 +43,6 @@ module.exports = {
         type: Sequelize.STRING(64),
         allowNull: false,
       },
-      client_type_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'ref_client_type',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
       start_date: {
         field: 'licensee_start_date',
         type: Sequelize.DATE,
