@@ -36,6 +36,7 @@ import DataManager from '../../libs/db';
 const dm = new DataManager(config);
 const {
   Client,
+  ClientType,
   Usage,
   Agreement,
   AgreementExemptionStatus,
@@ -58,6 +59,18 @@ const router = new Router();
 
 const allAgreementChildren = [
   {
+    model: Client,
+    through: {
+      attributes: [],
+    },
+    include: [
+      {
+        model: ClientType,
+        attributes: ['id', 'code', 'description'],
+      }],
+    attributes: ['id', 'name', 'locationCode', 'startDate'],
+  },
+  {
     model: AgreementExemptionStatus,
     attributes: {
       exclude: ['active', 'createdAt', 'updatedAt'],
@@ -65,9 +78,14 @@ const allAgreementChildren = [
   },
   {
     model: Zone,
-    include: [District],
+    include: [{
+      model: District,
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
+    }],
     attributes: {
-      exclude: ['district_id'],
+      exclude: ['district_id', 'districtId', 'createdAt', 'updatedAt'],
     },
   },
   {
@@ -133,17 +151,10 @@ const allAgreementChildren = [
     ],
   },
   {
-    model: Client,
-    as: 'primaryAgreementHolder',
-    attributes: {
-      exclude: ['client_type_id'],
-    },
-  },
-  {
     model: Usage,
     as: 'usage',
     attributes: {
-      exclude: ['agreement_id'],
+      exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
     },
   },
 ];
@@ -234,6 +245,9 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
+      // through: {
+      //   attributes: [],
+      // },
       include: allAgreementChildren,
       attributes: {
         exclude: excludedAgreementAttributes,

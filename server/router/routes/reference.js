@@ -31,7 +31,9 @@ const dm = new DataManager(config);
 const {
   AgreementType,
   AgreementExemptionStatus,
+  ClientType,
   LivestockType,
+  LivestockIdentifierType,
   PlanStatus,
 } = dm;
 
@@ -53,12 +55,16 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const agreementExemptionStatus = await AgreementExemptionStatus.findAll(opts);
     const livestockType = await LivestockType.findAll(opts);
     const planStatus = await PlanStatus.findAll(opts);
+    const clientType = await ClientType.findAll(opts);
+    const livestockIdentifierType = await LivestockIdentifierType.findAll(opts);
 
     const response = {
       AGREEMENT_TYPE: agreementType || { error: 'Unable to fetch reference data' },
       AGREEMENT_EXEMPTION_STATUS: agreementExemptionStatus || { error: 'Unable to fetch reference data' },
       LIVESTOCK_TYPE: livestockType || { error: 'Unable to fetch reference data' },
       PLAN_STATUS: planStatus || { error: 'Unable to fetch reference data' },
+      CLIENT_TYPE: clientType || { error: 'Unable to fetch reference data' },
+      LIVESTOCK_IDENTIFIER_TYPE: livestockIdentifierType || { error: 'Unable to fetch reference data' },
     };
 
     res.status(200).json(response);

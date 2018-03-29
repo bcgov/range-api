@@ -28,8 +28,9 @@ import fs from 'fs'
 import DataManager from '../server/libs/db'
 import config from '../server/config'
 
-const USAGE = 'FTA/FTA_RANGE_USAGE.csv'
-const LICENSEE = 'FTA/FTA_RANGE_LICENSEE.csv'
+const USAGE = 'fta/FTA_RANGE_USAGE.csv'
+const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv'
+const CLIENT = 'fta/FTA_RANGE_CLIENT.csv'
 
 const dm = new DataManager(config);
 const {
@@ -37,8 +38,8 @@ const {
   AgreementType,
   AgreementExemptionStatus,
   // PlanStatus,
-  // Client,
-  // ClientType,
+  Client,
+  ClientType,
   District,
   // Extension,
   // GrazingSchedule,
@@ -79,6 +80,8 @@ const isValidRecord = (record) => {
   return true
 }
 
+const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
+
 const loadFile = (name) => new Promise((resolve, reject) => {
   const records = [];
   fs.readFile(name, 'utf8', (err, contents) => {
@@ -90,12 +93,13 @@ const loadFile = (name) => new Promise((resolve, reject) => {
       data.forEach((line) => {
         const record = {}
         fields.forEach((value, i) => {
+          const key = value.replace(/ /g, '_');
           if (i > 1) {
-            record[value] = line[i]
+            record[key] = line[i]
             return
           }
 
-          record[value] = line[i]
+          record[key] = line[i]
         });
         records.push(record);
       })
@@ -286,6 +290,59 @@ const updateUsage = async (data) => {
   }
 }
 
+const updateClient = async data => {
+  for (var i = 0; i < data.length; i++) {
+    const record = data[i];
+
+    if (!isValidRecord(record) || !record.CLIENT_LOCN_CODE) {
+      console.log(`Skipping record with ID ${record.CLIENT_NUMBER}, Agreement ID = ${record.FOREST_FILE_ID}`,
+      );
+      continue;
+    }
+
+    try {
+      const ctype = await ClientType.findOne({
+        where: {
+          code: record.FOREST_FILE_CLIENT_TYPE_CODE,
+        },
+      });
+
+      let client = await Client.findOne({
+        where: {
+          id: record.CLIENT_NUMBER,
+        },
+      });
+
+      if (!client) {
+        client = await Client.create({
+          id: record.CLIENT_NUMBER,
+          name: record.CLIENT_NAME || 'Unknown Name',
+          locationCode: record.CLIENT_LOCN_CODE,
+          startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
+          typeId: ctype.id,
+        });
+      } else {
+        client.name = record.CLIENT_NAME || 'Unknown Name';
+        client.locationCode = record.CLIENT_LOCN_CODE;
+        client.startDate = record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null;
+
+        client.setClientType(ctype);
+        await client.save();
+      }
+
+      const agreement = await Agreement.findById(record.FOREST_FILE_ID);
+      if (agreement) {
+        await agreement.addClient(client);
+      }
+
+      console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.FOREST_FILE_ID}`);
+    } catch (error) {
+      console.log(record);
+      console.log(`Can not update Client. Error = ${error.message}`);
+    }
+  }
+};
+
 const main = async () => {
   try {
     const licensee = await loadFile(LICENSEE);
@@ -319,6 +376,17 @@ const main = async () => {
     //   TOTAL_ANNUAL_USE: '6'
     // }
     await updateUsage(usage)
+
+    const client = await loadFile(CLIENT); 
+    // {
+    //   FOREST_FILE_ID: 'RAN077194',
+    //   CLIENT_NUMBER: '00001023',
+    //   CLIENT_LOCN_CODE: '00',
+    //   CLIENT_NAME: 'ALLEN, MARTIN EUGENE',
+    //   FOREST_FILE_CLIENT_TYPE_CODE: 'A',
+    //   LICENSEE_START_DATE: '2009-02-06 00:00:00'
+    // }
+    await updateClient(client);
 
     process.exit(0);
   } catch (err) {
