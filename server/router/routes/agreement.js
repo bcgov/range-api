@@ -168,21 +168,38 @@ const excludedAgreementAttributes = ['agreementTypeId', 'zoneId', 'agreementExem
 //
 
 /**
- * Transform a client object to the format apropriate for the API response.
+ * Transform a client object to the format apropriate for the API spec
+ *
+ * @param {[Client]} clients The agreement object containing the clients
+ * @param {[ClientType]} clientTypes The client type reference objects
+ * @returns Array of plain (JSON) client objects
+ */
+const transformClients = (clients, clientTypes) => {
+  const results = clients
+    .map((c) => {
+      const client = c.get({ plain: true });
+      const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
+      delete client.clientAgreement;
+      return Object.assign(client, { clientTypeCode: ctype.code });
+    })
+    .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
+
+  return results;
+};
+
+/**
+ * Transform the structure of an Agreement to match the API spec
  *
  * @param {Agreement} agreement The agreement object containing the clients
  * @param {[ClientType]} clientTypes The client type reference objects
- * @returns Array of plain (JSON) client Objects
+ * @returns A plain (JSON) Agreement object
  */
-const transformClient = (agreement, clientTypes) => {
-  const clients = agreement.clients.map((c) => {
-    const client = c.get({ plain: true });
-    const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
-    delete client.clientAgreement;
-    return Object.assign(client, { clientTypeCode: ctype.code });
-  });
+const transformAgreement = (agreement, clientTypes) => {
+  const transformedClients = transformClients(agreement.clients, clientTypes);
+  const agreementAsJSON = agreement.get({ plain: true });
+  agreementAsJSON.clients = transformedClients;
 
-  return clients;
+  return agreementAsJSON;
 };
 
 //
@@ -213,13 +230,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     });
 
     // apply and transforms to the data structure.
-    const agreements = results.map((result) => {
-      const transformedClients = transformClient(result, clientTypes);
-      const plainAgreement = result.get({ plain: true });
-      plainAgreement.clients = transformedClients;
-
-      return plainAgreement;
-    });
+    const agreements = results.map(result => transformAgreement(result, clientTypes));
 
     res.status(200).json(agreements).end();
   } catch (err) {
@@ -246,10 +257,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     });
 
     if (agreement) {
-      const transformedClients = transformClient(agreement, clientTypes);
-      const plainAgreement = agreement.get({ plain: true });
-      plainAgreement.clients = transformedClients;
-
+      const plainAgreement = transformAgreement(agreement, clientTypes);
       res.status(200).json(plainAgreement).end();
     } else {
       res.status(404).json({ error: 'Not found' }).end();
@@ -296,9 +304,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       res.send(400).json().end(); // Bad Request
     }
 
-    const transformedClients = transformClient(agreement, clientTypes);
-    const plainAgreement = agreement.get({ plain: true });
-    plainAgreement.clients = transformedClients;
+    const plainAgreement = transformAgreement(agreement, clientTypes);
 
     res.status(200).json(plainAgreement).end();
   } catch (error) {
