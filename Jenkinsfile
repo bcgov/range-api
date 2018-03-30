@@ -141,3 +141,14 @@ node('master') {
     }
   }
 }
+stage('Approval') {
+  timeout(time: 1, unit: 'DAYS') {
+    input message: "Deploy to test?", submitter: 'jleach-admin'
+  }
+  node ('master') {
+    stage('Promotion') {
+      openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[1], srcStream: IMAGESTREAM_NAME, srcTag: "${IMAGE_HASH}"
+      notifySlack("Promotion Completed\n Build #${BUILD_ID} was promoted to test.", "#range-api", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], OPENSHIFT_ICO)
+    }
+  }  
+}

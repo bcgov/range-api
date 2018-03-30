@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-08.
+// Created by Jason Leach on 2018-03-28.
 //
 
 /* eslint-env es6 */
@@ -23,36 +23,21 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Client = sequelize.define('client', {
-    id: {
+  const ClientAgreement = sequelize.define('clientAgreement', {
+    agreementId: {
+      type: DataTypes.STRING(9),
+      allowNull: false,
+      field: 'agreement_id',
+    },
+    clientId: {
       type: DataTypes.STRING(8),
-      field: 'client_number',
       allowNull: false,
-      primaryKey: true,
-      validate: {
-        is: /^[0-9]{8}$/,
-        len: [8],
-      },
+      field: 'client_id',
     },
-    locationCode: {
-      field: 'location_code',
+    clientTypeId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      type: DataTypes.STRING(2),
-    },
-    name: {
-      type: DataTypes.STRING(64),
-      validate: {
-        // is: /^[a-z]+$/i,
-        len: [0, 64],
-      },
-    },
-    startDate: {
-      field: 'licensee_start_date',
-      type: DataTypes.DATE,
-    },
-    endDate: {
-      field: 'licensee_end_date',
-      type: DataTypes.DATE,
+      field: 'client_type_id',
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -70,8 +55,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'ref_client',
+    tableName: 'client_agreement',
   });
 
-  return Client;
+  return ClientAgreement;
 };

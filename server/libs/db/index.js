@@ -55,15 +55,15 @@ export default class DataManager {
     //
     // Client Type
     //
-    this.Client.belongsTo(this.ClientType);
+    this.ClientAgreement.belongsTo(this.ClientType);
 
     //
     // Client, Agreement
     //
 
     // A Client can have multiple Agreements, and an Agreement can have multiple clients.
-    this.Agreement.belongsToMany(this.Client, { through: 'client_agreement' });
-    this.Client.belongsToMany(this.Agreement, { through: 'client_agreement' });
+    this.Agreement.belongsToMany(this.Client, { through: { model: this.ClientAgreement } });
+    this.Client.belongsToMany(this.Agreement, { through: { model: this.ClientAgreement } });
 
     //
     // Agreement Type, Agreement Status
