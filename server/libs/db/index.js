@@ -72,9 +72,6 @@ export default class DataManager {
     this.Agreement.belongsTo(this.AgreementType);
     this.Agreement.belongsTo(this.AgreementExemptionStatus); // { as: 'exemptionStatus' }
 
-    // A District has multiple zones. This relation allows us to easily
-    // query for the Zones in a particular District.
-    this.District.belongsToMany(this.Zone, { through: 'district_zone' });
     // One District per Zone. This relation allows us to easily query for
     // at Zone's District.
     this.Zone.belongsTo(this.District);
