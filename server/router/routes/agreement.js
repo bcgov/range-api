@@ -208,7 +208,7 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { id } = req.query;
+  const { term } = req.query;
 
   try {
     const clientTypes = await ClientType.findAll();
@@ -222,7 +222,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
         [Op.or]: [
           {
             id: {
-              [Op.like]: `%${id || ''}%`,
+              [Op.like]: `%${term || ''}%`,
             },
           },
         ],
