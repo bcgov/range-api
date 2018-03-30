@@ -222,7 +222,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
         [Op.or]: [
           {
             id: {
-              [Op.like]: `%${term || ''}%`,
+              [Op.iLike]: `%${term || ''}%`, // (iLike: case insensitive)
             },
           },
         ],
