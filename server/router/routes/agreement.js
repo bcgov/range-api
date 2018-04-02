@@ -233,10 +233,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
     });
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
+    const total = await Agreement.count({ where });
     const result = {
       perPage: limit,
-      currentPage: page,
-      total: await Agreement.count({ where }),
+      currentPage: Number(page),
+      totalPage: Math.ceil(total / limit),
       agreements: transformedAgreements,
     };
 
