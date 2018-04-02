@@ -236,8 +236,8 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const total = await Agreement.count({ where });
     const result = {
       perPage: limit,
-      currentPage: Number(page),
-      totalPage: Math.ceil(total / limit),
+      currentPage: Number(page) || 1,
+      totalPage: Math.ceil(total / limit) || 1,
       agreements: transformedAgreements,
     };
 
