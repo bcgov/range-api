@@ -23,8 +23,6 @@
 'use strict';
 
 import compression from 'compression';
-import path from 'path';
-import fs from 'fs';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
@@ -48,16 +46,6 @@ const options = {
   limit: '3000kb',
   type: 'image/*',
 };
-const docpath = path.join(__dirname, '../', 'public/doc/api');
-
-fs.access(docpath, fs.constants.R_OK, (err) => {
-  if (err) {
-    logger.warn('API documentation does not exist');
-    return;
-  }
-
-  app.use('/doc', express.static(docpath));
-});
 
 app.use(compression());
 app.use(cookieParser());
