@@ -36,9 +36,11 @@ export default (sequelize, DataTypes) => {
       unique: true,
     },
     givenName: {
+      field: 'given_name',
       type: DataTypes.STRING(32),
     },
     familyName: {
+      field: 'family_name',
       type: DataTypes.STRING(32),
     },
     email: {
