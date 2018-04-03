@@ -56,7 +56,6 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(bodyParser.raw(options));
 app.use(flash());
-// app.use('/download', express.static('download'));
 
 // Authentication middleware
 app.use(auth(app));
