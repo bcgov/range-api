@@ -34,10 +34,8 @@ import {
   started,
 } from './libs/logger';
 import config from './config';
-import DataManager from './libs/db';
 
 const env = config.get('environment');
-const dm = new DataManager(config);
 
 // Middlewares
 
@@ -84,21 +82,14 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   res.status(code).json({ error: message, success: false });
 });
 
-dm
-  .sequelize
-  .sync({
-    force: false,
-  })
-  .then(() => app.listen(port, '0.0.0.0', (err) => {
-    if (err) {
-      return logger.error(`There was a problem starting the server, ${err.message}`);
-    }
-    if (isDev) {
-      return started(port);
-    }
-    return logger.info(`Production server running on port: ${port}`);
-  })).catch((err) => {
-    logger.error(`There was a problem starting the server, error =  ${err.message}`);
-  });
+app.listen(port, '0.0.0.0', (err) => {
+  if (err) {
+    return logger.error(`There was a problem starting the server, ${err.message}`);
+  }
+  if (isDev) {
+    return started(port);
+  }
+  return logger.info(`Production server running on port: ${port}`);
+});
 
 module.exports = app;
