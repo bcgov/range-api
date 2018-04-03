@@ -32,6 +32,7 @@ import {
   started,
 } from './libs/logger';
 import config from './config';
+import auth from './libs/authmware';
 
 const env = config.get('environment');
 
@@ -56,6 +57,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.raw(options));
 app.use(flash());
 // app.use('/download', express.static('download'));
+
+// Authentication middleware
+app.use(auth(app));
 
 // Server API routes
 require('./router')(app);
