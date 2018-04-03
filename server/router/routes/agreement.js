@@ -208,31 +208,39 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term } = req.query;
-
+  const { term = '', page = 1, limit = 10 } = req.query;
+  const offset = limit * (page - 1);
+  const where = {
+    [Op.or]: [
+      {
+        id: {
+          [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
+        },
+      },
+    ],
+  };
   try {
     const clientTypes = await ClientType.findAll();
-    const results = await Agreement.findAll({
-      limit: 10,
+    const agreements = await Agreement.findAll({
+      limit,
+      offset,
       include: allAgreementChildren,
       attributes: {
         exclude: excludedAgreementAttributes,
       },
-      where: {
-        [Op.or]: [
-          {
-            id: {
-              [Op.iLike]: `%${term || ''}%`, // (iLike: case insensitive)
-            },
-          },
-        ],
-      },
+      where,
     });
-
     // apply and transforms to the data structure.
-    const agreements = results.map(result => transformAgreement(result, clientTypes));
+    const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
+    const total = await Agreement.count({ where });
+    const result = {
+      perPage: limit,
+      currentPage: Number(page),
+      totalPage: Math.ceil(total / limit) || 1,
+      agreements: transformedAgreements,
+    };
 
-    res.status(200).json(agreements).end();
+    res.status(200).json(result).end();
   } catch (err) {
     throw err;
   }
