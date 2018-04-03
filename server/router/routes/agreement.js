@@ -208,8 +208,7 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', page = 1 } = req.query;
-  const limit = 10;
+  const { term = '', page = 1, limit = 10 } = req.query;
   const offset = limit * (page - 1);
   const where = {
     [Op.or]: [
@@ -236,7 +235,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const total = await Agreement.count({ where });
     const result = {
       perPage: limit,
-      currentPage: Number(page) || 1,
+      currentPage: Number(page),
       totalPage: Math.ceil(total / limit) || 1,
       agreements: transformedAgreements,
     };
