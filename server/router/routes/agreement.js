@@ -208,7 +208,13 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', page = 1, limit = 10 } = req.query;
+  const {
+    term = '',
+    limit = 10,
+    page = 1,
+    paginated,
+  } = req.query;
+
   const offset = limit * (page - 1);
   const where = {
     [Op.or]: [
@@ -219,6 +225,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
       },
     ],
   };
+
   try {
     const clientTypes = await ClientType.findAll();
     const agreements = await Agreement.findAll({
@@ -230,15 +237,22 @@ router.get('/', asyncMiddleware(async (req, res) => {
       },
       where,
     });
+
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
-    const total = await Agreement.count({ where });
-    const result = {
-      perPage: limit,
-      currentPage: Number(page),
-      totalPage: Math.ceil(total / limit) || 1,
-      agreements: transformedAgreements,
-    };
+
+    let result;
+    if (paginated) {
+      const total = await Agreement.count({ where });
+      result = {
+        perPage: limit,
+        currentPage: Number(page),
+        totalPage: Math.ceil(total / limit) || 1,
+        agreements: transformedAgreements,
+      };
+    } else {
+      result = transformedAgreements;
+    }
 
     res.status(200).json(result).end();
   } catch (err) {
