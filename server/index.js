@@ -23,8 +23,6 @@
 'use strict';
 
 import compression from 'compression';
-import path from 'path';
-import fs from 'fs';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
@@ -34,10 +32,9 @@ import {
   started,
 } from './libs/logger';
 import config from './config';
-import DataManager from './libs/db';
+import auth from './libs/authmware';
 
 const env = config.get('environment');
-const dm = new DataManager(config);
 
 // Middlewares
 
@@ -50,16 +47,6 @@ const options = {
   limit: '3000kb',
   type: 'image/*',
 };
-const docpath = path.join(__dirname, '../', 'public/doc/api');
-
-fs.access(docpath, fs.constants.R_OK, (err) => {
-  if (err) {
-    logger.warn('API documentation does not exist');
-    return;
-  }
-
-  app.use('/doc', express.static(docpath));
-});
 
 app.use(compression());
 app.use(cookieParser());
@@ -69,7 +56,9 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(bodyParser.raw(options));
 app.use(flash());
-// app.use('/download', express.static('download'));
+
+// Authentication middleware
+app.use(auth(app));
 
 // Server API routes
 require('./router')(app);
@@ -84,21 +73,14 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   res.status(code).json({ error: message, success: false });
 });
 
-dm
-  .sequelize
-  .sync({
-    force: false,
-  })
-  .then(() => app.listen(port, '0.0.0.0', (err) => {
-    if (err) {
-      return logger.error(`There was a problem starting the server, ${err.message}`);
-    }
-    if (isDev) {
-      return started(port);
-    }
-    return logger.info(`Production server running on port: ${port}`);
-  })).catch((err) => {
-    logger.error(`There was a problem starting the server, error =  ${err.message}`);
-  });
+app.listen(port, '0.0.0.0', (err) => {
+  if (err) {
+    return logger.error(`There was a problem starting the server, ${err.message}`);
+  }
+  if (isDev) {
+    return started(port);
+  }
+  return logger.info(`Production server running on port: ${port}`);
+});
 
 module.exports = app;

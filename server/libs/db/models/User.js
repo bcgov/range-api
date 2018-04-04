@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-27.
+// Created by Jason Leach on 2018-02-21.
 //
 
 /* eslint-env es6 */
@@ -23,33 +23,43 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Reference = sequelize.define('reference', {
+  const User = sequelize.define('user', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    name: {
-      type: DataTypes.TEXT,
+    username: {
       allowNull: false,
+      type: DataTypes.STRING(16),
+      unique: true,
     },
-    value: {
-      type: DataTypes.JSON,
+    givenName: {
+      field: 'given_name',
+      type: DataTypes.STRING(32),
+    },
+    familyName: {
+      field: 'family_name',
+      type: DataTypes.STRING(32),
+    },
+    email: {
       allowNull: false,
+      unique: true,
+      type: DataTypes.STRING(32),
     },
-    active: {
-      type: DataTypes.BOOLEAN,
+    roleId: {
+      field: 'role_id',
+      allowNull: false,
+      type: DataTypes.INTEGER,
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
-      field: 'created_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
-    updatedAt: {
+    updated_at: {
       type: DataTypes.DATE,
-      field: 'updated_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
@@ -57,8 +67,19 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'app_ref_list',
+    tableName: 'user_account',
   });
 
-  return Reference;
+  //
+  // Instance Method
+  //
+
+  /* eslint-disable func-names, arrow-body-style */
+
+  User.prototype.isAdministrator = function () {
+    return this.roleId === 1;
+  };
+
+  return User;
 };
+
