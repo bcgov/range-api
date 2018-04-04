@@ -208,14 +208,9 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const {
-    term = '',
-    limit = 10,
-    page = 1,
-    paginated,
-  } = req.query;
+  const { term = '', limit = 10, page } = req.query;
 
-  const offset = limit * (page - 1);
+  const offset = page ? limit * (page - 1) : 0;
   const where = {
     [Op.or]: [
       {
@@ -237,12 +232,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
       },
       where,
     });
-
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
 
     let result;
-    if (paginated) {
+    if (page) {
       const total = await Agreement.count({ where });
       result = {
         perPage: limit,
