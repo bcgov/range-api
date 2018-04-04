@@ -15,14 +15,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-29.
+// Created by Jason Leach on 2018-03-10.
 //
+
+/* eslint-env es6 */
 
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-
-const table = 'user_account';
+const table = 'ref_user_role';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -35,20 +36,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      username: {
+      name: {
         allowNull: false,
-        type: Sequelize.STRING(16),
-      },
-      given_name: {
         type: Sequelize.STRING(32),
       },
-      family_name: {
-        type: Sequelize.STRING(32),
-      },
-      email: {
+      active: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        unique: true,
-        type: Sequelize.STRING(32),
       },
       created_at: {
         type: Sequelize.DATE,
@@ -67,13 +61,7 @@ module.exports = {
     ON ${table} FOR EACH ROW EXECUTE PROCEDURE 
     update_changetimestamp_column();`;
 
-    const comment = `
-    COMMENT ON TABLE ${table} IS 'User is reserved. Do not use as table name.';
-    `;
-
     await queryInterface.sequelize.query(query);
-    await queryInterface.sequelize.query(comment);
-    await queryInterface.addIndex(table, ['id']);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(table);

@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
+// Created by Jason Leach on 2018-04-03.
 //
 
 /* eslint-env es6 */
@@ -23,43 +23,29 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const User = sequelize.define('user', {
+  const UserRole = sequelize.define('userRole', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    username: {
-      allowNull: false,
+    name: {
       type: DataTypes.STRING(16),
-      unique: true,
     },
-    givenName: {
-      field: 'given_name',
-      type: DataTypes.STRING(32),
-    },
-    familyName: {
-      field: 'family_name',
-      type: DataTypes.STRING(32),
-    },
-    email: {
+    active: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      unique: true,
-      type: DataTypes.STRING(32),
     },
-    roleId: {
-      field: 'role_id',
-      allowNull: false,
-      type: DataTypes.INTEGER,
-    },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
+      field: 'created_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
+      field: 'updated_at',
       defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
       allowNull: false,
     },
@@ -67,19 +53,8 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false,
     underscored: true,
-    tableName: 'user_account',
+    tableName: 'ref_user_role',
   });
 
-  //
-  // Instance Method
-  //
-
-  /* eslint-disable func-names, arrow-body-style */
-
-  User.prototype.isAdministrator = function () {
-    return this.roleId === 1;
-  };
-
-  return User;
+  return UserRole;
 };
-

@@ -58,6 +58,11 @@ export default class DataManager {
     this.ClientAgreement.belongsTo(this.ClientType);
 
     //
+    // User Role
+    //
+    this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
+
+    //
     // Client, Agreement
     //
 
@@ -75,6 +80,7 @@ export default class DataManager {
     // One District per Zone. This relation allows us to easily query for
     // at Zone's District.
     this.Zone.belongsTo(this.District);
+    this.Zone.belongsTo(this.User);
 
     // A zone can bridge one or more Agreements. This relation allows us to easily
     // query for the Applications in particular zone.

@@ -36,6 +36,7 @@ import { errorWithCode } from './utils';
 const dm = new DataManager(config);
 const {
   User,
+  UserRole,
 } = dm;
 
 const authmware = async (app) => {
@@ -130,8 +131,9 @@ const authmware = async (app) => {
     try {
       const user = await User.findOne({
         where: {
-          email: jwtPayload.email,
+          username: jwtPayload.preferred_username,
         },
+        include: [UserRole],
       });
 
       if (user) {

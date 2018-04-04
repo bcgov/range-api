@@ -57,7 +57,18 @@ const {
 
 const router = new Router();
 
-// Includes all nested json data for Agreement
+const INCLUDE_ZONE = {
+  model: Zone,
+  include: [{
+    model: District,
+    attributes: {
+      exclude: ['createdAt', 'updatedAt'],
+    },
+  }],
+  attributes: {
+    exclude: ['districtId', 'createdAt', 'updatedAt'],
+  },
+};
 
 const allAgreementChildren = [
   {
@@ -73,18 +84,6 @@ const allAgreementChildren = [
     model: AgreementExemptionStatus,
     attributes: {
       exclude: ['active', 'createdAt', 'updatedAt'],
-    },
-  },
-  {
-    model: Zone,
-    include: [{
-      model: District,
-      attributes: {
-        exclude: ['createdAt', 'updatedAt'],
-      },
-    }],
-    attributes: {
-      exclude: ['district_id', 'districtId', 'createdAt', 'updatedAt'],
     },
   },
   {
@@ -188,6 +187,20 @@ const transformClients = (clients, clientTypes) => {
 };
 
 /**
+ * Add `Zone` filtering by userId accounting for Administrative privledges.
+ *
+ * @param {User} user The user to filter on.
+ * @returns The `Zone` with the apropriate filtering via the where clause.
+ */
+const filterZonesOnUser = (user) => {
+  if (!user.isAdministrator()) {
+    return Object.assign(INCLUDE_ZONE, { where: { userId: user.id } });
+  }
+
+  return INCLUDE_ZONE;
+};
+
+/**
  * Transform the structure of an Agreement to match the API spec
  *
  * @param {Agreement} agreement The agreement object containing the clients
@@ -214,7 +227,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const clientTypes = await ClientType.findAll();
     const results = await Agreement.findAll({
       limit: 10,
-      include: allAgreementChildren,
+      include: allAgreementChildren.concat(filterZonesOnUser(req.user)),
       attributes: {
         exclude: excludedAgreementAttributes,
       },
@@ -244,13 +257,12 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     const {
       id,
     } = req.params;
-
     const clientTypes = await ClientType.findAll();
     const agreement = await Agreement.findOne({
       where: {
         id,
       },
-      include: allAgreementChildren,
+      include: allAgreementChildren.concat(filterZonesOnUser(req.user)),
       attributes: {
         exclude: excludedAgreementAttributes,
       },
@@ -283,7 +295,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: allAgreementChildren,
+      include: allAgreementChildren.concat(INCLUDE_ZONE), // no filtering for now.
       attributes: {
         exclude: excludedAgreementAttributes,
       },
@@ -339,7 +351,6 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
     if (!agreement) {
       throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
-
     const zone = await Zone.findOne({
       where: {
         id: zoneId,

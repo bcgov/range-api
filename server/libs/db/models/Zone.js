@@ -59,6 +59,11 @@ export default (sequelize, DataTypes) => {
       field: 'district_id',
       allowNull: false,
     },
+    userId: {
+      type: DataTypes.INTEGER,
+      field: 'user_id',
+      allowNull: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
