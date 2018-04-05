@@ -1,3 +1,5 @@
+// a class for managing all the include attributes for models in one place
+
 export default class Includes {
   constructor(dm) {
     const {

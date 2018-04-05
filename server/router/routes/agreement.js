@@ -110,7 +110,7 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', limit = 10, page } = req.query;
+  const { term = '', limit = 0, page } = req.query;
 
   const offset = page ? limit * (page - 1) : 0;
   const where = {
