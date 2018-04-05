@@ -236,7 +236,7 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
   try {
     const plan = await Plan.findById(planId);
-    const pasture = await Pasture.create(Object.assign(body, { planId }));
+    const pasture = await Pasture.create({ ...body, planId });
 
     await plan.addPasture(pasture);
 
@@ -286,7 +286,7 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
 
     const schedule = await GrazingSchedule.create(req.body);
     const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
-      return GrazingScheduleEntry.create(Object.assign(entry, { grazingScheduleId: schedule.id }));
+      return GrazingScheduleEntry.create({ ...entry, grazingScheduleId: schedule.id });
     });
 
     const createdEntries = await Promise.all(promises);
