@@ -237,11 +237,19 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
     let result;
     if (page) {
-      const total = await Agreement.count({ where });
+      // Its a bit tough to get the count from Sequlize but a raw query works great. A where clause
+      // is applied only if the user is not an administrator.
+      let query = 'SELECT count(*) FROM agreement JOIN ref_zone ON agreement.zone_id = ref_zone.id';
+      if (!req.user.isAdministrator()) {
+        query = `${query} WHERE ref_zone.user_id = ${req.user.id}`;
+      }
+      const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
+      const { count: totalCount = 0 } = response;
+
       result = {
         perPage: limit,
         currentPage: Number(page),
-        totalPage: Math.ceil(total / limit) || 1,
+        totalPage: Math.ceil(totalCount / limit) || 1,
         agreements: transformedAgreements,
       };
     } else {
