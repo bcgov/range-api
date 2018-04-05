@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
+// Created by Jason Leach on 2018-04-03.
 //
 
 /* eslint-env es6 */
@@ -23,46 +23,19 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Zone = sequelize.define('zone', {
+  const UserRole = sequelize.define('userRole', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    code: {
-      type: DataTypes.STRING(5),
-      allowNull: false,
-      validate: {
-        is: /^[a-z\d]+$/i,
-        len: [3, 5],
-      },
-    },
-    description: {
-      type: DataTypes.STRING(64),
-      allowNull: false,
-    },
-    contactName: {
-      field: 'contact_name',
-      type: DataTypes.STRING(32),
-    },
-    contactPhoneNumber: {
-      field: 'contact_phone',
+    name: {
       type: DataTypes.STRING(16),
     },
-    contactEmail: {
-      field: 'contact_email',
-      type: DataTypes.STRING(32),
-    },
-    districtId: {
-      type: DataTypes.INTEGER,
-      field: 'district_id',
+    active: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      field: 'user_id',
-      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -77,11 +50,11 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
     },
   }, {
-    timestamps: false,
     freezeTableName: true,
+    timestamps: false,
     underscored: true,
-    tableName: 'ref_zone',
+    tableName: 'ref_user_role',
   });
 
-  return Zone;
+  return UserRole;
 };

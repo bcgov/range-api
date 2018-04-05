@@ -34,6 +34,7 @@ import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
+const router = new Router();
 const dm = new DataManager(config);
 const {
   Client,
@@ -55,54 +56,49 @@ const {
   LivestockType,
 } = dm;
 
-const router = new Router();
-
-// Includes all nested json data for Agreement
-
-const allAgreementChildren = [
-  {
-    model: Client,
-    through: {
-      model: ClientAgreement,
-      // include: [ClientType],
-      attributes: ['clientTypeId'],
-    },
-    attributes: ['id', 'name', 'locationCode', 'startDate'],
-  },
-  {
-    model: AgreementExemptionStatus,
+const INCLUDE_ZONE = {
+  model: Zone,
+  include: [{
+    model: District,
     attributes: {
-      exclude: ['active', 'createdAt', 'updatedAt'],
+      exclude: ['createdAt', 'updatedAt'],
     },
+  }],
+  attributes: {
+    exclude: ['districtId', 'createdAt', 'updatedAt'],
   },
-  {
-    model: Zone,
-    include: [{
-      model: District,
-      attributes: {
-        exclude: ['createdAt', 'updatedAt'],
-      },
-    }],
-    attributes: {
-      exclude: ['district_id', 'districtId', 'createdAt', 'updatedAt'],
-    },
+};
+const INCLUDE_CLIENT = {
+  model: Client,
+  through: {
+    model: ClientAgreement,
+    attributes: ['clientTypeId'],
   },
-  {
-    model: LivestockIdentifier,
-    include: [LivestockIdentifierLocation, LivestockIdentifierType],
-    attributes: {
-      exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
-    },
+  attributes: ['id', 'name', 'locationCode', 'startDate'],
+};
+const INCLUDE_AGREEMENT_EXEMPTION_STATUS = {
+  model: AgreementExemptionStatus,
+  attributes: {
+    exclude: ['active', 'createdAt', 'updatedAt'],
   },
-  {
-    model: Plan,
-    attributes: {
-      exclude: ['status_id'],
-    },
-    order: [
-      ['create_at', 'DESC'],
-    ],
-    include: [{
+};
+const INCLUDE_LIVESTOCK_IDENTIFIER = {
+  model: LivestockIdentifier,
+  include: [LivestockIdentifierLocation, LivestockIdentifierType],
+  attributes: {
+    exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
+  },
+};
+const INCLUDE_PLAN = {
+  model: Plan,
+  attributes: {
+    exclude: ['status_id'],
+  },
+  order: [
+    ['create_at', 'DESC'],
+  ],
+  include: [
+    {
       model: PlanStatus,
       as: 'status',
     }, {
@@ -110,35 +106,6 @@ const allAgreementChildren = [
       attributes: {
         exclude: ['plan_id'],
       },
-      // include: [{
-      //   model: PlantCommunity,
-      //   attributes: {
-      //     exclude: ['aspect_id', 'elevation_id', 'pasture_id'],
-      //   },
-      //   include: [{
-      //       model: PlantCommunityAspect,
-      //       as: 'aspect'
-      //     }, {
-      //       model: PlantCommunityElevation,
-      //       as: 'elevation'
-      //     },
-      //     {
-      //       model: PlantCommunityAction,
-      //       as: 'actions',
-      //       attributes: {
-      //         exclude: ['plant_community_id'],
-      //       },
-      //       include: [{
-      //         model: PlantCommunityActionPurpose,
-      //         as: 'actionPurpose'
-      //       },
-      //       {
-      //         model: PlantCommunityActionType,
-      //         as: 'actionType'
-      //       }],
-      //     }
-      //   ],
-      // }],
     },
     {
       model: GrazingSchedule,
@@ -150,18 +117,18 @@ const allAgreementChildren = [
         },
       }],
     },
-    ],
+  ],
+};
+const INCLUDE_USAGE = {
+  model: Usage,
+  as: 'usage',
+  attributes: {
+    exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
   },
-  {
-    model: Usage,
-    as: 'usage',
-    attributes: {
-      exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
-    },
-  },
-];
-
-const excludedAgreementAttributes = ['agreementTypeId', 'zoneId', 'agreementExemptionStatusId'];
+};
+const STANDARD_INCLUDE_NO_ZONE = [INCLUDE_CLIENT, INCLUDE_AGREEMENT_EXEMPTION_STATUS,
+  INCLUDE_LIVESTOCK_IDENTIFIER, INCLUDE_PLAN, INCLUDE_USAGE];
+const EXCLUDED_AGREEMENT_ATTR = ['agreementTypeId', 'zoneId', 'agreementExemptionStatusId'];
 
 //
 // Helpers
@@ -185,6 +152,20 @@ const transformClients = (clients, clientTypes) => {
     .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
 
   return results;
+};
+
+/**
+ * Add `Zone` filtering by userId accounting for Administrative privledges.
+ *
+ * @param {User} user The user to filter on.
+ * @returns The `Zone` with the apropriate filtering via the where clause.
+ */
+const filterZonesOnUser = (user) => {
+  if (!user.isAdministrator()) {
+    return Object.assign(INCLUDE_ZONE, { where: { userId: user.id } });
+  }
+
+  return INCLUDE_ZONE;
 };
 
 /**
@@ -226,9 +207,9 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const agreements = await Agreement.findAll({
       limit,
       offset,
-      include: allAgreementChildren,
+      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
       attributes: {
-        exclude: excludedAgreementAttributes,
+        exclude: EXCLUDED_AGREEMENT_ATTR,
       },
       where,
     });
@@ -268,15 +249,14 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     const {
       id,
     } = req.params;
-
     const clientTypes = await ClientType.findAll();
     const agreement = await Agreement.findOne({
       where: {
         id,
       },
-      include: allAgreementChildren,
+      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
       attributes: {
-        exclude: excludedAgreementAttributes,
+        exclude: EXCLUDED_AGREEMENT_ATTR,
       },
     });
 
@@ -292,6 +272,8 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 }));
 
 // Update
+// can probably be removed nothing in the Agreement should be updated directly. Expose
+// new endpoint for exemtpin status (check with list).
 router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
@@ -307,9 +289,9 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: allAgreementChildren,
+      include: STANDARD_INCLUDE_NO_ZONE.concat(INCLUDE_ZONE), // no filtering for now.
       attributes: {
-        exclude: excludedAgreementAttributes,
+        exclude: EXCLUDED_AGREEMENT_ATTR,
       },
     });
 
@@ -363,7 +345,6 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
     if (!agreement) {
       throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
-
     const zone = await Zone.findOne({
       where: {
         id: zoneId,
