@@ -31,6 +31,7 @@ import {
 
 import config from '../../config';
 import DataManager from '../../libs/db';
+import Includes from './includes';
 
 const dm = new DataManager(config);
 const {
@@ -40,34 +41,13 @@ const {
   Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
-  LivestockType,
+  // LivestockType,
 } = dm;
 
-const INCLUDE_PLAN_STATUS = {
-  model: PlanStatus,
-  as: 'status',
-};
-
-const INCLUDE_PASTURE = {
-  model: Pasture,
-  attributes: {
-    exclude: ['plan_id'],
-  },
-};
-
-const INCLUDE_GRAZING_SCHEDULE = {
-  model: GrazingSchedule,
-  include: [{
-    model: GrazingScheduleEntry,
-    include: [LivestockType, Pasture],
-    attributes: {
-      exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
-    },
-  }],
-};
-
-const EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
-const STANDARD_PLAN_INCLUDE = [INCLUDE_PLAN_STATUS, INCLUDE_PASTURE, INCLUDE_GRAZING_SCHEDULE];
+const {
+  EXCLUDED_PLAN_ATTR,
+  STANDARD_PLAN_INCLUDE,
+} = new Includes(dm);
 
 const router = new Router();
 
