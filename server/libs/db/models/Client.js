@@ -26,6 +26,7 @@ export default (sequelize, DataTypes) => {
   const Client = sequelize.define('client', {
     id: {
       type: DataTypes.STRING(8),
+      field: 'client_number',
       allowNull: false,
       primaryKey: true,
       validate: {
@@ -33,7 +34,8 @@ export default (sequelize, DataTypes) => {
         len: [8],
       },
     },
-    location: {
+    locationCode: {
+      field: 'location_code',
       allowNull: false,
       type: DataTypes.STRING(2),
     },
@@ -44,12 +46,12 @@ export default (sequelize, DataTypes) => {
         len: [0, 64],
       },
     },
-    clientStartDate: {
-      field: 'client_start_date',
+    startDate: {
+      field: 'licensee_start_date',
       type: DataTypes.DATE,
     },
-    clientEndDate: {
-      field: 'client_end_date',
+    endDate: {
+      field: 'licensee_end_date',
       type: DataTypes.DATE,
     },
     createdAt: {

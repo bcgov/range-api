@@ -55,16 +55,20 @@ export default class DataManager {
     //
     // Client Type
     //
-    this.Client.belongsTo(this.ClientType);
+    this.ClientAgreement.belongsTo(this.ClientType);
+
+    //
+    // User Role
+    //
+    this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
 
     //
     // Client, Agreement
     //
 
-    // A Client can have multiple Agreements.
-    this.Agreement.belongsTo(this.Client, { as: 'primaryAgreementHolder', foreignKey: 'primary_agreement_holder_id' });
-    // this.Client.belongsToMany(this.Agreement, { as: 'secondaryClient',
-    // through: 'client_agreement' });
+    // A Client can have multiple Agreements, and an Agreement can have multiple clients.
+    this.Agreement.belongsToMany(this.Client, { through: { model: this.ClientAgreement } });
+    this.Client.belongsToMany(this.Agreement, { through: { model: this.ClientAgreement } });
 
     //
     // Agreement Type, Agreement Status
@@ -73,12 +77,10 @@ export default class DataManager {
     this.Agreement.belongsTo(this.AgreementType);
     this.Agreement.belongsTo(this.AgreementExemptionStatus); // { as: 'exemptionStatus' }
 
-    // A District has multiple zones. This relation allows us to easily
-    // query for the Zones in a particular District.
-    this.District.belongsToMany(this.Zone, { through: 'district_zone' });
     // One District per Zone. This relation allows us to easily query for
     // at Zone's District.
     this.Zone.belongsTo(this.District);
+    this.Zone.belongsTo(this.User);
 
     // A zone can bridge one or more Agreements. This relation allows us to easily
     // query for the Applications in particular zone.

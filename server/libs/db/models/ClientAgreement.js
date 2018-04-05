@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-21.
+// Created by Jason Leach on 2018-03-28.
 //
 
 /* eslint-env es6 */
@@ -23,46 +23,21 @@
 'use strict';
 
 export default (sequelize, DataTypes) => {
-  const Zone = sequelize.define('zone', {
-    id: {
+  const ClientAgreement = sequelize.define('clientAgreement', {
+    agreementId: {
+      type: DataTypes.STRING(9),
       allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
+      field: 'agreement_id',
+    },
+    clientId: {
+      type: DataTypes.STRING(8),
+      allowNull: false,
+      field: 'client_id',
+    },
+    clientTypeId: {
       type: DataTypes.INTEGER,
-    },
-    code: {
-      type: DataTypes.STRING(5),
       allowNull: false,
-      validate: {
-        is: /^[a-z\d]+$/i,
-        len: [3, 5],
-      },
-    },
-    description: {
-      type: DataTypes.STRING(64),
-      allowNull: false,
-    },
-    contactName: {
-      field: 'contact_name',
-      type: DataTypes.STRING(32),
-    },
-    contactPhoneNumber: {
-      field: 'contact_phone',
-      type: DataTypes.STRING(16),
-    },
-    contactEmail: {
-      field: 'contact_email',
-      type: DataTypes.STRING(32),
-    },
-    districtId: {
-      type: DataTypes.INTEGER,
-      field: 'district_id',
-      allowNull: false,
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      field: 'user_id',
-      allowNull: true,
+      field: 'client_type_id',
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -77,11 +52,11 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
     },
   }, {
-    timestamps: false,
     freezeTableName: true,
+    timestamps: false,
     underscored: true,
-    tableName: 'ref_zone',
+    tableName: 'client_agreement',
   });
 
-  return Zone;
+  return ClientAgreement;
 };

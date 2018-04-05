@@ -38,23 +38,23 @@ import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
+  Pasture,
   Plan,
   PlanStatus,
   Agreement,
+  GrazingSchedule,
+  GrazingScheduleEntry,
+  // LivestockType,
 } = dm;
 
 const router = new Router();
 
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
-    body,
-  } = req;
-
-  const {
     rangeName,
     statusId,
     agreementId,
-  } = body;
+  } = req.body;
 
   if (!rangeName) {
     throw errorWithCode('rangeName is required in body', 400);
@@ -74,7 +74,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
       throw errorWithCode('agreement not found', 404);
     }
 
-    const plan = await Plan.create(body);
+    const plan = await Plan.create(req.body);
     await agreement.addPlan(plan);
     await agreement.save();
 
@@ -84,7 +84,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
-router.put('/:planId', asyncMiddleware(async (req, res) => {
+router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const {
     planId,
   } = req.params;
@@ -172,6 +172,93 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     throw err;
   }
 }));
+
+//
+// Pasture
+//
+
+router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
+  const {
+    body,
+  } = req;
+  const {
+    planId,
+  } = req.params;
+
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+
+  try {
+    const plan = await Plan.findById(planId);
+    const pasture = await Pasture.create(Object.assign(body, { planId }));
+
+    await plan.addPasture(pasture);
+
+    return res.status(200).json(pasture).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+//
+// Schedule
+//
+
+router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+
+  const {
+    year,
+    grazingScheduleEntries,
+  } = req.body;
+
+  if (!planId) {
+    throw errorWithCode('planId is required in path', 400);
+  }
+
+  if (!year) {
+    throw errorWithCode('year is required in body', 400);
+  }
+
+  if (!grazingScheduleEntries) {
+    throw errorWithCode('grazingScheduleEntries is required in body', 400);
+  }
+
+  grazingScheduleEntries.forEach((entry) => {
+    if (!entry.livestockTypeId) {
+      throw errorWithCode('grazingScheduleEntries must have livestockType');
+    }
+  });
+
+  try {
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      throw errorWithCode('plan not found', 404);
+    }
+
+    const schedule = await GrazingSchedule.create(req.body);
+    const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
+      return GrazingScheduleEntry.create(Object.assign(entry, { grazingScheduleId: schedule.id }));
+    });
+
+    const createdEntries = await Promise.all(promises);
+
+    await schedule.addGrazingScheduleEntries(createdEntries);
+    await plan.addGrazingSchedule(schedule);
+    await plan.save();
+
+    return res.status(200).json(schedule).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+//
+// PDF
+//
 
 router.put('/:planId?/pdf', asyncMiddleware(async (req, res) => {
   const {

@@ -23,39 +23,26 @@
 'use strict';
 
 /* eslint-disable no-unused-vars,arrow-body-style */
-const table = 'client_agreement';
+const table = 'ref_user_role';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const { sequelize } = queryInterface;
 
     await queryInterface.createTable(table, {
-      agreement_id: {
-        type: Sequelize.STRING(9),
+      id: {
         allowNull: false,
-        references: {
-          model: 'agreement',
-          key: 'forest_file_id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      client_id: {
-        type: Sequelize.STRING(8),
-        allowNull: false,
-        references: {
-          model: 'ref_client',
-          key: 'client_number',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      client_type_id: {
+        autoIncrement: true,
+        primaryKey: true,
         type: Sequelize.INTEGER,
+      },
+      name: {
         allowNull: false,
-        references: {
-          model: 'ref_client_type',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
+        type: Sequelize.STRING(32),
+      },
+      active: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -75,7 +62,6 @@ module.exports = {
     update_changetimestamp_column();`;
 
     await queryInterface.sequelize.query(query);
-    await queryInterface.addIndex(table, ['agreement_id', 'client_id']);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(table);

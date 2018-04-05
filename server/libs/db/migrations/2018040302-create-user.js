@@ -15,77 +15,58 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-10.
+// Created by Jason Leach on 2018-03-29.
 //
-
-/* eslint-env es6 */
 
 'use strict';
 
-/* eslint-disable no-unused-vars,arrow-body-style,no-global-assign */
+/* eslint-disable no-unused-vars,arrow-body-style */
 
-const table = 'agreement';
+const table = 'user_account';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    const { sequelize } = queryInterface;
+
     await queryInterface.createTable(table, {
-      forest_file_id: {
+      id: {
         allowNull: false,
+        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.STRING(9),
+        type: Sequelize.INTEGER,
       },
-      agreement_start_date: {
-        type: Sequelize.DATE,
+      username: {
         allowNull: false,
+        type: Sequelize.STRING(16),
       },
-      agreement_end_date: {
-        type: Sequelize.DATE,
+      given_name: {
+        type: Sequelize.STRING(32),
+      },
+      family_name: {
+        type: Sequelize.STRING(32),
+      },
+      email: {
         allowNull: false,
+        unique: true,
+        type: Sequelize.STRING(32),
       },
-      agreement_exemption_status_id: {
+      role_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'ref_agreement_exemption_status',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      agreement_type_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'ref_agreement_type',
-          key: 'id',
-          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-        },
-      },
-      // primary_agreement_holder_id: {
-      //   type: Sequelize.STRING(8),
-      //   references: {
-      //     model: 'ref_client',
-      //     key: 'client_number',
-      //     deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
-      //   },
-      // },
-      zone_id: {
-        type: Sequelize.INTEGER,
-        field: 'zone_id',
-        allowNull: false,
-        references: {
-          model: 'ref_zone',
+          model: 'ref_user_role',
           key: 'id',
           deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
         },
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
         allowNull: false,
       },
       updated_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
         allowNull: false,
       },
     });
@@ -95,11 +76,15 @@ module.exports = {
     ON ${table} FOR EACH ROW EXECUTE PROCEDURE 
     update_changetimestamp_column();`;
 
-    await queryInterface.sequelize.query(query);
-    await queryInterface.addIndex(table, ['forest_file_id']);
-  },
+    const comment = `
+    COMMENT ON TABLE ${table} IS 'User is reserved. Do not use as table name.';
+    `;
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable(table);
+    await queryInterface.sequelize.query(query);
+    await queryInterface.sequelize.query(comment);
+    await queryInterface.addIndex(table, ['id']);
+  },
+  down: (queryInterface, Sequelize) => {
+    return queryInterface.dropTable(table);
   },
 };

@@ -28,8 +28,10 @@ import fs from 'fs'
 import DataManager from '../server/libs/db'
 import config from '../server/config'
 
-const USAGE = 'FTA/FTA_RANGE_USAGE.csv'
-const LICENSEE = 'FTA/FTA_RANGE_LICENSEE.csv'
+const USAGE = 'import/FTA_RANGE_USAGE.csv'
+const LICENSEE = 'import/FTA_RANGE_LICENSEE.csv'
+const CLIENT = 'import/FTA_RANGE_CLIENT.csv'
+const USER = 'import/ZONE_USER.csv'
 
 const dm = new DataManager(config);
 const {
@@ -37,8 +39,9 @@ const {
   AgreementType,
   AgreementExemptionStatus,
   // PlanStatus,
-  // Client,
-  // ClientType,
+  Client,
+  ClientType,
+  ClientAgreement,
   District,
   // Extension,
   // GrazingSchedule,
@@ -55,6 +58,7 @@ const {
   // PlantCommunityAspect,
   // PlantCommunityElevation,
   Usage,
+  User,
   Zone,
 } = dm;
 
@@ -79,6 +83,8 @@ const isValidRecord = (record) => {
   return true
 }
 
+const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
+
 const loadFile = (name) => new Promise((resolve, reject) => {
   const records = [];
   fs.readFile(name, 'utf8', (err, contents) => {
@@ -86,16 +92,15 @@ const loadFile = (name) => new Promise((resolve, reject) => {
       if (err) reject(err)
 
       const fields = data.shift()
-      fields.pop();
       data.forEach((line) => {
         const record = {}
         fields.forEach((value, i) => {
+          const key = value.replace(/ /g, '_');
           if (i > 1) {
-            record[value] = line[i]
+            record[key] = line[i]
             return
           }
-
-          record[value] = line[i]
+          record[key] = line[i]
         });
         records.push(record);
       })
@@ -286,6 +291,107 @@ const updateUsage = async (data) => {
   }
 }
 
+const updateClient = async data => {
+  for (var i = 0; i < data.length; i++) {
+    const record = data[i];
+
+    if (!isValidRecord(record) || !record.CLIENT_LOCN_CODE) {
+      console.log(`Skipping record with ID ${record.CLIENT_NUMBER}, Agreement ID = ${record.FOREST_FILE_ID}`,
+      );
+      continue;
+    }
+
+    try {
+      const ctype = await ClientType.findOne({
+        where: {
+          code: record.FOREST_FILE_CLIENT_TYPE_CODE,
+        },
+      });
+
+      let client = await Client.findOne({
+        where: {
+          id: record.CLIENT_NUMBER,
+        },
+      });
+
+      if (!client) {
+        client = await Client.create({
+          id: record.CLIENT_NUMBER,
+          name: record.CLIENT_NAME || 'Unknown Name',
+          locationCode: record.CLIENT_LOCN_CODE,
+          startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
+        });
+      } else {
+        client.name = record.CLIENT_NAME || 'Unknown Name';
+        client.locationCode = record.CLIENT_LOCN_CODE;
+        client.startDate = record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null;
+
+        await client.save();
+      }
+
+      const agreement = await Agreement.findById(record.FOREST_FILE_ID);
+      if (agreement) {
+        const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+        VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
+
+        await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.UPDATE });
+      }
+
+      console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.FOREST_FILE_ID}`);
+    } catch (error) {
+      console.log(record);
+      console.log(`Can not update Client. Error = ${error.message}`);
+    }
+  }
+};
+
+const updateUser = async data => {
+  for (var i = 0; i < data.length; i++) {
+    const record = data[i]
+    if (!record.CONTACT_USER_ID || !record.RANGE_ZONE_CODE) {
+      console.log(`Skipping record with CODE ${record.RANGE_ZONE_CODE}, username = ${record.CONTACT_USER_ID}`)
+      continue
+    }
+
+    try {
+
+      let user = await User.findOne({
+        where: {
+          username: record.CONTACT_USER_ID.toLowerCase(),
+        },
+      });
+
+      const [first, last] = record.CONTACT.split(' ');
+
+      if (!user) {
+        let user = await User.create({
+          username: record.CONTACT_USER_ID.toLowerCase(),
+          givenName: first || 'Unknown',
+          familyName: last || 'Unknown',
+          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+          roleId: 2, // Range Officer
+        });
+      } else {
+        user.givenName = first || 'Unknown';
+        user.familyName = last || 'Unknown';
+        user.email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+      }
+
+      let zone = await Zone.update({
+        userId: user.id,
+      }, {
+        where: {
+          code: record.RANGE_ZONE_CODE
+        }
+      });
+
+      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.RANGE_ZONE_CODE} owner.`);
+    } catch (error) {
+      console.log(`Can not update User with username ${record.CONTACT_USER_ID}. error = ${error.message}`);
+    }
+  }
+}
+
 const main = async () => {
   try {
     const licensee = await loadFile(LICENSEE);
@@ -319,6 +425,27 @@ const main = async () => {
     //   TOTAL_ANNUAL_USE: '6'
     // }
     await updateUsage(usage)
+
+    const client = await loadFile(CLIENT); 
+    // {
+    //   FOREST_FILE_ID: 'RAN077194',
+    //   CLIENT_NUMBER: '00001023',
+    //   CLIENT_LOCN_CODE: '00',
+    //   CLIENT_NAME: 'MARTIN, WALTER EUGENE',
+    //   FOREST_FILE_CLIENT_TYPE_CODE: 'A',
+    //   LICENSEE_START_DATE: '2009-02-06 00:00:00'
+    // }
+    await updateClient(client);
+
+    const user = await loadFile(USER);
+    // { 
+    // ADMIN_FOREST_DISTRICT_NO: '15',
+    // RANGE_ZONE_CODE: 'CHWK',
+    // ZONE_DESCRIPTION: 'Chilliwack',
+    // CONTACT_USER_ID: 'RPARRIAD' 
+    // CONTACT: 'Rene Phillips' 
+    // }
+    await updateUser(user);
 
     process.exit(0);
   } catch (err) {

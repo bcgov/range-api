@@ -22,8 +22,8 @@
 
 'use strict';
 
+import passport from 'passport';
 import cors from 'cors';
-// import config from '../config';
 import agreement from './routes/agreement';
 import client from './routes/client';
 import district from './routes/district';
@@ -31,7 +31,6 @@ import ehlo from './routes/ehlo';
 import plan from './routes/plan';
 import reference from './routes/reference';
 import zone from './routes/zone';
-import { isAuthenticated } from '../libs/auth';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -42,7 +41,8 @@ const corsOptions = {
 module.exports = (app) => {
   app.use(cors(corsOptions));
   app.use('/v1/ehlo', ehlo); // probes
-  app.use(isAuthenticated);
+  // authentication middleware for routes.
+  app.use(passport.authenticate('jwt', { session: false }));
   app.use('/v1/agreement', agreement);
   app.use('/v1/client', client);
   app.use('/v1/district', district);

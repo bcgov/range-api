@@ -40,16 +40,6 @@ export default (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER,
     },
-    startDate: {
-      field: 'start_date',
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    endDate: {
-      field: 'end_date',
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
     graceDays: {
       field: 'grace_days',
       type: DataTypes.INTEGER,
@@ -68,6 +58,18 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       field: 'date_out',
       allowNull: false,
+    },
+    livestockTypeId: {
+      field: 'livestock_type_id',
+      type: DataTypes.INTEGER,
+    },
+    grazingScheduleId: {
+      field: 'grazing_schedule_id',
+      type: DataTypes.INTEGER,
+    },
+    pastureId: {
+      field: 'pasture_id',
+      type: DataTypes.INTEGER,
     },
     createdAt: {
       type: DataTypes.DATE,

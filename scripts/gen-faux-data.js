@@ -430,20 +430,23 @@ const test = async (agreementId) => {
 };
 
 const main = async () => {
-  const agreements = ['RAN077054']
+  const agreements = await Agreement.findAll({
+    limit: 1,
+  });
 
   try {
-  for (let i = 0; i < agreements.length; i++ ) {
-    const agreementId = agreements[i];
+    for (let i = 0; i < agreements.length; i++ ) {
+      const agreement = agreements[i];
+      const agreementId = agreement.id;
 
-    console.log(`Generating faux data for agreement ${agreementId}`);
+      console.log(`Generating faux data for agreement ${agreementId}`);
 
-    const clientId = await createClient();
-    const planId = await createPlan(agreementId);
-    const pastureIds = await createPasture(planId);
+      const clientId = await createClient();
+      const planId = await createPlan(agreementId);
+      const pastureIds = await createPasture(planId);
 
-    await test(agreementId);
-  }
+      await test(agreementId);
+    }
 
   // const agreementId = await createAgreement(clientId);
   // const pastureIds = await createPasture(agreementId);
