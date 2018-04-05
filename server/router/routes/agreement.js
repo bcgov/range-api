@@ -225,11 +225,12 @@ router.get('/', asyncMiddleware(async (req, res) => {
         query = `${query} WHERE ref_zone.user_id = ${req.user.id}`;
       }
       const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
+      const { count: totalCount = 0 } = response;
 
       result = {
         perPage: limit,
         currentPage: Number(page),
-        totalPage: Math.ceil(response.count || 0 / limit) || 1,
+        totalPage: Math.ceil(totalCount / limit) || 1,
         agreements: transformedAgreements,
       };
     } else {
