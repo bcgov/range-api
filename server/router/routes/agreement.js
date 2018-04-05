@@ -218,11 +218,18 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
     let result;
     if (page) {
-      const total = await Agreement.count({ where });
+      // Its a bit tough to get the count from Sequlize but a raw query works great. A where clause
+      // is applied only if the user is not an administrator.
+      let query = 'SELECT count(*) FROM agreement JOIN ref_zone ON agreement.zone_id = ref_zone.id';
+      if (!req.user.isAdministrator()) {
+        query = `${query} WHERE ref_zone.user_id = ${req.user.id}`;
+      }
+      const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
+
       result = {
         perPage: limit,
         currentPage: Number(page),
-        totalPage: Math.ceil(total / limit) || 1,
+        totalPage: Math.ceil(response.count || 0 / limit) || 1,
         agreements: transformedAgreements,
       };
     } else {
@@ -264,6 +271,8 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 }));
 
 // Update
+// can probably be removed nothing in the Agreement should be updated directly. Expose
+// new endpoint for exemtpin status (check with list).
 router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
