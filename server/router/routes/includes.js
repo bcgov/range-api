@@ -114,10 +114,8 @@ export default class Includes {
     this.EXCLUDED_AGREEMENT_ATTR = [
       'agreementTypeId',
       'zoneId',
-      'zone_id',
       'agreementExemptionStatusId',
       'agreement_type_id',
-      'agreement_exemption_status_id',
     ];
     this.STANDARD_INCLUDE_NO_ZONE = [
       this.INCLUDE_CLIENT_MODEL,
