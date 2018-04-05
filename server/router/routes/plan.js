@@ -40,29 +40,41 @@ const {
   Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
-  // LivestockType,
+  LivestockType,
 } = dm;
+
+const INCLUDE_PLAN_STATUS = {
+  model: PlanStatus,
+  as: 'status',
+};
+
+const INCLUDE_PASTURE = {
+  model: Pasture,
+  attributes: {
+    exclude: ['plan_id'],
+  },
+};
+
+const INCLUDE_GRAZING_SCHEDULE = {
+  model: GrazingSchedule,
+  include: [{
+    model: GrazingScheduleEntry,
+    include: [LivestockType, Pasture],
+    attributes: {
+      exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+    },
+  }],
+};
+
+const EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
+const STANDARD_PLAN_INCLUDE = [INCLUDE_PLAN_STATUS, INCLUDE_PASTURE, INCLUDE_GRAZING_SCHEDULE];
 
 const router = new Router();
 
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
-    rangeName,
-    statusId,
     agreementId,
   } = req.body;
-
-  if (!rangeName) {
-    throw errorWithCode('rangeName is required in body', 400);
-  }
-
-  if (!statusId) {
-    throw errorWithCode('statusId is required in body', 400);
-  }
-
-  if (!agreementId) {
-    throw errorWithCode('agreementId is required in body', 400);
-  }
 
   try {
     const agreement = await Agreement.findById(agreementId);
@@ -70,41 +82,70 @@ router.post('/', asyncMiddleware(async (req, res) => {
       throw errorWithCode('agreement not found', 404);
     }
 
-    const plan = await Plan.create(req.body);
+    // don't allow to create if there is a plan in progress
+    // const isInProgress = await Plan.count({
+    //   where: {
+    //     agreementId,
+    //     statusId: status of draft or incomplete
+    //   },
+    // });
+    // if (!isInProgress) {
+    //   throw errorWithCode('there is a plan in progress already', 400);
+    // }
+
+    const options = {
+      attributes: {
+        exclude: EXCLUDED_PLAN_ATTR,
+      },
+      include: STANDARD_PLAN_INCLUDE,
+    };
+    const plan = await Plan.create(req.body, options);
     await agreement.addPlan(plan);
     await agreement.save();
 
-    return res.status(200).json(plan).end();
+    const createdPlan = await Plan.findById(plan.id, options);
+    return res.status(200).json(createdPlan).end();
   } catch (err) {
     throw err;
   }
 }));
+
+const createAndUpdatePastures = async (plan, body) => {
+  const { pastures = [] } = body;
+
+  // delete all old pastures and create new pastures
+  await Pasture.destroy({
+    where: {
+      planId: plan.id,
+    },
+  });
+
+  await Promise.all(pastures.map(async (p) => {
+    const pasture = await Pasture.create(p);
+    if (pasture) {
+      await plan.addPasture(pasture);
+    }
+  }));
+
+  // this doens't works since the client doesn't send pastures with id(this can be used later)
+  // await Promise.all(pastures.map(async (p) => {
+  //   const { pasture, isCreated } = await Pasture.upsert(p, { returning: true });
+  //   if (isCreated) {
+  //     await plan.addPasture(pasture);
+  //   }
+  // }));
+};
 
 router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const {
     planId,
   } = req.params;
 
-  const {
-    rangeName,
-    statusId,
-    agreementId,
-  } = req.body;
+  // don't allow to change the relationship with the agreement
+  delete req.body.agreementId;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
-  }
-
-  if (!rangeName) {
-    throw errorWithCode('rangeName is required in body', 400);
-  }
-
-  if (!statusId) {
-    throw errorWithCode('statusId is required in body', 400);
-  }
-
-  if (!agreementId) {
-    throw errorWithCode('agreementId is required in body', 400);
   }
 
   try {
@@ -119,8 +160,17 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     }
 
     const plan = await Plan.findById(planId);
+    await createAndUpdatePastures(plan, req.body);
 
-    return res.status(200).json(plan).end();
+    const options = {
+      attributes: {
+        exclude: EXCLUDED_PLAN_ATTR,
+      },
+      include: STANDARD_PLAN_INCLUDE,
+    };
+    const updatedPlan = await Plan.findById(planId, options);
+
+    return res.status(200).json(updatedPlan).end();
   } catch (err) {
     throw err;
   }

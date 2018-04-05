@@ -92,7 +92,7 @@ const INCLUDE_LIVESTOCK_IDENTIFIER = {
 const INCLUDE_PLAN = {
   model: Plan,
   attributes: {
-    exclude: ['status_id'],
+    exclude: ['status_id', 'agreement_id'],
   },
   order: [
     ['create_at', 'DESC'],
