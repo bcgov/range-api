@@ -59,6 +59,7 @@ export default class Includes {
       attributes: {
         exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
       },
+      as: 'zone',
     };
 
     this.INCLUDE_CLIENT_MODEL = {
@@ -68,6 +69,7 @@ export default class Includes {
         attributes: ['clientTypeId'],
       },
       attributes: ['id', 'name', 'locationCode', 'startDate'],
+      as: 'clients',
     };
 
     this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL = {

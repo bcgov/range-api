@@ -120,35 +120,38 @@ router.get('/', asyncMiddleware(async (req, res) => {
           [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
         },
       },
+      {
+        '$zone.contact_name$': {
+          [Op.iLike]: `%${term}%`,
+        },
+      },
+      {
+        '$clients.name$': {
+          [Op.iLike]: `%${term}%`,
+        },
+      },
     ],
   };
-
   try {
     const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll({
+    const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
+      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
+      exclude: EXCLUDED_AGREEMENT_ATTR,
+      attributes: [
+        dm.sequelize.literal('DISTINCT ON("agreement"."forest_file_id") 1'), 'id',
+      ],
+      where,
       limit,
       offset,
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
-      where,
+      subQuery: false, // prevent from putting LIMIT and OFFSET in sub query
+      distinct: true, // get distinct count of agreements
     });
+
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
 
     let result;
     if (page) {
-      // Its a bit tough to get the count from Sequlize but a raw query works great. A where clause
-      // is applied only if the user is not an administrator.
-      let query = `SELECT count(*) FROM agreement JOIN ref_zone ON agreement.zone_id = ref_zone.id WHERE forest_file_id LIKE '%${term}%'`;
-      if (!req.user.isAdministrator()) {
-        query = `${query} AND ref_zone.user_id = ${req.user.id}`;
-      }
-
-      const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
-      const { count: totalCount = 0 } = response;
-
       result = {
         totalPage: Math.ceil(totalCount / limit) || 1,
         totalItems: Number(totalCount),
