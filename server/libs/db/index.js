@@ -67,7 +67,7 @@ export default class DataManager {
     //
 
     // A Client can have multiple Agreements, and an Agreement can have multiple clients.
-    this.Agreement.belongsToMany(this.Client, { through: { model: this.ClientAgreement } });
+    this.Agreement.belongsToMany(this.Client, { as: 'clients', through: { model: this.ClientAgreement } });
     this.Client.belongsToMany(this.Agreement, { through: { model: this.ClientAgreement } });
 
     //
@@ -87,7 +87,7 @@ export default class DataManager {
     // this.Zone.belongsToMany(this.Agreement, { through: 'agreement_zone' });
     // One Zone per Agreement. This relation allows us to easlily query for
     // an Agreement's Zone.
-    this.Agreement.belongsTo(this.Zone); // { foreignKey: { allowNull: false } }
+    this.Agreement.belongsTo(this.Zone, { as: 'zone' }); // { foreignKey: { allowNull: false } }
 
     //
     // Agreements and Livestock Identifiers
