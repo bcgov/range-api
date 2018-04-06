@@ -28,11 +28,6 @@ import {
   isNumeric,
   errorWithCode,
 } from '../../libs/utils';
-import {
-  loadTemplate,
-  renderToPDF,
-  compile,
-} from '../../libs/template';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -254,26 +249,6 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
   } catch (err) {
     throw err;
   }
-}));
-
-//
-// PDF
-//
-
-router.put('/:planId?/pdf', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
-
-  if (!planId) {
-    throw errorWithCode('planId must be provided in path', 400);
-  }
-
-  const plan = await Plan.findById(planId);
-  if (!plan) {
-    throw errorWithCode(`No Plan with ID ${planId} exists`, 404);
-  }
-
 }));
 
 module.exports = router;

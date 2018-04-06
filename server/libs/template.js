@@ -28,12 +28,25 @@ import handlebars from 'handlebars';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { logger } from './logger';
 
-export const compile = (source, type, context) => {
+/**
+ * Compile the handelbars template and run it with the given context
+ * to produce html.
+ *
+ * @param {ReadStream} source A stream asociated to the handelbars markup template
+ * @param {JSON} context The object with appropriate data for the template
+ * @returns A resolved `Promise` with the HTML data.
+ */
+export const compile = (source, context) => {
   const html = handlebars.compile(source.toString('utf-8'))(context);
-
   return Promise.resolve(html);
 };
 
+/**
+ * Render the given HTML as a PDF document and return a stream of the newly generated PDF.
+ *
+ * @param {String} html A string containing HTML
+ * @returns A resolved `Promise` with the `ReadStream` of the renderd PDF; rejected otherwise.
+ */
 export const renderToPDF = html =>
   new Promise((resolve, reject) => {
     const fileName = Math.random()
@@ -58,8 +71,14 @@ export const renderToPDF = html =>
     });
   });
 
+/**
+ * Load the html template from the local file system and return it as a Buffer.
+ *
+ * @param {any} fileName The path and name of the file to be loaded
+ * @returns A resolved `Promise` with a stream of the loaded file; rejected otherwise.
+ */
 export const loadTemplate = (fileName) => {
-  const docpath = path.join(__dirname, '../', 'templates', fileName);
+  const docpath = path.join(__dirname, '../../', 'templates', fileName);
 
   return new Promise((resolve, reject) => {
     fs.access(docpath, fs.constants.R_OK, (accessErr) => {

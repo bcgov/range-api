@@ -31,6 +31,7 @@ import ehlo from './routes/ehlo';
 import plan from './routes/plan';
 import reference from './routes/reference';
 import zone from './routes/zone';
+import report from './routes/report';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -49,4 +50,5 @@ module.exports = (app) => {
   app.use('/v1/plan', plan);
   app.use('/v1/reference', reference);
   app.use('/v1/zone', zone);
+  app.use('/v1/report', report);
 };
