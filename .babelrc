@@ -4,8 +4,7 @@
       "targets": {
         "node": "6.11"
       }
-    }],
-    "stage-3"
+    }]
   ],
   "plugins": [
     "transform-runtime"
