@@ -31,9 +31,9 @@ import { logger } from './logger';
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
   // libs.
-  const lpath = path.join(__dirname, '../../', 'wkhtmltopdf-amd64-0.12.4', 'lib');
-  const bpath = path.join(__dirname, '../../', 'wkhtmltopdf-amd64-0.12.4', 'bin', 'wkhtmltopdf');
-  wkhtmltopdf.command = `${process.env.LD_LIBRARY_PATH}:${lpath} ${bpath}`;
+  const lpath = path.join(__dirname, '../', 'wkhtmltopdf-amd64-0.12.4', 'lib');
+  const bpath = path.join(__dirname, '../', 'wkhtmltopdf-amd64-0.12.4', 'bin', 'wkhtmltopdf');
+  wkhtmltopdf.command = `LD_LIBRARY_PATH=${process.env.LD_LIBRARY_PATH}:${lpath} ${bpath}`;
 }
 
 /**
