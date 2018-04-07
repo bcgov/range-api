@@ -42,8 +42,8 @@ gulp.task('copy-node-config', ['clean'], () => gulp.src(['apidoc.json', 'package
   .pipe(gulp.dest('build')));
 
 gulp.task('copy-tools', [], () =>
-  gulp.src(['wkhtmltopdf'], { dot: true })
-    .pipe(gulp.dest('build/server')));
+  gulp.src(['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false })
+    .pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
 
 gulp.task('default', ['clean', 'transpile', 'copy-config',
   'copy-node-config', 'copy-tools']);
