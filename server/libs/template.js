@@ -28,6 +28,14 @@ import handlebars from 'handlebars';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { logger } from './logger';
 
+if (process.platform === 'linux') {
+  // On Linux (OpenShift) we need to run our own copy of the binary with any related
+  // libs.
+  const lpath = path.join(__dirname, '../../', 'wkhtmltopdf-amd64-0.12.4', 'lib');
+  const bpath = path.join(__dirname, '../../', 'wkhtmltopdf-amd64-0.12.4', 'bin', 'wkhtmltopdf');
+  wkhtmltopdf.command = `${process.env.LD_LIBRARY_PATH}:${lpath} ${bpath}`;
+}
+
 /**
  * Compile the handelbars template and run it with the given context
  * to produce html.
