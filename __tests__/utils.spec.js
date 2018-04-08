@@ -29,7 +29,6 @@ import {
 } from '../server/libs/utils';
 
 describe('utility helpers', () => {
-
   beforeEach(() => {
     // nothig to do
   });
