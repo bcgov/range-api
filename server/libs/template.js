@@ -27,6 +27,7 @@ import fs from 'fs';
 import handlebars from 'handlebars';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { logger } from './logger';
+import { AGREEMENT_HOLDER_ROLE } from '../constants';
 
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
@@ -35,6 +36,39 @@ if (process.platform === 'linux') {
   const bpath = path.join(__dirname, '../', 'wkhtmltopdf-amd64-0.12.4', 'bin', 'wkhtmltopdf');
   wkhtmltopdf.command = `LD_LIBRARY_PATH=${process.env.LD_LIBRARY_PATH}:${lpath} ${bpath}`;
 }
+
+//
+// Format Helpers
+//
+
+/**
+ * Capitalize the first letter for a string
+ *
+ * @param {String} string The string to be operated on
+ */
+export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+
+/**
+ * Handlebars helper to build the full name of the primary agreement holder
+ *
+ * @param {[Contact]} contacts The `Agreement` contacts
+ * @returns A string representing the full name of the promary contact
+ */
+export const primaryContactFullNameHelper = (contacts) => {
+  const [pcontact] = contacts
+    .filter(contact => contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY);
+  const [lastName, firstName] = pcontact.name
+    .split(',')
+    .map(string => string.toLowerCase())
+    .map(string => string.trim());
+  const fullName = `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`;
+
+  return fullName;
+};
+
+//
+// Document Rendering
+//
 
 /**
  * Compile the handelbars template and run it with the given context
@@ -45,6 +79,8 @@ if (process.platform === 'linux') {
  * @returns A resolved `Promise` with the HTML data.
  */
 export const compile = (source, context) => {
+  handlebars.registerHelper('getPrimaryContactName', primaryContactFullNameHelper);
+
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);
 };
@@ -82,7 +118,7 @@ export const renderToPDF = html =>
 /**
  * Load the html template from the local file system and return it as a Buffer.
  *
- * @param {any} fileName The path and name of the file to be loaded
+ * @param {String} fileName The path and name of the file to be loaded
  * @returns A resolved `Promise` with a stream of the loaded file; rejected otherwise.
  */
 export const loadTemplate = (fileName) => {
