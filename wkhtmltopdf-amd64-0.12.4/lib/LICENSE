@@ -1,0 +1,108 @@
+XFree86® Licenses
+
+The current version of the XFree86 Project licence is 1.1 and applies to all versions (tags, snapshots, releases) of the software subsequent to XFree86 version 4.3.99.903 (XFree86 4.4.0 RC3). Our previous version is 1.0, applies to 4.3.99.902 (XFree86 4.4.0 RC) and all XFree86 versions (tags, snapshots, releases) of the software preceeding the 1.1 revision.
+
+XFree86 as a whole contains software covered by a range of different licenses and is not covered by a single license. The 1.1 licence revision itself applies only to those portions of the code that are copyrighted by solely The XFree86 Project, Inc. Even so, some portions of this code continue to carry the 1.0 license. Refer to each source file for specific licence details.
+
+While we admit that all these licenses are unwieldy, and such a concept of 'several licenses' in one piece of software is undoubtedly unfamiiar to most in the free and open-source community, we hope that the following FAQ explains the rationale for this. If not, tell us how to improve this FAQ so our licensing scheme is transparent but above all, free.
+
+Version 1.1 of XFree86® Project Licence.
+
+Copyright (C) 1994-2004 The XFree86®Project, Inc.
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicence, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+Redistributions of source code must retain the above copyright notice, this list of conditions, and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution, and in the same place and form as other copyright, license and disclaimer information.
+The end-user documentation included with the redistribution, if any, must include the following acknowledgment: "This product includes software developed by The XFree86 Project, Inc (http://www.xfree86.org/) and its contributors", in the same place and form as other third-party acknowledgments. Alternately, this acknowledgment may appear in the software itself, in the same form and location as other such third-party acknowledgments.
+Except as contained in this notice, the name of The XFree86 Project, Inc shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from The XFree86 Project, Inc.
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE XFREE86 PROJECT, INC OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The FAQ about the XFree86® 1.1 licence.
+
+The XFree86 1.1 license uses some language from the original 1.0 license, together with some language from the Apache 1.1 license. There are also other modifications that are solely intended to clarify the intent.
+
+These modifications though have caused a lot of raucous comments, a lot of which is unfounded, but neverthless, for which the XFree86 Project is decidely unhappy with, so it is the lone purpose of this FAQ to dispel any and all uncertainity surrounding the license revision.
+
+Why did you modify your license?
+
+David Dawes, the current President of the XFree86 Project, gave the Project's reasons when he announced the revision on 29 January 2004. He noted that the main reason was to ensure that the Project and its developers receive their full due for what they have given freely away these past 12 years.
+
+What is main the difference between 1.0 and 1.1?
+
+The main difference is that both the source code and the binary redistribution are now explicitly addressed and separated, because the original 1.0 license was vague in its reference to "the Software".
+
+Traditionally, "Software" in the free software world has meant "source code" but as our license allows for binary-only (i.e. no source need be supplied) redistributions. This made the 1.0 license rather unique in free software, and created a glaring flaw that meant that the licence notices "may" not always be reproduced in full.
+
+So the new license, unlike the old one, explicitly requires that the copyright holders and its contributors, are to be acknowledged in the end user documentation that accompanies redistribution, i.e. the binary only redistributions. The original problem has now been solved.
+
+You mention "third party software", what is that?
+
+This is a legal term to describe the various 'parties' involved in redistributing the software.
+
+The original vendor of the software is the first party; the person to whom you distribute the software to is the second party. When this second party re-distributes the software to someone else, the receipient is then called the third party. The shorthand for this mumbo jumbo is simply "Third Party Software."
+
+To demonstate an example, if you receive XFree86 from any other place than the main XFree86.org site (or a verbatim mirror thereof), you are receiving XFree86 as third party software.
+
+What do you mean when you say being in "same form and place as other third-party acknowledgements."
+
+This clause means that if a distributor of software or packages already includes acknowledgements for other third-party software contributions in its end-user documentation, then the XFree86 acknowledgement must also be made in a likewise manner.
+
+Alternatively, if a derived work carries an acknowledgement of third-party software contributions within the software itself, such as a banner message, splash screen, about box, etc, then the XFree86 acknowledgement must be made similiarly.
+
+What if there are no other acknowledgements of third party software?
+
+In that extremely rare case, where there is no other form of acknowledgements for other third-party software contributions in either the end-user documentation or in the software itself, then an explicit XFree86 acknowlegement is not required. All that is required is that the copyright and license accompany binary redistributions as stated in clause 2 of the licence.
+
+Are you demanding credit everywhere?
+
+No.
+
+Acknowledgements or credits for other, non-software contributions, are not a factor all. A good example is, if you credit the artwork on a CDROM booklet, you are NOT required to place an XFree86 acknowledgement in that same place because even if you consider the CDROM booklet part of the end-user documentation, artwork credit is not a third-party software acknowledgement.
+
+What about if there are multiple forms of end-user documentation?
+
+In this instance, when there are multiple forms or pieces of end-user documentation which contain acknowledgements for third-party software contributions, then our requirement is satisfied by including the XFree86 acknowledgement in the most appropriate piece.
+
+What about GPL-compatibility? Is XFree86 GPL compatible?
+
+The XFree86 Project maintains that the 4.4.0 release of XFree86 is as GPL compatible as any and all previous versions were.
+
+But what about you wanting "credit"? I heard it was an advertising clause?
+
+Our Credit clause is Absolutely Not an advertising clause! An advertising clause explicitly mentions "advertising" like this one does in paragraph #3. We do not have anything remotely similiar despite what you may read or hear elsewhere.
+
+As for "credit" being GPL-compatible, the GPL FAQ states that credit is something someone, like us, may want. It specifically mentions that you can only ask for credit if you are the copyright holder, which is why XFree86 only revised the license on work which we are the copyright holder to.
+
+Can XFree86 under the new 1.1 license still be distributed with GPL programs?
+
+This issue called 'mere aggregation' concerns putting two programs of different licensing schemes side by side on the same CD or DVD or hard disk. In this particuar case, just because one of the programs is covered by the GPL does not mean it's neighbor must also. They are independent of each and are 'merely aggregated' in the same space.
+
+XFree86 has always been 'aggregated' with GPL programs and can continue to be so.
+
+And so are you still free?
+
+Absolutely. Always have been, always will be. We consider this the foundation of who we are, and so we put it in our name ;-)
+
+Version 1.0 of XFree86® Project License.
+
+Copyright (C) 1994-2003 The XFree86® Project, Inc.
+All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicence, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE XFREE86 PROJECT BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the XFree86 Project shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from the XFree86 Project.
+
+Spelling Notes:
+
+License/Licence has been spelled variously throughout this page, and our website, to suit American and British readers. They are also equally correct according to both the American Merriam-Webster and the British Cambridge dictionaries.
+
+Copyright © 1994-2005 The XFree86 Project, Inc. All Rights Reserved. This page is XHTML 1.0 valid.
+
+XFree86® is a registered trademark of The XFree86 Project, Inc.
+Last Updated: 1 January 2005
