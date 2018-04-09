@@ -1,0 +1,504 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "range-api-psql-deployment",
+    "annotations": {
+      "description": "Deployment template for a nodejs server and psql persistent.",
+      "tags": "node",
+      "iconClass": "icon-node"
+    }
+  },
+  "objects": [
+    {
+      "kind": "Secret",
+      "type": "Opaque",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${POSTGRESQL_SECRET_NAME}",
+        "labels": {
+          "app": "${DATABASE_SERVICE_NAME}"
+        }
+      },
+      "stringData": {
+        "user": "${POSTGRESQL_USER_VALUE}",
+        "password": "${POSTGRESQL_PASSWORD_VALUE}"
+      }
+    },
+    {
+      "kind": "Secret",
+      "type": "Opaque",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${SSO_SECRET_NAME}",
+        "labels": {
+          "app": "${API_NAME}"
+        }
+      },
+      "stringData": {
+        "secret": "${SSO_SECRET_VALUE}"
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${API_NAME}",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        }
+      },
+      "spec": {
+        "ports": [{
+          "name": "8080-tcp",
+          "port": 8080,
+          "targetPort": 8080
+        }],
+        "selector": {
+          "name": "${API_NAME}"
+        }
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${ROUTE_NAME}"
+      },
+      "spec": {
+        "port": {
+          "targetPort": "8080-tcp"
+        },
+        "to": {
+          "kind": "Service",
+          "name": "${API_NAME}",
+          "weight": 100
+        },
+        "tls": {
+          "termination": "edge"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${API_NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the application server"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [{
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${API_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "${IMAGE_NAMESPACE}",
+                "name": "${API_NAME}:${IMAGE_TAG}"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${API_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${API_NAME}",
+            "labels": {
+              "name": "${API_NAME}"
+            }
+          },
+          "spec": {
+            "containers": [{
+              "name": "${API_NAME}",
+              "image": " ",
+              "ports": [{
+                "containerPort": 8080,
+                "protocol": "TCP"
+              }],
+              "readinessProbe": {
+                "timeoutSeconds": 3,
+                "initialDelaySeconds": 3,
+                "httpGet": {
+                  "path": "/v1/ehlo",
+                  "port": 8080
+                }
+              },
+              "livenessProbe": {
+                "timeoutSeconds": 3,
+                "initialDelaySeconds": 300,
+                "httpGet": {
+                  "path": "/v1/ehlo",
+                  "port": 8080
+                }
+              },
+              "env": [
+                {
+                  "name": "POSTGRESQL_USER",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "user",
+                      "name": "${POSTGRESQL_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "POSTGRESQL_PASSWORD",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "password",
+                      "name": "${POSTGRESQL_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "POSTGRESQL_DATABASE",
+                  "value":"myra"
+                },
+                {
+                  "name": "POSTGRESQL_HOST",
+                  "value": "${DATABASE_SERVICE_NAME}.${ENV_NAMESPACE}.svc"
+                },
+                {
+                  "name": "SSO_CLIENT_SECRET",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "secret",
+                      "name": "${SSO_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "PORT",
+                  "value": "${PORT}"
+                },
+                {
+                  "name": "NODE_ENV",
+                  "value": "${NODE_ENV}"
+                },
+
+                {
+                  "name": "APP_URL",
+                  "value": "${APP_URL}"
+                }
+              ],
+              "resources": {
+                "limits": {
+                  "memory": "${MEMORY_LIMIT}"
+                }
+              }
+            }]
+          }
+        }
+      }
+    },
+    {
+      "kind": "PersistentVolumeClaim",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${STORAGE_NAME}-data"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "${VOLUME_CAPACITY}"
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${DATABASE_SERVICE_NAME}",
+        "annotations": {
+          "description": "Exposes the database server"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "${DATABASE_SERVICE_NAME}",
+            "port": 5432,
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "name": "${DATABASE_SERVICE_NAME}"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${DATABASE_SERVICE_NAME}",
+        "labels": {
+          "app": "${DATABASE_SERVICE_NAME}"
+        },
+        "annotations": {
+          "description": "Defines how to deploy the database"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${DATABASE_SERVICE_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "${IMAGE_NAMESPACE}",
+                "name": "${DATABASE_SERVICE_NAME}:${LATEST_IMAGE_TAG}"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "app": "${DATABASE_SERVICE_NAME}",
+          "deploymentconfig": "${DATABASE_SERVICE_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${DATABASE_SERVICE_NAME}",
+            "labels": {
+              "app": "${DATABASE_SERVICE_NAME}",
+              "deploymentconfig": "${DATABASE_SERVICE_NAME}"
+            }
+          },
+          "spec": {
+            "volumes": [
+              {
+                "name": "${VOLUMN_NAME}",
+                "persistentVolumeClaim": {
+                  "claimName": "${STORAGE_NAME}-data"
+                }
+              }
+            ],
+            "containers": [
+              {
+                "name": "${DATABASE_SERVICE_NAME}",
+                "image": " ",
+                "ports": [{
+                    "containerPort": 5432,
+                    "protocol": "TCP"
+                }],
+                "env": [
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "user",
+                        "name": "${POSTGRESQL_SECRET_NAME}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "password",
+                        "name": "${POSTGRESQL_SECRET_NAME}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "value":"myra"
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "${VOLUMN_NAME}",
+                    "mountPath": "/var/lib/pgsql/data"
+                  }
+                ],
+                "readinessProbe": {
+                  "timeoutSeconds": 1,
+                  "initialDelaySeconds": 5,
+                  "exec": {
+                    "command": [ "/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U ${POSTGRESQL_USER} -q -d ${POSTGRESQL_DATABASE} -c 'SELECT 1'"]
+                  }
+                },
+                "livenessProbe": {
+                  "timeoutSeconds": 1,
+                  "initialDelaySeconds": 30,
+                  "tcpSocket": {
+                    "port": 5432
+
+                  }
+                },
+                "resources": {
+                  "limits": {
+                    "memory": "${MEMORY_POSTGRESQL_LIMIT}"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "DATABASE_SERVICE_NAME",
+      "displayName": "DB Name",
+      "description": "The name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "postgres-postgis-rhel7"
+    },
+    {
+      "name": "API_NAME",
+      "displayName": "Name",
+      "description": "The name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "range-myra-api"
+    },
+    {
+      "name": "IMAGE_TAG",
+      "displayName": "Output Image Tag",
+      "description": "The tag given to the built image.",
+      "required": true,
+      "value": "test"
+    },
+    {
+      "name": "LATEST_IMAGE_TAG",
+      "displayName": "Output Image Tag",
+      "description": "The tag given to the built image.",
+      "required": true,
+      "value": "latest"
+    },
+    {
+      "name": "IMAGE_NAMESPACE",
+      "displayName": "Image Namespace",
+      "required": true,
+      "description": "The namespace of the OpenShift project containing the imagestream for the application.",
+      "value": "range-myra-tools"
+    },
+    {
+      "name": "ENV_NAMESPACE",
+      "displayName": "Image Namespace for test env",
+      "required": true,
+      "description": "The namespace of the OpenShift project containing the imagestream for the application.",
+      "value": "range-myra-test"
+    },
+    {
+      "name": "MEMORY_LIMIT",
+      "displayName": "Memory Limit",
+      "required": true,
+      "description": "Maximum amount of memory the container can use.",
+      "value": "512Mi"
+    },
+    {
+      "name": "MEMORY_POSTGRESQL_LIMIT",
+      "displayName": "Memory Limit (PostgreSQL)",
+      "required": true,
+      "description": "Maximum amount of memory the PostgreSQL container can use.",
+      "value": "512Mi"
+    },
+    {
+      "name": "ROUTE_NAME",
+      "displayName": "Application Route",
+      "description": "The name of the default route use to access this service.",
+      "value": "api"
+    },
+    {
+      "name": "POSTGRESQL_SECRET_NAME",
+      "displayName": "PostgreSQL secret name",
+      "description": "The secret name of database.",
+      "value": "postgresql"
+    },
+    {
+      "name": "SSO_SECRET_NAME",
+      "displayName": "SSO secret name",
+      "description": "The secret name of sso-credentials.",
+      "value": "sso-credentials"
+    },
+    {
+      "name": "SSO_SECRET_VALUE",
+      "displayName": "SSO secret name",
+      "description": "The secret name of sso-credentials.",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_USER_VALUE",
+      "displayName": "The PostgreSQL db user name",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_PASSWORD_VALUE",
+      "displayName": "The PostgreSQL user password",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    },
+    {
+      "name": "STORAGE_NAME",
+      "displayName": "The Postgres storage name",
+      "description": "The Postgres storage name as postgres-data",
+      "value": "postgres",
+      "required": true
+    },
+    {
+      "name": "VOLUMN_NAME",
+      "displayName": "The volumn name for psql",
+      "description": "The volumn name for postgres image",
+      "value": "pgdata",
+      "required": true
+    },
+    {
+      "name": "VOLUME_CAPACITY",
+      "displayName": "Volume Capacity",
+      "description": "Volume space available for data, e.g. 512Mi, 2Gi",
+      "value": "1Gi",
+      "required": true
+    },
+    {
+      "name": "PORT",
+      "displayName": "Server Port",
+      "description": "The perferd port for the server to listen on.",
+      "value": "8080"
+    },
+    {
+      "name": "NODE_ENV",
+      "displayName": "Node Environment",
+      "description": "The node environment. Typically: develop, test, stage, or production",
+      "value": "development"
+    },
+    {
+      "name": "APP_URL",
+      "displayName": "Application URL",
+      "description": "The fully qualified external URL to access this service.",
+      "value": "https://web-range-myra-test.pathfinder.gov.bc.ca"
+    }
+  ]
+}
