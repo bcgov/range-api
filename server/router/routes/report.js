@@ -42,98 +42,12 @@ import DataManager from '../../libs/db';
 const router = new Router();
 const dm = new DataManager(config);
 const {
-  Client,
   // ClientType,
-  ClientAgreement,
-  Usage,
   Agreement,
-  AgreementExemptionStatus,
-  Zone,
-  District,
-  LivestockIdentifier,
-  LivestockIdentifierLocation,
-  LivestockIdentifierType,
-  Pasture,
-  Plan,
-  PlanStatus,
-  GrazingSchedule,
-  GrazingScheduleEntry,
-  LivestockType,
+  STANDARD_INCLUDE_NO_ZONE,
+  INCLUDE_ZONE_MODEL,
+  EXCLUDED_AGREEMENT_ATTR,
 } = dm;
-
-const INCLUDE_ZONE = {
-  model: Zone,
-  include: [{
-    model: District,
-    attributes: {
-      exclude: ['createdAt', 'updatedAt'],
-    },
-  }],
-  attributes: {
-    exclude: ['districtId', 'createdAt', 'updatedAt'],
-  },
-};
-const INCLUDE_CLIENT = {
-  model: Client,
-  through: {
-    model: ClientAgreement,
-    attributes: ['clientTypeId'],
-  },
-  attributes: ['id', 'name', 'locationCode', 'startDate'],
-};
-const INCLUDE_AGREEMENT_EXEMPTION_STATUS = {
-  model: AgreementExemptionStatus,
-  attributes: {
-    exclude: ['active', 'createdAt', 'updatedAt'],
-  },
-};
-const INCLUDE_LIVESTOCK_IDENTIFIER = {
-  model: LivestockIdentifier,
-  include: [LivestockIdentifierLocation, LivestockIdentifierType],
-  attributes: {
-    exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
-  },
-};
-const INCLUDE_PLAN = {
-  model: Plan,
-  attributes: {
-    exclude: ['status_id'],
-  },
-  order: [
-    ['create_at', 'DESC'],
-  ],
-  include: [
-    {
-      model: PlanStatus,
-      as: 'status',
-    }, {
-      model: Pasture,
-      attributes: {
-        exclude: ['plan_id'],
-      },
-    },
-    {
-      model: GrazingSchedule,
-      include: [{
-        model: GrazingScheduleEntry,
-        include: [LivestockType, Pasture],
-        attributes: {
-          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
-        },
-      }],
-    },
-  ],
-};
-const INCLUDE_USAGE = {
-  model: Usage,
-  as: 'usage',
-  attributes: {
-    exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
-  },
-};
-const STANDARD_INCLUDE_NO_ZONE = [INCLUDE_CLIENT, INCLUDE_AGREEMENT_EXEMPTION_STATUS,
-  INCLUDE_LIVESTOCK_IDENTIFIER, INCLUDE_PLAN, INCLUDE_USAGE];
-const EXCLUDED_AGREEMENT_ATTR = ['agreementTypeId', 'zoneId', 'agreementExemptionStatusId'];
 
 //
 // PDF
@@ -141,10 +55,10 @@ const EXCLUDED_AGREEMENT_ATTR = ['agreementTypeId', 'zoneId', 'agreementExemptio
 
 const filterZonesOnUser = (user) => {
   if (!user.isAdministrator()) {
-    return Object.assign(INCLUDE_ZONE, { where: { userId: user.id } });
+    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
   }
 
-  return INCLUDE_ZONE;
+  return INCLUDE_ZONE_MODEL;
 };
 
 router.get('/:agreementId/', asyncMiddleware(async (req, res) => {
