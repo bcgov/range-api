@@ -28,7 +28,6 @@ import {
   isNumeric,
   errorWithCode,
 } from '../../libs/utils';
-
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -156,6 +155,7 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
         exclude: ['updatedAt', 'createdAt', 'active'],
       },
     });
+
     if (!status) {
       throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
     }

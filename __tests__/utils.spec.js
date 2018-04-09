@@ -22,50 +22,52 @@
 
 'use strict';
 
-import jest from 'jest';
 import {
   isValid,
   isNumeric,
   errorWithCode,
-} from '../server/libs/utils'
+} from '../server/libs/utils';
 
-describe('utility helpers', function() {
+describe('utility helpers', () => {
+  beforeEach(() => {
+    // nothig to do
+  });
 
-    beforeEach(() => {
-      // nothig to do
-    });
-  
-    afterEach(() => {
-      // nothig to do
-    });
-  
-    test('isValid handles a valid string', async () => {
-        let testString = 'a-b_c%123';
+  afterEach(() => {
+    // nothig to do
+  });
 
-        expect(isValid(testString)).toBe(true); 
-    });
+  test('isValid handles a valid string', async () => {
+    const testString = 'a-b_c%123';
 
-    test('isValid handles string with invalid characters', async () => {
-        let testString = 'a-b_c#123';
+    expect(isValid(testString)).toBe(true);
+  });
 
-        expect(isValid(testString)).toBe(false); 
-    });
+  test('isValid handles string with invalid characters', async () => {
+    const testString = 'a-b_c#123';
 
-    test('errorWithCode properly creates an Error object', async () => {
-        const message = 'Hello Cat';
-        const code = 500;
-        const error = errorWithCode(message, code);
+    expect(isValid(testString)).toBe(false);
+  });
 
-        expect(error).toBeDefined();
-        expect(error.message).toEqual(message);
-        expect(error.code).toEqual(code); 
-    });
+  test('errorWithCode properly creates an Error object', async () => {
+    const message = 'Hello Cat';
+    const code = 500;
+    const error = errorWithCode(message, code);
 
-    test('isNumeric corectly deals with strings', async () => {
-        const notAnumber = 'A';
-        const isAnumber = '1';
+    expect(error).toBeDefined();
+    expect(error.message).toEqual(message);
+    expect(error.code).toEqual(code);
+  });
 
-        expect(isNumeric(notAnumber)).toBe(false);
-        expect(isNumeric(isAnumber)).toBe(true);
-    });
+  test('isNumeric corectly deals with strings', async () => {
+    const notAnumber = 'A';
+    const isAnumber = '1';
+
+    expect(isNumeric(notAnumber)).toBe(false);
+    expect(isNumeric(isAnumber)).toBe(true);
+  });
+
+  test.skip('streamToBuffer converts a stream into a buffer', async () => {
+    // TODO
+  });
 });

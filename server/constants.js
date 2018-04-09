@@ -27,3 +27,12 @@ export const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',
 };
+
+export const TEMPLATES = {
+  RANGE_USE_PLAN: 'rup.html',
+};
+
+export const AGREEMENT_HOLDER_ROLE = {
+  PRIMARY: 1,
+  SECONDARY: 2,
+};
