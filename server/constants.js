@@ -36,3 +36,7 @@ export const AGREEMENT_HOLDER_ROLE = {
   PRIMARY: 1,
   SECONDARY: 2,
 };
+
+export const REPORT_DEFAULTS = {
+  DATE_FORMAT: 'MMMM Do, YYYY',
+};

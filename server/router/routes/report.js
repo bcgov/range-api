@@ -42,10 +42,14 @@ import DataManager from '../../libs/db';
 const router = new Router();
 const dm = new DataManager(config);
 const {
-  // ClientType,
   Agreement,
-  STANDARD_INCLUDE_NO_ZONE,
   INCLUDE_ZONE_MODEL,
+  INCLUDE_CLIENT_MODEL,
+  INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+  INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
+  INCLUDE_PLAN_MODEL,
+  INCLUDE_USAGE_MODEL,
+  INCLUDE_AGREEMENT_TYPE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
 } = dm;
 
@@ -55,31 +59,34 @@ const {
 
 const filterZonesOnUser = (user) => {
   if (!user.isAdministrator()) {
-    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+    return { ...INCLUDE_ZONE_MODEL, where: { userId: user.id } };
   }
 
   return INCLUDE_ZONE_MODEL;
 };
 
-router.get('/:agreementId/', asyncMiddleware(async (req, res) => {
+router.get('/:planId/', asyncMiddleware(async (req, res) => {
   const {
-    agreementId,
+    planId,
   } = req.params;
 
   try {
+    const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
+    const myIncludes = [INCLUDE_CLIENT_MODEL, INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+      INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
+      myPlan, filterZonesOnUser(req.user)];
     const agreement = (await Agreement.findOne({
-      where: {
-        id: agreementId,
-      },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
+      include: myIncludes,
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
     })).get({ plain: true });
 
     if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 400);
+      throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
     }
+
+    // console.log(agreement);
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
     const html = await compile(template, { agreement });

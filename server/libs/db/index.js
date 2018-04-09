@@ -162,6 +162,10 @@ export default class DataManager {
   }
 
   setupIncludeAttributes() {
+    this.INCLUDE_AGREEMENT_TYPE_MODEL = {
+      model: this.AgreementType,
+    };
+
     this.INCLUDE_DISTRICT_MODEL = {
       model: this.District,
       attributes: {
@@ -257,7 +261,6 @@ export default class DataManager {
       'agreementTypeId',
       'zoneId',
       'agreementExemptionStatusId',
-      'agreement_type_id',
     ];
 
     this.STANDARD_INCLUDE_NO_ZONE = [
@@ -266,6 +269,7 @@ export default class DataManager {
       this.INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
       this.INCLUDE_PLAN_MODEL,
       this.INCLUDE_USAGE_MODEL,
+      this.INCLUDE_AGREEMENT_TYPE_MODEL,
     ];
   }
 }
