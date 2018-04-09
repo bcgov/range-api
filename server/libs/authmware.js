@@ -125,7 +125,11 @@ const authmware = async (app) => {
   opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
   opts.algorithms = ['RS256'];
   opts.secretOrKey = await getJwtSecret();
-  opts.ignoreExpiration = true;
+  // For development purposes only ignore the expiration
+  // time of tokens.
+  if (config.get('environment') === 'development') {
+    opts.ignoreExpiration = true;
+  }
 
   const jwtStrategy = new JwtStrategy(opts, async (jwtPayload, done) => {
     try {
