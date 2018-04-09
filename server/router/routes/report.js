@@ -38,19 +38,15 @@ import { logger } from '../../libs/logger';
 import { TEMPLATES } from '../../constants';
 import config from '../../config';
 import DataManager from '../../libs/db';
-import Includes from './includes';
 
 const router = new Router();
 const dm = new DataManager(config);
 const {
+  // ClientType,
+  Agreement,
   STANDARD_INCLUDE_NO_ZONE,
   INCLUDE_ZONE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
-} = new Includes(dm);
-
-const {
-  // ClientType,
-  Agreement,
 } = dm;
 
 //

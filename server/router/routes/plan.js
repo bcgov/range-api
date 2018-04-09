@@ -31,7 +31,6 @@ import {
 
 import config from '../../config';
 import DataManager from '../../libs/db';
-import Includes from './includes';
 
 const dm = new DataManager(config);
 const {
@@ -42,12 +41,9 @@ const {
   GrazingSchedule,
   GrazingScheduleEntry,
   // LivestockType,
-} = dm;
-
-const {
   EXCLUDED_PLAN_ATTR,
   STANDARD_PLAN_INCLUDE,
-} = new Includes(dm);
+} = dm;
 
 const router = new Router();
 

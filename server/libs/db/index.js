@@ -35,6 +35,7 @@ export default class DataManager {
     this.config = config;
     this.loadModels();
     this.buildRelations();
+    this.setupIncludeAttributes();
   }
 
   loadModels() {
@@ -158,5 +159,113 @@ export default class DataManager {
     // //
     // this.PlantActionReference.belongsToMany(this.Agreement,
     // { through: 'agreement_plant_action' });
+  }
+
+  setupIncludeAttributes() {
+    this.INCLUDE_DISTRICT_MODEL = {
+      model: this.District,
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
+    };
+
+    this.INCLUDE_ZONE_MODEL = {
+      model: this.Zone,
+      include: [this.INCLUDE_DISTRICT_MODEL],
+      attributes: {
+        exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
+      },
+    };
+
+    this.INCLUDE_CLIENT_MODEL = {
+      model: this.Client,
+      through: {
+        model: this.ClientAgreement,
+        attributes: ['clientTypeId'],
+      },
+      attributes: ['id', 'name', 'locationCode', 'startDate'],
+    };
+
+    this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL = {
+      model: this.AgreementExemptionStatus,
+      attributes: {
+        exclude: ['active', 'createdAt', 'updatedAt'],
+      },
+    };
+
+    this.INCLUDE_LIVESTOCK_IDENTIFIER_MODEL = {
+      model: this.LivestockIdentifier,
+      include: [this.LivestockIdentifierLocation, this.LivestockIdentifierType],
+      attributes: {
+        exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
+      },
+    };
+
+    this.INCLUDE_PLAN_STATUS_MODEL = {
+      model: this.PlanStatus,
+      as: 'status',
+    };
+
+    this.INCLUDE_PASTURE_MODEL = {
+      model: this.Pasture,
+      attributes: {
+        exclude: ['plan_id'],
+      },
+    };
+
+    this.INCLUDE_GRAZING_SCHEDULE_MODEL = {
+      model: this.GrazingSchedule,
+      include: [{
+        model: this.GrazingScheduleEntry,
+        include: [this.LivestockType, this.Pasture],
+        attributes: {
+          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+        },
+      }],
+    };
+
+    this.EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
+    this.INCLUDE_PLAN_MODEL = {
+      model: this.Plan,
+      attributes: {
+        exclude: this.EXCLUDED_PLAN_ATTR,
+      },
+      order: [
+        ['create_at', 'DESC'],
+      ],
+      include: [
+        this.INCLUDE_PLAN_STATUS_MODEL,
+        this.INCLUDE_PASTURE_MODEL,
+        this.INCLUDE_GRAZING_SCHEDULE_MODEL,
+      ],
+    };
+    this.STANDARD_PLAN_INCLUDE = [
+      this.INCLUDE_PLAN_STATUS_MODEL,
+      this.INCLUDE_PASTURE_MODEL,
+      this.INCLUDE_GRAZING_SCHEDULE_MODEL,
+    ];
+
+    this.INCLUDE_USAGE_MODEL = {
+      model: this.Usage,
+      as: 'usage',
+      attributes: {
+        exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
+      },
+    };
+
+    this.EXCLUDED_AGREEMENT_ATTR = [
+      'agreementTypeId',
+      'zoneId',
+      'agreementExemptionStatusId',
+      'agreement_type_id',
+    ];
+
+    this.STANDARD_INCLUDE_NO_ZONE = [
+      this.INCLUDE_CLIENT_MODEL,
+      this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+      this.INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
+      this.INCLUDE_PLAN_MODEL,
+      this.INCLUDE_USAGE_MODEL,
+    ];
   }
 }

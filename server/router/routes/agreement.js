@@ -33,7 +33,6 @@ import {
 import { logger } from '../../libs/logger';
 import config from '../../config';
 import DataManager from '../../libs/db';
-import Includes from './includes';
 
 const router = new Router();
 const dm = new DataManager(config);
@@ -42,14 +41,11 @@ const {
   Agreement,
   Zone,
   LivestockIdentifier,
-} = dm;
-
-const {
   STANDARD_INCLUDE_NO_ZONE,
   EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
-} = new Includes(dm);
+} = dm;
 
 //
 // Helpers
