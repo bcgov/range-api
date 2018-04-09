@@ -110,9 +110,9 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', limit = 10, page } = req.query;
+  const { term = '', limit, page } = req.query;
 
-  const offset = page ? limit * (page - 1) : 0;
+  const offset = (page && limit) ? limit * (page - 1) : 0;
   const where = {
     [Op.or]: [
       {
@@ -125,7 +125,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
   try {
     const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll({
+    const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
       offset,
       include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
@@ -133,23 +133,15 @@ router.get('/', asyncMiddleware(async (req, res) => {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
       where,
+      distinct: true, // get the distinct number of agreements
     });
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
 
     let result;
     if (page) {
-      // Its a bit tough to get the count from Sequlize but a raw query works great. A where clause
-      // is applied only if the user is not an administrator.
-      let query = 'SELECT count(*) FROM agreement JOIN ref_zone ON agreement.zone_id = ref_zone.id';
-      if (!req.user.isAdministrator()) {
-        query = `${query} WHERE ref_zone.user_id = ${req.user.id}`;
-      }
-      const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
-      const { count: totalCount = 0 } = response;
-
       result = {
-        perPage: limit,
+        perPage: Number(limit) || 1,
         currentPage: Number(page),
         totalPage: Math.ceil(totalCount / limit) || 1,
         agreements: transformedAgreements,
