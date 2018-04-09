@@ -26,8 +26,12 @@ import path from 'path';
 import fs from 'fs';
 import handlebars from 'handlebars';
 import wkhtmltopdf from 'wkhtmltopdf';
+import moment from 'moment';
 import { logger } from './logger';
-import { AGREEMENT_HOLDER_ROLE } from '../constants';
+import {
+  AGREEMENT_HOLDER_ROLE,
+  REPORT_DEFAULTS,
+} from '../constants';
 
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
@@ -42,11 +46,58 @@ if (process.platform === 'linux') {
 //
 
 /**
+ * Convert a boolean value to its human readable equivolent
+ *
+ * @param {Boolean} boolValue The value to be operated on
+ * @returns A string with the reformated date
+ */
+// eslint-disable-next-line no-confusing-arrow
+const asYesOrNoValue = boolValue => boolValue ? 'YES' : 'NO';
+
+/**
+ * Convert the standard ISO date format to the report perferd format
+ *
+ * @param {Date} isoFormatDate The date in ISO format
+ * @returns A string with the reformated date
+ */
+const asStandardDateFormat = isoFormatDate => moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
+  .format(REPORT_DEFAULTS.DATE_FORMAT);
+
+/**
  * Capitalize the first letter for a string
  *
  * @param {String} string The string to be operated on
+ * @returns A string with the first letter capitalized
  */
 export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+
+/**
+ * Convert the contact type / role to its string equivolent
+ *
+ * @param {Contact} contact The contact to be operated on
+ * @returns The `String` representing the contacts role
+ */
+const contactRole = (contact) => {
+  if (contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY) {
+    return 'Primary';
+  }
+
+  return 'Secondary';
+};
+
+/**
+ * Reformat the contact name
+ *
+ * @param {Contact} contact The contact to be operated on
+ * @returns A `String` represeting the contact name in the format `First Last`
+ */
+const conatactFullName = (contact) => {
+  const [lastName, firstName] = contact.name
+    .split(',')
+    .map(string => string.toLowerCase())
+    .map(string => string.trim());
+  return `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`;
+};
 
 /**
  * Handlebars helper to build the full name of the primary agreement holder
@@ -54,16 +105,11 @@ export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + 
  * @param {[Contact]} contacts The `Agreement` contacts
  * @returns A string representing the full name of the promary contact
  */
-export const primaryContactFullNameHelper = (contacts) => {
+export const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY);
-  const [lastName, firstName] = pcontact.name
-    .split(',')
-    .map(string => string.toLowerCase())
-    .map(string => string.trim());
-  const fullName = `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`;
 
-  return fullName;
+  return conatactFullName(pcontact);
 };
 
 //
@@ -79,7 +125,11 @@ export const primaryContactFullNameHelper = (contacts) => {
  * @returns A resolved `Promise` with the HTML data.
  */
 export const compile = (source, context) => {
-  handlebars.registerHelper('getPrimaryContactName', primaryContactFullNameHelper);
+  handlebars.registerHelper('getContactRole', contactRole);
+  handlebars.registerHelper('getContactFullName', conatactFullName);
+  handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
+  handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
+  handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);
