@@ -37,98 +37,15 @@ import DataManager from '../../libs/db';
 const router = new Router();
 const dm = new DataManager(config);
 const {
-  Client,
   ClientType,
-  ClientAgreement,
-  Usage,
   Agreement,
-  AgreementExemptionStatus,
   Zone,
-  District,
   LivestockIdentifier,
-  LivestockIdentifierLocation,
-  LivestockIdentifierType,
-  Pasture,
-  Plan,
-  PlanStatus,
-  GrazingSchedule,
-  GrazingScheduleEntry,
-  LivestockType,
+  STANDARD_INCLUDE_NO_ZONE,
+  EXCLUDED_AGREEMENT_ATTR,
+  INCLUDE_ZONE_MODEL,
+  INCLUDE_DISTRICT_MODEL,
 } = dm;
-
-const INCLUDE_ZONE = {
-  model: Zone,
-  include: [{
-    model: District,
-    attributes: {
-      exclude: ['createdAt', 'updatedAt'],
-    },
-  }],
-  attributes: {
-    exclude: ['districtId', 'createdAt', 'updatedAt'],
-  },
-};
-const INCLUDE_CLIENT = {
-  model: Client,
-  through: {
-    model: ClientAgreement,
-    attributes: ['clientTypeId'],
-  },
-  attributes: ['id', 'name', 'locationCode', 'startDate'],
-};
-const INCLUDE_AGREEMENT_EXEMPTION_STATUS = {
-  model: AgreementExemptionStatus,
-  attributes: {
-    exclude: ['active', 'createdAt', 'updatedAt'],
-  },
-};
-const INCLUDE_LIVESTOCK_IDENTIFIER = {
-  model: LivestockIdentifier,
-  include: [LivestockIdentifierLocation, LivestockIdentifierType],
-  attributes: {
-    exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
-  },
-};
-const INCLUDE_PLAN = {
-  model: Plan,
-  attributes: {
-    exclude: ['status_id'],
-  },
-  order: [
-    ['create_at', 'DESC'],
-  ],
-  include: [
-    {
-      model: PlanStatus,
-      as: 'status',
-    }, {
-      model: Pasture,
-      attributes: {
-        exclude: ['plan_id'],
-      },
-    },
-    {
-      model: GrazingSchedule,
-      include: [{
-        model: GrazingScheduleEntry,
-        include: [LivestockType, Pasture],
-        attributes: {
-          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
-        },
-      }],
-    },
-  ],
-};
-const INCLUDE_USAGE = {
-  model: Usage,
-  as: 'usage',
-  attributes: {
-    exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
-  },
-};
-const STANDARD_INCLUDE_NO_ZONE = [INCLUDE_CLIENT, INCLUDE_AGREEMENT_EXEMPTION_STATUS,
-  INCLUDE_LIVESTOCK_IDENTIFIER, INCLUDE_PLAN, INCLUDE_USAGE];
-const EXCLUDED_AGREEMENT_ATTR = ['agreementTypeId', 'zoneId', 'agreementExemptionStatusId'];
 
 //
 // Helpers
@@ -147,7 +64,7 @@ const transformClients = (clients, clientTypes) => {
       const client = c.get({ plain: true });
       const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
       delete client.clientAgreement;
-      return Object.assign(client, { clientTypeCode: ctype.code });
+      return { ...client, clientTypeCode: ctype.code };
     })
     .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
 
@@ -162,10 +79,10 @@ const transformClients = (clients, clientTypes) => {
  */
 const filterZonesOnUser = (user) => {
   if (!user.isAdministrator()) {
-    return Object.assign(INCLUDE_ZONE, { where: { userId: user.id } });
+    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
   }
 
-  return INCLUDE_ZONE;
+  return INCLUDE_ZONE_MODEL;
 };
 
 /**
@@ -189,9 +106,9 @@ const transformAgreement = (agreement, clientTypes) => {
 
 // Get all agreements
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', limit = 10, page } = req.query;
+  const { term = '', limit, page } = req.query;
 
-  const offset = page ? limit * (page - 1) : 0;
+  const offset = (page && limit) ? limit * (page - 1) : 0;
   const where = {
     [Op.or]: [
       {
@@ -204,7 +121,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
   try {
     const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll({
+    const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
       offset,
       include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
@@ -212,23 +129,15 @@ router.get('/', asyncMiddleware(async (req, res) => {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
       where,
+      distinct: true, // get the distinct number of agreements
     });
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
 
     let result;
     if (page) {
-      // Its a bit tough to get the count from Sequlize but a raw query works great. A where clause
-      // is applied only if the user is not an administrator.
-      let query = 'SELECT count(*) FROM agreement JOIN ref_zone ON agreement.zone_id = ref_zone.id';
-      if (!req.user.isAdministrator()) {
-        query = `${query} WHERE ref_zone.user_id = ${req.user.id}`;
-      }
-      const [response] = await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.SELECT });
-      const { count: totalCount = 0 } = response;
-
       result = {
-        perPage: limit,
+        perPage: Number(limit) || 1,
         currentPage: Number(page),
         totalPage: Math.ceil(totalCount / limit) || 1,
         agreements: transformedAgreements,
@@ -289,7 +198,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(INCLUDE_ZONE), // no filtering for now.
+      include: STANDARD_INCLUDE_NO_ZONE.concat(INCLUDE_ZONE_MODEL), // no filtering for now.
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
@@ -346,6 +255,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
     }
     const zone = await Zone.findOne({
+      include: [INCLUDE_DISTRICT_MODEL],
       where: {
         id: zoneId,
       },
