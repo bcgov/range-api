@@ -59,7 +59,7 @@ const {
 
 const filterZonesOnUser = (user) => {
   if (!user.isAdministrator()) {
-    return Object.assign(INCLUDE_ZONE_MODEL, { where: { userId: user.id } });
+    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
   }
 
   return INCLUDE_ZONE_MODEL;

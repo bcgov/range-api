@@ -68,7 +68,7 @@ const transformClients = (clients, clientTypes) => {
       const client = c.get({ plain: true });
       const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
       delete client.clientAgreement;
-      return Object.assign(client, { clientTypeCode: ctype.code });
+      return { ...client, clientTypeCode: ctype.code };
     })
     .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
 
@@ -83,7 +83,7 @@ const transformClients = (clients, clientTypes) => {
  */
 const filterZonesOnUser = (user) => {
   if (!user.isAdministrator()) {
-    return Object.assign(INCLUDE_ZONE_MODEL, { where: { userId: user.id } });
+    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
   }
 
   return INCLUDE_ZONE_MODEL;
