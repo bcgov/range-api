@@ -22,7 +22,7 @@
 
 import {
   capitalizeFirstLetter,
-  primaryContactFullNameHelper,
+  primaryContactFullName,
 } from '../server/libs/template';
 
 const contacts = [
@@ -71,7 +71,7 @@ describe('template functions', () => {
   });
 
   test('primaryContactFullNameHelper() foo bar', async () => {
-    expect(primaryContactFullNameHelper(contacts) === 'Joseph Phillip').toBe(true);
+    expect(primaryContactFullName(contacts) === 'Joseph Phillip').toBe(true);
   });
 
   test.skip('loadTemplate() loads a template from the file system', async () => {
