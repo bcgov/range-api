@@ -93,9 +93,9 @@ const contactRole = (contact) => {
  */
 const getDistrict = (zone) => {
   if (zone.district && zone.district.description) {
-    return `${zone.code} - ${zone.description}`;
+    return `${zone.district.code} - ${zone.district.description}`;
   }
-  return `${zone.code}`;
+  return zone.district.code;
 };
 
 /**

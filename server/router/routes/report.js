@@ -67,8 +67,9 @@ const filterZonesOnUser = (user) => {
 
 router.get('/:planId/', asyncMiddleware(async (req, res) => {
   const {
-    planId,
+    planId: pId,
   } = req.params;
+  const planId = Number(pId);
 
   try {
     const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
@@ -86,21 +87,30 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
     }
 
-    const plan = agreement.plans.find(p => p.id === Number(planId));
+    const NOT_PROVIDED = 'Not provided';
+    const plan = agreement.plans.find(p => p.id === planId);
     const { zone } = agreement;
-    // const { pastures, grazingSchedules: schedules } = plan;
+    const { pastures, grazingSchedules } = plan;
+    agreement.clients
+      .sort((a, b) => a.clientAgreement.clientTypeId > b.clientAgreement.clientTypeId);
 
     ['rangeName', 'alternateBusinessName'].forEach((key) => {
-      plan[key] = plan[key] || 'Not provided';
+      plan[key] = plan[key] || NOT_PROVIDED;
     });
 
     const requiredZoneFields = ['contactName', 'contactPhoneNumber', 'contactEmail', 'description', 'code'];
     requiredZoneFields.forEach((key) => {
-      zone[key] = zone[key] || 'Not provided';
+      zone[key] = zone[key] || NOT_PROVIDED;
     });
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
-    const html = await compile(template, { agreement, plan, zone });
+    const html = await compile(template, {
+      agreement,
+      plan,
+      zone,
+      pastures,
+      grazingSchedules,
+    });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);
 

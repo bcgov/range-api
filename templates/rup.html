@@ -124,15 +124,11 @@
     <div class="section-title">Contact Information</div>
     <div class="textfield">
       <div class="textfield__title">District (Responsible)</div>
-      {{#if zone.district.description}}
-        <div class="textfield__content">{{zone.district.code}} - {{zone.district.description}}</div>
-      {{else}}
-        <div class="textfield__content">{{zone.district.code}}</div>
-      {{/if}}
+      <div class="textfield__content">{{getDistrict zone}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Zone</div>
-      <div class="textfield__content">{{getDistrict zone}}</div>
+      <div class="textfield__content">{{zone.code}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Name</div>
@@ -191,7 +187,7 @@
   <h2>Pastures</h2>
   <div class="divider"></div>
   
-  {{#each plan.pastures}}
+  {{#each pastures}}
     <div class="section-title">Pasture: {{this.name}}</div>
     <div class="cell-4">
       <div class="textfield__title">Allowable AUM's</div>
@@ -209,53 +205,34 @@
   
   <h2>Schedule</h2>
   <div class="divider"></div>
-  <div class="section-title">{{year}} Grazing Schedule</div>
-  
-  <table>
-    <tr>
-      <th>Pasture</th>
-      <th>Livestock Type</th>
-      <th># of Animals</th>
-      <th>Date in</th>
-      <th>Date out</th>
-      <th>Days</th>
-      <th>Grace Days</th>
-      <th>PLD</th>
-      <th>Crown AUMs</th>
-    </tr>
-    <tr>
-      <td>Billy's Bluff</td>
-      <td>Cow/Calf</td>
-      <td>512</td>
-      <td>March 12, 2016</td>
-      <td>March 12, 2017</td>
-      <td>2</td>
-      <td>3</td>
-      <td>100</td>
-      <td>31423</td>
-    </tr>
-    <tr>
-      <td>Billy's Bluff</td>
-      <td>Cow/Calf</td>
-      <td>512</td>
-      <td>March 12, 2016</td>
-      <td>March 12, 2017</td>
-      <td>2</td>
-      <td>3</td>
-      <td>100</td>
-      <td>31423</td>
-    </tr>
-    <tr>
-      <td>{{name}}</td>
-      <td>{{lifestockType}}</td>
-      <td>{{numberOfAnimals}}</td>
-      <td>{{dateIn}}</td>
-      <td>{{dateOut}}</td>
-      <td>{{days}}</td>
-      <td>{{graceDays}}</td>
-      <td>{{pldPercent}}</td>
-      <td>{{allowableAum}}</td>
-    </tr>
-  </table>
+  {{#each grazingSchedules}}
+    <div class="section-title">{{this.year}} Grazing Schedule</div>
+    <table>
+      <tr>
+        <th>Pasture</th>
+        <th>Livestock Type</th>
+        <th># of Animals</th>
+        <th>Date in</th>
+        <th>Date out</th>
+        <th>Days</th>
+        <th>Grace Days</th>
+        <th>PLD</th>
+        <th>Crown AUMs</th>
+      </tr>
+      {{#each this.grazingScheduleEntries}}
+        <tr>
+          <td>{{this.name}}</td>
+          <td>{{this.lifestockType}}</td>
+          <td>{{this.numberOfAnimals}}</td>
+          <td>{{this.dateIn}}</td>
+          <td>{{this.dateOut}}</td>
+          <td>{{this.days}}</td>
+          <td>{{this.graceDays}}</td>
+          <td>{{this.pldPercent}}</td>
+          <td>{{this.allowableAum}}</td>
+        </tr>
+      {{/each}}
+    </table>
+  {{/each}}  
 </body>
 </html>
