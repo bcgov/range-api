@@ -91,7 +91,7 @@ const contactRole = (contact) => {
  * @param {Contact} contact The contact to be operated on
  * @returns A `String` represeting the contact name in the format `First Last`
  */
-const conatactFullName = (contact) => {
+const contactFullName = (contact) => {
   const [lastName, firstName] = contact.name
     .split(',')
     .map(string => string.toLowerCase())
@@ -109,7 +109,7 @@ export const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
-  return conatactFullName(pcontact);
+  return contactFullName(pcontact);
 };
 
 //
@@ -126,7 +126,7 @@ export const primaryContactFullName = (contacts) => {
  */
 export const compile = (source, context) => {
   handlebars.registerHelper('getContactRole', contactRole);
-  handlebars.registerHelper('getContactFullName', conatactFullName);
+  handlebars.registerHelper('getContactFullName', contactFullName);
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);

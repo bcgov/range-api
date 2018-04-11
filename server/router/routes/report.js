@@ -86,10 +86,21 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
     }
 
-    // console.log(agreement);
+    const plan = agreement.plans.find(p => p.id === Number(planId));
+    const { zone } = agreement;
+    // const { pastures, grazingSchedules: schedules } = plan;
+
+    ['rangeName', 'alternateBusinessName'].forEach((key) => {
+      plan[key] = plan[key] || 'Not provided';
+    });
+
+    const requiredZoneFields = ['contactName', 'contactPhoneNumber', 'contactEmail', 'description', 'code'];
+    requiredZoneFields.forEach((key) => {
+      zone[key] = zone[key] || 'Not provided';
+    });
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
-    const html = await compile(template, { agreement });
+    const html = await compile(template, { agreement, plan, zone });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);
 

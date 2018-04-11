@@ -4,73 +4,82 @@
   	<meta content="ie=edge" http-equiv="x-ua-compatible">
   	<meta content="width=device-width, initial-scale=1" name="viewport">
 <style>
-  		@page {
-			margin: 0;
-			padding: 0;
-			overflow: hidden; }
-		@media print {
-  * {
-    box-sizing: border-box;
+  @page {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
   }
-  
-  body {
-    padding: 25px;
-    font-family: arial, sans-serif;
-  }
-  
-  table {
+  @media print {
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      padding: 25px;
       font-family: arial, sans-serif;
-      border-collapse: collapse;
-      width: 100%;
-  }
+    }
 
-  td, th {
-      border: 1px solid #dddddd;
-      text-align: left;
-      padding: 8px;
-  }
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
 
-  tr:nth-child(even) {
-      background-color: #dddddd;
-  }
-  
-  .header {
-      display: flex;
-      justify-content: space-between;
-  }
-  .header__logo {
-    height: 90px;
-  }
-  .header__right {
-      text-align: end;
-      line-height: 160%;
-  }
-  .header__title {
+    td, th {
+        border: 1px solid #eeeeee ;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+    }
+    .header__logo {
+      height: 90px;
+    }
+    .header__right {
+        text-align: end;
+        line-height: 160%;
+    }
+    .header__title {
+        font-weight: bold;
+        font-size: 1.4rem;
+    }
+    .header__divider {
+        border-top: 1px solid #aaaaaa;
+    }
+    .divider {
+        border-top: 2px solid #003366;
+    }
+    .sub-divider {
+        border-top: 1px solid #003366;
+        margin: 10px 0;
+    }
+    .section-title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin: 10px 0;
+    }
+    .textfield {
+        margin: 5px 0;
+    }
+    .textfield__title {
       font-weight: bold;
-      font-size: 1.2rem;
+    }
+    .cell-6 {
+        width: 49%;
+        display: inline-block;
+    }
+    .cell-4 {
+        width: 32%;
+        display: inline-block;
+    }
   }
-  .header__divider {
-      border-top: 1px solid #aaaaaa;
-  }
-  .divider {
-      border-top: 2px solid #003366;
-  }
-  .section-title {
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin: 10px 0;
-  }
-  .textfield {
-      margin: 5px 0;
-  }
-  .textfield__title {
-    font-weight: bold;
-  }
-  .cell-6 {
-      width: 49%;
-      display: inline-block;
-  }
-}
 </style>
 </head>
 <body>
@@ -81,7 +90,7 @@
   <div class="header__right">
     <div class="header__title">Range Use Plan</div>
     <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
-    <div>{{getStandardDateFormat agreement.plans.0.planStartDate}} - {{getStandardDateFormat agreement.plans.0.planEndDate}}</div>    
+    <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
   </div>
   </div>
   <div class="header__divider"></div>  
@@ -101,45 +110,50 @@
       <div class="textfield__title">Agreement Date</div>
       <div class="textfield__content">{{getStandardDateFormat agreement.agreementStartDate}} - {{getStandardDateFormat agreement.agreementEndDate}}</div>
     </div>
+
     <div class="textfield">
       <div class="textfield__title">Range Name</div>
-      <div class="textfield__content">{{agreement.plans.0.rangeName}}</div>
+      <div class="textfield__content">{{plan.rangeName}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Alternative Business Name</div>
-      <div class="textfield__content"></div>
+      <div class="textfield__content">{{plan.alternateBusinessName}}</div>
     </div>
   </div>
   <div class="cell-6">
     <div class="section-title">Contact Information</div>
     <div class="textfield">
       <div class="textfield__title">District (Responsible)</div>
-      <div class="textfield__content">{{agreement.zone.district.code}} - {{agreement.zone.district.description}}</div>
+      {{#if zone.district.description}}
+        <div class="textfield__content">{{zone.district.code}} - {{zone.district.description}}</div>
+      {{else}}
+        <div class="textfield__content">{{zone.district.code}}</div>
+      {{/if}}
     </div>
     <div class="textfield">
       <div class="textfield__title">Zone</div>
-      <div class="textfield__content">{{agreement.zone.code}} - {{agreement.zone.description}}</div>
+      <div class="textfield__content">{{zone.code}} - {{zone.description}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Name</div>
-      <div class="textfield__content">{{agreement.zone.contactName}}</div>
+      <div class="textfield__content">{{zone.contactName}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Phone</div>
-      <div class="textfield__content">{{agreement.zone.contactPhoneNumber}}</div>
+      <div class="textfield__content">{{zone.contactPhoneNumber}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Email</div>
-      <div class="textfield__content">{{agreement.zone.contactEmail}}</div>
+      <div class="textfield__content">{{zone.contactEmail}}</div>
     </div>
   </div>
   
-  <div class="divider"></div>
+  <div class="sub-divider"></div>
   <div class="section-title">Plan Information</div>
   <div class="cell-6">
     <div class="textfield">
       <div class="textfield__title">Plan Start Date</div>
-      <div class="textfield__content">{{getStandardDateFormat agreement.plans.0.planStartDate}}</div>
+      <div class="textfield__content">{{getStandardDateFormat plan.planStartDate}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Extended</div>
@@ -149,7 +163,7 @@
   <div class="cell-6">
     <div class="textfield">
       <div class="textfield__title">Plan End Date</div>
-      <div class="textfield__content">{{getStandardDateFormat agreement.plans.0.planEndDate}}</div>
+      <div class="textfield__content">{{getStandardDateFormat plan.planEndDate}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Exemption Status</div>
@@ -157,7 +171,7 @@
     </div>
   </div>
   
-  <div class="divider"></div>
+  <div class="sub-divider"></div>
   <div class="section-title">Agreement Holders</div>
   <div class="cell-6">
       <div class="textfield__title">Name</div>
@@ -173,7 +187,26 @@
         <div class="textfield__content">{{getContactRole this}}</div>
     </div>
   {{/each}}
-
+  
+  <h2>Pastures</h2>
+  <div class="divider"></div>
+  
+  {{#each plan.pastures}}
+    <div class="section-title">Pasture: {{this.name}}</div>
+    <div class="cell-4">
+      <div class="textfield__title">Allowable AUM's</div>
+      <div class="textfield__content">{{this.allowableAum}}</div>
+    </div> 
+    <div class="cell-4">
+      <div class="textfield__title">Private Land Deduction</div>
+      <div class="textfield__content">{{this.pldPercent}}</div>
+    </div>
+    <div class="cell-4">
+      <div class="textfield__title">Grace Days</div>
+      <div class="textfield__content">{{this.graceDays}}</div>
+    </div>
+  {{/each}}
+  
   <h2>Schedule</h2>
   <div class="divider"></div>
   <div class="section-title">{{year}} Grazing Schedule</div>
@@ -191,26 +224,37 @@
       <th>Crown AUMs</th>
     </tr>
     <tr>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
+      <td>Billy's Bluff</td>
+      <td>Cow/Calf</td>
+      <td>512</td>
+      <td>March 12, 2016</td>
+      <td>March 12, 2017</td>
+      <td>2</td>
+      <td>3</td>
+      <td>100</td>
+      <td>31423</td>
     </tr>
     <tr>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
-      <td>Alfreds Futterkiste</td>
-      <td>Maria Anders</td>
-      <td>Germany</td>
+      <td>Billy's Bluff</td>
+      <td>Cow/Calf</td>
+      <td>512</td>
+      <td>March 12, 2016</td>
+      <td>March 12, 2017</td>
+      <td>2</td>
+      <td>3</td>
+      <td>100</td>
+      <td>31423</td>
+    </tr>
+    <tr>
+      <td>{{name}}</td>
+      <td>{{lifestockType}}</td>
+      <td>{{numberOfAnimals}}</td>
+      <td>{{dateIn}}</td>
+      <td>{{dateOut}}</td>
+      <td>{{days}}</td>
+      <td>{{graceDays}}</td>
+      <td>{{pldPercent}}</td>
+      <td>{{allowableAum}}</td>
     </tr>
   </table>
 </body>
