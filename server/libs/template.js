@@ -86,6 +86,19 @@ const contactRole = (contact) => {
 };
 
 /**
+ * Convert the zone code / descriiption to its string equivolent
+ *
+ * @param {Zone} zone The zone to be operated on
+ * @returns The `String` representing the district
+ */
+const getDistrict = (zone) => {
+  if (zone.district && zone.district.description) {
+    return `${zone.code} - ${zone.description}`;
+  }
+  return `${zone.code}`;
+};
+
+/**
  * Reformat the contact name
  *
  * @param {Contact} contact The contact to be operated on
@@ -126,6 +139,7 @@ export const primaryContactFullName = (contacts) => {
  */
 export const compile = (source, context) => {
   handlebars.registerHelper('getContactRole', contactRole);
+  handlebars.registerHelper('getDistrict', getDistrict);
   handlebars.registerHelper('getContactFullName', contactFullName);
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
