@@ -67,7 +67,7 @@ const {
   Zone,
 } = dm;
 
-const sync = async (force = false) => dm.sequelize.sync({ force });
+// const sync = async (force = false) => dm.sequelize.sync({ force });
 
 const createClient = async () => {
   try {
