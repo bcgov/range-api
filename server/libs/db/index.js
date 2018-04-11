@@ -122,7 +122,7 @@ export default class DataManager {
     // Agreements and Grazing Schedule
     //
 
-    this.Plan.belongsToMany(this.GrazingSchedule, { through: 'plan_grazing_schedule' });
+    this.Plan.hasMany(this.GrazingSchedule);
 
     //
     // GrazingScheduleEntry, Grazing Schedule, LivestockType
@@ -223,7 +223,7 @@ export default class DataManager {
         model: this.GrazingScheduleEntry,
         include: [this.LivestockType, this.Pasture],
         attributes: {
-          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+          exclude: ['grazing_schedule_id', 'livestock_type_id'],
         },
       }],
     };

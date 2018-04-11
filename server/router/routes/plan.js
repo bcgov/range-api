@@ -43,9 +43,18 @@ const {
   // LivestockType,
   EXCLUDED_PLAN_ATTR,
   STANDARD_PLAN_INCLUDE,
+  INCLUDE_ZONE_MODEL,
 } = dm;
 
 const router = new Router();
+
+const filterZonesOnUser = (user) => {
+  if (!user.isAdministrator()) {
+    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+  }
+
+  return INCLUDE_ZONE_MODEL;
+};
 
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
@@ -53,21 +62,16 @@ router.post('/', asyncMiddleware(async (req, res) => {
   } = req.body;
 
   try {
-    const agreement = await Agreement.findById(agreementId);
+    const agreement = await Agreement.findOne({
+      where: {
+        id: agreementId,
+      },
+      include: [filterZonesOnUser(req.user)],
+    });
+
     if (!agreement) {
       throw errorWithCode('agreement not found', 404);
     }
-
-    // don't allow to create if there is a plan in progress
-    // const isInProgress = await Plan.count({
-    //   where: {
-    //     agreementId,
-    //     statusId: status of draft or incomplete
-    //   },
-    // });
-    // if (!isInProgress) {
-    //   throw errorWithCode('there is a plan in progress already', 400);
-    // }
 
     const options = {
       attributes: {
@@ -75,12 +79,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
       },
       include: STANDARD_PLAN_INCLUDE,
     };
+
     const plan = await Plan.create(req.body, options);
     await agreement.addPlan(plan);
     await agreement.save();
 
-    const createdPlan = await Plan.findById(plan.id, options);
-    return res.status(200).json(createdPlan).end();
+    return res.status(200).json(plan).end();
   } catch (err) {
     throw err;
   }
