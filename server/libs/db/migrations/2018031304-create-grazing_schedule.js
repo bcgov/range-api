@@ -43,6 +43,15 @@ module.exports = {
       narative: {
         type: Sequelize.TEXT,
       },
+      plan_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'plan',
+          key: 'id',
+          deferrable: Sequelize.Deferrable.INITIALLY_IMMEDIATE,
+        },
+      },
       created_at: {
         type: Sequelize.DATE,
         defaultValue: sequelize.literal('CURRENT_TIMESTAMP(3)'),
