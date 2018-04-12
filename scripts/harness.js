@@ -67,7 +67,7 @@ const {
   AgreementStatus,
 } = dm;
 
-const sync = async (force = false) => dm.sequelize.sync({ force });
+// const sync = async (force = false) => dm.sequelize.sync({ force });
 
 const applicationZones = async () => {
   try {
