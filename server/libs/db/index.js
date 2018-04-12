@@ -188,12 +188,27 @@ export default class DataManager {
       },
     };
 
-    this.INCLUDE_ZONE_MODEL = {
-      model: this.Zone,
-      include: [this.INCLUDE_DISTRICT_MODEL],
-      attributes: {
-        exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
-      },
+    /**
+     * Add `Zone` filtering by userId accounting for Administrative privledges.
+     *
+     * @param {Zone} model The model to be operated on.
+     * @param {User} user The user to filter on.
+     * @returns The `Zone` with the apropriate filtering via the where clause.
+     */
+    this.INCLUDE_ZONE_MODEL = (user) => {
+      const BASIC_INCLUDE_ZONE_MODEL = {
+        model: this.Zone,
+        include: [this.INCLUDE_DISTRICT_MODEL],
+        attributes: {
+          exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
+        },
+      };
+
+      if (user && !user.isAdministrator()) {
+        return { ...BASIC_INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+      }
+
+      return BASIC_INCLUDE_ZONE_MODEL;
     };
 
     this.INCLUDE_CLIENT_MODEL = {

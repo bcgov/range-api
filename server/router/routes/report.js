@@ -50,6 +50,7 @@ const {
   INCLUDE_USAGE_MODEL,
   INCLUDE_AGREEMENT_TYPE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
+  INCLUDE_ZONE_MODEL,
 } = dm;
 
 //
@@ -65,7 +66,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
     const myIncludes = [INCLUDE_CLIENT_MODEL, INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
-      myPlan, dm.zoneIncludeForUserRole(req.user)];
+      myPlan, INCLUDE_ZONE_MODEL(req.user)];
     const agreement = (await Agreement.findOne({
       include: myIncludes,
       attributes: {
