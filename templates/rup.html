@@ -221,15 +221,15 @@
       </tr>
       {{#each this.grazingScheduleEntries}}
         <tr>
-          <td>{{this.name}}</td>
-          <td>{{this.lifestockType}}</td>
-          <td>{{this.numberOfAnimals}}</td>
-          <td>{{this.dateIn}}</td>
-          <td>{{this.dateOut}}</td>
-          <td>{{this.days}}</td>
+          <td>{{this.pasture.name}}</td>
+          <td>{{this.livestockType.nam}}</td>
+          <td>{{this.livestockCount}}</td>
+          <td>{{getStandardDateFormat this.dateIn}}</td>
+          <td>{{getStandardDateFormat this.dateOut}}</td>
+          <td>{{getDaysOfGrazing this.dateIn this.dateOut}}</td>
           <td>{{this.graceDays}}</td>
-          <td>{{this.pldPercent}}</td>
-          <td>{{this.allowableAum}}</td>
+          <td>{{this.pasture.pldPercen}}</td>
+          <td>{{this.pasture.allowable}}</td>
         </tr>
       {{/each}}
     </table>

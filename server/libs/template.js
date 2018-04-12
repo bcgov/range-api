@@ -125,6 +125,17 @@ export const primaryContactFullName = (contacts) => {
   return contactFullName(pcontact);
 };
 
+/**
+ * Calculate the number of days between the date in and out
+ *
+ * @param {Date} dateIn The date in ISO format
+ * @param {Date} dateOut The date in ISO format
+ * @returns A number
+ */
+export const getDaysOfGrazing = (dateIn, dateOut) => (
+  dateOut.getDate() - dateIn.getDate()
+);
+
 //
 // Document Rendering
 //
@@ -144,6 +155,7 @@ export const compile = (source, context) => {
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
+  handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);
