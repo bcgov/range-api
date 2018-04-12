@@ -110,7 +110,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
       offset,
-      include: STANDARD_INCLUDE_NO_ZONE.concat(dm.zoneIncludeForUserRole(req.user)),
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
@@ -149,7 +149,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(dm.zoneIncludeForUserRole(req.user)),
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
@@ -184,7 +184,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(INCLUDE_ZONE_MODEL), // no filtering for now.
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()], // no filtering for now.
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
