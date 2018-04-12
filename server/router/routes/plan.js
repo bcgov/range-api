@@ -39,10 +39,8 @@ const {
   Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
-  // LivestockType,
   EXCLUDED_PLAN_ATTR,
   STANDARD_PLAN_INCLUDE,
-  INCLUDE_ZONE_MODEL,
 } = dm;
 
 const router = new Router();
@@ -57,7 +55,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
       where: {
         id: agreementId,
       },
-      include: [dm.zoneIncludeForUserRole(INCLUDE_ZONE_MODEL, req.user),
+      include: [dm.zoneIncludeForUserRole(req.user),
       ],
     });
 
