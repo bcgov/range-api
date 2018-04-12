@@ -43,7 +43,6 @@ const router = new Router();
 const dm = new DataManager(config);
 const {
   Agreement,
-  INCLUDE_ZONE_MODEL,
   INCLUDE_CLIENT_MODEL,
   INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
   INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
@@ -57,14 +56,6 @@ const {
 // PDF
 //
 
-const filterZonesOnUser = (user) => {
-  if (!user.isAdministrator()) {
-    return { ...INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-  }
-
-  return INCLUDE_ZONE_MODEL;
-};
-
 router.get('/:planId/', asyncMiddleware(async (req, res) => {
   const {
     planId,
@@ -74,7 +65,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
     const myIncludes = [INCLUDE_CLIENT_MODEL, INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
-      myPlan, filterZonesOnUser(req.user)];
+      myPlan, dm.zoneIncludeForUserRole(req.user)];
     const agreement = (await Agreement.findOne({
       include: myIncludes,
       attributes: {

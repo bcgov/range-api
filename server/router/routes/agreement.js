@@ -72,20 +72,6 @@ const transformClients = (clients, clientTypes) => {
 };
 
 /**
- * Add `Zone` filtering by userId accounting for Administrative privledges.
- *
- * @param {User} user The user to filter on.
- * @returns The `Zone` with the apropriate filtering via the where clause.
- */
-const filterZonesOnUser = (user) => {
-  if (!user.isAdministrator()) {
-    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-  }
-
-  return INCLUDE_ZONE_MODEL;
-};
-
-/**
  * Transform the structure of an Agreement to match the API spec
  *
  * @param {Agreement} agreement The agreement object containing the clients
@@ -124,7 +110,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
       offset,
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
+      include: STANDARD_INCLUDE_NO_ZONE.concat(dm.zoneIncludeForUserRole(req.user)),
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
@@ -163,7 +149,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
+      include: STANDARD_INCLUDE_NO_ZONE.concat(dm.zoneIncludeForUserRole(req.user)),
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },

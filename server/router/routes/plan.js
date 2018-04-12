@@ -28,7 +28,6 @@ import {
   isNumeric,
   errorWithCode,
 } from '../../libs/utils';
-
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -48,14 +47,6 @@ const {
 
 const router = new Router();
 
-const filterZonesOnUser = (user) => {
-  if (!user.isAdministrator()) {
-    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-  }
-
-  return INCLUDE_ZONE_MODEL;
-};
-
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
     agreementId,
@@ -66,7 +57,8 @@ router.post('/', asyncMiddleware(async (req, res) => {
       where: {
         id: agreementId,
       },
-      include: [filterZonesOnUser(req.user)],
+      include: [dm.zoneIncludeForUserRole(INCLUDE_ZONE_MODEL, req.user),
+      ],
     });
 
     if (!agreement) {

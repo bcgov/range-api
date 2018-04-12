@@ -38,6 +38,21 @@ export default class DataManager {
     this.setupIncludeAttributes();
   }
 
+  /**
+   * Add `Zone` filtering by userId accounting for Administrative privledges.
+   *
+   * @param {Zone} model The model to be operated on.
+   * @param {User} user The user to filter on.
+   * @returns The `Zone` with the apropriate filtering via the where clause.
+   */
+  zoneIncludeForUserRole(user) {
+    if (!user.isAdministrator()) {
+      return { ...this.INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+    }
+
+    return this.INCLUDE_ZONE_MODEL;
+  }
+
   loadModels() {
     fs.readdirSync(path.join(__dirname, 'models'))
       .filter(file => (file.indexOf('.') !== 0) && (file !== 'index.js'))
