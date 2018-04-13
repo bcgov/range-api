@@ -257,6 +257,9 @@ export default class DataManager {
         },
       }],
     };
+    this.INCLUDE_USER_MODEL = {
+      model: this.User,
+    };
 
     this.EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
     this.INCLUDE_PLAN_MODEL = {
