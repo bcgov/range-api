@@ -35,7 +35,7 @@ import {
   compile,
 } from '../../libs/template';
 import { logger } from '../../libs/logger';
-import { TEMPLATES } from '../../constants';
+import { TEMPLATES, NOT_PROVIDED } from '../../constants';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -79,7 +79,6 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
     }
 
-    const NOT_PROVIDED = 'Not provided';
     const plan = agreement.plans.find(p => p.id === planId);
     const { zone } = agreement;
     const { pastures, grazingSchedules } = plan;
