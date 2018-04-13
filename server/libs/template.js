@@ -86,12 +86,25 @@ const contactRole = (contact) => {
 };
 
 /**
+ * Convert the zone code / descriiption to its string equivolent
+ *
+ * @param {Zone} zone The zone to be operated on
+ * @returns The `String` representing the district
+ */
+const getDistrict = (zone) => {
+  if (zone.district && zone.district.description) {
+    return `${zone.district.code} - ${zone.district.description}`;
+  }
+  return zone.district.code;
+};
+
+/**
  * Reformat the contact name
  *
  * @param {Contact} contact The contact to be operated on
  * @returns A `String` represeting the contact name in the format `First Last`
  */
-const conatactFullName = (contact) => {
+const contactFullName = (contact) => {
   const [lastName, firstName] = contact.name
     .split(',')
     .map(string => string.toLowerCase())
@@ -109,8 +122,19 @@ export const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
-  return conatactFullName(pcontact);
+  return contactFullName(pcontact);
 };
+
+/**
+ * Calculate the number of days between the date in and out
+ *
+ * @param {Date} dateIn The date in ISO format
+ * @param {Date} dateOut The date in ISO format
+ * @returns A number
+ */
+export const getDaysOfGrazing = (dateIn, dateOut) => (
+  dateOut.getDate() - dateIn.getDate()
+);
 
 //
 // Document Rendering
@@ -126,10 +150,12 @@ export const primaryContactFullName = (contacts) => {
  */
 export const compile = (source, context) => {
   handlebars.registerHelper('getContactRole', contactRole);
-  handlebars.registerHelper('getContactFullName', conatactFullName);
+  handlebars.registerHelper('getDistrict', getDistrict);
+  handlebars.registerHelper('getContactFullName', contactFullName);
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
+  handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);

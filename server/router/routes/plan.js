@@ -74,7 +74,9 @@ router.post('/', asyncMiddleware(async (req, res) => {
     await agreement.addPlan(plan);
     await agreement.save();
 
-    return res.status(200).json(plan).end();
+    const createdPlan = await Plan.findById(plan.id, options);
+
+    return res.status(200).json(createdPlan).end();
   } catch (err) {
     throw err;
   }
