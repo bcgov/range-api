@@ -31,6 +31,7 @@ import { logger } from './logger';
 import {
   AGREEMENT_HOLDER_ROLE,
   REPORT_DEFAULTS,
+  NOT_PROVIDED,
 } from '../constants';
 
 if (process.platform === 'linux') {
@@ -60,8 +61,13 @@ const asYesOrNoValue = boolValue => boolValue ? 'YES' : 'NO';
  * @param {Date} isoFormatDate The date in ISO format
  * @returns A string with the reformated date
  */
-const asStandardDateFormat = isoFormatDate => moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
-  .format(REPORT_DEFAULTS.DATE_FORMAT);
+const asStandardDateFormat = (isoFormatDate) => {
+  if (!isoFormatDate) {
+    return NOT_PROVIDED;
+  }
+  return moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
+    .format(REPORT_DEFAULTS.DATE_FORMAT);
+};
 
 /**
  * Capitalize the first letter for a string
@@ -69,7 +75,12 @@ const asStandardDateFormat = isoFormatDate => moment(isoFormatDate, 'YYYY-MM-DDT
  * @param {String} string The string to be operated on
  * @returns A string with the first letter capitalized
  */
-export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+export const capitalizeFirstLetter = (string) => {
+  if (!string) {
+    return '';
+  }
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 /**
  * Convert the contact type / role to its string equivolent
@@ -78,6 +89,9 @@ export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + 
  * @returns The `String` representing the contacts role
  */
 const contactRole = (contact) => {
+  if (!contact) {
+    return NOT_PROVIDED;
+  }
   if (contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY) {
     return 'Primary';
   }
@@ -92,6 +106,9 @@ const contactRole = (contact) => {
  * @returns The `String` representing the district
  */
 const getDistrict = (zone) => {
+  if (!zone) {
+    return NOT_PROVIDED;
+  }
   if (zone.district && zone.district.description) {
     return `${zone.district.code} - ${zone.district.description}`;
   }
@@ -132,9 +149,12 @@ export const primaryContactFullName = (contacts) => {
  * @param {Date} dateOut The date in ISO format
  * @returns A number
  */
-export const getDaysOfGrazing = (dateIn, dateOut) => (
-  dateOut.getDate() - dateIn.getDate()
-);
+export const getDaysOfGrazing = (dateIn, dateOut) => {
+  if ((dateIn instanceof Date) && (dateOut instanceof Date)) {
+    return dateOut.getDate() - dateIn.getDate();
+  }
+  return NOT_PROVIDED;
+};
 
 //
 // Document Rendering
