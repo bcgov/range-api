@@ -31,7 +31,7 @@
         background-color: #dddddd;
     }
     .header__logo {
-      width: 200px;
+      height: 100px;
     }
     .header__left {
       width: 40%;
@@ -81,15 +81,15 @@
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header__left">
-    <img class="header__logo" src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1" alt="">
-  </div>
-  <div class="header__right">
-    <div class="header__title">Range Use Plan</div>
-    <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
-    <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
-  </div>
+  <div class="header">
+    <div class="header__left">
+      <img class="header__logo" src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1" alt="">
+    </div>
+    <div class="header__right">
+      <div class="header__title">Range Use Plan</div>
+      <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
+      <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
+    </div>
   </div>
   <div class="header__divider"></div>  
   <h2>Basic Information</h2>
