@@ -43,6 +43,7 @@ const router = new Router();
 const dm = new DataManager(config);
 const {
   Agreement,
+  GrazingSchedule,
   INCLUDE_CLIENT_MODEL,
   INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
   INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
@@ -51,6 +52,7 @@ const {
   INCLUDE_AGREEMENT_TYPE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
+  INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL,
 } = dm;
 
 //
@@ -80,19 +82,16 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     }
 
     const plan = agreement.plans.find(p => p.id === planId);
+    const grazingSchedules = await GrazingSchedule.findAll({
+      include: [INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
+      where: {
+        plan_id: planId,
+      },
+    });
     const { zone } = agreement;
-    const { pastures, grazingSchedules } = plan;
+    const { pastures } = plan;
     agreement.clients
       .sort((a, b) => a.clientAgreement.clientTypeId > b.clientAgreement.clientTypeId);
-
-    ['rangeName', 'alternateBusinessName'].forEach((key) => {
-      plan[key] = plan[key] || NOT_PROVIDED;
-    });
-
-    const requiredZoneFields = ['contactName', 'contactPhoneNumber', 'contactEmail', 'description', 'code'];
-    requiredZoneFields.forEach((key) => {
-      zone[key] = zone[key] || NOT_PROVIDED;
-    });
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
     const html = await compile(template, {
