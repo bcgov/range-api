@@ -13,85 +13,83 @@
     * {
       box-sizing: border-box;
     }
-
     body {
       padding: 25px;
       font-family: arial, sans-serif;
     }
-
     table {
         font-family: arial, sans-serif;
         border-collapse: collapse;
         width: 100%;
     }
-
     td, th {
         border: 1px solid #eeeeee ;
         text-align: left;
         padding: 8px;
     }
-
     tr:nth-child(even) {
         background-color: #dddddd;
     }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-    }
     .header__logo {
-      height: 90px;
+      height: 100px;
+    }
+    .header__left {
+      width: 40%;
+      float: left;
     }
     .header__right {
-        text-align: end;
-        line-height: 160%;
+      float: right;
+      width: 59%;
+      text-align: end;
+      line-height: 160%;
     }
     .header__title {
-        font-weight: bold;
-        font-size: 1.4rem;
+      font-weight: bold;
+      font-size: 1.4rem;
     }
     .header__divider {
-        border-top: 1px solid #aaaaaa;
+      clear: both;
+      border-top: 1px solid #aaaaaa;
     }
     .divider {
-        border-top: 2px solid #003366;
+      border-top: 2px solid #003366;
     }
     .sub-divider {
-        border-top: 1px solid #003366;
-        margin: 10px 0;
+      border-top: 1px solid #003366;
+      margin: 10px 0;
     }
     .section-title {
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin: 10px 0;
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin: 10px 0;
     }
     .textfield {
-        margin: 5px 0;
+      margin: 5px 0;
     }
     .textfield__title {
       font-weight: bold;
     }
     .cell-6 {
-        width: 49%;
-        display: inline-block;
+      width: 49%;
+      display: inline-block;
     }
     .cell-4 {
-        width: 32%;
-        display: inline-block;
+      width: 32%;
+      display: inline-block;
     }
   }
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header__left">
-    <img class="header__logo" src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1" alt="">
-  </div>
-  <div class="header__right">
-    <div class="header__title">Range Use Plan</div>
-    <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
-    <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
-  </div>
+  <div class="header">
+    <div class="header__left">
+      <img class="header__logo" src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1" alt="">
+    </div>
+    <div class="header__right">
+      <div class="header__title">Range Use Plan</div>
+      <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
+      <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
+    </div>
   </div>
   <div class="header__divider"></div>  
   <h2>Basic Information</h2>
@@ -100,11 +98,11 @@
     <div class="section-title">Agreement Information</div>
     <div class="textfield">
       <div class="textfield__title">Range Number</div>
-      <div class="textfield__content">{{agreement.id}}</div>
+      <div class="textfield__content">{{handleNullValue agreement.id}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Agreement Type</div>
-      <div class="textfield__content">{{agreement.agreementType.code}} - {{agreement.agreementType.description}}</div>
+      <div class="textfield__content">{{getAgreementType agreement.agreementType}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Agreement Date</div>
@@ -113,11 +111,11 @@
 
     <div class="textfield">
       <div class="textfield__title">Range Name</div>
-      <div class="textfield__content">{{plan.rangeName}}</div>
+      <div class="textfield__content">{{handleNullValue plan.rangeName}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Alternative Business Name</div>
-      <div class="textfield__content">{{plan.alternateBusinessName}}</div>
+      <div class="textfield__content">{{handleNullValue plan.alternateBusinessName}}</div>
     </div>
   </div>
   <div class="cell-6">
@@ -128,19 +126,19 @@
     </div>
     <div class="textfield">
       <div class="textfield__title">Zone</div>
-      <div class="textfield__content">{{zone.code}}</div>
+      <div class="textfield__content">{{handleNullValue zone.code}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Name</div>
-      <div class="textfield__content">{{zone.contactName}}</div>
+      <div class="textfield__content">{{handleNullValue zone.contactName}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Phone</div>
-      <div class="textfield__content">{{zone.contactPhoneNumber}}</div>
+      <div class="textfield__content">{{handleNullValue zone.contactPhoneNumber}}</div>
     </div>
     <div class="textfield">
       <div class="textfield__title">Contact Email</div>
-      <div class="textfield__content">{{zone.contactEmail}}</div>
+      <div class="textfield__content">{{handleNullValue zone.contactEmail}}</div>
     </div>
   </div>
   
@@ -153,7 +151,7 @@
     </div>
     <div class="textfield">
       <div class="textfield__title">Extended</div>
-      <div class="textfield__content">No</div>
+      <div class="textfield__content">{{handleNullValue plan.extension}}</div>
     </div>
   </div>
   <div class="cell-6">
@@ -163,7 +161,7 @@
     </div>
     <div class="textfield">
       <div class="textfield__title">Exemption Status</div>
-      <div class="textfield__content">{{agreement.agreementExemptionStatus.description}}</div>
+      <div class="textfield__content">{{handleNullValue agreement.agreementExemptionStatus.description}}</div>
     </div>
   </div>
   
@@ -222,14 +220,14 @@
       {{#each this.grazingScheduleEntries}}
         <tr>
           <td>{{this.pasture.name}}</td>
-          <td>{{this.livestockType.nam}}</td>
+          <td>{{this.livestockType.name}}</td>
           <td>{{this.livestockCount}}</td>
           <td>{{getStandardDateFormat this.dateIn}}</td>
           <td>{{getStandardDateFormat this.dateOut}}</td>
           <td>{{getDaysOfGrazing this.dateIn this.dateOut}}</td>
           <td>{{this.graceDays}}</td>
-          <td>{{this.pasture.pldPercen}}</td>
-          <td>{{this.pasture.allowable}}</td>
+          <td>{{this.pasture.pldPercent}}</td>
+          <td>{{this.pasture.allowableAum}}</td>
         </tr>
       {{/each}}
     </table>

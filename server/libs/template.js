@@ -70,19 +70,6 @@ const asStandardDateFormat = (isoFormatDate) => {
 };
 
 /**
- * Capitalize the first letter for a string
- *
- * @param {String} string The string to be operated on
- * @returns A string with the first letter capitalized
- */
-export const capitalizeFirstLetter = (string) => {
-  if (!string) {
-    return '';
-  }
-  return string.charAt(0).toUpperCase() + string.slice(1);
-};
-
-/**
  * Convert the contact type / role to its string equivolent
  *
  * @param {Contact} contact The contact to be operated on
@@ -99,6 +86,13 @@ const contactRole = (contact) => {
   return 'Secondary';
 };
 
+const handleNullValue = (value) => {
+  if (!value) {
+    return NOT_PROVIDED;
+  }
+  return value;
+};
+
 /**
  * Convert the zone code / descriiption to its string equivolent
  *
@@ -113,6 +107,35 @@ const getDistrict = (zone) => {
     return `${zone.district.code} - ${zone.district.description}`;
   }
   return zone.district.code;
+};
+
+/**
+ * Convert the agreement type code / descriiption to its string equivolent
+ *
+ * @param {AgreementType} agreementType The zone to be operated on
+ * @returns The `String` representing the agreement type
+ */
+const getAgreementType = (agreementType) => {
+  if (!agreementType) {
+    return NOT_PROVIDED;
+  }
+  if (agreementType.description) {
+    return `${agreementType.code} - ${agreementType.description}`;
+  }
+  return agreementType.code;
+};
+
+/**
+ * Capitalize the first letter for a string
+ *
+ * @param {String} string The string to be operated on
+ * @returns A string with the first letter capitalized
+ */
+export const capitalizeFirstLetter = (string) => {
+  if (!string) {
+    return '';
+  }
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
 /**
@@ -176,6 +199,8 @@ export const compile = (source, context) => {
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
   handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
+  handlebars.registerHelper('handleNullValue', handleNullValue);
+  handlebars.registerHelper('getAgreementType', getAgreementType);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);

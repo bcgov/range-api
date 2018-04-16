@@ -247,16 +247,19 @@ export default class DataManager {
       },
     };
 
+    this.INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL = {
+      model: this.GrazingScheduleEntry,
+      include: [this.LivestockType, this.Pasture],
+      attributes: {
+        exclude: ['grazing_schedule_id', 'livestock_type_id'],
+      },
+    };
+
     this.INCLUDE_GRAZING_SCHEDULE_MODEL = {
       model: this.GrazingSchedule,
-      include: [{
-        model: this.GrazingScheduleEntry,
-        include: [this.LivestockType, this.Pasture],
-        attributes: {
-          exclude: ['grazing_schedule_id', 'livestock_type_id'],
-        },
-      }],
+      include: [this.INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
     };
+
     this.INCLUDE_USER_MODEL = {
       model: this.User,
     };
