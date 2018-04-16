@@ -42,15 +42,15 @@ const corsOptions = {
 
 module.exports = (app) => {
   app.use(cors(corsOptions));
-  app.use('/v1/ehlo', ehlo); // probes
+  app.use('/api/v1/ehlo', ehlo); // probes
   // authentication middleware for routes.
   app.use(passport.authenticate('jwt', { session: false }));
-  app.use('/v1/agreement', agreement);
-  app.use('/v1/client', client);
-  app.use('/v1/district', district);
-  app.use('/v1/plan', plan);
-  app.use('/v1/reference', reference);
-  app.use('/v1/zone', zone);
-  app.use('/v1/report', report);
-  app.use('/v1/user', user);
+  app.use('/api/v1/agreement', agreement);
+  app.use('/api/v1/client', client);
+  app.use('/api/v1/district', district);
+  app.use('/api/v1/plan', plan);
+  app.use('/api/v1/reference', reference);
+  app.use('/api/v1/zone', zone);
+  app.use('/api/v1/report', report);
+  app.use('/api/v1/user', user);
 };
