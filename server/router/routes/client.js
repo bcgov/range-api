@@ -39,16 +39,15 @@ const router = new Router();
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const clients = await Client.findAll({
-      include: [ClientType],
-      atrributes: {
-        exclude: ['client_type_id'],
-      },
+    // cause association error
+      // include: [ClientType],
+      // atrributes: {
+      //   exclude: ['client_type_id'],
+      // },
     });
     res.status(200).json(clients).end();
   } catch (err) {
-    res.status(500).json({
-      error: err,
-    }).end();
+    throw err;
   }
 }));
 
@@ -75,7 +74,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       res.status(404).json({ error: 'Not found' }).end();
     }
   } catch (err) {
-    res.status(500).json({ error: err }).end();
+    throw err;
   }
 }));
 

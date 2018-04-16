@@ -31,6 +31,7 @@ import { logger } from './logger';
 import {
   AGREEMENT_HOLDER_ROLE,
   REPORT_DEFAULTS,
+  NOT_PROVIDED,
 } from '../constants';
 
 if (process.platform === 'linux') {
@@ -60,16 +61,13 @@ const asYesOrNoValue = boolValue => boolValue ? 'YES' : 'NO';
  * @param {Date} isoFormatDate The date in ISO format
  * @returns A string with the reformated date
  */
-const asStandardDateFormat = isoFormatDate => moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
-  .format(REPORT_DEFAULTS.DATE_FORMAT);
-
-/**
- * Capitalize the first letter for a string
- *
- * @param {String} string The string to be operated on
- * @returns A string with the first letter capitalized
- */
-export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+const asStandardDateFormat = (isoFormatDate) => {
+  if (!isoFormatDate) {
+    return NOT_PROVIDED;
+  }
+  return moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
+    .format(REPORT_DEFAULTS.DATE_FORMAT);
+};
 
 /**
  * Convert the contact type / role to its string equivolent
@@ -78,11 +76,66 @@ export const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + 
  * @returns The `String` representing the contacts role
  */
 const contactRole = (contact) => {
+  if (!contact) {
+    return NOT_PROVIDED;
+  }
   if (contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY) {
     return 'Primary';
   }
 
   return 'Secondary';
+};
+
+const handleNullValue = (value) => {
+  if (!value) {
+    return NOT_PROVIDED;
+  }
+  return value;
+};
+
+/**
+ * Convert the zone code / descriiption to its string equivolent
+ *
+ * @param {Zone} zone The zone to be operated on
+ * @returns The `String` representing the district
+ */
+const getDistrict = (zone) => {
+  if (!zone) {
+    return NOT_PROVIDED;
+  }
+  if (zone.district && zone.district.description) {
+    return `${zone.district.code} - ${zone.district.description}`;
+  }
+  return zone.district.code;
+};
+
+/**
+ * Convert the agreement type code / descriiption to its string equivolent
+ *
+ * @param {AgreementType} agreementType The zone to be operated on
+ * @returns The `String` representing the agreement type
+ */
+const getAgreementType = (agreementType) => {
+  if (!agreementType) {
+    return NOT_PROVIDED;
+  }
+  if (agreementType.description) {
+    return `${agreementType.code} - ${agreementType.description}`;
+  }
+  return agreementType.code;
+};
+
+/**
+ * Capitalize the first letter for a string
+ *
+ * @param {String} string The string to be operated on
+ * @returns A string with the first letter capitalized
+ */
+export const capitalizeFirstLetter = (string) => {
+  if (!string) {
+    return '';
+  }
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
 /**
@@ -91,7 +144,7 @@ const contactRole = (contact) => {
  * @param {Contact} contact The contact to be operated on
  * @returns A `String` represeting the contact name in the format `First Last`
  */
-const conatactFullName = (contact) => {
+const contactFullName = (contact) => {
   const [lastName, firstName] = contact.name
     .split(',')
     .map(string => string.toLowerCase())
@@ -109,7 +162,21 @@ export const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientAgreement.clientTypeId === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
-  return conatactFullName(pcontact);
+  return contactFullName(pcontact);
+};
+
+/**
+ * Calculate the number of days between the date in and out
+ *
+ * @param {Date} dateIn The date in ISO format
+ * @param {Date} dateOut The date in ISO format
+ * @returns A number
+ */
+export const getDaysOfGrazing = (dateIn, dateOut) => {
+  if ((dateIn instanceof Date) && (dateOut instanceof Date)) {
+    return dateOut.getDate() - dateIn.getDate();
+  }
+  return NOT_PROVIDED;
 };
 
 //
@@ -126,10 +193,14 @@ export const primaryContactFullName = (contacts) => {
  */
 export const compile = (source, context) => {
   handlebars.registerHelper('getContactRole', contactRole);
-  handlebars.registerHelper('getContactFullName', conatactFullName);
+  handlebars.registerHelper('getDistrict', getDistrict);
+  handlebars.registerHelper('getContactFullName', contactFullName);
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
   handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
+  handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
+  handlebars.registerHelper('handleNullValue', handleNullValue);
+  handlebars.registerHelper('getAgreementType', getAgreementType);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);

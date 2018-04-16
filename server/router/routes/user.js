@@ -1,3 +1,4 @@
+
 //
 // MYRA
 //
@@ -15,7 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-01-18.
+// Created by Kyubin Han on 2018-04-12.
 //
 
 /* eslint-env es6 */
@@ -30,58 +31,18 @@ import DataManager from '../../libs/db';
 
 const dm = new DataManager(config);
 const {
-  Zone,
   User,
-  INCLUDE_DISTRICT_MODEL,
-  INCLUDE_USER_MODEL,
 } = dm;
 
 const router = new Router();
 
 // Get
 router.get('/', asyncMiddleware(async (req, res) => {
-  const {
-    districtId,
-  } = req.query;
-
   try {
-    const where = {};
-    if (districtId) {
-      where.districtId = districtId;
-    }
-
-    const zones = await Zone.findAll({
-      include: [INCLUDE_DISTRICT_MODEL, INCLUDE_USER_MODEL],
-      where,
-    });
-    res.status(200).json(zones).end();
+    const users = await User.findAll();
+    res.status(200).json(users).end();
   } catch (error) {
     throw error;
-  }
-}));
-
-router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
-  const {
-    zoneId,
-  } = req.params;
-
-  const {
-    userId,
-  } = req.body;
-
-  try {
-    const zone = await Zone.findById(zoneId);
-    if (!zone) {
-      throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
-    }
-    const user = await User.findById(userId);
-    if (!user) {
-      throw errorWithCode(`No user with ID ${userId} exists`, 404);
-    }
-    await zone.setUser(user);
-    res.status(200).json(user).end();
-  } catch (err) {
-    throw err;
   }
 }));
 

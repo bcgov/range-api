@@ -72,20 +72,6 @@ const transformClients = (clients, clientTypes) => {
 };
 
 /**
- * Add `Zone` filtering by userId accounting for Administrative privledges.
- *
- * @param {User} user The user to filter on.
- * @returns The `Zone` with the apropriate filtering via the where clause.
- */
-const filterZonesOnUser = (user) => {
-  if (!user.isAdministrator()) {
-    return { INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-  }
-
-  return INCLUDE_ZONE_MODEL;
-};
-
-/**
  * Transform the structure of an Agreement to match the API spec
  *
  * @param {Agreement} agreement The agreement object containing the clients
@@ -104,16 +90,45 @@ const transformAgreement = (agreement, clientTypes) => {
 // Routes
 //
 
-// Get all agreements
+// Get all agreements based on the user type
 router.get('/', asyncMiddleware(async (req, res) => {
-  const { term = '', limit, page } = req.query;
+  try {
+    const clientTypes = await ClientType.findAll();
+    const agreements = await Agreement.findAll({
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
+      attributes: {
+        exclude: EXCLUDED_AGREEMENT_ATTR,
+      },
+    });
 
-  const offset = (page && limit) ? limit * (page - 1) : 0;
+    // apply and transforms to the data structure.
+    const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
+    res.status(200).json(transformedAgreements).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// Search agreements by RAN, contact name, and client name.
+router.get('/search', asyncMiddleware(async (req, res) => {
+  const { term = '', limit = 10, page = 1 } = req.query;
+
+  const offset = limit * (page - 1);
   const where = {
     [Op.or]: [
       {
         id: {
           [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
+        },
+      },
+      {
+        '$zone.contact_name$': {
+          [Op.iLike]: `%${term}%`,
+        },
+      },
+      {
+        '$clients.name$': {
+          [Op.iLike]: `%${term}%`,
         },
       },
     ],
@@ -124,27 +139,24 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
       offset,
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
+      attributes: [
+        dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
+        'id',
+      ],
       where,
       distinct: true, // get the distinct number of agreements
+      subQuery: false, // prevent from putting LIMIT and OFFSET in sub query
     });
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
 
-    let result;
-    if (page) {
-      result = {
-        perPage: Number(limit) || 1,
-        currentPage: Number(page),
-        totalPage: Math.ceil(totalCount / limit) || 1,
-        agreements: transformedAgreements,
-      };
-    } else {
-      result = transformedAgreements;
-    }
+    const result = {
+      perPage: Number(limit),
+      currentPage: Number(page),
+      totalPage: Math.ceil(totalCount / limit) || 1,
+      agreements: transformedAgreements,
+    };
 
     res.status(200).json(result).end();
   } catch (err) {
@@ -163,7 +175,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(filterZonesOnUser(req.user)),
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
@@ -198,7 +210,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
       where: {
         id,
       },
-      include: STANDARD_INCLUDE_NO_ZONE.concat(INCLUDE_ZONE_MODEL), // no filtering for now.
+      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()], // no filtering for now.
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },

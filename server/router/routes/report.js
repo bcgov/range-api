@@ -35,7 +35,7 @@ import {
   compile,
 } from '../../libs/template';
 import { logger } from '../../libs/logger';
-import { TEMPLATES } from '../../constants';
+import { TEMPLATES, NOT_PROVIDED } from '../../constants';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
@@ -43,7 +43,7 @@ const router = new Router();
 const dm = new DataManager(config);
 const {
   Agreement,
-  INCLUDE_ZONE_MODEL,
+  GrazingSchedule,
   INCLUDE_CLIENT_MODEL,
   INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
   INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
@@ -51,30 +51,25 @@ const {
   INCLUDE_USAGE_MODEL,
   INCLUDE_AGREEMENT_TYPE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
+  INCLUDE_ZONE_MODEL,
+  INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL,
 } = dm;
 
 //
 // PDF
 //
 
-const filterZonesOnUser = (user) => {
-  if (!user.isAdministrator()) {
-    return { ...INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-  }
-
-  return INCLUDE_ZONE_MODEL;
-};
-
 router.get('/:planId/', asyncMiddleware(async (req, res) => {
   const {
-    planId,
+    planId: pId,
   } = req.params;
+  const planId = Number(pId);
 
   try {
     const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
     const myIncludes = [INCLUDE_CLIENT_MODEL, INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
-      myPlan, filterZonesOnUser(req.user)];
+      myPlan, INCLUDE_ZONE_MODEL(req.user)];
     const agreement = (await Agreement.findOne({
       include: myIncludes,
       attributes: {
@@ -86,10 +81,26 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
     }
 
-    // console.log(agreement);
+    const plan = agreement.plans.find(p => p.id === planId);
+    const grazingSchedules = await GrazingSchedule.findAll({
+      include: [INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
+      where: {
+        plan_id: planId,
+      },
+    });
+    const { zone } = agreement;
+    const { pastures } = plan;
+    agreement.clients
+      .sort((a, b) => a.clientAgreement.clientTypeId > b.clientAgreement.clientTypeId);
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
-    const html = await compile(template, { agreement });
+    const html = await compile(template, {
+      agreement,
+      plan,
+      zone,
+      pastures,
+      grazingSchedules,
+    });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);
 

@@ -38,6 +38,21 @@ export default class DataManager {
     this.setupIncludeAttributes();
   }
 
+  /**
+   * Add `Zone` filtering by userId accounting for Administrative privledges.
+   *
+   * @param {Zone} model The model to be operated on.
+   * @param {User} user The user to filter on.
+   * @returns The `Zone` with the apropriate filtering via the where clause.
+   */
+  zoneIncludeForUserRole(user) {
+    if (!user.isAdministrator()) {
+      return { ...this.INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+    }
+
+    return this.INCLUDE_ZONE_MODEL;
+  }
+
   loadModels() {
     fs.readdirSync(path.join(__dirname, 'models'))
       .filter(file => (file.indexOf('.') !== 0) && (file !== 'index.js'))
@@ -122,7 +137,7 @@ export default class DataManager {
     // Agreements and Grazing Schedule
     //
 
-    this.Plan.belongsToMany(this.GrazingSchedule, { through: 'plan_grazing_schedule' });
+    this.Plan.hasMany(this.GrazingSchedule);
 
     //
     // GrazingScheduleEntry, Grazing Schedule, LivestockType
@@ -173,12 +188,27 @@ export default class DataManager {
       },
     };
 
-    this.INCLUDE_ZONE_MODEL = {
-      model: this.Zone,
-      include: [this.INCLUDE_DISTRICT_MODEL],
-      attributes: {
-        exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
-      },
+    /**
+     * Add `Zone` filtering by userId accounting for Administrative privledges.
+     *
+     * @param {Zone} model The model to be operated on.
+     * @param {User} user The user to filter on.
+     * @returns The `Zone` with the apropriate filtering via the where clause.
+     */
+    this.INCLUDE_ZONE_MODEL = (user) => {
+      const BASIC_INCLUDE_ZONE_MODEL = {
+        model: this.Zone,
+        include: [this.INCLUDE_DISTRICT_MODEL],
+        attributes: {
+          exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
+        },
+      };
+
+      if (user && !user.isAdministrator()) {
+        return { ...BASIC_INCLUDE_ZONE_MODEL, where: { userId: user.id } };
+      }
+
+      return BASIC_INCLUDE_ZONE_MODEL;
     };
 
     this.INCLUDE_CLIENT_MODEL = {
@@ -217,15 +247,21 @@ export default class DataManager {
       },
     };
 
+    this.INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL = {
+      model: this.GrazingScheduleEntry,
+      include: [this.LivestockType, this.Pasture],
+      attributes: {
+        exclude: ['grazing_schedule_id', 'livestock_type_id'],
+      },
+    };
+
     this.INCLUDE_GRAZING_SCHEDULE_MODEL = {
       model: this.GrazingSchedule,
-      include: [{
-        model: this.GrazingScheduleEntry,
-        include: [this.LivestockType, this.Pasture],
-        attributes: {
-          exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
-        },
-      }],
+      include: [this.INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
+    };
+
+    this.INCLUDE_USER_MODEL = {
+      model: this.User,
     };
 
     this.EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];

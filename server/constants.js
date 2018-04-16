@@ -40,3 +40,5 @@ export const AGREEMENT_HOLDER_ROLE = {
 export const REPORT_DEFAULTS = {
   DATE_FORMAT: 'MMMM Do, YYYY',
 };
+
+export const NOT_PROVIDED = 'Not provided';
