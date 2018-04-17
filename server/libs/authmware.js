@@ -137,11 +137,17 @@ const authmware = async (app) => {
         where: {
           username: jwtPayload.preferred_username,
         },
-        include: [UserRole],
       });
 
       if (user) {
-        return done(null, user);
+        // User roles are assigned on SSO and extracted from the JWT. We
+        // see the User object for additional functionality.
+        const roles = jwtPayload.resource_access[config.get('sso:clientId')];
+        if (!roles) {
+          done(errorWithCode('This user has no roles', 401), false);
+        }
+
+        return done(null, { ...user, roles });
       }
 
       return done(errorWithCode('No such user', 401), false);
