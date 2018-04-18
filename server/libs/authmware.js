@@ -55,13 +55,13 @@ const authmware = async (app) => {
 
   // We don't store any user information.
   passport.serializeUser((user, done) => {
-    console.log('serial');
+    logger.info('serialize');
     done(null, {});
   });
 
   // We don't load any addtional user information.
   passport.deserializeUser((id, done) => {
-    console.log('deserial');
+    logger.info('deserial');
     done(null, {});
   });
 
@@ -141,12 +141,12 @@ const authmware = async (app) => {
       if (user) {
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
-        const roles = jwtPayload.resource_access[config.get('sso:clientId')];
+        const { roles } = jwtPayload.resource_access[config.get('sso:clientId')];
         if (!roles) {
           done(errorWithCode('This user has no roles', 401), false);
         }
 
-        return done(null, { ...user, roles });
+        return done(null, Object.assign(user, { roles }));
       }
 
       return done(errorWithCode('No such user', 401), false);
