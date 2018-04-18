@@ -35,7 +35,7 @@ import {
   compile,
 } from '../../libs/template';
 import { logger } from '../../libs/logger';
-import { TEMPLATES, NOT_PROVIDED } from '../../constants';
+import { TEMPLATES } from '../../constants';
 import config from '../../config';
 import DataManager from '../../libs/db';
 
