@@ -197,8 +197,8 @@
               ],
               "resources": {
                 "limits": {
-                  "memory": "${MEMORY_LIMIT}",
-                  "cpu": "${CPU_LIMIT}"
+                  "memory": "${API_MEMORY_LIMIT}",
+                  "cpu": "${API_CPU_LIMIT}"
                 }
               }
             }]
@@ -361,7 +361,7 @@
                 },
                 "resources": {
                   "limits": {
-                    "memory": "${MEMORY_POSTGRESQL_LIMIT}"
+                    "memory": "${POSTGRESQL_MEMORY_LIMIT}"
                   }
                 }
               }
@@ -415,21 +415,21 @@
       "value": "range-myra-test"
     },
     {
-      "name": "MEMORY_LIMIT",
+      "name": "API_MEMORY_LIMIT",
       "displayName": "Memory Limit",
       "required": true,
       "description": "Maximum amount of memory the container can use.",
       "value": "1Gi"
     },
     {
-      "name": "CPU_LIMIT",
+      "name": "API_CPU_LIMIT",
       "displayName": "CPU core Limit",
       "required": true,
       "description": "Maximum amount of CPU core the container can use.",
       "value": "1"
     },
     {
-      "name": "MEMORY_POSTGRESQL_LIMIT",
+      "name": "POSTGRESQL_MEMORY_LIMIT",
       "displayName": "Memory Limit (PostgreSQL)",
       "required": true,
       "description": "Maximum amount of memory the PostgreSQL container can use.",
