@@ -228,6 +228,9 @@
       "apiVersion": "v1",
       "metadata": {
         "name": "${DATABASE_SERVICE_NAME}",
+        "labels": {
+          "app": "${DATABASE_SERVICE_NAME}"
+        },
         "annotations": {
           "description": "Exposes the database server"
         }
@@ -235,13 +238,14 @@
       "spec": {
         "ports": [
           {
-            "name": "${DATABASE_SERVICE_NAME}",
+            "name": "5432-tcp",
             "port": 5432,
+            "protocol": "TCP",
             "targetPort": 5432
           }
         ],
         "selector": {
-          "name": "${DATABASE_SERVICE_NAME}"
+          "deploymentconfig": "${DATABASE_SERVICE_NAME}"
         }
       }
     },
