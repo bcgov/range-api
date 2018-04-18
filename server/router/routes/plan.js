@@ -47,9 +47,10 @@ const {
 const router = new Router();
 
 router.post('/', asyncMiddleware(async (req, res) => {
+  const { createdAt, updatedAt, ...body } = req.body;
   const {
     agreementId,
-  } = req.body;
+  } = body;
 
   try {
     const agreement = await Agreement.findOne({
@@ -69,8 +70,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
       },
       include: STANDARD_PLAN_INCLUDE,
     };
-
-    const plan = await Plan.create(req.body, options);
+    const plan = await Plan.create(body, options);
     await agreement.addPlan(plan);
     await agreement.save();
 
@@ -93,7 +93,13 @@ const createAndUpdatePastures = async (plan, body) => {
   });
 
   await Promise.all(pastures.map(async (p) => {
-    const pasture = await Pasture.create(p);
+    const {
+      createdAt,
+      updatedAt,
+      ...pastureBody
+    } = p;
+
+    const pasture = await Pasture.create(pastureBody);
     if (pasture) {
       await plan.addPasture(pasture);
     }
@@ -101,7 +107,13 @@ const createAndUpdatePastures = async (plan, body) => {
 
   // this doens't works since the client doesn't send pastures with id(this can be used later)
   // await Promise.all(pastures.map(async (p) => {
-  //   const { pasture, isCreated } = await Pasture.upsert(p, { returning: true });
+  //   const {
+  //     createdAt,
+  //     updatedAt,
+  //     ...pastureBody
+  //   } = p;
+
+  //   const { pasture, isCreated } = await Pasture.upsert(pastureBody, { returning: true });
   //   if (isCreated) {
   //     await plan.addPasture(pasture);
   //   }
@@ -113,15 +125,19 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     planId,
   } = req.params;
 
-  // don't allow to change the relationship with the agreement
-  delete req.body.agreementId;
+  const {
+    createdAt,
+    updatedAt,
+    agreementId, // don't allow to change the relationship with the agreement
+    ...body
+  } = req.body;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
   }
 
   try {
-    const [affectedCount] = await Plan.update(req.body, {
+    const [affectedCount] = await Plan.update(body, {
       where: {
         id: planId,
       },
@@ -132,7 +148,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     }
 
     const plan = await Plan.findById(planId);
-    await createAndUpdatePastures(plan, req.body);
+    await createAndUpdatePastures(plan, body);
 
     const options = {
       attributes: {
@@ -196,8 +212,11 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 
 router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
   const {
-    body,
-  } = req;
+    createdAt,
+    updatedAt,
+    ...body
+  } = req.body;
+
   const {
     planId,
   } = req.params;
@@ -228,9 +247,15 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
   } = req.params;
 
   const {
+    createdAt,
+    updatedAt,
+    ...body
+  } = req.body;
+
+  const {
     year,
     grazingScheduleEntries,
-  } = req.body;
+  } = body;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
@@ -256,7 +281,7 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
       throw errorWithCode('plan not found', 404);
     }
 
-    const schedule = await GrazingSchedule.create(req.body);
+    const schedule = await GrazingSchedule.create(body);
     const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
       return GrazingScheduleEntry.create({ ...entry, grazingScheduleId: schedule.id });
     });

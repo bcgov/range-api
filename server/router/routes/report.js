@@ -117,7 +117,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       });
     }
 
-    res.contentType('application/octet-stream');
+    res.contentType('application/pdf');
 
     return res.end(buffer, 'binary');
   } catch (err) {

@@ -271,7 +271,7 @@ export default class DataManager {
         exclude: this.EXCLUDED_PLAN_ATTR,
       },
       order: [
-        ['create_at', 'DESC'],
+        ['created_at', 'DESC'],
       ],
       include: [
         this.INCLUDE_PLAN_STATUS_MODEL,

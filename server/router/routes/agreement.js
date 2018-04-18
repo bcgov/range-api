@@ -40,11 +40,13 @@ const {
   ClientType,
   Agreement,
   Zone,
+  Plan,
   LivestockIdentifier,
   STANDARD_INCLUDE_NO_ZONE,
   EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
+  INCLUDE_PLAN_MODEL,
 } = dm;
 
 //
@@ -148,8 +150,17 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       distinct: true, // get the distinct number of agreements
       subQuery: false, // prevent from putting LIMIT and OFFSET in sub query
     });
+
     // apply and transforms to the data structure.
-    const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
+    const transformedAgreements = await Promise.all(agreements.map(async (agreement) => {
+      const { model, ...options } = INCLUDE_PLAN_MODEL;
+      options.where = {
+        agreementId: agreement.id,
+      };
+      const plans = await Plan.findAll(options);
+
+      return { ...transformAgreement(agreement, clientTypes), plans };
+    }));
 
     const result = {
       perPage: Number(limit),
@@ -179,6 +190,9 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
+      order: [
+        ['plans', 'createdAt', 'DESC'],
+      ],
     });
 
     if (agreement) {
@@ -201,8 +215,10 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
   } = req.params;
 
   const {
-    body,
-  } = req;
+    createdAt,
+    updatedAt,
+    ...body
+  } = req.body;
 
   try {
     const clientTypes = await ClientType.findAll();
@@ -302,10 +318,6 @@ router.post('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, re
     throw errorWithCode('agreementId must be provided in path', 400);
   }
 
-  const {
-    body,
-  } = req;
-
   // TODO: validate fields in body
   try {
     const agreement = await Agreement.findOne({
@@ -313,7 +325,7 @@ router.post('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, re
         agreementId,
       },
     });
-
+    const { createdAt, updatedAt, ...body } = req.body;
     const livestockIdentifier = await LivestockIdentifier.create(body);
 
     await agreement.addLivestockIdentifier(livestockIdentifier);
