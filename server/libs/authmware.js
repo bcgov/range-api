@@ -147,6 +147,10 @@ const authmware = async (app) => {
           done(errorWithCode('This user has no valid roles', 403), false);
         }
 
+        // Update the last-login time of this user.
+        user.lastLoginAt = new Date();
+        await user.save();
+
         return done(null, Object.assign(user, { roles }));
       }
 
