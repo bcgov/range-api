@@ -42,8 +42,8 @@ export const REPORT_DEFAULTS = {
 };
 
 export const SSO_ROLE_MAP = {
-  ADMINISTRATOR: '',
-  RANGE_OFFICER: '',
+  ADMINISTRATOR: 'myra_admin',
+  RANGE_OFFICER: 'myra_range_officer',
 };
 
 export const NOT_PROVIDED = 'Not provided';
