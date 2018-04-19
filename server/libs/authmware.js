@@ -32,6 +32,7 @@ import config from '../config';
 import DataManager from './db';
 import { logger } from './logger';
 import { errorWithCode } from './utils';
+import { SSO_ROLE_MAP } from '../constants';
 
 const dm = new DataManager(config);
 const {
@@ -142,8 +143,8 @@ const authmware = async (app) => {
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
         const { roles } = jwtPayload.resource_access[config.get('sso:clientId')];
-        if (!roles) {
-          done(errorWithCode('This user has no roles', 401), false);
+        if (!roles || !Object.values(SSO_ROLE_MAP).some(item => roles.includes(item))) {
+          done(errorWithCode('This user has no valid roles', 403), false);
         }
 
         return done(null, Object.assign(user, { roles }));
