@@ -22,6 +22,8 @@
 
 'use strict';
 
+import { SSO_ROLE_MAP } from '../../../constants';
+
 export default (sequelize, DataTypes) => {
   const User = sequelize.define('user', {
     id: {
@@ -77,7 +79,7 @@ export default (sequelize, DataTypes) => {
   /* eslint-disable func-names, arrow-body-style */
 
   User.prototype.isAdministrator = function () {
-    return this.roleId === 1;
+    return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
   };
 
   return User;

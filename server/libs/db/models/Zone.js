@@ -42,18 +42,6 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(64),
       allowNull: false,
     },
-    contactName: {
-      field: 'contact_name',
-      type: DataTypes.STRING(32),
-    },
-    contactPhoneNumber: {
-      field: 'contact_phone',
-      type: DataTypes.STRING(16),
-    },
-    contactEmail: {
-      field: 'contact_email',
-      type: DataTypes.STRING(32),
-    },
     districtId: {
       type: DataTypes.INTEGER,
       field: 'district_id',

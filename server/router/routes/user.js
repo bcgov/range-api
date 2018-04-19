@@ -24,7 +24,7 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware, errorWithCode } from '../../libs/utils';
+import { asyncMiddleware } from '../../libs/utils';
 
 import config from '../../config';
 import DataManager from '../../libs/db';

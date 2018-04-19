@@ -41,4 +41,9 @@ export const REPORT_DEFAULTS = {
   DATE_FORMAT: 'MMMM Do, YYYY',
 };
 
+export const SSO_ROLE_MAP = {
+  ADMINISTRATOR: 'myra_admin',
+  RANGE_OFFICER: 'myra_range_officer',
+};
+
 export const NOT_PROVIDED = 'Not provided';
