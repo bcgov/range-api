@@ -198,7 +198,7 @@ export default class DataManager {
     this.INCLUDE_ZONE_MODEL = (user) => {
       const BASIC_INCLUDE_ZONE_MODEL = {
         model: this.Zone,
-        include: [this.INCLUDE_DISTRICT_MODEL],
+        include: [this.INCLUDE_DISTRICT_MODEL, this.INCLUDE_USER_MODEL],
         attributes: {
           exclude: ['districtId', 'createdAt', 'updatedAt', 'user_id', 'district_id'],
         },

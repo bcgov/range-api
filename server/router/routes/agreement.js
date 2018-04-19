@@ -124,7 +124,12 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         },
       },
       {
-        '$zone.contact_name$': {
+        '$zone.user.given_name$': {
+          [Op.iLike]: `%${term}%`,
+        },
+      },
+      {
+        '$zone.user.family_name$': {
           [Op.iLike]: `%${term}%`,
         },
       },
