@@ -46,6 +46,22 @@ const {
 
 const router = new Router();
 
+router.get('/:planId', asyncMiddleware(async (req, res) => {
+  const {
+    planId: pId,
+  } = req.params;
+  const planId = Number(pId);
+  const options = {
+    attributes: {
+      exclude: EXCLUDED_PLAN_ATTR,
+    },
+    include: STANDARD_PLAN_INCLUDE,
+  };
+  const plan = await Plan.findById(planId, options);
+
+  return res.status(200).json(plan).end();
+}));
+
 router.post('/', asyncMiddleware(async (req, res) => {
   const { createdAt, updatedAt, ...body } = req.body;
   const {

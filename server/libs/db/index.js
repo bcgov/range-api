@@ -265,6 +265,11 @@ export default class DataManager {
     };
 
     this.EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
+    this.STANDARD_PLAN_INCLUDE = [
+      this.INCLUDE_PLAN_STATUS_MODEL,
+      this.INCLUDE_PASTURE_MODEL,
+      this.INCLUDE_GRAZING_SCHEDULE_MODEL,
+    ];
     this.INCLUDE_PLAN_MODEL = {
       model: this.Plan,
       attributes: {
@@ -273,17 +278,8 @@ export default class DataManager {
       order: [
         ['created_at', 'DESC'],
       ],
-      include: [
-        this.INCLUDE_PLAN_STATUS_MODEL,
-        this.INCLUDE_PASTURE_MODEL,
-        this.INCLUDE_GRAZING_SCHEDULE_MODEL,
-      ],
+      include: this.STANDARD_PLAN_INCLUDE,
     };
-    this.STANDARD_PLAN_INCLUDE = [
-      this.INCLUDE_PLAN_STATUS_MODEL,
-      this.INCLUDE_PASTURE_MODEL,
-      this.INCLUDE_GRAZING_SCHEDULE_MODEL,
-    ];
 
     this.INCLUDE_USAGE_MODEL = {
       model: this.Usage,
