@@ -45,19 +45,19 @@ const {
 } = dm;
 
 const router = new Router();
+const planQueryOptions = {
+  attributes: {
+    exclude: EXCLUDED_PLAN_ATTR,
+  },
+  include: STANDARD_PLAN_INCLUDE,
+};
 
 router.get('/:planId', asyncMiddleware(async (req, res) => {
   const {
     planId: pId,
   } = req.params;
   const planId = Number(pId);
-  const options = {
-    attributes: {
-      exclude: EXCLUDED_PLAN_ATTR,
-    },
-    include: STANDARD_PLAN_INCLUDE,
-  };
-  const plan = await Plan.findById(planId, options);
+  const plan = await Plan.findById(planId, planQueryOptions);
 
   return res.status(200).json(plan).end();
 }));
@@ -80,17 +80,11 @@ router.post('/', asyncMiddleware(async (req, res) => {
       throw errorWithCode('agreement not found', 404);
     }
 
-    const options = {
-      attributes: {
-        exclude: EXCLUDED_PLAN_ATTR,
-      },
-      include: STANDARD_PLAN_INCLUDE,
-    };
-    const plan = await Plan.create(body, options);
+    const plan = await Plan.create(body, planQueryOptions);
     await agreement.addPlan(plan);
     await agreement.save();
 
-    const createdPlan = await Plan.findById(plan.id, options);
+    const createdPlan = await Plan.findById(plan.id, planQueryOptions);
 
     return res.status(200).json(createdPlan).end();
   } catch (err) {
@@ -166,13 +160,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     const plan = await Plan.findById(planId);
     await createAndUpdatePastures(plan, body);
 
-    const options = {
-      attributes: {
-        exclude: EXCLUDED_PLAN_ATTR,
-      },
-      include: STANDARD_PLAN_INCLUDE,
-    };
-    const updatedPlan = await Plan.findById(planId, options);
+    const updatedPlan = await Plan.findById(planId, planQueryOptions);
 
     return res.status(200).json(updatedPlan).end();
   } catch (err) {
