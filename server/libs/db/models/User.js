@@ -50,6 +50,10 @@ export default (sequelize, DataTypes) => {
       unique: true,
       type: DataTypes.STRING(32),
     },
+    phone: {
+      field: 'phone_number',
+      type: DataTypes.STRING(32),
+    },
     roleId: {
       field: 'role_id',
       allowNull: false,
