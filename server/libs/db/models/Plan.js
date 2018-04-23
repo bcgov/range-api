@@ -35,6 +35,10 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(32),
       allowNull: false,
     },
+    alternativeBusinessName: {
+      field: 'alt_business_name',
+      type: DataTypes.STRING(32),
+    },
     planStartDate: {
       field: 'plan_start_date',
       type: DataTypes.DATE,
