@@ -37,8 +37,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
     },
     year: {
-      type: DataTypes.STRING(4),
-      is: /^([0-9]){4}$/i,
+      type: DataTypes.SMALLINT,
       allowNull: false,
     },
     narative: {
