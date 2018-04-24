@@ -38,6 +38,6 @@ module.exports = {
     );
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn(table, 'last_login_at');
+    await queryInterface.removeColumn(table, 'alt_business_name');
   },
 };
