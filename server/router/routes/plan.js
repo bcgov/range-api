@@ -31,26 +31,27 @@ import {
 import config from '../../config';
 import DataManager from '../../libs/db';
 
+const router = new Router();
 const dm = new DataManager(config);
 const {
+  transformAgreement,
+  ClientType,
   Pasture,
   Plan,
   PlanStatus,
   Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
-  EXCLUDED_PLAN_ATTR,
-  STANDARD_PLAN_INCLUDE,
+  INCLUDE_PLAN_MODEL,
   INCLUDE_ZONE_MODEL,
+  INCLUDE_CLIENT_MODEL,
+  INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+  INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
+  INCLUDE_USAGE_MODEL,
+  INCLUDE_AGREEMENT_TYPE_MODEL,
 } = dm;
 
-const router = new Router();
-const planQueryOptions = {
-  attributes: {
-    exclude: EXCLUDED_PLAN_ATTR,
-  },
-  include: STANDARD_PLAN_INCLUDE,
-};
+const { model, ...planQueryOptions } = INCLUDE_PLAN_MODEL;
 
 router.get('/:planId', asyncMiddleware(async (req, res) => {
   const {
@@ -58,8 +59,17 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
   } = req.params;
   const planId = Number(pId);
   const plan = await Plan.findById(planId, planQueryOptions);
-
-  return res.status(200).json(plan).end();
+  const clientTypes = await ClientType.findAll();
+  const agreement = await Agreement.findById(plan.agreementId, {
+    include: [
+      INCLUDE_CLIENT_MODEL,
+      INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+      INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
+      INCLUDE_USAGE_MODEL,
+      INCLUDE_AGREEMENT_TYPE_MODEL,
+    ],
+  });
+  return res.status(200).json({ ...transformAgreement(agreement, clientTypes), plan }).end();
 }));
 
 router.post('/', asyncMiddleware(async (req, res) => {
