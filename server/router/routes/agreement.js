@@ -47,6 +47,7 @@ const {
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
   INCLUDE_PLAN_MODEL,
+  INCLUDE_USER_MODEL,
 } = dm;
 
 //
@@ -114,34 +115,43 @@ router.get('/', asyncMiddleware(async (req, res) => {
 // Search agreements by RAN, contact name, and client name.
 router.get('/search', asyncMiddleware(async (req, res) => {
   const { term = '', limit = 10, page = 1 } = req.query;
-
   const offset = limit * (page - 1);
-  const where = {
-    [Op.or]: [
-      {
-        id: {
-          [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
-        },
-      },
-      {
-        '$zone.user.given_name$': {
-          [Op.iLike]: `%${term}%`,
-        },
-      },
-      {
-        '$zone.user.family_name$': {
-          [Op.iLike]: `%${term}%`,
-        },
-      },
-      {
-        '$clients.name$': {
-          [Op.iLike]: `%${term}%`,
-        },
-      },
-    ],
-  };
 
   try {
+    // fetch all the zones where the User's first or last name matches the
+    // search term.
+    const codes = await Zone.findAll({
+      where: {
+        user_id: {
+          [Op.ne]: null,
+        },
+      },
+      include: [INCLUDE_USER_MODEL],
+    })
+      .filter((zone) => {
+        const rx = new RegExp(`(?=.*${zone.user.givenName})|(?=.*${zone.user.familyName})`, 'ig');
+        return rx.test(term);
+      })
+      .map(zone => zone.code);
+    // This `where` clause will match the Agreement ID (forest file ID), or a Zone with
+    // a matching User (see above), or a matching Client.
+    const where = {
+      [Op.or]: [
+        {
+          id: {
+            [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
+          },
+        },
+        {
+          '$zone.code$': codes, // limit scope of Zones
+        },
+        {
+          '$clients.name$': {
+            [Op.iLike]: `%${term}%`,
+          },
+        },
+      ],
+    };
     const clientTypes = await ClientType.findAll();
     const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
       limit,
