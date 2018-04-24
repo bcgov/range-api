@@ -46,6 +46,7 @@ const {
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
   INCLUDE_USER_MODEL,
+  INCLUDE_CLIENT_MODEL,
 } = dm;
 
 //
@@ -112,7 +113,9 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Search agreements by RAN, contact name, and client name.
 router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '', limit = 10, page = 1 } = req.query;
+  const { term = '', limit: l = 10, page: p = 1 } = req.query;
+  const page = Number(p);
+  const limit = Number(l);
   const offset = limit * (page - 1);
 
   try {
@@ -152,13 +155,13 @@ router.get('/search', asyncMiddleware(async (req, res) => {
     };
     const clientTypes = await ClientType.findAll();
     const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
-      limit,
-      offset,
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
       attributes: [
         dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
         'id',
       ],
+      include: [INCLUDE_ZONE_MODEL(), INCLUDE_CLIENT_MODEL],
+      limit,
+      offset,
       where,
       distinct: true, // get the distinct number of agreements
       subQuery: false, // prevent from putting LIMIT and OFFSET in sub query
@@ -176,8 +179,9 @@ router.get('/search', asyncMiddleware(async (req, res) => {
     }));
 
     const result = {
-      perPage: Number(limit),
-      currentPage: Number(page),
+      perPage: limit,
+      currentPage: page,
+      totalItems: totalCount,
       totalPage: Math.ceil(totalCount / limit) || 1,
       agreements: transformedAgreements,
     };
