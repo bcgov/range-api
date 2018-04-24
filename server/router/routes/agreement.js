@@ -40,13 +40,11 @@ const {
   ClientType,
   Agreement,
   Zone,
-  Plan,
   LivestockIdentifier,
   STANDARD_INCLUDE_NO_ZONE,
   EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
-  INCLUDE_PLAN_MODEL,
   INCLUDE_USER_MODEL,
 } = dm;
 
@@ -168,13 +166,13 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
     // apply and transforms to the data structure.
     const transformedAgreements = await Promise.all(agreements.map(async (agreement) => {
-      const { model, ...options } = INCLUDE_PLAN_MODEL;
-      options.where = {
-        agreementId: agreement.id,
-      };
-      const plans = await Plan.findAll(options);
+      // Agreements from `findAndCountAll` dont' have a complete set of properties. We
+      // fetch a fresh copy by ID to work around this.
+      const myAgreement = await Agreement.findById(agreement.id, {
+        include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
+      });
 
-      return { ...transformAgreement(agreement, clientTypes), plans };
+      return { ...transformAgreement(myAgreement, clientTypes) };
     }));
 
     const result = {
