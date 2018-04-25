@@ -46,6 +46,7 @@ const {
   INCLUDE_DISTRICT_MODEL,
   INCLUDE_USER_MODEL,
   INCLUDE_CLIENT_MODEL,
+  INCLUDE_PLAN_MODEL,
   STANDARD_INCLUDE_NO_ZONE,
   EXCLUDED_AGREEMENT_ATTR,
 } = dm;
@@ -121,7 +122,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
         'id',
       ],
-      include: [INCLUDE_ZONE_MODEL(), INCLUDE_CLIENT_MODEL],
+      include: [INCLUDE_CLIENT_MODEL, INCLUDE_ZONE_MODEL()],
       limit,
       offset,
       where,
@@ -134,6 +135,9 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       // Agreements from `findAndCountAll` dont' have a complete set of properties. We
       // fetch a fresh copy by ID to work around this.
       const myAgreement = await Agreement.findById(agreement.id, {
+        attributes: {
+          exclude: EXCLUDED_AGREEMENT_ATTR,
+        },
         include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
       });
 

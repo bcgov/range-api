@@ -49,6 +49,7 @@ const {
   INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
   INCLUDE_USAGE_MODEL,
   INCLUDE_AGREEMENT_TYPE_MODEL,
+  EXCLUDED_AGREEMENT_ATTR,
 } = dm;
 
 const { model, ...planQueryOptions } = INCLUDE_PLAN_MODEL;
@@ -61,12 +62,16 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
   const plan = await Plan.findById(planId, planQueryOptions);
   const clientTypes = await ClientType.findAll();
   const agreement = await Agreement.findById(plan.agreementId, {
+    attributes: {
+      exclude: EXCLUDED_AGREEMENT_ATTR,
+    },
     include: [
       INCLUDE_CLIENT_MODEL,
       INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
       INCLUDE_USAGE_MODEL,
       INCLUDE_AGREEMENT_TYPE_MODEL,
+      INCLUDE_ZONE_MODEL(),
     ],
   });
   return res.status(200).json({ ...transformAgreement(agreement, clientTypes), plan }).end();
