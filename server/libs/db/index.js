@@ -76,7 +76,7 @@ export default class DataManager {
     //
     // User Role
     //
-    this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
+    // this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
 
     //
     // Client, Agreement

@@ -34,7 +34,7 @@ export default (sequelize, DataTypes) => {
     },
     username: {
       allowNull: false,
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(64),
       unique: true,
     },
     givenName: {
@@ -54,10 +54,10 @@ export default (sequelize, DataTypes) => {
       field: 'phone_number',
       type: DataTypes.STRING(32),
     },
-    roleId: {
-      field: 'role_id',
+    active: {
       allowNull: false,
-      type: DataTypes.INTEGER,
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     lastLoginAt: {
       field: 'last_login_at',
