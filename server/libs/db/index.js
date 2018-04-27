@@ -322,7 +322,6 @@ export default class DataManager {
     this.EXCLUDED_AGREEMENT_ATTR = [
       'agreementTypeId',
       'zoneId',
-      'zone_id',
       'agreementExemptionStatusId',
     ];
   }
