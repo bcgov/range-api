@@ -37,6 +37,12 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING(64),
       unique: true,
     },
+    clientId: {
+      type: DataTypes.STRING(8),
+      field: 'client_id',
+      allowNull: false,
+      unique: true,
+    },
     givenName: {
       field: 'given_name',
       type: DataTypes.STRING(32),
@@ -89,6 +95,14 @@ export default (sequelize, DataTypes) => {
 
   User.prototype.isAdministrator = function () {
     return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
+  };
+
+  User.prototype.isAgreementHolder = function () {
+    return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
+  };
+
+  User.prototype.isRangeOfficer = function () {
+    return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
   };
 
   return User;

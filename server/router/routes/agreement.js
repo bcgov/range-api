@@ -42,6 +42,7 @@ const {
   Zone,
   LivestockIdentifier,
   STANDARD_INCLUDE_NO_ZONE,
+  STANDARD_INCLUDE_NO_ZONE_CLIENT,
   EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
@@ -95,13 +96,18 @@ const transformAgreement = (agreement, clientTypes) => {
 // Get all agreements based on the user type
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll({
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
+    const options = {
+      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
+        INCLUDE_CLIENT_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
-    });
+      order: [
+        ['plans', 'createdAt', 'DESC'],
+      ],
+    };
+    const clientTypes = await ClientType.findAll();
+    const agreements = await Agreement.findAll(options);
 
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
@@ -198,19 +204,21 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     const {
       id,
     } = req.params;
-    const clientTypes = await ClientType.findAll();
-    const agreement = await Agreement.findOne({
+    const options = {
       where: {
         id,
       },
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
+      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
+        INCLUDE_CLIENT_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
       order: [
         ['plans', 'createdAt', 'DESC'],
       ],
-    });
+    };
+    const clientTypes = await ClientType.findAll();
+    const agreement = await Agreement.findOne(options);
 
     if (agreement) {
       const plainAgreement = transformAgreement(agreement, clientTypes);
