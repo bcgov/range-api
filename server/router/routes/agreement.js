@@ -40,54 +40,16 @@ const {
   ClientType,
   Agreement,
   Zone,
+  transformAgreement,
   LivestockIdentifier,
   STANDARD_INCLUDE_NO_ZONE,
   STANDARD_INCLUDE_NO_ZONE_CLIENT,
-  EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
   INCLUDE_USER_MODEL,
   INCLUDE_CLIENT_MODEL,
+  EXCLUDED_AGREEMENT_ATTR,
 } = dm;
-
-//
-// Helpers
-//
-
-/**
- * Transform a client object to the format apropriate for the API spec
- *
- * @param {[Client]} clients The agreement object containing the clients
- * @param {[ClientType]} clientTypes The client type reference objects
- * @returns Array of plain (JSON) client objects
- */
-const transformClients = (clients, clientTypes) => {
-  const results = clients
-    .map((c) => {
-      const client = c.get({ plain: true });
-      const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
-      delete client.clientAgreement;
-      return { ...client, clientTypeCode: ctype.code };
-    })
-    .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
-
-  return results;
-};
-
-/**
- * Transform the structure of an Agreement to match the API spec
- *
- * @param {Agreement} agreement The agreement object containing the clients
- * @param {[ClientType]} clientTypes The client type reference objects
- * @returns A plain (JSON) Agreement object
- */
-const transformAgreement = (agreement, clientTypes) => {
-  const transformedClients = transformClients(agreement.clients, clientTypes);
-  const agreementAsJSON = agreement.get({ plain: true });
-  agreementAsJSON.clients = transformedClients;
-
-  return agreementAsJSON;
-};
 
 //
 // Routes
@@ -165,7 +127,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
         'id',
       ],
-      include: [INCLUDE_ZONE_MODEL(), INCLUDE_CLIENT_MODEL],
+      include: [INCLUDE_CLIENT_MODEL, INCLUDE_ZONE_MODEL()],
       limit,
       offset,
       where,
@@ -178,7 +140,13 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       // Agreements from `findAndCountAll` dont' have a complete set of properties. We
       // fetch a fresh copy by ID to work around this.
       const myAgreement = await Agreement.findById(agreement.id, {
+        attributes: {
+          exclude: EXCLUDED_AGREEMENT_ATTR,
+        },
         include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
+        order: [
+          ['plans', 'createdAt', 'DESC'],
+        ],
       });
 
       return { ...transformAgreement(myAgreement, clientTypes) };

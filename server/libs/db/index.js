@@ -36,21 +36,44 @@ export default class DataManager {
     this.loadModels();
     this.buildRelations();
     this.setupIncludeAttributes();
+    this.setupHelperFunctions();
   }
 
-  /**
-   * Add `Zone` filtering by userId accounting for Administrative privledges.
-   *
-   * @param {Zone} model The model to be operated on.
-   * @param {User} user The user to filter on.
-   * @returns The `Zone` with the apropriate filtering via the where clause.
-   */
-  zoneIncludeForUserRole(user) {
-    if (!user.isAdministrator()) {
-      return { ...this.INCLUDE_ZONE_MODEL, where: { userId: user.id } };
-    }
+  setupHelperFunctions() {
+    /**
+     * Transform a client object to the format apropriate for the API spec
+     *
+     * @param {[Client]} clients The agreement object containing the clients
+     * @param {[ClientType]} clientTypes The client type reference objects
+     * @returns Array of plain (JSON) client objects
+     */
+    this.transformClients = (clients, clientTypes) => {
+      const results = clients
+        .map((c) => {
+          const client = c.get({ plain: true });
+          const ctype = clientTypes.find(t => t.id === c.clientAgreement.clientTypeId);
+          delete client.clientAgreement;
+          return { ...client, clientTypeCode: ctype.code };
+        })
+        .sort((a, b) => a.clientTypeCode > b.clientTypeCode);
 
-    return this.INCLUDE_ZONE_MODEL;
+      return results;
+    };
+
+    /**
+     * Transform the structure of an Agreement to match the API spec
+     *
+     * @param {Agreement} agreement The agreement object containing the clients
+     * @param {[ClientType]} clientTypes The client type reference objects
+     * @returns A plain (JSON) Agreement object
+     */
+    this.transformAgreement = (agreement, clientTypes) => {
+      const transformedClients = this.transformClients(agreement.clients, clientTypes);
+      const agreementAsJSON = agreement.get({ plain: true });
+      agreementAsJSON.clients = transformedClients;
+
+      return agreementAsJSON;
+    };
   }
 
   loadModels() {
@@ -272,21 +295,19 @@ export default class DataManager {
       model: this.User,
     };
 
-    this.EXCLUDED_PLAN_ATTR = ['status_id', 'agreement_id'];
-    this.STANDARD_PLAN_INCLUDE = [
-      this.INCLUDE_PLAN_STATUS_MODEL,
-      this.INCLUDE_PASTURE_MODEL,
-      this.INCLUDE_GRAZING_SCHEDULE_MODEL,
-    ];
     this.INCLUDE_PLAN_MODEL = {
       model: this.Plan,
       attributes: {
-        exclude: this.EXCLUDED_PLAN_ATTR,
+        exclude: ['status_id', 'agreement_id'],
       },
       order: [
         ['created_at', 'DESC'],
       ],
-      include: this.STANDARD_PLAN_INCLUDE,
+      include: [
+        this.INCLUDE_PLAN_STATUS_MODEL,
+        this.INCLUDE_PASTURE_MODEL,
+        this.INCLUDE_GRAZING_SCHEDULE_MODEL,
+      ],
     };
 
     this.INCLUDE_USAGE_MODEL = {
@@ -296,12 +317,6 @@ export default class DataManager {
         exclude: ['agreement_id', 'agreementId', 'createdAt', 'updatedAt'],
       },
     };
-
-    this.EXCLUDED_AGREEMENT_ATTR = [
-      'agreementTypeId',
-      'zoneId',
-      'agreementExemptionStatusId',
-    ];
 
     this.STANDARD_INCLUDE_NO_ZONE = [
       this.INCLUDE_CLIENT_MODEL,
@@ -318,6 +333,12 @@ export default class DataManager {
       this.INCLUDE_PLAN_MODEL,
       this.INCLUDE_USAGE_MODEL,
       this.INCLUDE_AGREEMENT_TYPE_MODEL,
+    ];
+
+    this.EXCLUDED_AGREEMENT_ATTR = [
+      'agreementTypeId',
+      'zoneId',
+      'agreementExemptionStatusId',
     ];
   }
 }
