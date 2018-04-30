@@ -66,7 +66,7 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
       exclude: EXCLUDED_AGREEMENT_ATTR,
     },
     include: [
-      INCLUDE_CLIENT_MODEL,
+      INCLUDE_CLIENT_MODEL(req.user),
       INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
       INCLUDE_USAGE_MODEL,

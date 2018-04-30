@@ -127,7 +127,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
         'id',
       ],
-      include: [INCLUDE_CLIENT_MODEL, INCLUDE_ZONE_MODEL()],
+      include: [INCLUDE_CLIENT_MODEL(req.user), INCLUDE_ZONE_MODEL()],
       limit,
       offset,
       where,
