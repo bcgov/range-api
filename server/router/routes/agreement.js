@@ -42,12 +42,12 @@ const {
   Zone,
   transformAgreement,
   LivestockIdentifier,
+  STANDARD_INCLUDE_NO_ZONE,
+  STANDARD_INCLUDE_NO_ZONE_CLIENT,
   INCLUDE_ZONE_MODEL,
   INCLUDE_DISTRICT_MODEL,
   INCLUDE_USER_MODEL,
   INCLUDE_CLIENT_MODEL,
-  INCLUDE_PLAN_MODEL,
-  STANDARD_INCLUDE_NO_ZONE,
   EXCLUDED_AGREEMENT_ATTR,
 } = dm;
 
@@ -58,13 +58,18 @@ const {
 // Get all agreements based on the user type
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll({
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
+    const options = {
+      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
+        INCLUDE_CLIENT_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
-    });
+      order: [
+        ['plans', 'createdAt', 'DESC'],
+      ],
+    };
+    const clientTypes = await ClientType.findAll();
+    const agreements = await Agreement.findAll(options);
 
     // apply and transforms to the data structure.
     const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
@@ -122,7 +127,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
         'id',
       ],
-      include: [INCLUDE_CLIENT_MODEL, INCLUDE_ZONE_MODEL()],
+      include: [INCLUDE_CLIENT_MODEL(req.user), INCLUDE_ZONE_MODEL()],
       limit,
       offset,
       where,
@@ -167,19 +172,21 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     const {
       id,
     } = req.params;
-    const clientTypes = await ClientType.findAll();
-    const agreement = await Agreement.findOne({
+    const options = {
       where: {
         id,
       },
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL(req.user)],
+      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
+        INCLUDE_CLIENT_MODEL(req.user)],
       attributes: {
         exclude: EXCLUDED_AGREEMENT_ATTR,
       },
       order: [
         ['plans', 'createdAt', 'DESC'],
       ],
-    });
+    };
+    const clientTypes = await ClientType.findAll();
+    const agreement = await Agreement.findOne(options);
 
     if (agreement) {
       const plainAgreement = transformAgreement(agreement, clientTypes);

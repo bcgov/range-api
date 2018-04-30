@@ -67,7 +67,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
 
   try {
     const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
-    const myIncludes = [INCLUDE_CLIENT_MODEL, INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+    const myIncludes = [INCLUDE_CLIENT_MODEL(req.user), INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
       myPlan, INCLUDE_ZONE_MODEL(req.user)];
     const agreement = (await Agreement.findOne({

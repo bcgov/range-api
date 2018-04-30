@@ -34,7 +34,13 @@ export default (sequelize, DataTypes) => {
     },
     username: {
       allowNull: false,
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(64),
+      unique: true,
+    },
+    clientId: {
+      type: DataTypes.STRING(8),
+      field: 'client_id',
+      allowNull: false,
       unique: true,
     },
     givenName: {
@@ -54,10 +60,10 @@ export default (sequelize, DataTypes) => {
       field: 'phone_number',
       type: DataTypes.STRING(32),
     },
-    roleId: {
-      field: 'role_id',
+    active: {
       allowNull: false,
-      type: DataTypes.INTEGER,
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     lastLoginAt: {
       field: 'last_login_at',
@@ -89,6 +95,14 @@ export default (sequelize, DataTypes) => {
 
   User.prototype.isAdministrator = function () {
     return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
+  };
+
+  User.prototype.isAgreementHolder = function () {
+    return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
+  };
+
+  User.prototype.isRangeOfficer = function () {
+    return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
   };
 
   return User;

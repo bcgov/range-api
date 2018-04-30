@@ -125,39 +125,50 @@ const authmware = async (app) => {
   opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
   opts.algorithms = ['RS256'];
   opts.secretOrKey = await getJwtSecret();
+  opts.passReqToCallback = true;
   // For development purposes only ignore the expiration
   // time of tokens.
   if (config.get('environment') === 'development') {
     opts.ignoreExpiration = true;
   }
 
-  const jwtStrategy = new JwtStrategy(opts, async (jwtPayload, done) => {
+  const jwtStrategy = new JwtStrategy(opts, async (req, jwtPayload, done) => {
     try {
-      const user = await User.findOne({
+      let user = await User.findOne({
         where: {
           username: jwtPayload.preferred_username,
         },
       });
 
-      if (user) {
-        // User roles are assigned in SSO and extracted from the JWT.
-        // See the User object for additional functionality.
-        const { roles } = jwtPayload.resource_access[config.get('sso:clientId')];
-        if (!roles || !Object.values(SSO_ROLE_MAP).some(item => roles.includes(item))) {
-          done(errorWithCode('This user has no valid roles', 403), false);
-        }
-
-        // Update the last-login time of this user.
-        user.lastLoginAt = new Date();
-        await user.save();
-
-        return done(null, Object.assign(user, { roles }));
+      if (!user) {
+        user = await User.create({
+          username: jwtPayload.preferred_username,
+          givenName: jwtPayload.given_name,
+          familyName: jwtPayload.family_name,
+          email: jwtPayload.email,
+        });
       }
 
-      return done(errorWithCode('No such user', 401), false);
+      // Only active users can use the system
+      if (!user.active) {
+        return done(errorWithCode('This user account is not active.', 403), false); // Forbidden
+      }
+
+      // User roles are assigned in SSO and extracted from the JWT.
+      // See the User object for additional functionality.
+      const { roles } = jwtPayload.resource_access[config.get('sso:clientId')];
+      if (!roles || !Object.values(SSO_ROLE_MAP).some(item => roles.includes(item))) {
+        return done(errorWithCode('This user has no valid roles', 403), false); // Forbidden
+      }
+
+      // Update the last-login time of this user.
+      user.lastLoginAt = new Date();
+      await user.save();
+
+      return done(null, Object.assign(user, { roles })); // OK
     } catch (error) {
       logger.error(`error authenticating user ${error.message}`);
-      return done(errorWithCode(error.message, 500), false);
+      return done(errorWithCode(error.message, 500), false); // Internal Server Error
     }
   });
 

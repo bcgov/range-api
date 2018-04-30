@@ -99,7 +99,7 @@ export default class DataManager {
     //
     // User Role
     //
-    this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
+    // this.User.belongsTo(this.UserRole, { foreignKey: 'role_id' });
 
     //
     // Client, Agreement
@@ -227,20 +227,28 @@ export default class DataManager {
         },
       };
 
-      if (user && !user.isAdministrator()) {
+      if (user && user.isRangeOfficer() && !user.isAgreementHolder()) {
         return { ...BASIC_INCLUDE_ZONE_MODEL, where: { userId: user.id } };
       }
 
       return BASIC_INCLUDE_ZONE_MODEL;
     };
 
-    this.INCLUDE_CLIENT_MODEL = {
-      model: this.Client,
-      through: {
-        model: this.ClientAgreement,
-        attributes: ['clientTypeId'],
-      },
-      attributes: ['id', 'name', 'locationCode', 'startDate'],
+    this.INCLUDE_CLIENT_MODEL = (user) => {
+      const BASIC_INCLUDE_CLIENT_MODEL = {
+        model: this.Client,
+        through: {
+          model: this.ClientAgreement,
+          attributes: ['clientTypeId'],
+        },
+        attributes: ['id', 'name', 'locationCode', 'startDate'],
+      };
+
+      if (user && user.isAgreementHolder()) {
+        return { ...BASIC_INCLUDE_CLIENT_MODEL, where: { id: user.clientId } };
+      }
+
+      return BASIC_INCLUDE_CLIENT_MODEL;
     };
 
     this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL = {
@@ -312,6 +320,14 @@ export default class DataManager {
 
     this.STANDARD_INCLUDE_NO_ZONE = [
       this.INCLUDE_CLIENT_MODEL,
+      this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
+      this.INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
+      this.INCLUDE_PLAN_MODEL,
+      this.INCLUDE_USAGE_MODEL,
+      this.INCLUDE_AGREEMENT_TYPE_MODEL,
+    ];
+
+    this.STANDARD_INCLUDE_NO_ZONE_CLIENT = [
       this.INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
       this.INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
       this.INCLUDE_PLAN_MODEL,
