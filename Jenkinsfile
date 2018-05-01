@@ -68,12 +68,12 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       sh "${CMD_PREFIX} npm -v"
       sh "${CMD_PREFIX} node -v"
 
+      sleep 3500
+
       // setup the node dev environment
       sh "${CMD_PREFIX} npm ci --only=dev"
       // not sure if this needs to be added to package.json.
       sh "${CMD_PREFIX} npm ci escape-string-regexp"
-
-      sleep 3500
     }
     
     stage('Test') {
