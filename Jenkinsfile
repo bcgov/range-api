@@ -34,7 +34,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     resourceLimitCpu: '2000m',
     resourceRequestMemory: '6Gi',
     resourceLimitMemory: '8Gi',
-    workingDir: '/home/jenkins',
+    workingDir: '/var/lib/jenkins',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
     alwaysPullImage: true
