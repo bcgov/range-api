@@ -41,7 +41,7 @@ module.exports = {
       table,
       'username',
       {
-        type: Sequelize.BOOLEAN(64),
+        type: Sequelize.STRING(64),
       },
     );
 
