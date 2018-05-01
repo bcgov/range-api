@@ -64,9 +64,10 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       // The version of node in the `node` that comes with OpenShift is too old
       // so I use a generic Linux and install my own node from LTS.
       sh "curl ${NODE_URI} | tar -Jx"
-      sh "${CMD_PREFIX} npm i npm@latest"
       sh "${CMD_PREFIX} node -v"
       sh "${CMD_PREFIX} npm -v"
+
+      sleep 3500
 
       // setup the node dev environment
       sh "${CMD_PREFIX} npm ci"
