@@ -65,15 +65,13 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       // so I use a generic Linux and install my own node from LTS.
       sh "curl ${NODE_URI} | tar -Jx"
       sh "${CMD_PREFIX} npm i npm@latest"
-      sh "${CMD_PREFIX} npm -v"
       sh "${CMD_PREFIX} node -v"
-
-      sleep 3500
+      sh "./node_modules/.bin/npm -v"
 
       // setup the node dev environment
-      sh "${CMD_PREFIX} npm ci --only=dev"
+      sh "./node_modules/.bin/npm ci"
       // not sure if this needs to be added to package.json.
-      sh "${CMD_PREFIX} npm ci escape-string-regexp"
+      sh "./node_modules/.bin/npm i escape-string-regexp"
     }
     
     stage('Test') {
