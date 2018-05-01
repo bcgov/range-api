@@ -61,14 +61,16 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     stage('Install') {
       echo "Setup: ${BUILD_ID}"
       
-      // The version of node in the `node` that comes with OpenShift is too old
-      // so I use a generic Linux and install my own node from LTS.
+      // Put an updated node and npm in place so that we know we're using a 
+      // modern version.
+
       sh "curl ${NODE_URI} | tar -Jx"
       sh "${CMD_PREFIX} npm i npm@latest"
       sh "rm -rf ./node-v8.11.1-linux-x64/lib/node_modules/npm"
       sh "cp -a ./node_modules/npm ./node-v8.11.1-linux-x64/lib/node_modules/"
       sh "${CMD_PREFIX} node -v"
       sh "${CMD_PREFIX} npm -v"
+      
       // setup the node dev environment
       sh "${CMD_PREFIX} npm ci"
       // not sure if this needs to be added to package.json.
