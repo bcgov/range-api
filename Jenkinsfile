@@ -32,9 +32,9 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     image: '172.50.0.2:5000/openshift/jenkins-slave-python3nodejs:latest',
     resourceRequestCpu: '1500m',
     resourceLimitCpu: '2000m',
-    resourceRequestMemory: '6Gi',
-    resourceLimitMemory: '8Gi',
-    workingDir: '/var/lib/jenkins',
+    resourceRequestMemory: '2Gi',
+    resourceLimitMemory: '4Gi',
+    workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
     alwaysPullImage: true
@@ -46,16 +46,16 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
   )
 ]) {
   node('range-api-node-build') {
+    stage('Checkout') {
+      echo "Checking out source"
+      checkout scm
+
     GIT_COMMIT_SHORT_HASH = sh (
       script: """git describe --always""",
       returnStdout: true).trim()
     GIT_COMMIT_AUTHOR = sh (
       script: """git show -s --pretty=%an""",
       returnStdout: true).trim()
-
-    stage('Checkout') {
-      echo "Checking out source"
-      checkout scm
     }
     
     stage('Install') {
