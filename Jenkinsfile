@@ -4,8 +4,8 @@ def APP_NAME = 'range-myra-api'
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
 def TAG_NAMES = ['dev', 'test', 'prod']
-def CMD_PREFIX = 'PATH=$PATH:$PWD/node-v8.11.1-linux-x64/bin'
-def NODE_URI = 'https://nodejs.org/dist/latest-v8.x/node-v8.11.1-linux-x64.tar.xz'
+def CMD_PREFIX = 'PATH=$PATH:$PWD/node-v10.0.0-linux-x64/bin'
+def NODE_URI = 'https://nodejs.org/dist/latest-v10.x/node-v10.0.0-linux-x64.tar.xz'
 def PIRATE_ICO = 'http://icons.iconarchive.com/icons/aha-soft/torrent/64/pirate-icon.png'
 def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo.png'
 def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
