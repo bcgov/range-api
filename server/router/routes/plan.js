@@ -209,9 +209,6 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       where: {
         id: statusId,
       },
-      attributes: {
-        exclude: ['updatedAt', 'createdAt', 'active'],
-      },
     });
     if (!status) {
       throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
@@ -306,6 +303,74 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
     });
 
     const createdEntries = await Promise.all(promises);
+
+    await schedule.addGrazingScheduleEntries(createdEntries);
+    await plan.addGrazingSchedule(schedule);
+    await plan.save();
+
+    return res.status(200).json(schedule).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+    scheduleId,
+  } = req.params;
+
+  const {
+    createdAt,
+    updatedAt,
+    ...body
+  } = req.body;
+
+  const {
+    year,
+    grazingScheduleEntries,
+  } = body;
+
+  if (!planId) {
+    throw errorWithCode('planId is required in path', 400);
+  }
+
+  if (!year) {
+    throw errorWithCode('year is required in body', 400);
+  }
+
+  if (!grazingScheduleEntries) {
+    throw errorWithCode('grazingScheduleEntries is required in body', 400);
+  }
+
+  grazingScheduleEntries.forEach((entry) => {
+    if (!entry.livestockTypeId) {
+      throw errorWithCode('grazingScheduleEntries must have livestockType');
+    }
+  });
+
+  try {
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      throw errorWithCode('plan not found', 404);
+    }
+
+    // if (scheduleId !== 'undefined') {
+    //   await GrazingSchedule.destroy({
+    //     where: {
+    //       id: scheduleId,
+    //     },
+    //   });
+    // }
+
+    const [schedule, created] = await GrazingSchedule.upsert(body, {
+      returning: true,
+    });
+    const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
+      return GrazingScheduleEntry.upsert(entry, { returning: true });
+    });
+
+    const createdEntries = (await Promise.all(promises)).map(foo => { return foo[0] });
 
     await schedule.addGrazingScheduleEntries(createdEntries);
     await plan.addGrazingSchedule(schedule);
