@@ -66,12 +66,12 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       sh "curl ${NODE_URI} | tar -Jx"
       sh "${CMD_PREFIX} npm i npm@latest"
       sh "${CMD_PREFIX} node -v"
-      sh "./node_modules/.bin/npm -v"
+      sh "${CMD_PREFIX} npm -v"
 
       // setup the node dev environment
-      sh "./node_modules/.bin/npm ci"
+      sh "${CMD_PREFIX} npm ci"
       // not sure if this needs to be added to package.json.
-      sh "./node_modules/.bin/npm i escape-string-regexp"
+      sh "${CMD_PREFIX} npm i escape-string-regexp"
     }
     
     stage('Test') {
