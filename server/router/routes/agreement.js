@@ -143,7 +143,8 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         attributes: {
           exclude: EXCLUDED_AGREEMENT_ATTR,
         },
-        include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()],
+        include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(),
+          INCLUDE_CLIENT_MODEL(req.user)],
         order: [
           ['plans', 'createdAt', 'DESC'],
         ],
