@@ -40,7 +40,6 @@ export default (sequelize, DataTypes) => {
     clientId: {
       type: DataTypes.STRING(8),
       field: 'client_id',
-      allowNull: false,
       unique: true,
     },
     givenName: {

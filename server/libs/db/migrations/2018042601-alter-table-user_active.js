@@ -39,7 +39,7 @@ module.exports = {
 
     await queryInterface.changeColumn(
       table,
-      'active',
+      'username',
       {
         type: Sequelize.STRING(64),
       },
