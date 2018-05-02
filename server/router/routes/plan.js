@@ -50,9 +50,69 @@ const {
   INCLUDE_USAGE_MODEL,
   INCLUDE_AGREEMENT_TYPE_MODEL,
   EXCLUDED_AGREEMENT_ATTR,
+  INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL,
 } = dm;
 
 const { model, ...planQueryOptions } = INCLUDE_PLAN_MODEL;
+
+// // create grazing scheules (and entries) and associate to Plan
+// const createAndUpdateScheduleEntry = async (schedule, body) => {
+//   let allEntries = [];
+//   body.grazingSchedules.forEach((item) => {
+//     const { grazingScheduleEntries = [] } = item;
+//     const promises = grazingScheduleEntries.map((e) => {
+//       delete e.createdAt; // eslint-disable-line no-param-reassign
+//       delete e.updatedAt; // eslint-disable-line no-param-reassign
+
+//       return GrazingScheduleEntry.create({ ...e, ...{ grazingScheduleId: schedule.id } });
+//     });
+
+//     allEntries = allEntries.concat(promises);
+//   });
+
+//   return Promise.all(allEntries);
+// };
+
+// create pastures and associate to Plan -> [pasture, created]
+// const createAndUpdatePastures = async (plan, body) => {
+//   const { pastures = [] } = body;
+//   const options = {
+//     returning: true,
+//   };
+
+//   const promises = pastures.map((p) => {
+//     delete p.createdAt; // eslint-disable-line no-param-reassign
+//     delete p.updatedAt; // eslint-disable-line no-param-reassign
+
+//     return Pasture.upsert({ ...p, ...{ planId: plan.id } }, options);
+//   });
+
+//   return Promise.all(promises);
+// };
+
+// // create grazing scheules (and entries) and associate to Plan
+// const createAndUpdateSchedule = async (plan, body) => {
+//   const { grazingSchedules = [] } = body;
+
+//   // delete all old pastures and create new pastures
+//   await GrazingSchedule.destroy({
+//     where: {
+//       planId: plan.id,
+//     },
+//   });
+
+//   const promises = grazingSchedules.map((s) => {
+//     delete s.createdAt; // eslint-disable-line no-param-reassign
+//     delete s.updatedAt; // eslint-disable-line no-param-reassign
+
+//     return GrazingSchedule.create({ ...s, ...{ planId: plan.id } });
+//   });
+
+//   const schedules = await Promise.all(promises);
+//   await schedules.map(s => createAndUpdateScheduleEntry(s, body));
+
+//   return schedules;
+// };
 
 router.get('/:planId', asyncMiddleware(async (req, res) => {
   const {
@@ -95,55 +155,24 @@ router.post('/', asyncMiddleware(async (req, res) => {
       throw errorWithCode('agreement not found', 404);
     }
 
-    const plan = await Plan.create(body, planQueryOptions);
+    if (body.id || body.planId) {
+      const plan = await Agreement.findById(body.id || body.planId);
+      if (plan) {
+        throw errorWithCode('A plan with this ID exists. Use PUT.', 409);
+      }
+    }
+
+    const plan = await Plan.create(body);
     await agreement.addPlan(plan);
     await agreement.save();
 
-    const createdPlan = await Plan.findById(plan.id, planQueryOptions);
+    // const createdPlan = await Plan.findById(plan.id, planQueryOptions);
 
-    return res.status(200).json(createdPlan).end();
+    return res.status(200).json(plan).end();
   } catch (err) {
     throw err;
   }
 }));
-
-const createAndUpdatePastures = async (plan, body) => {
-  const { pastures = [] } = body;
-
-  // delete all old pastures and create new pastures
-  await Pasture.destroy({
-    where: {
-      planId: plan.id,
-    },
-  });
-
-  await Promise.all(pastures.map(async (p) => {
-    const {
-      createdAt,
-      updatedAt,
-      ...pastureBody
-    } = p;
-
-    const pasture = await Pasture.create(pastureBody);
-    if (pasture) {
-      await plan.addPasture(pasture);
-    }
-  }));
-
-  // this doens't works since the client doesn't send pastures with id(this can be used later)
-  // await Promise.all(pastures.map(async (p) => {
-  //   const {
-  //     createdAt,
-  //     updatedAt,
-  //     ...pastureBody
-  //   } = p;
-
-  //   const { pasture, isCreated } = await Pasture.upsert(pastureBody, { returning: true });
-  //   if (isCreated) {
-  //     await plan.addPasture(pasture);
-  //   }
-  // }));
-};
 
 router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const {
@@ -172,12 +201,9 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
       throw errorWithCode(`No plan with ID ${planId} exists`, 404);
     }
 
-    const plan = await Plan.findById(planId);
-    await createAndUpdatePastures(plan, body);
+    const aPlan = await Plan.findById(planId, planQueryOptions);
 
-    const updatedPlan = await Plan.findById(planId, planQueryOptions);
-
-    return res.status(200).json(updatedPlan).end();
+    return res.status(200).json(aPlan).end();
   } catch (err) {
     throw err;
   }
@@ -302,13 +328,15 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
       return GrazingScheduleEntry.create({ ...entry, grazingScheduleId: schedule.id });
     });
 
-    const createdEntries = await Promise.all(promises);
-
-    await schedule.addGrazingScheduleEntries(createdEntries);
+    await Promise.all(promises);
     await plan.addGrazingSchedule(schedule);
     await plan.save();
 
-    return res.status(200).json(schedule).end();
+    const aSchedule = await GrazingSchedule.findById(schedule.id, {
+      include: [INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
+    });
+
+    return res.status(200).json(aSchedule).end();
   } catch (err) {
     throw err;
   }
@@ -355,28 +383,28 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
       throw errorWithCode('plan not found', 404);
     }
 
-    // if (scheduleId !== 'undefined') {
-    //   await GrazingSchedule.destroy({
-    //     where: {
-    //       id: scheduleId,
-    //     },
-    //   });
-    // }
+    const schedule = await GrazingSchedule.findById(scheduleId);
+    if (!schedule) {
+      throw errorWithCode('schedule not found', 404);
+    }
 
-    const [schedule, created] = await GrazingSchedule.upsert(body, {
-      returning: true,
-    });
+    await schedule.update(body);
+
     const promises = grazingScheduleEntries.map((entry) => { // eslint-disable-line arrow-body-style
-      return GrazingScheduleEntry.upsert(entry, { returning: true });
+      return GrazingScheduleEntry.upsert({ ...entry, ...{ grazingScheduleId: schedule.id } }, {
+        returning: true,
+      });
     });
 
-    const createdEntries = (await Promise.all(promises)).map(foo => { return foo[0] });
-
-    await schedule.addGrazingScheduleEntries(createdEntries);
+    await Promise.all(promises);
     await plan.addGrazingSchedule(schedule);
     await plan.save();
 
-    return res.status(200).json(schedule).end();
+    const aSchedule = await GrazingSchedule.findById(scheduleId, {
+      include: [INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
+    });
+
+    return res.status(200).json(aSchedule).end();
   } catch (err) {
     throw err;
   }
