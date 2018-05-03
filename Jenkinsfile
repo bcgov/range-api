@@ -4,7 +4,6 @@ def APP_NAME = 'range-myra-api'
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
 def TAG_NAMES = ['dev', 'test', 'prod']
-def NODE_URI = 'https://nodejs.org/dist/latest-v8.x/node-v8.11.1-linux-x64.tar.xz'
 def PIRATE_ICO = 'http://icons.iconarchive.com/icons/aha-soft/torrent/64/pirate-icon.png'
 def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo.png'
 def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
@@ -49,12 +48,12 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       echo "Checking out source"
       checkout scm
 
-    GIT_COMMIT_SHORT_HASH = sh (
-      script: """git describe --always""",
-      returnStdout: true).trim()
-    GIT_COMMIT_AUTHOR = sh (
-      script: """git show -s --pretty=%an""",
-      returnStdout: true).trim()
+      GIT_COMMIT_SHORT_HASH = sh (
+        script: """git describe --always""",
+        returnStdout: true).trim()
+      GIT_COMMIT_AUTHOR = sh (
+        script: """git show -s --pretty=%an""",
+        returnStdout: true).trim()
     }
     
     stage('Install') {
