@@ -29,7 +29,7 @@ def notifySlack(text, channel, url, attachments, icon) {
 podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', serviceAccount: 'jenkins', cloud: 'openshift', containers: [
   containerTemplate(
     name: 'jnlp',
-    image: '172.50.0.2:5000/openshift/jenkins-slave-python3nodejs:latest',
+    image: '172.50.0.2:5000/range-myra-tools/jenkins-slave-node6:latest',
     resourceRequestCpu: '1500m',
     resourceLimitCpu: '2000m',
     resourceRequestMemory: '2Gi',
@@ -64,17 +64,17 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       // Put an updated node and npm in place so that we know we're using a 
       // modern version.
 
-      sh "curl ${NODE_URI} | tar -Jx"
-      sh "${CMD_PREFIX} npm i npm@latest"
-      sh "rm -rf ./node-v8.11.1-linux-x64/lib/node_modules/npm"
-      sh "cp -a ./node_modules/npm ./node-v8.11.1-linux-x64/lib/node_modules/"
-      sh "${CMD_PREFIX} node -v"
-      sh "${CMD_PREFIX} npm -v"
+      // sh "curl ${NODE_URI} | tar -Jx"
+      // sh "${CMD_PREFIX} npm i npm@latest"
+      // sh "rm -rf ./node-v8.11.1-linux-x64/lib/node_modules/npm"
+      // sh "cp -a ./node_modules/npm ./node-v8.11.1-linux-x64/lib/node_modules/"
+      // sh "${CMD_PREFIX} node -v"
+      // sh "${CMD_PREFIX} npm -v"
       
       // setup the node dev environment
-      sh "${CMD_PREFIX} npm ci"
+      sh "npm ci"
       // not sure if this needs to be added to package.json.
-      sh "${CMD_PREFIX} npm i escape-string-regexp"
+      sh "npm i escape-string-regexp"
     }
     
     stage('Test') {
@@ -85,7 +85,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       script {
         // Run a security check on our packages
         try {
-          sh "${CMD_PREFIX} ./node_modules/.bin/nsp check"
+          sh "./node_modules/.bin/nsp check"
         } catch (error) {
           // def output = readFile('nsp-report.txt').trim()
           def attachment = [:]
@@ -100,7 +100,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
 
         try {
           // Run our unit tests et al.
-          sh "${CMD_PREFIX} npm run test:lint"
+          sh "npm run test:lint"
         } catch (error) {
           def attachment = [:]
           attachment.fallback = 'See build log for more details'
@@ -114,7 +114,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
 
         try {
           // Run our unit tests et al.
-          sh "${CMD_PREFIX} npm test"
+          sh "npm test"
         } catch (error) {
           def attachment = [:]
           attachment.fallback = 'See build log for more details'
