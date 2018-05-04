@@ -43,6 +43,10 @@ export default (sequelize, DataTypes) => {
     narative: {
       type: DataTypes.TEXT,
     },
+    planId: {
+      type: DataTypes.INTEGER,
+      field: 'plan_id',
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
