@@ -22,19 +22,45 @@
 
 'use strict';
 
-import compression from 'compression';
-import express from 'express';
-import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
+import compression from 'compression';
 import flash from 'connect-flash';
-import {
-  logger,
-  started,
-} from './libs/logger';
+import cookieParser from 'cookie-parser';
+import express from 'express';
 import config from './config';
 import auth from './libs/authmware';
+import DataManager from './libs/db2';
+import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
+
+const dm = new DataManager(config);
+const {
+  db,
+  Agreement,
+  District,
+  Zone,
+} = dm;
+
+const foo = async () => {
+  const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  const z = (await Zone.find(db, { id: a.zoneId })).pop();
+  const d = (await District.find(db, { id: z.districtId })).pop();
+
+  const agreement = { ...a, zone: { ...z, district: d } };
+  console.log(agreement);
+
+  const ag = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  const zones = await Zone.find(db, {});
+  const districts = await District.find(db, {});
+
+  ag.zone = zones.find(item => item.id === ag.zoneId);
+  ag.zone.district = districts.find(item => item.id === ag.zone.id);
+
+  console.log(ag);
+};
+
+foo();
 
 // Middlewares
 
