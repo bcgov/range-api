@@ -26,8 +26,11 @@ import Model from './model';
 
 export default class Agreement extends Model {
   static get fields() {
-    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id', 'agreement_type_id',
-      'agreement_exemption_status_id'];
+    return ['agreement.forest_file_id', 'agreement.agreement_start_date', 'agreement.agreement_end_date',
+      'agreement.agreement_type_id', 'agreement.agreement_exemption_status_id',
+      'ref_zone.id AS zone_id', 'ref_zone.code AS zone_code', 'ref_zone.description AS zone_description',
+      'ref_district.id AS district_id', 'ref_district.code AS district_code',
+      'ref_district.description AS district_description'];
   }
 
   static get table() {
@@ -38,6 +41,17 @@ export default class Agreement extends Model {
     return db.table(Agreement.table)
       .where(...where)
       .select(...Agreement.fields)
+      .then(rows => rows.map(row => new Agreement(row)));
+  }
+
+  static async f(db, ...where) {
+    
+    return db
+      .select(this.fields)
+      .from(Agreement.table)
+      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+      .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+      .where(...where)
       .then(rows => rows.map(row => new Agreement(row)));
   }
 }

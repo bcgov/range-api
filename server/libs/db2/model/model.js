@@ -24,11 +24,16 @@
 
 export default class Model {
   constructor(data) {
+    console.log('xx', this.table);
     const obj = {};
     Object.keys(data).forEach((key) => {
       obj[Model.toCamelCase(key)] = data[key];
     });
     Object.assign(this, obj);
+  }
+
+  static get table() {
+    return '';
   }
 
   static toCamelCase(str) {

@@ -43,21 +43,24 @@ const {
 } = dm;
 
 const foo = async () => {
-  const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
-  const z = (await Zone.find(db, { id: a.zoneId })).pop();
-  const d = (await District.find(db, { id: z.districtId })).pop();
+  // const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  // const z = (await Zone.find(db, { id: a.zoneId })).pop();
+  // const d = (await District.find(db, { id: z.districtId })).pop();
 
-  const agreement = { ...a, zone: { ...z, district: d } };
-  console.log(agreement);
+  // const agreement = { ...a, zone: { ...z, district: d } };
+  // console.log(agreement);
 
-  const ag = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
-  const zones = await Zone.find(db, {});
-  const districts = await District.find(db, {});
+  // const ag = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  // const zones = await Zone.find(db, {});
+  // const districts = await District.find(db, {});
 
-  ag.zone = zones.find(item => item.id === ag.zoneId);
-  ag.zone.district = districts.find(item => item.id === ag.zone.id);
+  // ag.zone = zones.find(item => item.id === ag.zoneId);
+  // ag.zone.district = districts.find(item => item.id === ag.zone.id);
 
-  console.log(ag);
+  // console.log(ag);
+
+  const ag2 = (await Agreement.f(db, { forest_file_id: 'RAN075120' })).pop();
+  console.log(ag2);
 };
 
 foo();
