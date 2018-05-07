@@ -45,7 +45,6 @@ export default class Agreement extends Model {
   }
 
   static async f(db, ...where) {
-    
     return db
       .select(this.fields)
       .from(Agreement.table)
