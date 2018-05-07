@@ -22,6 +22,7 @@
 
 'use strict';
 
+import AgreementType from './agreementtype';
 import District from './district';
 import Model from './model';
 import Zone from './zone';
@@ -37,6 +38,7 @@ export default class Agreement extends Model {
     super(obj);
     this.zone = new Zone(Model.extract(data, Zone));
     this.district = new District(Model.extract(data, District));
+    this.agreementType = new AgreementType(Model.extract(data, AgreementType));
   }
 
   static get fields() {
@@ -55,11 +57,12 @@ export default class Agreement extends Model {
       .then(rows => rows.map(row => new Agreement(row)));
   }
 
-  static async findWithZoneAndDistrict(db, ...where) {
+  static async findWithTypeZoneDistrict(db, ...where) {
     const myFields = [
       ...Agreement.fields,
       ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...AgreementType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     return db
@@ -67,6 +70,7 @@ export default class Agreement extends Model {
       .from(Agreement.table)
       .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
       .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+      .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
       .where(...where)
       .then(rows => rows.map(row => new Agreement(row)));
   }
