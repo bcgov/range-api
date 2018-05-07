@@ -38,29 +38,16 @@ const dm = new DataManager(config);
 const {
   db,
   Agreement,
-  District,
-  Zone,
 } = dm;
 
 const foo = async () => {
   // const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
-  // const z = (await Zone.find(db, { id: a.zoneId })).pop();
-  // const d = (await District.find(db, { id: z.districtId })).pop();
 
-  // const agreement = { ...a, zone: { ...z, district: d } };
-  // console.log(agreement);
+  const result1 = await Agreement.findWithTypeZoneDistrict(db, { forest_file_id: 'RAN073263' });
+  console.log(result1);
 
-  // const ag = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
-  // const zones = await Zone.find(db, {});
-  // const districts = await District.find(db, {});
-
-  // ag.zone = zones.find(item => item.id === ag.zoneId);
-  // ag.zone.district = districts.find(item => item.id === ag.zone.id);
-
-  // console.log(ag);
-
-  const ag2 = (await Agreement.f(db, { forest_file_id: 'RAN075120' })).pop();
-  console.log(ag2);
+  const result2 = await Agreement.update(db, { forest_file_id: 'RAN073263' }, { zone_id: 10 });
+  console.log(result2);
 };
 
 foo();

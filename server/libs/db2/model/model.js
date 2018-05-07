@@ -37,6 +37,10 @@ export default class Model {
     }).replace(/\s+/g, '');
   }
 
+  static toSnakeCase(str) {
+    return str.replace(/([A-Z])/g, $1 => `_${$1.toLowerCase()}`);
+  }
+
   static extract(data, model) {
     const obj = {};
     Object.keys(data).forEach((key) => {

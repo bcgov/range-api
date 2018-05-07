@@ -57,7 +57,7 @@ export default class Agreement extends Model {
       .then(rows => rows.map(row => new Agreement(row)));
   }
 
-  static async findWithTypeZoneDistrict(db, ...where) {
+  static async findWithTypeZoneDistrict(db, where, page = undefined, limit = undefined) {
     const myFields = [
       ...Agreement.fields,
       ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -65,13 +65,50 @@ export default class Agreement extends Model {
       ...AgreementType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
-    return db
-      .select(myFields)
-      .from(Agreement.table)
-      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
-      .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
-      .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
-      .where(...where)
-      .then(rows => rows.map(row => new Agreement(row)));
+    try {
+      let results = [];
+      const q = db
+        .select(myFields)
+        .from(Agreement.table)
+        .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+        .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+        .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
+        .where(where);
+
+      if (page && limit) {
+        const offset = limit * (page - 1);
+        results = await q
+          .offset(offset)
+          .limit(limit);
+      } else {
+        results = await q;
+      }
+
+      return results.map(row => new Agreement(row));
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async update(db, where, values) {
+    const obj = { ...values, ...{} };
+    Object.keys(values).forEach((key) => {
+      obj[Model.toSnakeCase(key)] = values[key];
+    });
+
+    try {
+      const count = await db
+        .table(Agreement.table)
+        .where(where)
+        .update(obj);
+
+      if (count > 0) {
+        return await Agreement.findWithTypeZoneDistrict(db, where);
+      }
+
+      return [];
+    } catch (err) {
+      throw err;
+    }
   }
 }

@@ -12,16 +12,15 @@
 
 'use strict';
 
-// import fs from 'fs';
-// import path from 'path';
 import knex from 'knex';
 import Agreement from './model/agreement';
 import District from './model/district';
 import Zone from './model/zone';
+import AgreementType from './model/agreementtype';
 
 export default class DataManager {
   constructor(config) {
-    this.db = knex({
+    const k = knex({
       client: 'pg',
       connection: {
         user: config.get('db:user'),
@@ -38,9 +37,11 @@ export default class DataManager {
       },
     });
 
+    this.db = k;
     this.config = config;
     this.Agreement = Agreement;
     this.Zone = Zone;
     this.District = District;
+    this.AgreementType = AgreementType;
   }
 }
