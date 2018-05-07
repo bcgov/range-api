@@ -22,15 +22,26 @@
 
 'use strict';
 
+import District from './district';
 import Model from './model';
+import Zone from './zone';
 
 export default class Agreement extends Model {
+  constructor(data) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      if (Agreement.fields.indexOf(`${Agreement.table}.${key}`) > -1) {
+        obj[key] = data[key];
+      }
+    });
+    super(obj);
+    this.zone = new Zone(Model.extract(data, Zone));
+    this.district = new District(Model.extract(data, District));
+  }
+
   static get fields() {
-    return ['agreement.forest_file_id', 'agreement.agreement_start_date', 'agreement.agreement_end_date',
-      'agreement.agreement_type_id', 'agreement.agreement_exemption_status_id',
-      'ref_zone.id AS zone_id', 'ref_zone.code AS zone_code', 'ref_zone.description AS zone_description',
-      'ref_district.id AS district_id', 'ref_district.code AS district_code',
-      'ref_district.description AS district_description'];
+    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'agreement_type_id',
+      'agreement_exemption_status_id'].map(f => `${Agreement.table}.${f}`);
   }
 
   static get table() {
@@ -44,9 +55,15 @@ export default class Agreement extends Model {
       .then(rows => rows.map(row => new Agreement(row)));
   }
 
-  static async f(db, ...where) {
+  static async findWithZoneAndDistrict(db, ...where) {
+    const myFields = [
+      ...Agreement.fields,
+      ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+    ];
+
     return db
-      .select(this.fields)
+      .select(myFields)
       .from(Agreement.table)
       .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
       .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })

@@ -24,7 +24,6 @@
 
 export default class Model {
   constructor(data) {
-    console.log('xx', this.table);
     const obj = {};
     Object.keys(data).forEach((key) => {
       obj[Model.toCamelCase(key)] = data[key];
@@ -36,5 +35,18 @@ export default class Model {
     return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
       return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
     }).replace(/\s+/g, '');
+  }
+
+  static extract(data, model) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      const prefix = model.table;
+      if (key.startsWith(prefix)) {
+        const aKey = key.replace(prefix, '').slice(1);
+        obj[aKey] = data[key];
+      }
+    });
+
+    return obj;
   }
 }

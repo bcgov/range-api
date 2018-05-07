@@ -26,7 +26,8 @@ import Model from './model';
 
 export default class District extends Model {
   static get fields() {
-    return ['id', 'code', 'description'];
+    return ['id', 'code', 'description']
+      .map(field => `${District.table}.${field}`);
   }
 
   static get table() {

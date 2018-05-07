@@ -26,7 +26,8 @@ import Model from './model';
 
 export default class Zone extends Model {
   static get fields() {
-    return ['id', 'code', 'description', 'district_id', 'user_id'];
+    return ['id', 'code', 'description', 'district_id', 'user_id']
+      .map(field => `${Zone.table}.${field}`);
   }
 
   static get table() {
