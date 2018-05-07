@@ -15,28 +15,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-05-04.
+// Created by Jason Leach on 2018-05-07.
 //
 
 /* eslint-env es6 */
 
 'use strict';
 
-import Model from './model';
-
-export default class Zone extends Model {
-  static get fields() {
-    return ['id', 'code', 'description', 'district_id', 'user_id'];
+export default class Model {
+  constructor(data) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      obj[Model.toCamelCase(key)] = data[key];
+    });
+    Object.assign(this, obj);
   }
 
-  static get table() {
-    return 'ref_zone';
-  }
-
-  static async find(db, ...where) {
-    return db.table(Zone.table)
-      .where(...where)
-      .select(...Zone.fields)
-      .then(rows => rows.map(row => new Zone(row)));
+  static toCamelCase(str) {
+    return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
+      return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
+    }).replace(/\s+/g, '');
   }
 }

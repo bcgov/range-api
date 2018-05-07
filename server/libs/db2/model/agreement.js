@@ -22,30 +22,22 @@
 
 'use strict';
 
-export default class Agreement {
-  constructor(data) {
-    const obj = {};
-    Object.keys(data).forEach((key) => {
-      obj[Agreement.toCamelCase(key)] = data[key];
-    });
-    Object.assign(this, obj);
-  }
+import Model from './model';
 
+export default class Agreement extends Model {
   static get fields() {
     return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id', 'agreement_type_id',
       'agreement_exemption_status_id'];
   }
 
-  static toCamelCase(str) {
-    return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
-      return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
-    }).replace(/\s+/g, '');
+  static get table() {
+    return 'agreement';
   }
 
   static async find(db, ...where) {
-    return db.table('agreement')
+    return db.table(Agreement.table)
       .where(...where)
-      .select(...this.fields)
+      .select(...Agreement.fields)
       .then(rows => rows.map(row => new Agreement(row)));
   }
 }

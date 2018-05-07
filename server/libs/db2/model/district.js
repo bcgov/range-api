@@ -22,29 +22,21 @@
 
 'use strict';
 
-export default class District {
-  constructor(data) {
-    const obj = {};
-    Object.keys(data).forEach((key) => {
-      obj[District.toCamelCase(key)] = data[key];
-    });
-    Object.assign(this, obj);
-  }
+import Model from './model';
 
+export default class District extends Model {
   static get fields() {
     return ['id', 'code', 'description'];
   }
 
-  static toCamelCase(str) {
-    return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
-      return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
-    }).replace(/\s+/g, '');
+  static get table() {
+    return 'ref_district';
   }
 
   static async find(db, ...where) {
-    return db.table('ref_district')
+    return db.table(District.table)
       .where(...where)
-      .select(...this.fields)
+      .select(...District.fields)
       .then(rows => rows.map(row => new District(row)));
   }
 }
