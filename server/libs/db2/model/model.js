@@ -32,10 +32,6 @@ export default class Model {
     Object.assign(this, obj);
   }
 
-  static get table() {
-    return '';
-  }
-
   static toCamelCase(str) {
     return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
       return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
