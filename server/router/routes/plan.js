@@ -434,12 +434,12 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
       throw errorWithCode('Unable to fetch plan', 400);
     }
 
-    const pastures = plan.pastures.filter(item => item.id === parseInt(pastureId, 10));
-    if (!pastures.length > 0) {
+    const pasture = plan.pastures.find(item => item.id === parseInt(pastureId, 10));
+    if (!pasture) {
       throw errorWithCode(`No pasture with ID ${pastureId} associated to plan ${planId}`, 400);
     }
 
-    const aPasture = await pastures.pop().update({ ...body, planId });
+    const aPasture = await pasture.update({ ...body, planId });
 
     return res.status(200).json(aPasture).end();
   } catch (err) {
