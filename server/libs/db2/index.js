@@ -14,10 +14,12 @@
 
 import knex from 'knex';
 import Agreement from './model/agreement';
-import District from './model/district';
-import Zone from './model/zone';
 import AgreementType from './model/agreementtype';
+import Client from './model/client';
+import ClientType from './model/clienttype';
+import District from './model/district';
 import User from './model/user';
+import Zone from './model/zone';
 
 export default class DataManager {
   constructor(config) {
@@ -45,5 +47,7 @@ export default class DataManager {
     this.District = District;
     this.AgreementType = AgreementType;
     this.User = User;
+    this.Client = Client;
+    this.ClientType = ClientType;
   }
 }
