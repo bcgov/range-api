@@ -17,6 +17,7 @@ import Agreement from './model/agreement';
 import District from './model/district';
 import Zone from './model/zone';
 import AgreementType from './model/agreementtype';
+import User from './model/user';
 
 export default class DataManager {
   constructor(config) {
@@ -43,5 +44,6 @@ export default class DataManager {
     this.Zone = Zone;
     this.District = District;
     this.AgreementType = AgreementType;
+    this.User = User;
   }
 }

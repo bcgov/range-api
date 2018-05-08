@@ -29,13 +29,13 @@ import request from 'request';
 import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import config from '../config';
-import DataManager from './db';
+import DataManager from './db2';
 import { logger } from './logger';
 import { errorWithCode } from './utils';
-import { SSO_ROLE_MAP } from '../constants';
 
 const dm = new DataManager(config);
 const {
+  db,
   User,
 } = dm;
 
@@ -134,14 +134,12 @@ const authmware = async (app) => {
 
   const jwtStrategy = new JwtStrategy(opts, async (req, jwtPayload, done) => {
     try {
-      let user = await User.findOne({
-        where: {
-          username: jwtPayload.preferred_username,
-        },
+      let user = await User.findOne(db, {
+        username: jwtPayload.preferred_username,
       });
 
       if (!user) {
-        user = await User.create({
+        user = await User.create(db, {
           username: jwtPayload.preferred_username,
           givenName: jwtPayload.given_name,
           familyName: jwtPayload.family_name,
@@ -149,23 +147,21 @@ const authmware = async (app) => {
         });
       }
 
-      // Only active users can use the system
-      if (!user.active) {
+      // User roles are assigned in SSO and extracted from the JWT.
+      // See the User object for additional functionality.
+      user.roles = jwtPayload.resource_access[config.get('sso:clientId')];
+      if (!user.isActive()) {
         return done(errorWithCode('This user account is not active.', 403), false); // Forbidden
       }
 
-      // User roles are assigned in SSO and extracted from the JWT.
-      // See the User object for additional functionality.
-      const { roles } = jwtPayload.resource_access[config.get('sso:clientId')];
-      if (!roles || !Object.values(SSO_ROLE_MAP).some(item => roles.includes(item))) {
-        return done(errorWithCode('This user has no valid roles', 403), false); // Forbidden
-      }
-
       // Update the last-login time of this user.
-      user.lastLoginAt = new Date();
-      await user.save();
+      await User.update(db, {
+        username: jwtPayload.preferred_username,
+      }, {
+        lastLoginAt: new Date(),
+      });
 
-      return done(null, Object.assign(user, { roles })); // OK
+      return done(null, user); // OK
     } catch (error) {
       logger.error(`error authenticating user ${error.message}`);
       return done(errorWithCode(error.message, 500), false); // Internal Server Error
