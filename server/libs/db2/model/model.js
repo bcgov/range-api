@@ -24,11 +24,29 @@
 
 export default class Model {
   constructor(data) {
+    Object.assign(this, Model.transformToCamelCase(data));
+  }
+
+  static get fields() {
+    // primary key *must* be first!
+    throw new Error('You must override this fields()');
+  }
+
+  static get table() {
+    throw new Error('You must override this table()');
+  }
+
+  static get primaryKey() {
+    return this.fields[0].split('.')[1];
+  }
+
+  static transformToCamelCase(data) {
     const obj = {};
     Object.keys(data).forEach((key) => {
       obj[Model.toCamelCase(key)] = data[key];
     });
-    Object.assign(this, obj);
+
+    return obj;
   }
 
   static toCamelCase(str) {
@@ -41,10 +59,53 @@ export default class Model {
     return str.replace(/([A-Z])/g, $1 => `_${$1.toLowerCase()}`);
   }
 
-  static extract(data, model) {
+  // Find an object(s) with the provided where conditions
+  static async find(db, ...where) {
+    return db.table(this.table)
+      .where(...where)
+      .select(...this.fields)
+      .then(rows => rows.map((row) => {
+        const obj = Object.create(this.prototype);
+        Object.assign(obj, this.transformToCamelCase(row));
+
+        return obj;
+      }));
+  }
+
+  static async findOne(db, ...where) {
+    return (await this.find(db, ...where)).pop();
+  }
+
+  static async findById(db, id) {
+    const where = {};
+    where[this.primaryKey] = id;
+    return this.findOne(db, where);
+  }
+
+  static async update(db, where, values) {
+    const obj = { ...values, ...{} };
+    Object.keys(values).forEach((key) => {
+      obj[Model.toSnakeCase(key)] = values[key];
+    });
+
+    try {
+      const results = await db
+        .table(this.table)
+        .where(where)
+        .update(obj)
+        .returning(this.primaryKey);
+
+      return results;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  // extract a models properties from the given data
+  static extract(data) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      const prefix = model.table;
+      const prefix = this.table;
       if (key.startsWith(prefix)) {
         const aKey = key.replace(prefix, '').slice(1);
         obj[aKey] = data[key];

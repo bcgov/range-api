@@ -36,25 +36,19 @@ export default class Agreement extends Model {
       }
     });
     super(obj);
-    this.zone = new Zone(Model.extract(data, Zone));
-    this.district = new District(Model.extract(data, District));
-    this.agreementType = new AgreementType(Model.extract(data, AgreementType));
+    this.zone = new Zone(Zone.extract(data));
+    this.district = new District(District.extract(data));
+    this.agreementType = new AgreementType(AgreementType.extract(data));
   }
 
   static get fields() {
+    // primary key *must* be first!
     return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'agreement_type_id',
       'agreement_exemption_status_id'].map(f => `${Agreement.table}.${f}`);
   }
 
   static get table() {
     return 'agreement';
-  }
-
-  static async find(db, ...where) {
-    return db.table(Agreement.table)
-      .where(...where)
-      .select(...Agreement.fields)
-      .then(rows => rows.map(row => new Agreement(row)));
   }
 
   static async findWithTypeZoneDistrict(db, where, page = undefined, limit = undefined) {
@@ -97,16 +91,15 @@ export default class Agreement extends Model {
     });
 
     try {
-      const count = await db
+      const results = await db
         .table(Agreement.table)
         .where(where)
-        .update(obj);
+        .update(obj)
+        .returning(this.primaryKey);
+      const promises = results.map(result =>
+        Agreement.findWithTypeZoneDistrict(db, { forest_file_id: result }));
 
-      if (count > 0) {
-        return await Agreement.findWithTypeZoneDistrict(db, where);
-      }
-
-      return [];
+      return Promise.all(promises);
     } catch (err) {
       throw err;
     }

@@ -26,18 +26,12 @@ import Model from './model';
 
 export default class AgreementType extends Model {
   static get fields() {
+    // primary key *must* be first!
     return ['id', 'code', 'description', 'active']
-      .map(field => `${AgreementType.table}.${field}`);
+      .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
     return 'ref_agreement_type';
-  }
-
-  static async find(db, ...where) {
-    return db.table(AgreementType.table)
-      .where(...where)
-      .select(...AgreementType.fields)
-      .then(rows => rows.map(row => new AgreementType(row)));
   }
 }

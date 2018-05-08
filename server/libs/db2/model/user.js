@@ -23,10 +23,6 @@
 import { SSO_ROLE_MAP } from '../../../constants';
 import Model from './model';
 
-const tableName = 'user_account';
-const defaultFields = ['id', 'username', 'client_id', 'given_name', 'family_name', 'email',
-  'phone_number', 'active', 'last_login_at'];
-
 export default class User extends Model {
   constructor(data) {
     super(data);
@@ -35,24 +31,14 @@ export default class User extends Model {
   }
 
   static get fields() {
-    return defaultFields
-      .map(field => `${tableName}.${field}`);
+    // primary key *must* be first!
+    return ['id', 'username', 'client_id', 'given_name', 'family_name', 'email',
+      'phone_number', 'active', 'last_login_at']
+      .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
-    return tableName;
-  }
-
-  static async find(db, ...where) {
-    return db
-      .table(User.table)
-      .where(...where)
-      .select(...User.fields)
-      .then(rows => rows.map(row => new User(row)));
-  }
-
-  static async findOne(db, ...where) {
-    return (await User.find(db, ...where)).pop();
+    return 'user_account';
   }
 
   static async update(db, where, values) {

@@ -26,18 +26,12 @@ import Model from './model';
 
 export default class District extends Model {
   static get fields() {
+    // primary key *must* be first!
     return ['id', 'code', 'description']
-      .map(field => `${District.table}.${field}`);
+      .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
     return 'ref_district';
-  }
-
-  static async find(db, ...where) {
-    return db.table(District.table)
-      .where(...where)
-      .select(...District.fields)
-      .then(rows => rows.map(row => new District(row)));
   }
 }

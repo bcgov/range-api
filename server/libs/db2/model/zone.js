@@ -26,18 +26,12 @@ import Model from './model';
 
 export default class Zone extends Model {
   static get fields() {
+    // primary key *must* be first!
     return ['id', 'code', 'description', 'district_id', 'user_id']
-      .map(field => `${Zone.table}.${field}`);
+      .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
     return 'ref_zone';
-  }
-
-  static async find(db, ...where) {
-    return db.table(Zone.table)
-      .where(...where)
-      .select(...Zone.fields)
-      .then(rows => rows.map(row => new Zone(row)));
   }
 }
