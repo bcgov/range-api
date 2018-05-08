@@ -44,7 +44,8 @@ const foo = async () => {
   // const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
 
   const result1 = await Agreement.findWithTypeZoneDistrict(db, { forest_file_id: 'RAN073263' });
-  console.log(result1);
+  await result1[0].fetchClients();
+  console.log('clients = ', result1[0]);
 
   const result2 = await Agreement.update(db, { forest_file_id: 'RAN073263' }, { zone_id: 10 });
   console.log(result2);

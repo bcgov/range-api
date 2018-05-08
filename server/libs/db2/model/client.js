@@ -26,15 +26,15 @@ import ClientType from './clienttype';
 import Model from './model';
 
 export default class Client extends Model {
-  constructor(data) {
+  constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
       if (Client.fields.indexOf(`${Client.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
-    super(obj);
-    this.clientType = new ClientType(ClientType.extract(data));
+    super(obj, db);
+    this.clientType = new ClientType(ClientType.extract(data), db);
   }
 
   static get fields() {

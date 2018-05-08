@@ -23,19 +23,22 @@
 'use strict';
 
 import AgreementType from './agreementtype';
+import Client from './client';
 import District from './district';
 import Model from './model';
 import Zone from './zone';
 
 export default class Agreement extends Model {
-  constructor(data) {
+  constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
       if (Agreement.fields.indexOf(`${Agreement.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
-    super(obj);
+
+    super(obj, db);
+
     this.zone = new Zone(Zone.extract(data));
     this.district = new District(District.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
@@ -78,7 +81,7 @@ export default class Agreement extends Model {
         results = await q;
       }
 
-      return results.map(row => new Agreement(row));
+      return results.map(row => new Agreement(row, db));
     } catch (err) {
       throw err;
     }
@@ -103,5 +106,14 @@ export default class Agreement extends Model {
     } catch (err) {
       throw err;
     }
+  }
+
+  async fetchClients() {
+    this.clients = await Client.clientsForAgreement(this.db, this);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async fetchPlans() {
+    throw new Error('not implemented yet');
   }
 }

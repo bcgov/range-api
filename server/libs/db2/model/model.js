@@ -23,7 +23,13 @@
 'use strict';
 
 export default class Model {
-  constructor(data) {
+  constructor(data, db = undefined) {
+    // this hides `db` from for..in.
+    Object.defineProperty(this, 'db', {
+      enumerable: false,
+      value: db,
+    });
+
     Object.assign(this, Model.transformToCamelCase(data));
   }
 
@@ -37,7 +43,8 @@ export default class Model {
   }
 
   static get primaryKey() {
-    return this.fields[0].split('.')[1];
+    const field = this.fields[0];
+    return field.indexOf('.') > -1 ? field.slice(field.indexOf('.') + 1) : field;
   }
 
   static transformToCamelCase(data) {

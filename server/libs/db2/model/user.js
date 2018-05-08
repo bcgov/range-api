@@ -24,8 +24,8 @@ import { SSO_ROLE_MAP } from '../../../constants';
 import Model from './model';
 
 export default class User extends Model {
-  constructor(data) {
-    super(data);
+  constructor(data, db = undefined) {
+    super(data, db);
 
     this.roles = [];
   }
