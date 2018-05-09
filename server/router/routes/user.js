@@ -24,11 +24,17 @@
 'use strict';
 
 import { Router } from 'express';
+import config from '../../config';
+import DataManager from '../../libs/db';
 import { asyncMiddleware } from '../../libs/utils';
 
 const router = new Router();
+const dm = new DataManager(config);
+const {
+  User,
+} = dm;
 
-// Get
+// Get a user profile
 router.get('/me', asyncMiddleware(async (req, res) => {
   try {
     const me = req.user.get({ raw: true });
@@ -37,6 +43,16 @@ router.get('/me', asyncMiddleware(async (req, res) => {
     const { roles } = req.user;
 
     res.status(200).json({ ...me, ...{ roles } }).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// Get all users
+router.get('/', asyncMiddleware(async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json(users).end();
   } catch (error) {
     throw error;
   }
