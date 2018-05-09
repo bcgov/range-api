@@ -26,21 +26,15 @@
 import { Router } from 'express';
 import { asyncMiddleware } from '../../libs/utils';
 
-import config from '../../config';
-import DataManager from '../../libs/db';
-
-const dm = new DataManager(config);
-const {
-  User,
-} = dm;
-
 const router = new Router();
 
 // Get
-router.get('/', asyncMiddleware(async (req, res) => {
+router.get('/me', asyncMiddleware(async (req, res) => {
   try {
-    const users = await User.findAll();
-    res.status(200).json(users).end();
+    const me = req.user.get({ raw: true });
+    const { roles } = req.user;
+
+    res.status(200).json({ ...me, ...{ roles } }).end();
   } catch (error) {
     throw error;
   }
