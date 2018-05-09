@@ -58,11 +58,13 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     
     stage('Install') {
       echo "Setup: ${BUILD_ID}"
+      sh "node -v"
+      sh "npm -v"
 
       // setup the node dev environment
       sh "npm ci"
       // not sure if this needs to be added to package.json.
-      sh "npm i escape-string-regexp"
+      // sh "npm i escape-string-regexp"
     }
     
     stage('Test') {
