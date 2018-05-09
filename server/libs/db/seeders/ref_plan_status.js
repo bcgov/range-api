@@ -33,13 +33,18 @@ module.exports = {
         active: true,
       },
       {
-        code: 'C',
-        name: 'Completed',
+        code: 'D',
+        name: 'Draft',
         active: true,
       },
       {
         code: 'P',
         name: 'Pending',
+        active: true,
+      },
+      {
+        code: 'C',
+        name: 'Completed',
         active: true,
       },
     ];
