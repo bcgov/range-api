@@ -40,7 +40,7 @@ export default class Agreement extends Model {
     super(obj, db);
 
     this.zone = new Zone(Zone.extract(data));
-    this.district = new District(District.extract(data));
+    this.zone.district = new District(District.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
   }
 
