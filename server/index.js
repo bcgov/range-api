@@ -48,7 +48,9 @@ const foo = async () => {
   await b.fetchUsage();
   await b.fetchPlans();
 
-  const promises = b.plans.map(p => p.fetchGrazingSchedules());
+  const promises = [...b.plans.map(p => p.fetchGrazingSchedules()),
+    ...b.plans.map(p => p.fetchPastures()),
+  ];
   await Promise.all(promises);
 
   console.log('b', b.forestFileId, b.plans);

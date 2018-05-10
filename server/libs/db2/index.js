@@ -20,6 +20,7 @@ import ClientType from './model/clienttype';
 import District from './model/district';
 import GrazingSchedule from './model/grazingschedule';
 import LivestockType from './model/livestocktype';
+import Pasture from './model/pasture';
 import Plan from './model/plan';
 import PlanExtension from './model/planextension';
 import PlanStatus from './model/planstatus';
@@ -61,5 +62,6 @@ export default class DataManager {
     this.PlanExtension = PlanExtension;
     this.GrazingSchedule = GrazingSchedule;
     this.LivestockType = LivestockType;
+    this.Pasture = Pasture;
   }
 }

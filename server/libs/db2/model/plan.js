@@ -22,6 +22,7 @@
 
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
+import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 
@@ -106,12 +107,12 @@ export default class Plan extends Model {
   //   }
   // }
 
-  // eslint-disable-next-line class-methods-use-this
   async fetchPastures() {
-    throw new Error('not implemented yet');
+    const where = { plan_id: this.id };
+    const pastures = await Pasture.find(this.db, where);
+    this.pastures = pastures;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async fetchGrazingSchedules() {
     const order = ['year', 'desc'];
     const where = { plan_id: this.id };
