@@ -43,13 +43,25 @@ const {
 const foo = async () => {
   const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
   await a.fetchClients();
-  const b = (await Agreement.find(db, { forest_file_id: 'RAN073117' })).pop();
+  const b = (await Agreement.find(db, { forest_file_id: 'RAN073745' })).pop();
   await b.fetchClients();
   await b.fetchUsage();
+  await b.fetchPlans();
 
-  console.log('a', a.forestFileId, a.clients);
-  console.log('b', b.forestFileId, b.clients);
-  console.log('b', b.forestFileId, b.usage);
+  const promises = b.plans.map(p => p.fetchGrazingSchedules());
+  await Promise.all(promises);
+
+  console.log('b', b.forestFileId, b.plans);
+  const plan = b.plans[0];
+
+  console.log(plan);
+
+  const schedule = plan.schedules[0];
+  console.log(schedule);
+
+
+  // console.log('b', b.forestFileId, b.clients);
+  // console.log('b', b.forestFileId, b.usage);
 
   // console.log(a.usage);
   // console.log(a.x);

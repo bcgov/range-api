@@ -20,6 +20,7 @@
 
 'use strict';
 
+import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
@@ -111,7 +112,19 @@ export default class Plan extends Model {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async fetchSchedules() {
-    throw new Error('not implemented yet');
+  async fetchGrazingSchedules() {
+    const order = ['year', 'desc'];
+    const where = { plan_id: this.id };
+    const schedules = await GrazingSchedule.find(this.db, where, order);
+    // egar load grazing schedule entries.
+    const promises = schedules.map(s => s.fetchGrazingSchedulesEntries(
+      this.db,
+      {
+        grazing_schedule_id: s.id,
+      },
+    ));
+    await Promise.all(promises);
+
+    this.schedules = schedules;
   }
 }
