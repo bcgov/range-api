@@ -15,21 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-05-04.
+// Created by Jason Leach on 2018-05-09.
 //
 
 'use strict';
 
 import Model from './model';
 
-export default class District extends Model {
+export default class Usage extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description']
+    return ['id', 'year', 'authorized_aum', 'temporary_increase', 'total_non_use', 'total_annual_use']
       .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
-    return 'ref_district';
+    return 'ref_usage';
   }
 }

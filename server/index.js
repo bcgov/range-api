@@ -41,14 +41,26 @@ const {
 } = dm;
 
 const foo = async () => {
-  // const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  await a.fetchClients();
+  const b = (await Agreement.find(db, { forest_file_id: 'RAN073117' })).pop();
+  await b.fetchClients();
+  await b.fetchUsage();
 
-  const result1 = await Agreement.findWithTypeZoneDistrict(db, { forest_file_id: 'RAN073263' });
-  await result1[0].fetchClients();
-  console.log('clients = ', result1[0]);
+  console.log('a', a.forestFileId, a.clients);
+  console.log('b', b.forestFileId, b.clients);
+  console.log('b', b.forestFileId, b.usage);
 
-  const result2 = await Agreement.update(db, { forest_file_id: 'RAN073263' }, { zone_id: 10 });
-  console.log(result2);
+  // console.log(a.usage);
+  // console.log(a.x);
+
+  // const result1 = await Agreement.findWithTypeZoneDistrict(db, { forest_file_id: 'RAN075120' });
+  // const first = result1[0];
+  // await first.fetchClient();
+  // console.log('clients = ', result1[0]);
+
+  // const result2 = await Agreement.update(db, { forest_file_id: 'RAN073263' }, { zone_id: 10 });
+  // console.log(result2);
 };
 
 foo();

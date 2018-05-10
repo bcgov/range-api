@@ -26,6 +26,7 @@ import AgreementType from './agreementtype';
 import Client from './client';
 import District from './district';
 import Model from './model';
+import Usage from './usage';
 import Zone from './zone';
 
 export default class Agreement extends Model {
@@ -36,6 +37,8 @@ export default class Agreement extends Model {
         obj[key] = data[key];
       }
     });
+
+    console.log('**********************************');
 
     super(obj, db);
 
@@ -109,11 +112,34 @@ export default class Agreement extends Model {
   }
 
   async fetchClients() {
-    this.clients = await Client.clientsForAgreement(this.db, this);
+    const clients = await Client.clientsForAgreement(this.db, this);
+    this.clients = clients;
   }
 
   // eslint-disable-next-line class-methods-use-this
   async fetchPlans() {
     throw new Error('not implemented yet');
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  async fetchUsage() {
+    const order = ['year', 'desc'];
+    const where = { agreement_id: this.forestFileId };
+    const usage = await Usage.find(this.db, where, order);
+    this.usage = usage;
+  }
 }
+
+// Agreement.prototype.fetchUsage = async function () {
+//   const order = ['year', 'desc'];
+//   const where = { agreement_id: this.forestFileId };
+//   const usage = await Usage.find(this.db, where, order);
+//   // console.log(usage);
+//   Object.assign(this, usage);
+// }
+
+// Agreement.prototype.fetchClient = async function () {
+//   const clients = await Client.clientsForAgreement(this.db, this);
+//   this.clients = clients;
+//   // Object.assign(this, clients);
+// };

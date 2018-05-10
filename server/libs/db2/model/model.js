@@ -28,19 +28,24 @@ export default class Model {
     Object.defineProperty(this, 'db', {
       enumerable: false,
       value: db,
+      writable: false,
     });
-
     Object.assign(this, Model.transformToCamelCase(data));
   }
 
   static get fields() {
     // primary key *must* be first!
-    throw new Error('You must override this fields()');
+    throw new Error('You must override fields()');
   }
 
   static get table() {
-    throw new Error('You must override this table()');
+    throw new Error('You must override table()');
   }
+
+  // // eslint-disable-next-line no-unused-vars
+  // static async find(db, where, order = undefined) {
+  //   throw new Error('You must override find()');
+  // }
 
   static get primaryKey() {
     const field = this.fields[0];
@@ -67,16 +72,32 @@ export default class Model {
   }
 
   // Find an object(s) with the provided where conditions
-  static async find(db, ...where) {
-    return db.table(this.table)
-      .where(...where)
-      .select(...this.fields)
-      .then(rows => rows.map((row) => {
-        const obj = Object.create(this.prototype);
-        Object.assign(obj, this.transformToCamelCase(row));
+  static async find(db, where, order = undefined) {
+    let results = [];
+    const q = db
+      .table(this.table)
+      .where(where)
+      .select(...this.fields);
+    if (order && order.length > 0) {
+      results = await q.orderBy(...order);
+    } else {
+      results = await q;
+    }
 
-        return obj;
-      }));
+    const objs = results.map((row) => {
+      const obj = Object.create(this.prototype, {
+        db: {
+          enumerable: false,
+          value: db,
+          writable: false,
+        },
+      });
+      Object.assign(obj, this.transformToCamelCase(row));
+
+      return obj;
+    });
+
+    return objs;
   }
 
   static async findOne(db, ...where) {
