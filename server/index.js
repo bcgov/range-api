@@ -41,25 +41,28 @@ const {
 } = dm;
 
 const foo = async () => {
-  const a = (await Agreement.find(db, { forest_file_id: 'RAN075120' })).pop();
+  const a = (await Agreement.findWithTypeZoneDistrictExemption(db, { forest_file_id: 'RAN075120' })).pop();
   await a.fetchClients();
-  const b = (await Agreement.find(db, { forest_file_id: 'RAN073745' })).pop();
-  await b.fetchClients();
-  await b.fetchUsage();
-  await b.fetchPlans();
 
-  const promises = [...b.plans.map(p => p.fetchGrazingSchedules()),
-    ...b.plans.map(p => p.fetchPastures()),
-  ];
-  await Promise.all(promises);
+  console.log(a);
 
-  console.log('b', b.forestFileId, b.plans);
-  const plan = b.plans[0];
+  // const b = (await Agreement.find(db, { forest_file_id: 'RAN073745' })).pop();
+  // await b.fetchClients();
+  // await b.fetchUsage();
+  // await b.fetchPlans();
 
-  console.log(plan);
+  // const promises = [...b.plans.map(p => p.fetchGrazingSchedules()),
+  //   ...b.plans.map(p => p.fetchPastures()),
+  // ];
+  // await Promise.all(promises);
 
-  const schedule = plan.schedules[0];
-  console.log(schedule);
+  // console.log('b', b.forestFileId, b.plans);
+  // const plan = b.plans[0];
+
+  // console.log(plan);
+
+  // const schedule = plan.schedules[0];
+  // console.log(schedule);
 
 
   // console.log('b', b.forestFileId, b.clients);

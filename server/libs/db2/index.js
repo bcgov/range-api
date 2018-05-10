@@ -14,6 +14,7 @@
 
 import knex from 'knex';
 import Agreement from './model/agreement';
+import AgreementExemptionStatus from './model/agreementexemptionstatus';
 import AgreementType from './model/agreementtype';
 import Client from './model/client';
 import ClientType from './model/clienttype';
@@ -63,5 +64,6 @@ export default class DataManager {
     this.GrazingSchedule = GrazingSchedule;
     this.LivestockType = LivestockType;
     this.Pasture = Pasture;
+    this.AgreementExemptionStatus = AgreementExemptionStatus;
   }
 }

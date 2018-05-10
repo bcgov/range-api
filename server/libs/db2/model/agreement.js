@@ -20,6 +20,7 @@
 
 'use strict';
 
+import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
 import Client from './client';
 import District from './district';
@@ -42,24 +43,25 @@ export default class Agreement extends Model {
     this.zone = new Zone(Zone.extract(data));
     this.zone.district = new District(District.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
+    this.exemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data));
   }
 
   static get fields() {
     // primary key *must* be first!
-    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'agreement_type_id',
-      'agreement_exemption_status_id'].map(f => `${Agreement.table}.${f}`);
+    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date'].map(f => `${Agreement.table}.${f}`);
   }
 
   static get table() {
     return 'agreement';
   }
 
-  static async findWithTypeZoneDistrict(db, where, page = undefined, limit = undefined) {
+  static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
     const myFields = [
       ...Agreement.fields,
       ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...AgreementExemptionStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
@@ -70,6 +72,7 @@ export default class Agreement extends Model {
         .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
         .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
+        .join('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
         .where(where);
 
       if (page && limit) {
