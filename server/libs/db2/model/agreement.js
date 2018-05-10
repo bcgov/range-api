@@ -24,6 +24,7 @@ import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
 import Client from './client';
 import District from './district';
+import LivestockIdentifier from './livestockidentifier';
 import Model from './model';
 import Plan from './plan';
 import Usage from './usage';
@@ -40,10 +41,25 @@ export default class Agreement extends Model {
 
     super(obj, db);
 
+    // // hide this property so it is not automatically returned by the
+    // // API.
+    // delete this.forestFileId;
+    // Object.defineProperty(this, 'forestFileId', {
+    //   value: obj.forestFileId,
+    //   writable: false,
+    //   enumerable: false,
+    // });
+
     this.zone = new Zone(Zone.extract(data));
     this.zone.district = new District(District.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
-    this.exemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data));
+    // eslint-disable-next-line max-len
+    this.agreementExemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data));
+  }
+
+  // To matche previous Agreement (sequelize) schema.
+  get id() {
+    return this.forestFileId;
   }
 
   static get fields() {
@@ -53,6 +69,30 @@ export default class Agreement extends Model {
 
   static get table() {
     return 'agreement';
+  }
+
+  static async findWithAllRelations(db, where, page = undefined, limit = undefined) {
+    let promises = [];
+    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit);
+    // fetch all data that is directly related to the agreement
+    promises = myAgreements.map(agreement =>
+      [agreement.fetchClients(),
+        agreement.fetchUsage(),
+        agreement.fetchPlans(),
+        agreement.fetchLivestockIdentifiers()]);
+
+    await Promise.all(promises.flatten());
+
+    // fetch all data that is indirectly (nested) related to an agreement
+    promises = [];
+    myAgreements.forEach((agreement) => {
+      promises = [...promises, ...agreement.plans.map(plan =>
+        [plan.fetchGrazingSchedules(), plan.fetchPastures()])];
+    });
+
+    await Promise.all(promises.flatten());
+
+    return myAgreements;
   }
 
   static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
@@ -116,7 +156,6 @@ export default class Agreement extends Model {
     this.clients = clients;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async fetchPlans() {
     const order = ['id', 'desc'];
     const where = { agreement_id: this.forestFileId };
@@ -124,11 +163,38 @@ export default class Agreement extends Model {
     this.plans = plans;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async fetchUsage() {
     const order = ['year', 'desc'];
     const where = { agreement_id: this.forestFileId };
     const usage = await Usage.find(this.db, where, order);
     this.usage = usage;
+  }
+
+  async fetchLivestockIdentifiers() {
+    const where = { agreement_id: this.forestFileId };
+    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(this.db, where);
+    this.livestockIdentifiers = livestockIdentifiers;
+  }
+
+  // Transform the client property to match the API v1 specification.
+  transformToV1() {
+    if (!this.clients && this.clients.length === 0) {
+      return;
+    }
+
+    const clients = this.clients.map((client) => {
+      const aClient = {
+        id: client.clientNumber,
+        locationCode: client.locationCode,
+        name: client.name,
+        clientTypeCode: client.clientType.code,
+        startDate: client.licenseeStartDate,
+        endDate: client.licenseeStartEnd,
+      };
+
+      return aClient;
+    });
+
+    this.clients = clients.sort((a, b) => a.clientTypeCode > b.clientTypeCode);
   }
 }

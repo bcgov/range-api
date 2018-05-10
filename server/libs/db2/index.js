@@ -20,6 +20,9 @@ import Client from './model/client';
 import ClientType from './model/clienttype';
 import District from './model/district';
 import GrazingSchedule from './model/grazingschedule';
+import LivestockIdentifier from './model/livestockidentifier';
+import LivestockIdentifierLocation from './model/livestockidentifierlocation';
+import LivestockIdentifierType from './model/livestockidentifiertype';
 import LivestockType from './model/livestocktype';
 import Pasture from './model/pasture';
 import Plan from './model/plan';
@@ -65,5 +68,8 @@ export default class DataManager {
     this.LivestockType = LivestockType;
     this.Pasture = Pasture;
     this.AgreementExemptionStatus = AgreementExemptionStatus;
+    this.LivestockIdentifier = LivestockIdentifier;
+    this.LivestockIdentifierLocation = LivestockIdentifierLocation;
+    this.LivestockIdentifierType = LivestockIdentifierType;
   }
 }

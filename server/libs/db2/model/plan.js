@@ -45,9 +45,12 @@ export default class Plan extends Model {
   }
 
   static get fields() {
+    // TODO:(jl) Work with consumers to remove 'agreement_id' from the selected
+    // fields.
+
     // primary key *must* be first!
     return ['id', 'range_name', 'plan_start_date', 'plan_end_date',
-      'notes', 'alt_business_name'].map(f => `${Plan.table}.${f}`);
+      'notes', 'alt_business_name', 'agreement_id'].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
@@ -126,6 +129,6 @@ export default class Plan extends Model {
     ));
     await Promise.all(promises);
 
-    this.schedules = schedules;
+    this.grazingSchedules = schedules;
   }
 }

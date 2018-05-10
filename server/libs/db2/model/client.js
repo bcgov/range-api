@@ -33,8 +33,24 @@ export default class Client extends Model {
         obj[key] = data[key];
       }
     });
+
     super(obj, db);
+
+    // // hide this property so it is not automatically returned by the
+    // // API.
+    // delete this.clientNumber;
+    // Object.defineProperty(this, 'clientNumber', {
+    //   value: obj.clientNumber,
+    //   writable: false,
+    //   enumerable: false,
+    // });
+
     this.clientType = new ClientType(ClientType.extract(data), db);
+  }
+
+  // To match previous Agreement (sequelize) schema.
+  get id() {
+    return this.clientNumber;
   }
 
   static get fields() {
