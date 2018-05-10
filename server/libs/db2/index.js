@@ -18,6 +18,9 @@ import AgreementType from './model/agreementtype';
 import Client from './model/client';
 import ClientType from './model/clienttype';
 import District from './model/district';
+import Plan from './model/plan';
+import PlanExtension from './model/planextension';
+import PlanStatus from './model/planstatus';
 import Usage from './model/usage';
 import User from './model/user';
 import Zone from './model/zone';
@@ -51,5 +54,8 @@ export default class DataManager {
     this.Client = Client;
     this.ClientType = ClientType;
     this.Usage = Usage;
+    this.Plan = Plan;
+    this.PlanStatus = PlanStatus;
+    this.PlanExtension = PlanExtension;
   }
 }
