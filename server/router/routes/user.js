@@ -51,7 +51,10 @@ router.get('/me', asyncMiddleware(async (req, res) => {
 // Get all users
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const users = await User.findAll();
+    let users = [];
+    if (req.user && !req.user.isAgreementHolder()) {
+      users = await User.findAll();
+    }
     res.status(200).json(users).end();
   } catch (error) {
     throw error;
