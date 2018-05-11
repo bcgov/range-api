@@ -47,7 +47,7 @@ export default class DataManager {
       debug: false,
       pool: {
         min: 1,
-        max: 2,
+        max: 64,
       },
     });
 
