@@ -23,33 +23,17 @@
 'use strict';
 
 import { Router } from 'express';
-// import deepDiff from 'deep-diff';
-import { Op } from 'sequelize';
-import {
-  asyncMiddleware,
-  errorWithCode,
-  isNumeric,
-} from '../../libs/utils';
-import { logger } from '../../libs/logger';
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
+import { logger } from '../../libs/logger';
+import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
 
 const router = new Router();
-const dm = new DataManager(config);
+const dm2 = new DataManager(config);
 const {
-  ClientType,
+  db,
   Agreement,
-  Zone,
-  transformAgreement,
-  LivestockIdentifier,
-  STANDARD_INCLUDE_NO_ZONE,
-  STANDARD_INCLUDE_NO_ZONE_CLIENT,
-  INCLUDE_ZONE_MODEL,
-  INCLUDE_DISTRICT_MODEL,
-  INCLUDE_USER_MODEL,
-  INCLUDE_CLIENT_MODEL,
-  EXCLUDED_AGREEMENT_ATTR,
-} = dm;
+} = dm2;
 
 //
 // Routes
@@ -58,22 +42,18 @@ const {
 // Get all agreements based on the user type
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const options = {
-      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
-        INCLUDE_CLIENT_MODEL(req.user)],
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
-      order: [
-        ['plans', 'createdAt', 'DESC'],
-      ],
-    };
-    const clientTypes = await ClientType.findAll();
-    const agreements = await Agreement.findAll(options);
+    // TODO:(jl) Confirm role(s) / access before proceeding with request.
+    // TODO:(jl) This is a pretty hevy weight query. Consider giving just
+    // base agreement details and let the clients pull in the `Plan` later.
+    const results = await Agreement.findWithAllRelations(db, { });
 
-    // apply and transforms to the data structure.
-    const transformedAgreements = agreements.map(result => transformAgreement(result, clientTypes));
-    res.status(200).json(transformedAgreements).end();
+    if (results.length > 0) {
+      results.map(agreement => agreement.transformToV1());
+
+      return res.status(200).json(results).end();
+    }
+
+    return res.status(404).json({ error: 'Not found' }).end();
   } catch (err) {
     throw err;
   }
@@ -81,78 +61,31 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Search agreements by RAN, contact name, and client name.
 router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '', limit: l = 10, page: p = 1 } = req.query;
-  const page = Number(p);
-  const limit = Number(l);
-  const offset = limit * (page - 1);
+  // const { term = '', limit: l = 10, page: p = 1 } = req.query;
+  // const page = Number(p);
+  // const limit = Number(l);
+  // const offset = limit * (page - 1);
 
   try {
-    // fetch all the zones where the User's first or last name matches the
-    // search term.
-    const codes = await Zone.findAll({
-      where: {
-        user_id: {
-          [Op.ne]: null,
-        },
-      },
-      include: [INCLUDE_USER_MODEL],
-    })
-      .filter((zone) => {
-        const rx = new RegExp(`(?=.*${zone.user.givenName})|(?=.*${zone.user.familyName})`, 'ig');
-        return rx.test(term);
-      })
-      .map(zone => zone.code);
-    // This `where` clause will match the Agreement ID (forest file ID), or a Zone with
-    // a matching User (see above), or a matching Client.
-    const where = {
-      [Op.or]: [
-        {
-          id: {
-            [Op.iLike]: `%${term}%`, // (iLike: case insensitive)
-          },
-        },
-        {
-          '$zone.code$': codes, // limit scope of Zones
-        },
-        {
-          '$clients.name$': {
-            [Op.iLike]: `%${term}%`,
-          },
-        },
-      ],
-    };
-    const clientTypes = await ClientType.findAll();
-    const { count: totalCount, rows: agreements } = await Agreement.findAndCountAll({
-      attributes: [
-        dm.sequelize.literal('DISTINCT ON(forest_file_id) forest_file_id'),
-        'id',
-      ],
-      include: [INCLUDE_CLIENT_MODEL(req.user), INCLUDE_ZONE_MODEL()],
-      limit,
-      offset,
-      where,
-      distinct: true, // get the distinct number of agreements
-      subQuery: false, // prevent from putting LIMIT and OFFSET in sub query
-    });
+    // const results = await Agreement.findWithAllRelations(db, { });
 
-    // apply and transforms to the data structure.
-    const transformedAgreements = await Promise.all(agreements.map(async (agreement) => {
-      // Agreements from `findAndCountAll` dont' have a complete set of properties. We
-      // fetch a fresh copy by ID to work around this.
-      const myAgreement = await Agreement.findById(agreement.id, {
-        attributes: {
-          exclude: EXCLUDED_AGREEMENT_ATTR,
-        },
-        include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(),
-          INCLUDE_CLIENT_MODEL(req.user)],
-        order: [
-          ['plans', 'createdAt', 'DESC'],
-        ],
-      });
+    // Agreements where
+    // User (first / last || first last) match term
+    // AgreementID matches term.
+    // Client name matches term.
 
-      return { ...transformAgreement(myAgreement, clientTypes) };
-    }));
+    // .filter((zone) => {
+    //   const rx = new RegExp(`(?=.*${zone.user.givenName})|(?=.*${zone.user.familyName})`, 'ig');
+    //   return rx.test(term);
+    // })
+    // .map(zone => zone.code);
 
+    // const m = results.filter((result) => {
+
+    // });
+
+    const [totalCount, limit, page] = 0;
+    const transformedAgreements = [];
     const result = {
       perPage: limit,
       currentPage: page,
@@ -169,32 +102,22 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
 // Get a single agreement by id
 router.get('/:id', asyncMiddleware(async (req, res) => {
-  try {
-    const {
-      id,
-    } = req.params;
-    const options = {
-      where: {
-        id,
-      },
-      include: [...STANDARD_INCLUDE_NO_ZONE_CLIENT, INCLUDE_ZONE_MODEL(req.user),
-        INCLUDE_CLIENT_MODEL(req.user)],
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
-      order: [
-        ['plans', 'createdAt', 'DESC'],
-      ],
-    };
-    const clientTypes = await ClientType.findAll();
-    const agreement = await Agreement.findOne(options);
+  const {
+    id,
+  } = req.params;
 
-    if (agreement) {
-      const plainAgreement = transformAgreement(agreement, clientTypes);
-      res.status(200).json(plainAgreement).end();
-    } else {
-      res.status(404).json({ error: 'Not found' }).end();
+  try {
+    // TODO:(jl) Confirm role(s) / access before proceeding with request.
+    const results = await Agreement.findWithAllRelations(db, { forest_file_id: id });
+
+    if (results.length > 0) {
+      const agreement = results.pop();
+      agreement.transformToV1();
+
+      return res.status(200).json(agreement).end();
     }
+
+    return res.status(404).json({ error: 'Not found' }).end();
   } catch (err) {
     throw err;
   }
@@ -207,46 +130,39 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
   const {
     id,
   } = req.params;
-
   const {
-    createdAt,
-    updatedAt,
-    ...body
-  } = req.body;
+    user,
+    body,
+  } = req;
+
+  delete body.forestFileId;
+  delete body.createdAt;
+  delete body.updatedAt;
 
   try {
-    const clientTypes = await ClientType.findAll();
-    const agreement = await Agreement.findOne({
-      where: {
-        id,
-      },
-      include: [...STANDARD_INCLUDE_NO_ZONE, INCLUDE_ZONE_MODEL()], // no filtering for now.
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
-    });
+    const results = await Agreement.find(db, { forest_file_id: id });
 
-    if (!agreement) {
-      res.status(404).end();
+    if (results.length === 0) {
+      throw errorWithCode('You do not access to this agreement', 400);
     }
 
-    const count = await Agreement.update(body, {
-      where: {
-        id,
-      },
-    });
+    const agreement = results.pop();
 
-    if (count[0] === 0) {
-      // No records were updated. The ID probably does not exists.
-      res.send(400).json().end(); // Bad Request
+    if (!user.canAccessAgreement(agreement)) {
+      throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const plainAgreement = transformAgreement(agreement, clientTypes);
+    const pkeys = await Agreement.update(db, { forest_file_id: id }, body);
+    if (pkeys.length === 0) {
+      throw errorWithCode('There was a problem updating the record', 400);
+    }
 
-    res.status(200).json(plainAgreement).end();
+    const agreements = pkeys.map(pkey => Agreement.find(db, { forest_file_id: pkey }));
+
+    res.status(200).json(await Promise.all(agreements)).end();
   } catch (error) {
-    logger.error(`error updating agreement ${id}`);
-    throw error;
+    logger.error(`error updating agreement ${id}, error = ${error.message}`);
+    throw errorWithCode('There was a problem updating the record', 500);
   }
 }));
 
@@ -257,13 +173,14 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
 // Update the zone of an agreement
 router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
   const {
-    zoneId,
-  } = req.body;
-  const {
     agreementId,
   } = req.params;
+  const {
+    user,
+    body,
+  } = req;
 
-  if (!zoneId || !isNumeric(zoneId)) {
+  if (!body.zoneId || !isNumeric(body.zoneId)) {
     throw errorWithCode('zoneId must be provided in body and be numeric', 400);
   }
 
@@ -272,130 +189,35 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
   }
 
   try {
-    const agreement = await Agreement.findById(agreementId);
-    if (!agreement) {
-      throw errorWithCode(`No Agreement with ID ${agreementId} exists`, 404);
-    }
-    const zone = await Zone.findOne({
-      include: [INCLUDE_DISTRICT_MODEL],
-      where: {
-        id: zoneId,
-      },
-      attributes: {
-        exclude: ['updatedAt', 'createdAt'],
-      },
-    });
-    if (!zone) {
-      throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
+    const results = await Agreement.find(db, { forest_file_id: agreementId });
+
+    if (results.length === 0) {
+      throw errorWithCode('You do not access to this agreement', 400);
     }
 
-    await agreement.setZone(zone);
-    return res.status(200).json(zone).end();
-  } catch (err) {
-    throw err;
-  }
-}));
+    const agreement = results.pop();
 
-//
-// Agreement Livestock Identifier
-//
-
-// create a livestock identifier in an agreement
-router.post('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
-  res.status(501).json({ error: 'not implemented yet' }).end();
-
-  const {
-    agreementId,
-  } = req.params;
-
-  if (!agreementId) {
-    throw errorWithCode('agreementId must be provided in path', 400);
-  }
-
-  // TODO: validate fields in body
-  try {
-    const agreement = await Agreement.findOne({
-      where: {
-        agreementId,
-      },
-    });
-    const { createdAt, updatedAt, ...body } = req.body;
-    const livestockIdentifier = await LivestockIdentifier.create(body);
-
-    await agreement.addLivestockIdentifier(livestockIdentifier);
-    await agreement.save();
-
-    res.status(200).json(livestockIdentifier).end();
-  } catch (err) {
-    throw err;
-  }
-}));
-
-// get all livestock identifiers of an agreement
-router.get('/:agreementId?/livestockidentifier', asyncMiddleware(async (req, res) => {
-  const {
-    agreementId,
-  } = req.params;
-
-  if (!agreementId) {
-    throw errorWithCode('agreementId must be provided in path', 400);
-  }
-
-  try {
-    const livestockIdentifiers = await LivestockIdentifier.findAll({
-      where: {
-        agreementId,
-      },
-    });
-
-    return res.status(200).json(livestockIdentifiers).end();
-  } catch (err) {
-    throw err;
-  }
-}));
-
-router.put('/:agreementId?/livestockidentifier/:livestockIdentifierId?', asyncMiddleware(async (req, res) => {
-  const {
-    agreementId,
-    livestockIdentifierId,
-  } = req.params;
-
-  const {
-    body,
-  } = req;
-
-  if (!livestockIdentifierId || !isNumeric(livestockIdentifierId)) {
-    throw errorWithCode('livestockIdentifierId must be provided and be numeric', 400);
-  }
-
-  if (!agreementId) {
-    throw errorWithCode('agreementId must be provided in path', 400);
-  }
-
-  try {
-    const [affectedCount] = await LivestockIdentifier.update(body, {
-      where: {
-        agreementId,
-        id: livestockIdentifierId,
-      },
-    });
-
-    if (!affectedCount) {
-      throw errorWithCode(`No livestock identifier with ID ${livestockIdentifierId} exists`, 400);
+    if (!user.canAccessAgreement(agreement)) {
+      throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const livestockIdentifier = await LivestockIdentifier.findOne({
-      where: {
-        id: livestockIdentifierId,
-      },
-      attributes: {
-        exclude: ['updatedAt', 'createdAt'],
-      },
-    });
+    const pkeys = await Agreement.update(
+      db,
+      { forest_file_id: agreementId },
+      { zone_id: body.zoneId },
+    );
 
-    return res.status(200).json(livestockIdentifier);
-  } catch (err) {
-    throw err;
+    if (pkeys.length === 0) {
+      throw errorWithCode('There was a problem updating the record', 400);
+    }
+
+    const agreements = pkeys.map(pkey => Agreement.find(db, { forest_file_id: pkey }));
+
+    res.status(200).json(await Promise.all(agreements)).end();
+  } catch (error) {
+    logger.error(`error updating agreement ${agreementId}, error = ${error.message}`);
+    throw errorWithCode('There was a problem updating the record', 500);
   }
 }));
+
 export default router;
