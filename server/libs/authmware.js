@@ -25,9 +25,9 @@
 // import url from 'url';
 import express from 'express';
 import passport from 'passport';
+import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import request from 'request';
 import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import config from '../config';
 import DataManager from './db2';
 import { logger } from './logger';
@@ -149,7 +149,7 @@ const authmware = async (app) => {
 
       // User roles are assigned in SSO and extracted from the JWT.
       // See the User object for additional functionality.
-      user.roles = jwtPayload.resource_access[config.get('sso:clientId')];
+      user.roles = jwtPayload.resource_access[config.get('sso:clientId')].roles;
       if (!user.isActive()) {
         return done(errorWithCode('This user account is not active.', 403), false); // Forbidden
       }
