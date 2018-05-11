@@ -100,7 +100,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
     const agreements = await Promise.all(promises);
     agreements.map(ageement => ageement.transformToV1());
 
-    // Make sure the user param suppleid is not more than the actual total
+    // Make sure the user param supplied is not more than the actual total
     // pages.
     const currentPage = page > totalPages ? totalPages : page;
     const result = {
@@ -108,6 +108,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       currentPage,
       totalItems,
       totalPages,
+      agreements,
     };
 
     res.status(200).json(result).end();
