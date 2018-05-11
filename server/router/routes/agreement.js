@@ -157,7 +157,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       perPage: limit,
       currentPage: page,
       totalItems: totalCount,
-      totalPage: Math.ceil(totalCount / limit) || 1,
+      totalPages: Math.ceil(totalCount / limit) || 1,
       agreements: transformedAgreements,
     };
 
