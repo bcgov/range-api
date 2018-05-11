@@ -64,7 +64,7 @@ export default class Agreement extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date'].map(f => `${Agreement.table}.${f}`);
+    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id'].map(f => `${Agreement.table}.${f}`);
   }
 
   static get table() {
@@ -182,7 +182,9 @@ export default class Agreement extends Model {
     const obj = { };
     Agreement.fields.forEach((field) => {
       const aKey = field.replace(Agreement.table, '').slice(1);
-      obj[aKey] = values[Model.toCamelCase(aKey)];
+      if (values[Model.toCamelCase(aKey)]) {
+        obj[aKey] = values[Model.toCamelCase(aKey)];
+      }
     });
 
     try {
@@ -228,6 +230,12 @@ export default class Agreement extends Model {
     if (!this.clients && this.clients.length === 0) {
       return;
     }
+
+    Object.defineProperty(this, 'id', {
+      enumerable: true,
+      value: this.forestFileId,
+      writable: false,
+    });
 
     const clients = this.clients.map((client) => {
       const aClient = {

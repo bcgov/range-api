@@ -31,7 +31,7 @@ const router = new Router();
 // Get
 router.get('/me', asyncMiddleware(async (req, res) => {
   try {
-    const me = req.user.get({ raw: true });
+    const me = req.user;
     delete me.created_at;
     delete me.updated_at;
     const { roles } = req.user;
