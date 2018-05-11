@@ -23,13 +23,9 @@
 'use strict';
 
 import { Router } from 'express';
-import {
-  asyncMiddleware,
-  isNumeric,
-  errorWithCode,
-} from '../../libs/utils';
 import config from '../../config';
 import DataManager from '../../libs/db';
+import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
 
 const router = new Router();
 const dm = new DataManager(config);
@@ -405,6 +401,47 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
     });
 
     return res.status(200).json(aSchedule).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+    pastureId,
+  } = req.params;
+
+  const {
+    createdAt,
+    updatedAt,
+    ...body
+  } = req.body;
+
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+
+  if (!pastureId) {
+    throw errorWithCode('pastureId must be provided in path', 400);
+  }
+
+  try {
+    // By fetching the plan and including the pastures we verify authorization
+    // during the fetch.
+    const plan = await Plan.findById(planId, planQueryOptions);
+    if (!plan) {
+      throw errorWithCode('Unable to fetch plan', 400);
+    }
+
+    const pasture = plan.pastures.find(item => item.id === parseInt(pastureId, 10));
+    if (!pasture) {
+      throw errorWithCode(`No pasture with ID ${pastureId} associated to plan ${planId}`, 400);
+    }
+
+    const aPasture = await pasture.update({ ...body, planId });
+
+    return res.status(200).json(aPasture).end();
   } catch (err) {
     throw err;
   }

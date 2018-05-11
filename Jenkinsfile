@@ -37,9 +37,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     args: '${computer.jnlpmac} ${computer.name}',
     alwaysPullImage: true
     // envVars: [
-    //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
-    //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
-    //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
+    //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
     //   ]
   )
 ]) {
@@ -58,11 +56,13 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     
     stage('Install') {
       echo "Setup: ${BUILD_ID}"
+      sh "node -v"
+      sh "npm -v"
 
       // setup the node dev environment
       sh "npm ci"
       // not sure if this needs to be added to package.json.
-      sh "npm i escape-string-regexp"
+      // sh "npm i escape-string-regexp"
     }
     
     stage('Test') {
@@ -70,18 +70,18 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
 
       script {
         // Run a security check on our packages
-        try {
-          sh "./node_modules/.bin/nsp check"
-        } catch (error) {
-          // def output = readFile('nsp-report.txt').trim()
-          def attachment = [:]
-          attachment.fallback = 'See build log for more details'
-          attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
-          attachment.color = '#FFA500' // Orange
-          attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
+        // try {
+        //   sh "./node_modules/.bin/nsp check"
+        // } catch (error) {
+        //   // def output = readFile('nsp-report.txt').trim()
+        //   def attachment = [:]
+        //   attachment.fallback = 'See build log for more details'
+        //   attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
+        //   attachment.color = '#FFA500' // Orange
+        //   attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
-        }
+        //   notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+        // }
 
         try {
           // Run our code quality tests et al.

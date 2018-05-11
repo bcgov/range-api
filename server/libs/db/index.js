@@ -302,6 +302,7 @@ export default class DataManager {
       },
       order: [
         ['created_at', 'DESC'],
+        ['grazingSchedules', 'year', 'ASC'],
       ],
       include: [
         this.INCLUDE_PLAN_STATUS_MODEL,
