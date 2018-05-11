@@ -75,12 +75,28 @@ export default class Client extends Model {
 
     const results = await db
       .select(myFields)
-      .from(this.table)
+      .from(Client.table)
       .join('client_agreement', { 'client_agreement.client_id': 'ref_client.client_number' })
       .join('ref_client_type', { 'client_agreement.client_type_id': 'ref_client_type.id' })
       .where({ 'client_agreement.agreement_id': agreement.forestFileId })
       .then(rows => rows.map(row => new Client(row)));
 
     return results;
+  }
+
+  static async search(db, term) {
+    if (!db || !term) {
+      return [];
+    }
+
+    const results = await db
+      .select(Client.primaryKey)
+      .from(Client.table)
+      .where('name', 'like', `%${term}%`)
+      .orWhere('name', 'like', `%${term.toLowerCase()}%`)
+      .orWhere('name', 'like', `%${term.toUpperCase()}%`);
+
+    // return an array of `client_number`
+    return results.map(result => Object.values(result)).flatten();
   }
 }

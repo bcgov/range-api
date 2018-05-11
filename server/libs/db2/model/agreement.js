@@ -93,7 +93,7 @@ export default class Agreement extends Model {
         [plan.fetchGrazingSchedules(), plan.fetchPastures()])];
     });
 
-    await Promise.all(promises.flatten());
+    await Promise.all(promises);
 
     return myAgreements;
   }
@@ -128,6 +128,51 @@ export default class Agreement extends Model {
       }
 
       return results.map(row => new Agreement(row, db));
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async agreementsForClientId(db, clientId) {
+    if (!db || !clientId) {
+      return [];
+    }
+
+    const results = await db
+      .select('agreement_id')
+      .from('client_agreement')
+      .where({ client_id: clientId });
+
+    return results.map(result => Object.values(result)).flatten();
+  }
+
+  static async agreementsForZoneId(db, zoneId) {
+    if (!db || !zoneId) {
+      return [];
+    }
+
+    const results = await db
+      .select('forest_file_id')
+      .from(Agreement.table)
+      .where({ zone_id: zoneId });
+
+    return results.map(result => Object.values(result)).flatten();
+  }
+
+  static async search(db, term) {
+    if (!db || !term) {
+      return [];
+    }
+
+    try {
+      const results = await db
+        .select(Agreement.primaryKey)
+        .from(Agreement.table)
+        .where({ 'agreement.forest_file_id': term })
+        .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
+
+      // return an array of `forest_file_id`
+      return results.map(result => Object.values(result)).flatten();
     } catch (err) {
       throw err;
     }

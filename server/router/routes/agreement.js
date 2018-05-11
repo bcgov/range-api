@@ -33,6 +33,8 @@ const dm2 = new DataManager(config);
 const {
   db,
   Agreement,
+  Client,
+  Zone,
 } = dm2;
 
 //
@@ -61,37 +63,39 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Search agreements by RAN, contact name, and client name.
 router.get('/search', asyncMiddleware(async (req, res) => {
-  // const { term = '', limit: l = 10, page: p = 1 } = req.query;
-  // const page = Number(p);
-  // const limit = Number(l);
-  // const offset = limit * (page - 1);
+  const { term = '', limit: l = 10, page: p = 1 } = req.query;
+  const page = Number(p);
+  const limit = Number(l);
+  const offset = limit * (page - 1);
 
   try {
-    // const results = await Agreement.findWithAllRelations(db, { });
+    const clientIDs = await Client.search(db, term);
+    const cpromises = clientIDs.map(clientId => Agreement.agreementsForClientId(db, clientId));
+    const zoneIDs = await Zone.search(db, term);
+    const zpromises = zoneIDs.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
+    const allIDs = [
+      ...(await Agreement.search(db, term)),
+      ...(await Promise.all(cpromises)),
+      ...(await Promise.all(zpromises)),
+    ].flatten();
 
-    // Agreements where
-    // User (first / last || first last) match term
-    // AgreementID matches term.
-    // Client name matches term.
+    const promises = allIDs
+      .slice(offset, offset + limit)
+      .map(agreementId =>
+        Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
 
-    // .filter((zone) => {
-    //   const rx = new RegExp(`(?=.*${zone.user.givenName})|(?=.*${zone.user.familyName})`, 'ig');
-    //   return rx.test(term);
-    // })
-    // .map(zone => zone.code);
+    const agreements = (await Promise.all(promises)).flatten();
+    agreements.map(ageement => ageement.transformToV1());
 
-    // const m = results.filter((result) => {
-
-    // });
-
-    const [totalCount, limit, page] = 0;
-    const transformedAgreements = [];
+    const totalPages = Math.ceil(allIDs.length / limit) || 1;
+    // Make sure the user param suppleid is not more than the actual total
+    // pages.
+    const currentPage = page > totalPages ? totalPages : page;
     const result = {
       perPage: limit,
-      currentPage: page,
-      totalItems: totalCount,
-      totalPage: Math.ceil(totalCount / limit) || 1,
-      agreements: transformedAgreements,
+      currentPage,
+      totalItems: allIDs.length,
+      totalPages,
     };
 
     res.status(200).json(result).end();

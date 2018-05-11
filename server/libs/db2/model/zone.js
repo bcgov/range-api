@@ -34,4 +34,19 @@ export default class Zone extends Model {
   static get table() {
     return 'ref_zone';
   }
+
+  static async search(db, term) {
+    if (!db || !term) {
+      return [];
+    }
+
+    const results = await db
+      .select(`${Zone.table}.${Zone.primaryKey}`)
+      .from(Zone.table)
+      .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
+      .whereRaw(`user_account.given_name || ' ' || user_account.family_name ILIKE '%${term}%'`);
+
+    // return an array of `zone_id`
+    return results.map(result => Object.values(result)).flatten();
+  }
 }

@@ -29,58 +29,9 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import config from './config';
 import auth from './libs/authmware';
-import DataManager from './libs/db2';
 import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
-
-const dm = new DataManager(config);
-const {
-  db,
-  Agreement,
-} = dm;
-
-const foo = async () => {
-  const a = (await Agreement.findWithTypeZoneDistrictExemption(db, { forest_file_id: 'RAN075120' })).pop();
-  await a.fetchClients();
-
-  console.log(a);
-
-  // const b = (await Agreement.find(db, { forest_file_id: 'RAN073745' })).pop();
-  // await b.fetchClients();
-  // await b.fetchUsage();
-  // await b.fetchPlans();
-
-  // const promises = [...b.plans.map(p => p.fetchGrazingSchedules()),
-  //   ...b.plans.map(p => p.fetchPastures()),
-  // ];
-  // await Promise.all(promises);
-
-  // console.log('b', b.forestFileId, b.plans);
-  // const plan = b.plans[0];
-
-  // console.log(plan);
-
-  // const schedule = plan.schedules[0];
-  // console.log(schedule);
-
-
-  // console.log('b', b.forestFileId, b.clients);
-  // console.log('b', b.forestFileId, b.usage);
-
-  // console.log(a.usage);
-  // console.log(a.x);
-
-  // const result1 = await Agreement.findWithTypeZoneDistrict(db, { forest_file_id: 'RAN075120' });
-  // const first = result1[0];
-  // await first.fetchClient();
-  // console.log('clients = ', result1[0]);
-
-  // const result2 = await Agreement.update(db, { forest_file_id: 'RAN073263' }, { zone_id: 10 });
-  // console.log(result2);
-};
-
-foo();
 
 // Middlewares
 
