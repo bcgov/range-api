@@ -75,11 +75,14 @@ export default class Agreement extends Model {
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit);
     // fetch all data that is directly related to the agreement
-    promises = myAgreements.map(agreement =>
-      [agreement.fetchClients(),
-        agreement.fetchUsage(),
-        agreement.fetchPlans(),
-        agreement.fetchLivestockIdentifiers()]);
+    // `await` used here to allow the queries to start imediatly and
+    // run in parallel. This greatly speeds up the fetch.
+    promises = myAgreements.map(async agreement =>
+      [await agreement.fetchClients(),
+        await agreement.fetchUsage(),
+        await agreement.fetchPlans(),
+        await agreement.fetchLivestockIdentifiers(),
+      ]);
 
     await Promise.all(promises.flatten());
 
@@ -131,21 +134,20 @@ export default class Agreement extends Model {
   }
 
   static async update(db, where, values) {
-    const obj = { ...values, ...{} };
-    Object.keys(values).forEach((key) => {
-      obj[Model.toSnakeCase(key)] = values[key];
+    const obj = { };
+    Agreement.fields.forEach((field) => {
+      const aKey = field.replace(Agreement.table, '').slice(1);
+      obj[aKey] = values[Model.toCamelCase(aKey)];
     });
 
     try {
-      const results = await db
+      const results = db
         .table(Agreement.table)
         .where(where)
         .update(obj)
         .returning(this.primaryKey);
-      const promises = results.map(result =>
-        Agreement.findWithTypeZoneDistrict(db, { forest_file_id: result }));
 
-      return Promise.all(promises);
+      return results;
     } catch (err) {
       throw err;
     }
@@ -157,7 +159,7 @@ export default class Agreement extends Model {
   }
 
   async fetchPlans() {
-    const order = ['id', 'desc'];
+    const order = ['id', 'desc']; // was created_at desc but this should do
     const where = { agreement_id: this.forestFileId };
     const plans = await Plan.findWithStatusExtension(this.db, where, order);
     this.plans = plans;
