@@ -67,36 +67,47 @@ router.get('/search', asyncMiddleware(async (req, res) => {
   const page = Number(p);
   const limit = Number(l);
   const offset = limit * (page - 1);
+  let promises = [];
+  let totalPages = 0;
+  let totalItems = 0;
 
   try {
-    const clientIDs = await Client.search(db, term);
-    const cpromises = clientIDs.map(clientId => Agreement.agreementsForClientId(db, clientId));
-    const zoneIDs = await Zone.search(db, term);
-    const zpromises = zoneIDs.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
-    const allIDs = [
-      ...(await Agreement.search(db, term)),
-      ...(await Promise.all(cpromises)),
-      ...(await Promise.all(zpromises)),
-    ].flatten();
+    if (term) {
+      const clientIDs = await Client.search(db, term);
+      const cpromises = clientIDs.map(clientId => Agreement.agreementsForClientId(db, clientId));
+      const zoneIDs = await Zone.search(db, term);
+      const zpromises = zoneIDs.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
+      const allIDs = [
+        ...(await Agreement.search(db, term)),
+        ...(await Promise.all(cpromises)),
+        ...(await Promise.all(zpromises)),
+      ].flatten();
 
-    const promises = allIDs
-      .slice(offset, offset + limit)
-      .map(agreementId =>
-        Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
+      totalPages = Math.ceil(allIDs.length / limit) || 1;
+      totalItems = allIDs.length;
 
-    const agreements = (await Promise.all(promises)).flatten();
+      promises = allIDs
+        .slice(offset, offset + limit)
+        .map(agreementId =>
+          Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
+    } else {
+      const count = await Agreement.count(db);
+      promises = await Agreement.findWithAllRelations(db, { }, page, limit);
+      totalPages = Math.ceil(count / limit) || 1;
+      totalItems = count;
+    }
+
+    const agreements = await Promise.all(promises);
     agreements.map(ageement => ageement.transformToV1());
 
-    const totalPages = Math.ceil(allIDs.length / limit) || 1;
     // Make sure the user param suppleid is not more than the actual total
     // pages.
     const currentPage = page > totalPages ? totalPages : page;
     const result = {
       perPage: limit,
       currentPage,
-      totalItems: allIDs.length,
+      totalItems,
       totalPages,
-      agreements,
     };
 
     res.status(200).json(result).end();
@@ -220,7 +231,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
       db,
       { forest_file_id: pkey },
     ));
-    const foo = (await Promise.all(agreements)).flatten();
+    const foo = (await Promise.all(agreements));
 
     res.status(200).json(foo.pop().zone).end();
   } catch (error) {

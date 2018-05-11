@@ -178,6 +178,19 @@ export default class Agreement extends Model {
     }
   }
 
+  static async count(db) {
+    const results = await db
+      .table(Agreement.table)
+      .count('*');
+
+    if (results.length === 0) {
+      return 0;
+    }
+
+    const count = parseInt(results.pop().count, 10);
+    return !Number.isNaN(count) ? count : 0;
+  }
+
   static async update(db, where, values) {
     const obj = { };
     Agreement.fields.forEach((field) => {
