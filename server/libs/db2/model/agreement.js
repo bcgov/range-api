@@ -95,7 +95,7 @@ export default class Agreement extends Model {
 
     await Promise.all(promises);
 
-    return myAgreements;
+    return myAgreements.flatten();
   }
 
   static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
