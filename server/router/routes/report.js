@@ -88,7 +88,15 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
         plan_id: planId,
       },
     });
-    const { zone } = agreement;
+    const { zone } = agreement || {};
+
+    const { user } = zone || {};
+    const {
+      givenName,
+      familyName,
+    } = user || {};
+    user.name = givenName && familyName && `${givenName} ${familyName}`;
+
     const { pastures } = plan;
     agreement.clients
       .sort((a, b) => a.clientAgreement.clientTypeId > b.clientAgreement.clientTypeId);
@@ -100,6 +108,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       zone,
       pastures,
       grazingSchedules,
+      user,
     });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);
