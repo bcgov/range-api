@@ -50,7 +50,7 @@ export default class Plan extends Model {
 
     // primary key *must* be first!
     return ['id', 'range_name', 'plan_start_date', 'plan_end_date',
-      'notes', 'alt_business_name', 'agreement_id'].map(f => `${Plan.table}.${f}`);
+      'notes', 'alt_business_name', 'agreement_id', 'status_id'].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
@@ -87,6 +87,20 @@ export default class Plan extends Model {
     } catch (err) {
       throw err;
     }
+  }
+
+  // Fetch the Agreement ID associated with a given Plan
+  static async agreementForPlanId(db, planId) {
+    if (!db || !planId) {
+      return [];
+    }
+
+    const results = await db
+      .select('agreement_id')
+      .from(Plan.table)
+      .where({ id: planId });
+
+    return results.map(result => Object.values(result)).flatten().pop();
   }
 
   // static async update(db, where, values) {

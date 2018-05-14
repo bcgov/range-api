@@ -25,144 +25,105 @@
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db';
+import DataManager2 from '../../libs/db2';
+import { logger } from '../../libs/logger';
 import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
 
 const router = new Router();
+
+const dm2 = new DataManager2(config);
+const {
+  db,
+} = dm2;
+const Plan2 = dm2.Plan;
+const Agreement2 = dm2.Agreement;
+const PlanStatus2 = dm2.PlanStatus;
+
 const dm = new DataManager(config);
 const {
-  transformAgreement,
-  ClientType,
   Pasture,
   Plan,
-  PlanStatus,
-  Agreement,
   GrazingSchedule,
   GrazingScheduleEntry,
   INCLUDE_PLAN_MODEL,
-  INCLUDE_ZONE_MODEL,
-  INCLUDE_CLIENT_MODEL,
-  INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
-  INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
-  INCLUDE_USAGE_MODEL,
-  INCLUDE_AGREEMENT_TYPE_MODEL,
-  EXCLUDED_AGREEMENT_ATTR,
   INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL,
 } = dm;
 
 const { model, ...planQueryOptions } = INCLUDE_PLAN_MODEL;
 
-// // create grazing scheules (and entries) and associate to Plan
-// const createAndUpdateScheduleEntry = async (schedule, body) => {
-//   let allEntries = [];
-//   body.grazingSchedules.forEach((item) => {
-//     const { grazingScheduleEntries = [] } = item;
-//     const promises = grazingScheduleEntries.map((e) => {
-//       delete e.createdAt; // eslint-disable-line no-param-reassign
-//       delete e.updatedAt; // eslint-disable-line no-param-reassign
+const userCanAccessAgreement = async (user, agreementId) => {
+  const agreements = await Agreement2.find(db, { forest_file_id: agreementId });
+  if (agreements.length === 0) {
+    throw errorWithCode('Unable to find the related agreement', 500);
+  }
 
-//       return GrazingScheduleEntry.create({ ...e, ...{ grazingScheduleId: schedule.id } });
-//     });
+  const agreement = agreements.pop();
 
-//     allEntries = allEntries.concat(promises);
-//   });
+  if (!user.canAccessAgreement(agreement)) {
+    return false;
+  }
 
-//   return Promise.all(allEntries);
-// };
+  return true;
+};
 
-// create pastures and associate to Plan -> [pasture, created]
-// const createAndUpdatePastures = async (plan, body) => {
-//   const { pastures = [] } = body;
-//   const options = {
-//     returning: true,
-//   };
-
-//   const promises = pastures.map((p) => {
-//     delete p.createdAt; // eslint-disable-line no-param-reassign
-//     delete p.updatedAt; // eslint-disable-line no-param-reassign
-
-//     return Pasture.upsert({ ...p, ...{ planId: plan.id } }, options);
-//   });
-
-//   return Promise.all(promises);
-// };
-
-// // create grazing scheules (and entries) and associate to Plan
-// const createAndUpdateSchedule = async (plan, body) => {
-//   const { grazingSchedules = [] } = body;
-
-//   // delete all old pastures and create new pastures
-//   await GrazingSchedule.destroy({
-//     where: {
-//       planId: plan.id,
-//     },
-//   });
-
-//   const promises = grazingSchedules.map((s) => {
-//     delete s.createdAt; // eslint-disable-line no-param-reassign
-//     delete s.updatedAt; // eslint-disable-line no-param-reassign
-
-//     return GrazingSchedule.create({ ...s, ...{ planId: plan.id } });
-//   });
-
-//   const schedules = await Promise.all(promises);
-//   await schedules.map(s => createAndUpdateScheduleEntry(s, body));
-
-//   return schedules;
-// };
-
+// Get a specific plan.
 router.get('/:planId', asyncMiddleware(async (req, res) => {
   const {
     planId: pId,
   } = req.params;
+
   const planId = Number(pId);
-  const plan = await Plan.findById(planId, planQueryOptions);
-  const clientTypes = await ClientType.findAll();
-  const agreement = await Agreement.findById(plan.agreementId, {
-    attributes: {
-      exclude: EXCLUDED_AGREEMENT_ATTR,
-    },
-    include: [
-      INCLUDE_CLIENT_MODEL(req.user),
-      INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
-      INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
-      INCLUDE_USAGE_MODEL,
-      INCLUDE_AGREEMENT_TYPE_MODEL,
-      INCLUDE_ZONE_MODEL(),
-    ],
-  });
-  return res.status(200).json({ ...transformAgreement(agreement, clientTypes), plan }).end();
+  try {
+    const agreementId = await Plan2.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
+
+    const results = await Agreement2.findWithAllRelations(db, { forest_file_id: agreementId });
+    const myAgreement = results.pop();
+    myAgreement.transformToV1();
+
+    // TODO:(jl) This should return the Plan, not the agreement with the embeded
+    // plan.
+
+    const plans = myAgreement.plans.filter(p => p.id === planId);
+    delete myAgreement.plans;
+    myAgreement.plan = plans.pop();
+
+    return res.status(200).json(myAgreement).end();
+  } catch (error) {
+    logger.error(`Unable to fetch plan, error = ${error.message}`);
+    throw errorWithCode('There was a problem fetching the record', 500);
+  }
 }));
 
+// Create a new plan.
 router.post('/', asyncMiddleware(async (req, res) => {
-  const { createdAt, updatedAt, ...body } = req.body;
+  const {
+    body,
+  } = req;
   const {
     agreementId,
   } = body;
 
   try {
-    const agreement = await Agreement.findOne({
-      where: {
-        id: agreementId,
-      },
-      include: [INCLUDE_ZONE_MODEL(req.user)],
-    });
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
 
+    const agreement = await Agreement2.findById(db, agreementId);
     if (!agreement) {
       throw errorWithCode('agreement not found', 404);
     }
 
     if (body.id || body.planId) {
-      const plan = await Agreement.findById(body.id || body.planId);
+      const plan = await Plan2.findById(db, body.id || body.planId);
       if (plan) {
         throw errorWithCode('A plan with this ID exists. Use PUT.', 409);
       }
     }
 
-    const plan = await Plan.create(body);
-    await agreement.addPlan(plan);
-    await agreement.save();
-
-    // const createdPlan = await Plan.findById(plan.id, planQueryOptions);
+    const plan = await Plan2.create(db, body);
 
     return res.status(200).json(plan).end();
   } catch (err) {
@@ -170,41 +131,39 @@ router.post('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
+// Update an existing plan
 router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const {
     planId,
   } = req.params;
-
   const {
-    createdAt,
-    updatedAt,
-    agreementId, // don't allow to change the relationship with the agreement
-    ...body
-  } = req.body;
+    body,
+  } = req;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
   }
 
   try {
-    const [affectedCount] = await Plan.update(body, {
-      where: {
-        id: planId,
-      },
-    });
-
-    if (!affectedCount) {
-      throw errorWithCode(`No plan with ID ${planId} exists`, 404);
+    const agreementId = await Plan2.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const aPlan = await Plan.findById(planId, planQueryOptions);
+    // Don't allow the agreement relation to be updated.
+    delete body.agreementId;
 
-    return res.status(200).json(aPlan).end();
+    const plan = await Plan2.update(db, { id: planId }, body);
+    await plan.fetchGrazingSchedules();
+    await plan.fetchPastures();
+
+    return res.status(200).json(plan).end();
   } catch (err) {
     throw err;
   }
 }));
 
+// Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
   const {
     statusId,
@@ -222,23 +181,23 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
   }
 
   try {
-    const plan = await Plan.findById(planId);
-    if (!plan) {
-      throw errorWithCode(`No Plan with ID ${planId} exists`, 404);
+    const agreementId = await Plan2.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const status = await PlanStatus.findOne({
-      where: {
-        id: statusId,
-      },
-    });
-    if (!status) {
-      throw errorWithCode(`No Status with ID ${statusId} exists`, 404);
+    // make sure the status exists.
+    // TODO:(jl) Should we make sure the statis is active?
+    const results = await PlanStatus2.find(db, { id: statusId });
+    if (results.length === 0) {
+      throw errorWithCode('You must supply a valid status ID', 403);
     }
 
-    await plan.setStatus(status);
+    const planStatus = results.pop();
 
-    return res.status(200).json(status).end();
+    await Plan2.update(db, { id: planId }, { status_id: statusId });
+
+    return res.status(200).json(planStatus).end();
   } catch (err) {
     throw err;
   }

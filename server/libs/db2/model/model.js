@@ -111,9 +111,18 @@ export default class Model {
   }
 
   static async update(db, where, values) {
-    const obj = { ...values, ...{} };
-    Object.keys(values).forEach((key) => {
-      obj[Model.toSnakeCase(key)] = values[key];
+    // Only the keys returned by the `fields` getter can
+    // be updated (by default). Override for different behaviour.
+    const obj = { };
+    this.fields.forEach((key) => {
+      const aKey = key.split('.').pop();
+      // check for both camel case and snake case values
+      if (values[Model.toCamelCase(aKey)]) {
+        obj[aKey] = values[Model.toCamelCase(aKey)];
+      }
+      if (values[aKey]) {
+        obj[aKey] = values[aKey];
+      }
     });
 
     try {
@@ -123,7 +132,48 @@ export default class Model {
         .update(obj)
         .returning(this.primaryKey);
 
-      return results;
+      return await this.findById(db, results.pop());
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async count(db) {
+    const results = await db
+      .table(this.table)
+      .count('*');
+
+    if (results.length === 0) {
+      return 0;
+    }
+
+    const count = parseInt(results.pop().count, 10);
+    return !Number.isNaN(count) ? count : 0;
+  }
+
+  static async create(db, values) {
+    // Only the keys returned by the `fields` getter can
+    // be used to create a new record (by default). Override for
+    // different behaviour.
+    const obj = { };
+    this.fields.forEach((key) => {
+      const aKey = key.split('.').pop();
+      // check for both camel case and snake case values
+      if (values[Model.toCamelCase(aKey)]) {
+        obj[aKey] = values[Model.toCamelCase(aKey)];
+      }
+      if (values[aKey]) {
+        obj[aKey] = values[aKey];
+      }
+    });
+
+    try {
+      const results = await db
+        .table(this.table)
+        .returning(this.primaryKey)
+        .insert(obj);
+
+      return await this.findById(db, results.pop());
     } catch (err) {
       throw err;
     }
