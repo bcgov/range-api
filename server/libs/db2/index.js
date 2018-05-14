@@ -56,20 +56,20 @@ export default class DataManager {
     this.Agreement = Agreement;
     this.AgreementExemptionStatus = AgreementExemptionStatus;
     this.AgreementType = AgreementType;
-    this.Zone = Zone;
-    this.District = District;
-    this.User = User;
     this.Client = Client;
     this.ClientType = ClientType;
-    this.Usage = Usage;
-    this.Plan = Plan;
-    this.PlanStatus = PlanStatus;
-    this.PlanExtension = PlanExtension;
+    this.District = District;
     this.GrazingSchedule = GrazingSchedule;
-    this.LivestockType = LivestockType;
-    this.Pasture = Pasture;
     this.LivestockIdentifier = LivestockIdentifier;
     this.LivestockIdentifierLocation = LivestockIdentifierLocation;
     this.LivestockIdentifierType = LivestockIdentifierType;
+    this.LivestockType = LivestockType;
+    this.Plan = Plan;
+    this.PlanStatus = PlanStatus;
+    this.PlanExtension = PlanExtension;
+    this.Pasture = Pasture;
+    this.User = User;
+    this.Usage = Usage;
+    this.Zone = Zone;
   }
 }
