@@ -23,12 +23,13 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs/utils';
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
+import { asyncMiddleware } from '../../libs/utils';
 
 const dm = new DataManager(config);
 const {
+  db,
   AgreementType,
   AgreementExemptionStatus,
   ClientType,
@@ -42,21 +43,13 @@ const router = new Router();
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const opts = {
-      where: {
-        active: true,
-      },
-      attributes: {
-        exclude: ['updatedAt', 'createdAt', 'active'],
-      },
-    };
-
-    const agreementType = await AgreementType.findAll(opts);
-    const agreementExemptionStatus = await AgreementExemptionStatus.findAll(opts);
-    const livestockType = await LivestockType.findAll(opts);
-    const planStatus = await PlanStatus.findAll(opts);
-    const clientType = await ClientType.findAll(opts);
-    const livestockIdentifierType = await LivestockIdentifierType.findAll(opts);
+    const where = { active: true };
+    const agreementType = await AgreementType.find(db, where);
+    const agreementExemptionStatus = await AgreementExemptionStatus.find(db, where);
+    const livestockType = await LivestockType.find(db, where);
+    const planStatus = await PlanStatus.find(db, where);
+    const clientType = await ClientType.find(db, where);
+    const livestockIdentifierType = await LivestockIdentifierType.find(db, where);
 
     const response = {
       AGREEMENT_TYPE: agreementType || { error: 'Unable to fetch reference data' },
