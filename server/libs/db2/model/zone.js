@@ -22,9 +22,23 @@
 
 'use strict';
 
+import District from './district';
 import Model from './model';
 
 export default class Zone extends Model {
+  constructor(data, db = undefined) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      if (Zone.fields.indexOf(`${Zone.table}.${key}`) > -1) {
+        obj[key] = data[key];
+      }
+    });
+
+    super(obj, db);
+
+    this.district = new District(District.extract(data));
+  }
+
   static get fields() {
     // primary key *must* be first!
     return ['id', 'code', 'description', 'district_id', 'user_id']
@@ -48,5 +62,24 @@ export default class Zone extends Model {
 
     // return an array of `zone_id`
     return results.map(result => Object.values(result)).flatten();
+  }
+
+  static async findWithDistrict(db, where) {
+    const myFields = [
+      ...Zone.fields,
+      ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+    ];
+
+    try {
+      const results = await db
+        .select(myFields)
+        .from(Zone.table)
+        .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+        .where(where);
+
+      return results.map(row => new Zone(row, db));
+    } catch (err) {
+      throw err;
+    }
   }
 }
