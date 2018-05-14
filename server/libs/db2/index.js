@@ -20,6 +20,7 @@ import Client from './model/client';
 import ClientType from './model/clienttype';
 import District from './model/district';
 import GrazingSchedule from './model/grazingschedule';
+import GrazingScheduleEntry from './model/grazingscheduleentry';
 import LivestockIdentifier from './model/livestockidentifier';
 import LivestockIdentifierLocation from './model/livestockidentifierlocation';
 import LivestockIdentifierType from './model/livestockidentifiertype';
@@ -60,6 +61,7 @@ export default class DataManager {
     this.ClientType = ClientType;
     this.District = District;
     this.GrazingSchedule = GrazingSchedule;
+    this.GrazingScheduleEntry = GrazingScheduleEntry;
     this.LivestockIdentifier = LivestockIdentifier;
     this.LivestockIdentifierLocation = LivestockIdentifierLocation;
     this.LivestockIdentifierType = LivestockIdentifierType;

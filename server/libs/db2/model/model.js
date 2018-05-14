@@ -114,16 +114,18 @@ export default class Model {
     // Only the keys returned by the `fields` getter can
     // be updated (by default). Override for different behaviour.
     const obj = { };
-    this.fields.forEach((key) => {
-      const aKey = key.split('.').pop();
-      // check for both camel case and snake case values
-      if (values[Model.toCamelCase(aKey)]) {
-        obj[aKey] = values[Model.toCamelCase(aKey)];
-      }
-      if (values[aKey]) {
-        obj[aKey] = values[aKey];
-      }
-    });
+    this.fields
+      .slice(1) // skip the PK, they can not be updated.
+      .forEach((key) => {
+        const aKey = key.split('.').pop();
+        // check for both camel case and snake case values
+        if (values[Model.toCamelCase(aKey)]) {
+          obj[aKey] = values[Model.toCamelCase(aKey)];
+        }
+        if (values[aKey]) {
+          obj[aKey] = values[aKey];
+        }
+      });
 
     try {
       const results = await db
