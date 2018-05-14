@@ -54,9 +54,10 @@ export default class DataManager {
     this.db = k;
     this.config = config;
     this.Agreement = Agreement;
+    this.AgreementExemptionStatus = AgreementExemptionStatus;
+    this.AgreementType = AgreementType;
     this.Zone = Zone;
     this.District = District;
-    this.AgreementType = AgreementType;
     this.User = User;
     this.Client = Client;
     this.ClientType = ClientType;
@@ -67,7 +68,6 @@ export default class DataManager {
     this.GrazingSchedule = GrazingSchedule;
     this.LivestockType = LivestockType;
     this.Pasture = Pasture;
-    this.AgreementExemptionStatus = AgreementExemptionStatus;
     this.LivestockIdentifier = LivestockIdentifier;
     this.LivestockIdentifierLocation = LivestockIdentifierLocation;
     this.LivestockIdentifierType = LivestockIdentifierType;
