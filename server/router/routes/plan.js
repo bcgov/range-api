@@ -75,9 +75,12 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
     // TODO:(jl) This should return the Plan, not the agreement with the embeded
     // plan.
 
-    const plans = myAgreement.plans.filter(p => p.id === planId);
+    const plans = myAgreement.plans.filter(p => p.id === Number(planId));
     delete myAgreement.plans;
     myAgreement.plan = plans.pop();
+
+    await myAgreement.plan.fetchPastures();
+    await myAgreement.plan.fetchGrazingSchedules();
 
     return res.status(200).json(myAgreement).end();
   } catch (error) {
