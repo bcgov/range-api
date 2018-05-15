@@ -152,7 +152,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
     }
 
     if (body.id || body.planId) {
-      const plan = await Agreement.findById(body.id || body.planId);
+      const plan = await Plan.findById(body.id || body.planId);
       if (plan) {
         throw errorWithCode('A plan with this ID exists. Use PUT.', 409);
       }
