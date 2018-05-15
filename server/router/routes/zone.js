@@ -50,7 +50,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     if (districtId) {
       where = { district_id: districtId };
     }
-    const zones = await Zone.findWithDistrict(db, where);
+    const zones = await Zone.findWithDistrictUser(db, where);
 
     res.status(200).json(zones).end();
   } catch (error) {

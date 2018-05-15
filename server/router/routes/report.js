@@ -78,8 +78,15 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     await plan.fetchPastures();
     await plan.fetchGrazingSchedules();
 
-    const { pastures, grazingSchedules } = plan;
-    const { zone } = agreement;
+    const { pastures, grazingSchedules } = plan || [];
+    const { zone } = agreement || {};
+    const { user } = zone || {};
+    const {
+      givenName,
+      familyName,
+    } = user || {};
+    user.name = givenName && familyName && `${givenName} ${familyName}`;
+
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
     const html = await compile(template, {
       agreement,
@@ -87,6 +94,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       zone,
       pastures,
       grazingSchedules,
+      user,
     });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);

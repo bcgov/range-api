@@ -24,6 +24,7 @@
 
 import District from './district';
 import Model from './model';
+import User from './user';
 
 export default class Zone extends Model {
   constructor(data, db = undefined) {
@@ -37,6 +38,7 @@ export default class Zone extends Model {
     super(obj, db);
 
     this.district = new District(District.extract(data));
+    this.user = new User(User.extract(data));
   }
 
   static get fields() {
@@ -64,10 +66,11 @@ export default class Zone extends Model {
     return results.map(result => Object.values(result)).flatten();
   }
 
-  static async findWithDistrict(db, where) {
+  static async findWithDistrictUser(db, where) {
     const myFields = [
       ...Zone.fields,
       ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
@@ -75,6 +78,7 @@ export default class Zone extends Model {
         .select(myFields)
         .from(Zone.table)
         .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+        .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
         .where(where);
 
       return results.map(row => new Zone(row, db));

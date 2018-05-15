@@ -28,6 +28,7 @@ import LivestockIdentifier from './livestockidentifier';
 import Model from './model';
 import Plan from './plan';
 import Usage from './usage';
+import User from './user';
 import Zone from './zone';
 
 export default class Agreement extends Model {
@@ -52,6 +53,7 @@ export default class Agreement extends Model {
 
     this.zone = new Zone(Zone.extract(data));
     this.zone.district = new District(District.extract(data));
+    this.zone.user = new User(User.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
     // eslint-disable-next-line max-len
     this.agreementExemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data));
@@ -105,6 +107,7 @@ export default class Agreement extends Model {
       ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementExemptionStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
@@ -114,6 +117,7 @@ export default class Agreement extends Model {
         .from(Agreement.table)
         .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+        .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
         .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .join('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
         .where(where);
