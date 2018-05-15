@@ -36,15 +36,6 @@ export default class Client extends Model {
 
     super(obj, db);
 
-    // // hide this property so it is not automatically returned by the
-    // // API.
-    // delete this.clientNumber;
-    // Object.defineProperty(this, 'clientNumber', {
-    //   value: obj.clientNumber,
-    //   writable: false,
-    //   enumerable: false,
-    // });
-
     this.clientType = new ClientType(ClientType.extract(data), db);
   }
 
@@ -78,10 +69,11 @@ export default class Client extends Model {
       .from(Client.table)
       .join('client_agreement', { 'client_agreement.client_id': 'ref_client.client_number' })
       .join('ref_client_type', { 'client_agreement.client_type_id': 'ref_client_type.id' })
-      .where({ 'client_agreement.agreement_id': agreement.forestFileId })
-      .then(rows => rows.map(row => new Client(row)));
+      .where({ 'client_agreement.agreement_id': agreement.forestFileId });
 
-    return results;
+    const clients = results.map(row => new Client(row));
+
+    return clients;
   }
 
   static async search(db, term) {

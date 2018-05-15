@@ -30,6 +30,7 @@ export default class Model {
       value: db,
       writable: false,
     });
+
     Object.assign(this, Model.transformToCamelCase(data));
   }
 
