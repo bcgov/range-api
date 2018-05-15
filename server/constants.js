@@ -33,8 +33,8 @@ export const TEMPLATES = {
 };
 
 export const AGREEMENT_HOLDER_ROLE = {
-  PRIMARY: 1,
-  SECONDARY: 2,
+  PRIMARY: 'A',
+  SECONDARY: 'B',
 };
 
 export const REPORT_DEFAULTS = {
