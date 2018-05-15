@@ -97,8 +97,8 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       totalItems = count;
     }
 
-    const agreements = await Promise.all(promises);
-    agreements.map(ageement => ageement.transformToV1());
+    const agreements = (await Promise.all(promises)).flatten();
+    agreements.map(agreement => agreement.transformToV1());
 
     // Make sure the user param supplied is not more than the actual total
     // pages.
@@ -232,9 +232,9 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
       db,
       { forest_file_id: pkey },
     ));
-    const foo = (await Promise.all(agreements));
+    const theAgreements = (await Promise.all(agreements)).flatten();
 
-    res.status(200).json(foo.pop().zone).end();
+    res.status(200).json(theAgreements.pop().zone).end();
   } catch (error) {
     logger.error(`error updating agreement ${agreementId}, error = ${error.message}`);
     throw errorWithCode('There was a problem updating the record', 500);
