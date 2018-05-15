@@ -24,9 +24,16 @@
 'use strict';
 
 import { Router } from 'express';
+import config from '../../config';
+import DataManager from '../../libs/db2';
 import { asyncMiddleware } from '../../libs/utils';
 
 const router = new Router();
+const dm = new DataManager(config);
+const {
+  db,
+  User,
+} = dm;
 
 // Get
 router.get('/me', asyncMiddleware(async (req, res) => {
@@ -37,6 +44,19 @@ router.get('/me', asyncMiddleware(async (req, res) => {
     const { roles } = req.user;
 
     res.status(200).json({ ...me, ...{ roles } }).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+router.get('/', asyncMiddleware(async (req, res) => {
+  try {
+    let users = [];
+    if (req.user && !req.user.isAgreementHolder()) {
+      users = await User.find(db, {});
+    }
+
+    res.status(200).json(users).end();
   } catch (error) {
     throw error;
   }
