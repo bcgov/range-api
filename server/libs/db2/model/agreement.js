@@ -30,6 +30,7 @@ import Plan from './plan';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
+// import { errorWithCode } from '../../utils';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -101,6 +102,10 @@ export default class Agreement extends Model {
   }
 
   static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
+    if (!db || !where) {
+      return [];
+    }
+
     const myFields = [
       ...Agreement.fields,
       ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -115,12 +120,19 @@ export default class Agreement extends Model {
       const q = db
         .select(myFields)
         .from(Agreement.table)
-        .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
-        .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
-        .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
-        .join('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
-        .join('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .where(where);
+        .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+        .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+        .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
+        .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
+        .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' });
+
+      if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+        const k = Object.keys(where)[0];
+        const v = where[k];
+        q.whereIn(k, v);
+      } else {
+        q.where(where);
+      }
 
       if (page && limit) {
         const offset = limit * (page - 1);
