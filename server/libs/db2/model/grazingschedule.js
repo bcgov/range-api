@@ -39,6 +39,6 @@ export default class GrazingSchedule extends Model {
     const order = ['id', 'desc'];
     const where = { grazing_schedule_id: this.id };
     const entries = await GrazingScheduleEntry.findWithLivestockType(this.db, where, order);
-    this.entries = entries;
+    this.grazingScheduleEntries = entries;
   }
 }
