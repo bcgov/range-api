@@ -37,6 +37,45 @@ const {
   Zone,
 } = dm2;
 
+const allowableIDsForUser = async (user, agreementIDs) => {
+  let okIDs = [];
+  if (user.isAgreementHolder()) {
+    const myIDs = await Agreement.agreementsForClientId(db, user.client_id);
+    okIDs = agreementIDs.filter(id => myIDs.includes(id));
+  } else if (user.isRangeOfficer()) {
+    const zones = await Zone.search(db, { user_id: user.id });
+    const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
+    const myIDs = await Promise.all(zpromise);
+    okIDs = agreementIDs.filter(id => myIDs.includes(id));
+  } else {
+    okIDs = agreementIDs;
+  }
+
+  return okIDs;
+};
+
+const agreementsForUser = async (user, page = undefined, limit = undefined) => {
+  let results = [];
+  // TODO:(jl) findWithAllRelations is a pretty hevy weight query. Consider
+  // giving just base agreement details and let the clients pull in the
+  // `Plan` later.
+
+  if (user.isAgreementHolder()) {
+    const ids = await Agreement.agreementsForClientId(db, user.client_id);
+    results = await Agreement.findWithAllRelations(db, { forest_file_id: ids }, page, limit);
+  } else if (user.isRangeOfficer()) {
+    const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
+    const ids = zones.map(zone => zone.id);
+    results = await Agreement.findWithAllRelations(db, { zone_id: ids }, page, limit);
+  } else if (user.isAdministrator()) {
+    results = await Agreement.findWithAllRelations(db, { }, page, limit);
+  } else {
+    throw errorWithCode('Unable to determine user roll', 500);
+  }
+
+  return results;
+};
+
 //
 // Routes
 //
@@ -44,10 +83,7 @@ const {
 // Get all agreements based on the user type
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    // TODO:(jl) Confirm role(s) / access before proceeding with request.
-    // TODO:(jl) This is a pretty hevy weight query. Consider giving just
-    // base agreement details and let the clients pull in the `Plan` later.
-    const results = await Agreement.findWithAllRelations(db, { });
+    const results = await agreementsForUser(req.user);
 
     if (results.length > 0) {
       results.map(agreement => agreement.transformToV1());
@@ -83,18 +119,19 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         ...(await Promise.all(zpromises)),
       ].flatten();
 
-      totalPages = Math.ceil(allIDs.length / limit) || 1;
-      totalItems = allIDs.length;
+      const okIDs = await allowableIDsForUser(req.user, allIDs);
 
-      promises = allIDs
+      totalPages = Math.ceil(okIDs.length / limit) || 1;
+      totalItems = okIDs.length;
+
+      promises = okIDs
         .slice(offset, offset + limit)
         .map(agreementId =>
           Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
     } else {
-      const count = await Agreement.count(db);
-      promises = await Agreement.findWithAllRelations(db, { }, page, limit);
-      totalPages = Math.ceil(count / limit) || 1;
-      totalItems = count;
+      const results = await agreementsForUser(req.user, page, limit);
+      totalPages = Math.ceil(results.length / limit) || 1;
+      totalItems = results.length;
     }
 
     const agreements = (await Promise.all(promises)).flatten();
@@ -127,14 +164,17 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
     // TODO:(jl) Confirm role(s) / access before proceeding with request.
     const results = await Agreement.findWithAllRelations(db, { forest_file_id: id });
 
-    if (results.length > 0) {
-      const agreement = results.pop();
-      agreement.transformToV1();
-
-      return res.status(200).json(agreement).end();
+    if (results.length === 0) {
+      throw errorWithCode(`Unable to find agreement with ID ${id}`, 404);
     }
 
-    return res.status(404).json({ error: 'Not found' }).end();
+    const agreement = results.pop();
+
+    if (!req.user.canAccessAgreement(agreement.pop())) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
+
+    return res.status(200).json(agreement.transformToV1()).end();
   } catch (err) {
     throw err;
   }
