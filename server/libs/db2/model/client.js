@@ -76,7 +76,7 @@ export default class Client extends Model {
     return clients;
   }
 
-  static async search(db, term) {
+  static async searchForTerm(db, term) {
     if (!db || !term) {
       return [];
     }
@@ -84,9 +84,7 @@ export default class Client extends Model {
     const results = await db
       .select(Client.primaryKey)
       .from(Client.table)
-      .where('name', 'like', `%${term}%`)
-      .orWhere('name', 'like', `%${term.toLowerCase()}%`)
-      .orWhere('name', 'like', `%${term.toUpperCase()}%`);
+      .whereRaw(`name ILIKE '%${term}%'`);
 
     // return an array of `client_number`
     return results.map(result => Object.values(result)).flatten();

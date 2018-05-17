@@ -77,8 +77,16 @@ export default class Model {
     let results = [];
     const q = db
       .table(this.table)
-      .where(where)
       .select(...this.fields);
+
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+      const k = Object.keys(where)[0];
+      const v = where[k];
+      q.whereIn(k, v);
+    } else {
+      q.where(where);
+    }
+
     if (order && order.length > 0) {
       results = await q.orderBy(...order);
     } else {
@@ -141,11 +149,20 @@ export default class Model {
     }
   }
 
-  static async count(db) {
-    const results = await db
+  static async count(db, where = {}) {
+    const q = db
       .table(this.table)
       .count('*');
 
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+      const k = Object.keys(where)[0];
+      const v = where[k];
+      q.whereIn(k, v);
+    } else {
+      q.where(where);
+    }
+
+    const results = await q;
     if (results.length === 0) {
       return 0;
     }

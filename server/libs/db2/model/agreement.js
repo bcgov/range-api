@@ -175,7 +175,7 @@ export default class Agreement extends Model {
     return results.map(result => Object.values(result)).flatten();
   }
 
-  static async search(db, term) {
+  static async searchForTerm(db, term) {
     if (!db || !term) {
       return [];
     }

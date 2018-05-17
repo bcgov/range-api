@@ -51,7 +51,7 @@ export default class Zone extends Model {
     return 'ref_zone';
   }
 
-  static async search(db, term) {
+  static async searchForTerm(db, term) {
     if (!db || !term) {
       return [];
     }

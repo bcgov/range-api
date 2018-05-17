@@ -40,18 +40,37 @@ const {
 const allowableIDsForUser = async (user, agreementIDs) => {
   let okIDs = [];
   if (user.isAgreementHolder()) {
-    const myIDs = await Agreement.agreementsForClientId(db, user.client_id);
+    const myIDs = await Agreement.agreementsForClientId(db, user.clientId);
     okIDs = agreementIDs.filter(id => myIDs.includes(id));
   } else if (user.isRangeOfficer()) {
-    const zones = await Zone.search(db, { user_id: user.id });
+    const zones = await Zone.find(db, { user_id: user.id });
     const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
-    const myIDs = await Promise.all(zpromise);
+    const myIDs = (await Promise.all(zpromise)).flatten();
     okIDs = agreementIDs.filter(id => myIDs.includes(id));
   } else {
     okIDs = agreementIDs;
   }
 
   return okIDs;
+};
+
+const agreementCountForUser = async (user) => {
+  let count = 0;
+  if (user.isAgreementHolder()) {
+    const ids = await Agreement.agreementsForClientId(db, user.clientId);
+    count = ids.length;
+  } else if (user.isRangeOfficer()) {
+    const zones = await Zone.findWithDistrictUser(db, { user_id: 34 });
+    const zids = zones.map(zone => zone.id);
+    const ids = await Agreement.find(db, { zone_id: zids });
+    count = ids.length;
+  } else if (user.isAdministrator()) {
+    count = await Agreement.count(db);
+  } else {
+    throw errorWithCode('Unable to determine user roll', 500);
+  }
+
+  return count;
 };
 
 const agreementsForUser = async (user, page = undefined, limit = undefined) => {
@@ -61,7 +80,7 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
   // `Plan` later.
 
   if (user.isAgreementHolder()) {
-    const ids = await Agreement.agreementsForClientId(db, user.client_id);
+    const ids = await Agreement.agreementsForClientId(db, user.clientId);
     results = await Agreement.findWithAllRelations(db, { forest_file_id: ids }, page, limit);
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
@@ -103,18 +122,18 @@ router.get('/search', asyncMiddleware(async (req, res) => {
   const page = Number(p);
   const limit = Number(l);
   const offset = limit * (page - 1);
-  let promises = [];
+  let agreements = [];
   let totalPages = 0;
   let totalItems = 0;
 
   try {
     if (term) {
-      const clientIDs = await Client.search(db, term);
+      const clientIDs = await Client.searchForTerm(db, term);
       const cpromises = clientIDs.map(clientId => Agreement.agreementsForClientId(db, clientId));
-      const zoneIDs = await Zone.search(db, term);
+      const zoneIDs = await Zone.searchForTerm(db, term);
       const zpromises = zoneIDs.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
       const allIDs = [
-        ...(await Agreement.search(db, term)),
+        ...(await Agreement.searchForTerm(db, term)),
         ...(await Promise.all(cpromises)),
         ...(await Promise.all(zpromises)),
       ].flatten();
@@ -124,17 +143,18 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
-      promises = okIDs
+      const promises = okIDs
         .slice(offset, offset + limit)
         .map(agreementId =>
           Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
+      agreements = (await Promise.all(promises)).flatten();
     } else {
-      const results = await agreementsForUser(req.user, page, limit);
-      totalPages = Math.ceil(results.length / limit) || 1;
-      totalItems = results.length;
+      const count = await agreementCountForUser(req.user);
+      agreements = await agreementsForUser(req.user, page, limit);
+      totalPages = Math.ceil(count / limit) || 1;
+      totalItems = count;
     }
 
-    const agreements = (await Promise.all(promises)).flatten();
     agreements.map(agreement => agreement.transformToV1());
 
     // Make sure the user param supplied is not more than the actual total
