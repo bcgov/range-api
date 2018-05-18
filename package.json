@@ -31,7 +31,6 @@
     "pg": "^7.4.1",
     "request": "^2.85.0",
     "rsa-pem-from-mod-exp": "^0.8.4",
-    "sequelize": "^4.37.6",
     "winston": "^2.4.1",
     "wkhtmltopdf": "^0.3.4"
   },
@@ -61,7 +60,8 @@
     "sinon": "^5.0.7"
   },
   "scripts": {
-    "start": "node --inspect=0.0.0.0:9222 --nolazy build/server",
+    "start": "node build/server",
+    "debug": "node --inspect=0.0.0.0:9222 --nolazy build/server",
     "dev": "cross-env NODE_ENV=development nodemon server --exec babel-node --inspect",
     "build": "cross-env NODE_ENV=production gulp",
     "build:doc": "./node_modules/.bin/apidoc -i server/ -o doc/api",
