@@ -22,9 +22,9 @@
 
 'use strict';
 
-import path from 'path';
-import nconf from 'nconf';
 import dotenv from 'dotenv';
+import nconf from 'nconf';
+import path from 'path';
 
 const env = process.env.NODE_ENV || 'development';
 

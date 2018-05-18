@@ -23,43 +23,42 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware, errorWithCode } from '../../libs/utils';
-
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
+import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
 
 const dm = new DataManager(config);
 const {
+  db,
   Zone,
   User,
-  INCLUDE_DISTRICT_MODEL,
-  INCLUDE_USER_MODEL,
 } = dm;
 
 const router = new Router();
 
-// Get
+// Get the Zones for a given District.
 router.get('/', asyncMiddleware(async (req, res) => {
   const {
     districtId,
   } = req.query;
 
-  try {
-    const where = {};
-    if (districtId) {
-      where.districtId = districtId;
-    }
+  // `District` is publically available information. If we choose it
+  // can be served without access control.
 
-    const zones = await Zone.findAll({
-      include: [INCLUDE_DISTRICT_MODEL, INCLUDE_USER_MODEL],
-      where,
-    });
+  try {
+    let where = {};
+    if (districtId) {
+      where = { district_id: districtId };
+    }
+    const zones = await Zone.findWithDistrictUser(db, where);
+
     res.status(200).json(zones).end();
   } catch (error) {
     throw error;
   }
 }));
 
+// Get the user associated with a specific zone.
 router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
   const {
     zoneId,
@@ -69,16 +68,23 @@ router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
     userId,
   } = req.body;
 
+  if (!userId) {
+    throw errorWithCode('You must supply the user ID', 400);
+  }
+
+  if (!isNumeric(zoneId) || !isNumeric(userId)) {
+    throw errorWithCode('The zone and user ID must be numeric', 400);
+  }
+
   try {
-    const zone = await Zone.findById(zoneId);
+    const zone = await Zone.findById(db, zoneId);
     if (!zone) {
       throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
     }
-    const user = await User.findById(userId);
-    if (!user) {
-      throw errorWithCode(`No user with ID ${userId} exists`, 404);
-    }
-    await zone.setUser(user);
+
+    await Zone.update(db, { id: parseInt(zoneId, 10) }, { user_id: userId });
+    const user = await User.findById(db, userId);
+
     res.status(200).json(user).end();
   } catch (err) {
     throw err;

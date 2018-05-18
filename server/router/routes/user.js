@@ -25,19 +25,20 @@
 
 import { Router } from 'express';
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
 import { asyncMiddleware } from '../../libs/utils';
 
 const router = new Router();
 const dm = new DataManager(config);
 const {
+  db,
   User,
 } = dm;
 
-// Get a user profile
+// Get
 router.get('/me', asyncMiddleware(async (req, res) => {
   try {
-    const me = req.user.get({ raw: true });
+    const me = req.user;
     delete me.created_at;
     delete me.updated_at;
     const { roles } = req.user;
@@ -48,13 +49,13 @@ router.get('/me', asyncMiddleware(async (req, res) => {
   }
 }));
 
-// Get all users
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     let users = [];
     if (req.user && !req.user.isAgreementHolder()) {
-      users = await User.findAll();
+      users = await User.find(db, {});
     }
+
     res.status(200).json(users).end();
   } catch (error) {
     throw error;

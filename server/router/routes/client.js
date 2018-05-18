@@ -18,19 +18,17 @@
 // Created by Jason Leach on 2018-01-18.
 //
 
-/* eslint-env es6 */
-
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs/utils';
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
+import { asyncMiddleware, errorWithCode } from '../../libs/utils';
 
 const dm = new DataManager(config);
 const {
+  db,
   Client,
-  ClientType,
 } = dm;
 
 const router = new Router();
@@ -38,41 +36,34 @@ const router = new Router();
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const clients = await Client.findAll({
-    // cause association error
-      // include: [ClientType],
-      // atrributes: {
-      //   exclude: ['client_type_id'],
-      // },
-    });
-    res.status(200).json(clients).end();
+    if (!req.user.isAdministrator() || !req.user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 401);
+    }
+
+    const results = await Client.find(db, {});
+    res.status(200).json(results).end();
   } catch (err) {
     throw err;
   }
 }));
 
 // Get by id
-router.get('/:id', asyncMiddleware(async (req, res) => {
+router.get('/:clientId', asyncMiddleware(async (req, res) => {
+  const {
+    clientId,
+  } = req.params;
+
   try {
-    const {
-      id,
-    } = req.params;
+    if (!req.user.isAdministrator() || !req.user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 401);
+    }
 
-    const client = await Client.findOne({
-      include: [ClientType],
-      atrributes: {
-        exclude: ['client_type_id'],
-      },
-      where: {
-        id,
-      },
-    });
-
-    if (client != null) {
-      res.status(200).json(client).end();
-    } else {
+    const results = await Client.find(db, { client_number: clientId });
+    if (results.length === 0) {
       res.status(404).json({ error: 'Not found' }).end();
     }
+
+    res.status(200).json(results.pop()).end();
   } catch (err) {
     throw err;
   }

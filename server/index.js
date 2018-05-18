@@ -22,17 +22,14 @@
 
 'use strict';
 
-import compression from 'compression';
-import express from 'express';
-import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
+import compression from 'compression';
 import flash from 'connect-flash';
-import {
-  logger,
-  started,
-} from './libs/logger';
+import cookieParser from 'cookie-parser';
+import express from 'express';
 import config from './config';
 import auth from './libs/authmware';
+import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
 

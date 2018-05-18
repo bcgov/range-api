@@ -23,13 +23,13 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs/utils';
-
 import config from '../../config';
-import DataManager from '../../libs/db';
+import DataManager from '../../libs/db2';
+import { asyncMiddleware } from '../../libs/utils';
 
 const dm = new DataManager(config);
 const {
+  db,
   District,
 } = dm;
 
@@ -38,8 +38,8 @@ const router = new Router();
 // Get all
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const districts = await District.findAll();
-    res.status(200).json(districts).end();
+    const results = await District.find(db, { });
+    res.status(200).json(results).end();
   } catch (err) {
     res.status(500).json({ error: err }).end();
   }

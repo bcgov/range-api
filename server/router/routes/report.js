@@ -22,38 +22,37 @@
 
 'use strict';
 
-import fs from 'fs';
 import { Router } from 'express';
-import {
-  asyncMiddleware,
-  errorWithCode,
-  streamToBuffer,
-} from '../../libs/utils';
-import {
-  loadTemplate,
-  renderToPDF,
-  compile,
-} from '../../libs/template';
-import { logger } from '../../libs/logger';
-import { TEMPLATES } from '../../constants';
+import fs from 'fs';
 import config from '../../config';
-import DataManager from '../../libs/db';
+import { TEMPLATES } from '../../constants';
+import DataManager from '../../libs/db2';
+import { logger } from '../../libs/logger';
+import { compile, loadTemplate, renderToPDF } from '../../libs/template';
+import { asyncMiddleware, errorWithCode, streamToBuffer } from '../../libs/utils';
 
 const router = new Router();
-const dm = new DataManager(config);
+const dm2 = new DataManager(config);
 const {
+  db,
   Agreement,
-  GrazingSchedule,
-  INCLUDE_CLIENT_MODEL,
-  INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
-  INCLUDE_LIVESTOCK_IDENTIFIER_MODEL,
-  INCLUDE_PLAN_MODEL,
-  INCLUDE_USAGE_MODEL,
-  INCLUDE_AGREEMENT_TYPE_MODEL,
-  EXCLUDED_AGREEMENT_ATTR,
-  INCLUDE_ZONE_MODEL,
-  INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL,
-} = dm;
+  Plan,
+} = dm2;
+
+const userCanAccessAgreement = async (user, agreementId) => {
+  const agreements = await Agreement.find(db, { forest_file_id: agreementId });
+  if (agreements.length === 0) {
+    throw errorWithCode('Unable to find the related agreement', 500);
+  }
+
+  const agreement = agreements.pop();
+
+  if (!user.canAccessAgreement(agreement)) {
+    return false;
+  }
+
+  return true;
+};
 
 //
 // PDF
@@ -66,40 +65,27 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
   const planId = Number(pId);
 
   try {
-    const myPlan = { ...INCLUDE_PLAN_MODEL, where: { id: planId } };
-    const myIncludes = [INCLUDE_CLIENT_MODEL(req.user), INCLUDE_AGREEMENT_EXEMPTION_STATUS_MODEL,
-      INCLUDE_LIVESTOCK_IDENTIFIER_MODEL, INCLUDE_USAGE_MODEL, INCLUDE_AGREEMENT_TYPE_MODEL,
-      myPlan, INCLUDE_ZONE_MODEL(req.user)];
-    const agreement = (await Agreement.findOne({
-      include: myIncludes,
-      attributes: {
-        exclude: EXCLUDED_AGREEMENT_ATTR,
-      },
-    })).get({ plain: true });
-
-    if (!agreement) {
-      throw errorWithCode(`No Plan with ID ${planId} exists`, 400);
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const plan = agreement.plans.find(p => p.id === planId);
-    const grazingSchedules = await GrazingSchedule.findAll({
-      include: [INCLUDE_GRAZING_SCHEDULE_ENTRY_MODEL],
-      where: {
-        plan_id: planId,
-      },
-    });
-    const { zone } = agreement || {};
+    const results = await Agreement.findWithAllRelations(db, { forest_file_id: agreementId });
+    const agreement = results.pop();
+    agreement.transformToV1();
 
+    const plan = agreement.plans.find(p => p.id === planId);
+    await plan.fetchPastures();
+    await plan.fetchGrazingSchedules();
+
+    const { pastures, grazingSchedules } = plan || [];
+    const { zone } = agreement || {};
     const { user } = zone || {};
     const {
       givenName,
       familyName,
     } = user || {};
     user.name = givenName && familyName && `${givenName} ${familyName}`;
-
-    const { pastures } = plan;
-    agreement.clients
-      .sort((a, b) => a.clientAgreement.clientTypeId > b.clientAgreement.clientTypeId);
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
     const html = await compile(template, {

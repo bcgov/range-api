@@ -1,5 +1,5 @@
 //
-// SecureImage
+// MyRA
 //
 // Copyright © 2018 Province of British Columbia
 //
@@ -15,36 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-01-10.
+// Created by Jason Leach on 2018-05-04.
 //
-
-/* eslint-env es6 */
 
 'use strict';
 
-// eslint-disable-next-line import/prefer-default-export
-export const ENVIRONMENTS = {
-  DEVELOPMENT: 'development',
-  PRODUCTION: 'production',
-};
+import Model from './model';
 
-export const TEMPLATES = {
-  RANGE_USE_PLAN: 'rup.html',
-};
+export default class District extends Model {
+  static get fields() {
+    // primary key *must* be first!
+    return ['id', 'code', 'description']
+      .map(field => `${this.table}.${field}`);
+  }
 
-export const AGREEMENT_HOLDER_ROLE = {
-  PRIMARY: 'A',
-  SECONDARY: 'B',
-};
-
-export const REPORT_DEFAULTS = {
-  DATE_FORMAT: 'MMMM Do, YYYY',
-};
-
-export const SSO_ROLE_MAP = {
-  ADMINISTRATOR: 'myra_admin',
-  RANGE_OFFICER: 'myra_range_officer',
-  AGREEMENT_HOLDER: 'myra_client',
-};
-
-export const NOT_PROVIDED = 'Not provided';
+  static get table() {
+    return 'ref_district';
+  }
+}
