@@ -11,5 +11,17 @@
             "port": 9229,
             "sourceMaps": true,
         },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Remote",
+            "restart": false,
+            "protocol": "inspector",
+            "port": 9222,
+            "address": "localhost",
+            "sourceMaps": true,
+            "localRoot": "${workspaceRoot}",
+            "remoteRoot": "/opt/app-root/src/build",
+        },
     ]
 }
