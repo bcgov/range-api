@@ -61,7 +61,7 @@
     "sinon": "^5.0.7"
   },
   "scripts": {
-    "start": "node --inspect build/server",
+    "start": "node --inspect=0.0.0.0:9222 build/server",
     "dev": "cross-env NODE_ENV=development nodemon server --exec babel-node --inspect",
     "build": "cross-env NODE_ENV=production gulp",
     "build:doc": "./node_modules/.bin/apidoc -i server/ -o doc/api",
