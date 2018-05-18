@@ -20,10 +20,7 @@
 
 'use strict';
 
-import {
-  capitalizeFirstLetter,
-  primaryContactFullName,
-} from '../server/libs/template';
+import { capitalizeFirstLetter, primaryContactFullName } from '../server/libs/template';
 
 const contacts = [
   {
@@ -34,6 +31,7 @@ const contacts = [
     clientAgreement: {
       clientTypeId: 2,
     },
+    clientTypeCode: 'B',
   },
   {
     id: '00046075',
@@ -43,6 +41,7 @@ const contacts = [
     clientAgreement: {
       clientTypeId: 1,
     },
+    clientTypeCode: 'A',
   },
   {
     id: '00045748',
@@ -52,6 +51,7 @@ const contacts = [
     clientAgreement: {
       clientTypeId: 2,
     },
+    clientTypeCode: 'B',
   },
 ];
 
