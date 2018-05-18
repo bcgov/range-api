@@ -35,7 +35,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: true
+    alwaysPullImage: false
     // envVars: [
     //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
     //   ]
@@ -52,6 +52,10 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
       GIT_COMMIT_AUTHOR = sh (
         script: """git show -s --pretty=%an""",
         returnStdout: true).trim()
+
+      SLACK_TOKEN = sh (
+        script: """oc get secret/slack -o template --template="{{.data.token}}" | base64 --decode""",
+        returnStdout: true).trim()
     }
     
     stage('Install') {
@@ -61,8 +65,6 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
 
       // setup the node dev environment
       sh "npm ci"
-      // not sure if this needs to be added to package.json.
-      // sh "npm i escape-string-regexp"
     }
     
     stage('Test') {
