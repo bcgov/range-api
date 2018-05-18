@@ -20,7 +20,7 @@
 
 'use strict';
 
-import flatten from 'flatten';
+import { flatten } from 'lodash';
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';

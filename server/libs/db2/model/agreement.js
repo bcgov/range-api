@@ -20,7 +20,7 @@
 
 'use strict';
 
-import flatten from 'flatten';
+import { flatten } from 'lodash';
 import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
 import Client from './client';

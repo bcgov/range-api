@@ -23,7 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
-import flatten from 'flatten';
+import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { logger } from '../../libs/logger';

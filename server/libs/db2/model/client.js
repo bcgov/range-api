@@ -22,7 +22,7 @@
 
 'use strict';
 
-import flatten from 'flatten';
+import { flatten } from 'lodash';
 import ClientType from './clienttype';
 import Model from './model';
 

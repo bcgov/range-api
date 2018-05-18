@@ -22,7 +22,7 @@
 
 'use strict';
 
-import flatten from 'flatten';
+import { flatten } from 'lodash';
 import District from './district';
 import Model from './model';
 import User from './user';
