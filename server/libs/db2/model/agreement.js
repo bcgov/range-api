@@ -20,6 +20,7 @@
 
 'use strict';
 
+import flatten from 'flatten';
 import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
 import Client from './client';
@@ -30,7 +31,6 @@ import Plan from './plan';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
-// import { errorWithCode } from '../../utils';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -87,7 +87,7 @@ export default class Agreement extends Model {
         await agreement.fetchLivestockIdentifiers(),
       ]);
 
-    await Promise.all(promises.flatten());
+    await Promise.all(flatten(promises));
 
     // fetch all data that is indirectly (nested) related to an agreement
     promises = [];
@@ -98,7 +98,7 @@ export default class Agreement extends Model {
 
     await Promise.all(promises);
 
-    return myAgreements.flatten();
+    return flatten(myAgreements);
   }
 
   static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
@@ -159,7 +159,7 @@ export default class Agreement extends Model {
       .from('client_agreement')
       .where({ client_id: clientId });
 
-    return results.map(result => Object.values(result)).flatten();
+    return flatten(results.map(result => Object.values(result)));
   }
 
   static async agreementsForZoneId(db, zoneId) {
@@ -172,7 +172,7 @@ export default class Agreement extends Model {
       .from(Agreement.table)
       .where({ zone_id: zoneId });
 
-    return results.map(result => Object.values(result)).flatten();
+    return flatten(results.map(result => Object.values(result)));
   }
 
   static async searchForTerm(db, term) {
@@ -188,7 +188,7 @@ export default class Agreement extends Model {
         .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
 
       // return an array of `forest_file_id`
-      return results.map(result => Object.values(result)).flatten();
+      return flatten(results.map(result => Object.values(result)));
     } catch (err) {
       throw err;
     }

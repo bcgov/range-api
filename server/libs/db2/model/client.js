@@ -22,6 +22,7 @@
 
 'use strict';
 
+import flatten from 'flatten';
 import ClientType from './clienttype';
 import Model from './model';
 
@@ -87,6 +88,6 @@ export default class Client extends Model {
       .whereRaw(`name ILIKE '%${term}%'`);
 
     // return an array of `client_number`
-    return results.map(result => Object.values(result)).flatten();
+    return flatten(results.map(result => Object.values(result)));
   }
 }

@@ -23,6 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
+import flatten from 'flatten';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { logger } from '../../libs/logger';
@@ -45,7 +46,7 @@ const allowableIDsForUser = async (user, agreementIDs) => {
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.find(db, { user_id: user.id });
     const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
-    const myIDs = (await Promise.all(zpromise)).flatten();
+    const myIDs = flatten(await Promise.all(zpromise));
     okIDs = agreementIDs.filter(id => myIDs.includes(id));
   } else {
     okIDs = agreementIDs;
@@ -132,11 +133,11 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       const cpromises = clientIDs.map(clientId => Agreement.agreementsForClientId(db, clientId));
       const zoneIDs = await Zone.searchForTerm(db, term);
       const zpromises = zoneIDs.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
-      const allIDs = [
+      const allIDs = flatten([
         ...(await Agreement.searchForTerm(db, term)),
         ...(await Promise.all(cpromises)),
         ...(await Promise.all(zpromises)),
-      ].flatten();
+      ]);
 
       const okIDs = await allowableIDsForUser(req.user, allIDs);
 
@@ -147,7 +148,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         .slice(offset, offset + limit)
         .map(agreementId =>
           Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
-      agreements = (await Promise.all(promises)).flatten();
+      agreements = flatten(await Promise.all(promises));
     } else {
       const count = await agreementCountForUser(req.user);
       agreements = await agreementsForUser(req.user, page, limit);
@@ -292,7 +293,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
       db,
       { forest_file_id: pkey },
     ));
-    const theAgreements = (await Promise.all(agreements)).flatten();
+    const theAgreements = flatten(await Promise.all(agreements));
 
     res.status(200).json(theAgreements.pop().zone).end();
   } catch (error) {

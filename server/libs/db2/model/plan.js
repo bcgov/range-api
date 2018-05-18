@@ -20,6 +20,7 @@
 
 'use strict';
 
+import flatten from 'flatten';
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';
@@ -100,7 +101,7 @@ export default class Plan extends Model {
       .from(Plan.table)
       .where({ id: planId });
 
-    return results.map(result => Object.values(result)).flatten().pop();
+    return flatten(results.map(result => Object.values(result))).pop();
   }
 
   // static async update(db, where, values) {

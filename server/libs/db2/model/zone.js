@@ -22,6 +22,7 @@
 
 'use strict';
 
+import flatten from 'flatten';
 import District from './district';
 import Model from './model';
 import User from './user';
@@ -63,7 +64,7 @@ export default class Zone extends Model {
       .whereRaw(`user_account.given_name || ' ' || user_account.family_name ILIKE '%${term}%'`);
 
     // return an array of `zone_id`
-    return results.map(result => Object.values(result)).flatten();
+    return flatten(results.map(result => Object.values(result)));
   }
 
   static async findWithDistrictUser(db, where) {

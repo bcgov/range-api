@@ -27,20 +27,11 @@ import compression from 'compression';
 import flash from 'connect-flash';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import flatten from 'flatten';
 import config from './config';
 import auth from './libs/authmware';
 import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
-
-// eslint-disable-next-line no-extend-native
-Object.defineProperty(Array.prototype, 'flatten', {
-  value: flatten,
-  configurable: true,
-  enumerable: false,
-  writable: true,
-});
 
 // Middlewares
 
