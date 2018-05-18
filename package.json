@@ -18,6 +18,7 @@
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
+    "flatten": "^1.0.2",
     "handlebars": "^4.0.11",
     "ip": "^1.1.4",
     "jsonwebtoken": "^8.2.1",
@@ -61,7 +62,7 @@
     "sinon": "^5.0.7"
   },
   "scripts": {
-    "start": "node --inspect=0.0.0.0:9222 build/server",
+    "start": "node --inspect=0.0.0.0:9222 --nolazy build/server",
     "dev": "cross-env NODE_ENV=development nodemon server --exec babel-node --inspect",
     "build": "cross-env NODE_ENV=production gulp",
     "build:doc": "./node_modules/.bin/apidoc -i server/ -o doc/api",
