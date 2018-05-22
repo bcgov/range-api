@@ -199,6 +199,18 @@ export default class Model {
     }
   }
 
+  static removeById(db, id) {
+    const where = {};
+    where[this.primaryKey] = id;
+
+    const results = db
+      .table(this.table)
+      .where(where)
+      .delete();
+
+    return results;
+  }
+
   // extract a models properties from the given data
   static extract(data) {
     const obj = {};

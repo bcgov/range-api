@@ -404,4 +404,36 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
   }
 }));
 
+// Remove a Schedule (and relted Grazing Schedule Entries) to an existing Plan
+router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+    scheduleId,
+  } = req.params;
+
+  if (!planId) {
+    throw errorWithCode('planId is required in path', 400);
+  }
+
+  if (!scheduleId) {
+    throw errorWithCode('scheduleId is required in path', 400);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
+
+    // WARNING: This will do a cascading delete on any grazing schedule
+    // entries. It will not modify other relations.
+    const result = await GrazingSchedule.removeById(db, scheduleId);
+    console.log(result); // for debugging only.
+
+    return res.status(204).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
 module.exports = router;
