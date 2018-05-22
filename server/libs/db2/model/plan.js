@@ -132,7 +132,7 @@ export default class Plan extends Model {
   }
 
   async fetchGrazingSchedules() {
-    const order = ['year', 'desc'];
+    const order = ['year', 'asc'];
     const where = { plan_id: this.id };
     const schedules = await GrazingSchedule.find(this.db, where, order);
     // egar load grazing schedule entries.
