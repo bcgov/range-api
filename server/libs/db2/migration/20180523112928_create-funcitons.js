@@ -22,7 +22,7 @@
 
 /* eslint-disable no-unused-vars */
 
-exports.up = (knex, Promise) => {
+exports.up = (knex) => {
   const query = `
     CREATE OR REPLACE FUNCTION update_changetimestamp_column()
     RETURNS TRIGGER AS $$
@@ -33,9 +33,10 @@ exports.up = (knex, Promise) => {
     $$ language 'plpgsql';
   `;
 
-  knex.schema.raw(query);
+  return knex.schema.raw(query);
 };
 
-exports.down = (knex, Promise) => {
-  //
+exports.down = (knex) => {
+  const query = 'DROP FUNCTION update_changetimestamp_column';
+  return knex.schema.raw(query);
 };

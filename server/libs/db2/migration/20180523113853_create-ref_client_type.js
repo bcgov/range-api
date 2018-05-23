@@ -25,15 +25,15 @@
 
 const table = 'ref_client_type';
 
-exports.up = (knex, Promise) =>
-  knex.schema.createTable('products', (t) => {
-    t.increments('id').unsigned().primary();
+exports.up = knex =>
+  knex.schema.createTable(table, (t) => {
+    t.increments('id').unsigned().index().primary();
     t.string('code', 1).notNull();
     t.string('description', 32).notNull();
     t.boolean('active').notNull().defaultTo(true);
     t.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull();
-    // t.string('name', 256).notNull();
+    // t.index(['id']);
     // t.text('decription').nullable();
     // t.decimal('price', 6, 2).notNull();
     // t.enum('category', ['apparel', 'electronics', 'furniture']).notNull();
@@ -47,5 +47,5 @@ exports.up = (knex, Promise) =>
     knex.schema.raw(query);
   });
 
-exports.down = (knex, Promise) =>
-  knex.schema.dropTable('products');
+exports.down = knex =>
+  knex.schema.dropTable(table);
