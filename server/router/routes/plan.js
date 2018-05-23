@@ -428,10 +428,15 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
     // WARNING: This will do a cascading delete on any grazing schedule
     // entries. It will not modify other relations.
     const result = await GrazingSchedule.removeById(db, scheduleId);
-    console.log(result); // for debugging only.
+    if (result === 0) {
+      throw errorWithCode('No such schedule exists', 400);
+    }
 
     return res.status(204).end();
   } catch (error) {
+    const message = `Unable to delete schedule ${scheduleId}`;
+    logger.error(`${message}, error = ${error.message}`);
+
     throw error;
   }
 }));
