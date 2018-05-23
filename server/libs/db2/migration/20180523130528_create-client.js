@@ -23,21 +23,17 @@
 
 /* eslint-disable no-unused-vars */
 
-const table = 'ref_client_type';
+const table = 'ref_client';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
-    t.increments('id').unsigned().index().primary();
-    t.string('code', 1).notNull();
-    t.string('description', 32).notNull();
-    t.boolean('active').notNull().defaultTo(true);
+    t.string('client_number', 8).index().primary();
+    t.string('location_code', 2).notNull();
+    t.string('name', 64).notNull();
+    t.dateTime('licensee_start_date').nullable();
+    t.dateTime('licensee_end_date').nullable();
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    // t.index(['id']);
-    // t.text('decription').nullable();
-    // t.decimal('price', 6, 2).notNull();
-    // t.enum('category', ['apparel', 'electronics', 'furniture']).notNull();
-    // table.bigInteger('AddressId').unsigned().index().references('id').inTable('Address')
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
