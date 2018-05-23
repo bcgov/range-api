@@ -383,11 +383,21 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
     const promises = grazingScheduleEntries.map((entry) => {
       delete entry.scheduleId; // eslint-disable-line no-param-reassign
       delete entry.schedule_id; // eslint-disable-line no-param-reassign
-      return GrazingScheduleEntry.update(
+      if (entry.id) {
+        return GrazingScheduleEntry.update(
+          db,
+          {
+            id: entry.id,
+          },
+          {
+            ...entry,
+            ...{ grazing_schedule_id: scheduleId },
+          },
+        );
+      }
+
+      return GrazingScheduleEntry.create(
         db,
-        {
-          id: entry.id,
-        },
         {
           ...entry,
           ...{ grazing_schedule_id: scheduleId },
