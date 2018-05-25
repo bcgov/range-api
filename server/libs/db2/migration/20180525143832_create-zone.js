@@ -31,7 +31,7 @@ exports.up = async knex =>
     t.string('code', 4).unique().index().notNull();
     t.string('description', 64).notNull();
     t.integer('district_id').notNull().references('id').inTable('ref_district');
-    t.integer('user_id');
+    t.integer('user_id').notNull().references('id').inTable('user_account');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

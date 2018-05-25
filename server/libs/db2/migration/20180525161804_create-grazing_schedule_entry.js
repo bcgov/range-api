@@ -28,8 +28,6 @@ const table = 'grazing_schedule_entry';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.dateTime('start_date').notNull();
-    t.dateTime('end_date').notNull();
     t.dateTime('date_in').notNull();
     t.dateTime('date_out').notNull();
     t.integer('grace_days').notNull().defaultTo(0);

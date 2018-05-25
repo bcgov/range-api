@@ -27,6 +27,7 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
     t.string('range_name', 32).notNull();
+    t.string('alt_business_name', 32);
     t.dateTime('plan_start_date');
     t.dateTime('plan_end_date');
     t.text('notes');
