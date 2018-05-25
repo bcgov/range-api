@@ -21,17 +21,17 @@
 
 'use strict';
 
-const table = 'ref_zone';
-
 /* eslint-disable newline-per-chained-call */
+
+const table = 'xxxxxxx';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
-    t.increments('id').unsigned().index().primary();
-    t.string('code', 4).unique().index().notNull();
-    t.string('description', 64).notNull();
-    t.integer('district_id').notNull().references('id').inTable('ref_district');
-    t.integer('user_id');
+    t.increments('id').unsigned().primary();
+    t.string('agreement_id', 8).notNull().index().references('forest_file_id').inTable('agreement').notNull();
+    t.string('client_id', 8).notNull().index().references('client_number').inTable('ref_client').notNull();
+    t.integer('zone_id').notNull().references('id').inTable('ref_zone').notNull();
+    t.integer('client_type_id').notNull().references('id').inTable('ref_client_type').notNull();
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
