@@ -23,7 +23,7 @@ module.exports = {
       max: 10,
     },
     migrations: {
-      stub: './config/knex-migration-stub.js',
+      // stub: './config/knex-migration-stub.js',
       tableName: 'migration',
       directory: 'server/libs/db2/migration',
     },
