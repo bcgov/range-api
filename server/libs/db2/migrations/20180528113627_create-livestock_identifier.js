@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -21,14 +20,17 @@
 
 'use strict';
 
-const table = 'ref_plan_status';
+const table = 'livestock_identifier';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('code', 2).unique().index().notNull();
-    t.string('name', 32).notNull();
-    t.boolean('active').notNull().defaultTo(true);
+    t.string('description', 64);
+    t.string('image_ref', 256);
+    t.boolean('accepted').notNull().defaultTo(false);
+    t.integer('livestock_identifier_location_id').notNull().references('id').inTable('ref_livestock_identifier_location');
+    t.integer('livestock_identifier_type_id').notNull().references('id').inTable('ref_livestock_identifier_type');
+    t.string('agreement_id', 9).notNull().references('forest_file_id').inTable('agreement');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

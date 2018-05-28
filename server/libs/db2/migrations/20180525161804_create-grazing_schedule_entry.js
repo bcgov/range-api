@@ -33,7 +33,7 @@ exports.up = async knex =>
     t.integer('grace_days').notNull().defaultTo(0);
     t.integer('livestock_count').notNull();
     t.integer('livestock_type_id').notNull().index().references('id').inTable('ref_livestock');
-    t.integer('grazing_schedule_id').notNull().index().references('id').inTable('ref_livestock');
+    t.integer('grazing_schedule_id').notNull().index().references('id').inTable('grazing_schedule');
     t.integer('pasture_id').notNull().index().references('id').inTable('pasture');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
