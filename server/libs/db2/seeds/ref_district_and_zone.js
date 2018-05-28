@@ -327,12 +327,12 @@ exports.seed = async (knex) => {
 
     delete zone.district;
   });
-
+  await knex('ref_zone').delete();
   await knex('ref_district').delete();
+
   await knex('ref_district').insert(districts);
   await knex.schema.raw(`ALTER SEQUENCE ref_district_id_seq RESTART WITH ${did + 1};`);
 
-  await knex('ref_zone').delete();
   await knex('ref_zone').insert(zones);
   await knex.schema.raw(`ALTER SEQUENCE ref_zone_id_seq RESTART WITH ${zid + 1};`);
 };
