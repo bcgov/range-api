@@ -22,31 +22,42 @@
 
 'use strict';
 
-const table = 'ref_agreement_type';
+const table = 'ref_livestock_identifier_location';
 
 exports.seed = async (knex) => {
   const ref = [
     {
-      code: 'E01',
-      description: 'Grazing Licence',
+      description: 'Left Ear',
       active: true,
     },
     {
-      code: 'E02',
-      description: 'Grazing Permit',
+      description: 'Right Ear',
       active: true,
     },
     {
-      code: 'H01',
-      description: 'Haycutting Licence',
+      description: 'Left Sholder',
       active: true,
     },
     {
-      code: 'H02',
-      description: 'Haycutting Permit',
+      description: 'Right Sholder',
       active: true,
     },
-  ];
+    {
+      description: 'Left Hind',
+      active: true,
+    },
+    {
+      description: 'Right Hind',
+      active: true,
+    },
+    {
+      description: 'Left Flank',
+      active: true,
+    },
+    {
+      description: 'Right Flank',
+      active: true,
+    }];
 
   await knex(table).delete();
   await knex(table).insert(ref);

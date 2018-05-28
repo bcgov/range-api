@@ -21,7 +21,7 @@
 
 'use strict';
 
-const table = 'ref_lifestock_identifier_type';
+const table = 'ref_livestock_identifier_type';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {

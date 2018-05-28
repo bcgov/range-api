@@ -18,36 +18,70 @@
 // Created by Jason Leach on 2018-05-28.
 //
 
-/* eslint-disable no-param-reassign */
+/* eslint-disable no-param-reassign, arrow-body-style */
 
 'use strict';
 
-const table = 'ref_agreement_type';
+const table = 'ref_livestock';
 
 exports.seed = async (knex) => {
+  // order matters !!!
   const ref = [
     {
-      code: 'E01',
-      description: 'Grazing Licence',
+      name: 'Cow with Calf',
+      au_factor: 1,
       active: true,
     },
     {
-      code: 'E02',
-      description: 'Grazing Permit',
+      name: 'Bull',
+      au_factor: '1.5',
       active: true,
     },
     {
-      code: 'H01',
-      description: 'Haycutting Licence',
+      name: 'Yearling',
+      au_factor: 0.7,
       active: true,
     },
     {
-      code: 'H02',
-      description: 'Haycutting Permit',
+      name: 'Horse',
+      au_factor: 1.25,
       active: true,
     },
-  ];
+    {
+      name: 'Sheep',
+      au_factor: 0.2,
+      active: true,
+    },
+    {
+      name: 'Alpaca',
+      au_factor: 0.1,
+      active: true,
+    },
+    {
+      name: 'Ass',
+      au_factor: 1.25,
+      active: true,
+    },
+    {
+      name: 'Goat',
+      au_factor: 0.2,
+      active: true,
+    },
+
+    {
+      name: 'Llama',
+      au_factor: 0.2,
+      active: true,
+    },
+    {
+      name: 'Mule',
+      au_factor: 1.25,
+      active: true,
+    },
+  ].map((item, index) => { return { ...item, ...{ id: index + 1 } }; });
 
   await knex(table).delete();
   await knex(table).insert(ref);
+
+  await knex.schema.raw(`ALTER SEQUENCE ${table}_id_seq RESTART WITH ${ref.length};`);
 };

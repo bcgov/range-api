@@ -15,30 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-03-14.
+// Created by Jason Leach on 2018-05-28.
 //
-
-/* eslint-env es6 */
-
-'use strict';
 
 /* eslint-disable no-param-reassign */
 
-module.exports = {
-  up: async (queryInterface) => {
-    const ref = [
-      {
-        description: 'Brand',
-        active: true,
-      },
-      {
-        description: 'Tag',
-        active: true,
-      }];
+'use strict';
 
-    await queryInterface.bulkInsert('ref_livestock_identifier_type', ref, {});
-  },
-  down: async (queryInterface) => {
-    await queryInterface.bulkDelete('ref_livestock_identifier_type', null, {});
-  },
+const table = 'ref_livestock_identifier_type';
+
+exports.seed = async (knex) => {
+  const ref = [
+    {
+      description: 'Brand',
+      active: true,
+    },
+    {
+      description: 'Tag',
+      active: true,
+    }];
+
+  await knex(table).delete();
+  await knex(table).insert(ref);
 };
