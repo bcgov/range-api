@@ -32,6 +32,6 @@ export default class MinisterIssueType extends Model {
   }
 
   static get table() {
-    return 'ref_client_type';
+    return 'ref_minister_issue_type';
   }
 }

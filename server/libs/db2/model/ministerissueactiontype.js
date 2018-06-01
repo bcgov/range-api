@@ -32,6 +32,6 @@ export default class MinisterIssueActionType extends Model {
   }
 
   static get table() {
-    return 'minister_issue_action_type';
+    return 'ref_minister_issue_action_type';
   }
 }
