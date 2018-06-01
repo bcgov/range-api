@@ -25,7 +25,7 @@ module.exports = {
     migrations: {
       // stub: './config/knex-migration-stub.js',
       tableName: 'migration',
-      directory: 'server/libs/db2/migration',
+      directory: 'server/libs/db2/migrations',
     },
   },
 
@@ -43,7 +43,7 @@ module.exports = {
     },
     migrations: {
       tableName: 'migration',
-      directory: 'server/libs/db2/migration',
+      directory: 'server/libs/db2/migrations',
     },
   },
 
@@ -61,7 +61,7 @@ module.exports = {
     },
     migrations: {
       tableName: 'migration',
-      directory: 'server/libs/db2/migration',
+      directory: 'server/libs/db2/migrations',
     },
   },
 };
