@@ -50,6 +50,9 @@ export default class DataManager {
         min: 1,
         max: 64,
       },
+      migrations: {
+        tableName: 'migration',
+      },
     });
 
     this.db = k;
