@@ -32,6 +32,10 @@ import PlanStatus from './model/planstatus';
 import Usage from './model/usage';
 import User from './model/user';
 import Zone from './model/zone';
+import MinisterIssue from './model/ministerissue';
+import MinisterIssueAciton from './model/ministerissueaction';
+import MinisterIssueActionType from './model/ministerissueactiontype';
+import MinisterIssueType from './model/ministerissuetype';
 
 export default class DataManager {
   constructor(config) {
@@ -69,6 +73,10 @@ export default class DataManager {
     this.LivestockIdentifierLocation = LivestockIdentifierLocation;
     this.LivestockIdentifierType = LivestockIdentifierType;
     this.LivestockType = LivestockType;
+    this.MinisterIssue = MinisterIssue;
+    this.MinisterIssueAciton = MinisterIssueAciton;
+    this.MinisterIssueActionType = MinisterIssueActionType;
+    this.MinisterIssueType = MinisterIssueType;
     this.Plan = Plan;
     this.PlanStatus = PlanStatus;
     this.PlanExtension = PlanExtension;
