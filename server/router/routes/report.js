@@ -24,6 +24,7 @@
 
 import { Router } from 'express';
 import fs from 'fs';
+import moment from 'moment';
 import config from '../../config';
 import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
@@ -52,6 +53,89 @@ const userCanAccessAgreement = async (user, agreementId) => {
   }
 
   return true;
+};
+
+const shift = (number, precision) => {
+  const numArray = (`${number}`).split('e');
+  return +(`${numArray[0]}e${(numArray[1] ? (+numArray[1] + precision) : precision)}`);
+};
+
+const round = (number, precision) => (
+  shift(Math.round(shift(number, +precision)), -precision)
+);
+
+/**
+ * Round the float to 1 decimal
+ *
+ * @param {float} number
+ * @returns the rounded float number
+ */
+const roundTo1Decimal = number => (
+  round(number, 1)
+);
+
+/**
+ *
+ * @param {number} numberOfAnimals
+ * @param {number} totalDays
+ * @param {number} auFactor parameter provided from the livestock type
+ * @returns {float} the total AUMs
+ */
+const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) => (
+  ((numberOfAnimals * totalDays * auFactor) / 30.44)
+);
+
+/**
+ * Present user friendly string when getting null or undefined value
+ *
+ * @param {string | Date} first the string in the class Date form
+ * @param {string | Date} second the string in the class Date form
+ * @param {bool} isUserFriendly
+ * @returns {number | string} the number of days or 'N/P'
+ */
+const calcDateDiff = (first, second, isUserFriendly) => {
+  if (first && second) {
+    return moment(first).diff(moment(second), 'days');
+  }
+  return isUserFriendly ? 'N/P' : 0;
+};
+
+/**
+ * Calculate Private Land Deduction Animal Unit Month
+ *
+ * @param {number} totalAUMs
+ * @param {float} pasturePldPercent
+ * @returns {float} the pld AUMs
+ */
+const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) => (
+  totalAUMs * pasturePldPercent
+);
+
+/**
+ * Calculate Crown Animal Unit Month
+ *
+ * @param {number} totalAUMs
+ * @param {number} pldAUMs
+ * @returns {float} the crown AUMs
+ */
+const calcCrownAUMs = (totalAUMs, pldAUMs) => (
+  (totalAUMs - pldAUMs)
+);
+
+/**
+ * Calculate the total Crown Animal Unit Month
+ *
+ * @param {Array} entries grazing schedule entries
+ * @returns {float} the total crown AUMs
+ */
+const calcCrownTotalAUMs = (entries = []) => {
+  const reducer = (accumulator, currentValue) => accumulator + currentValue;
+  if (entries.length === 0) {
+    return 0;
+  }
+  return entries
+    .map(entry => entry.crownAUMs)
+    .reduce(reducer);
 };
 
 //
@@ -85,6 +169,42 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       givenName,
       familyName,
     } = user || {};
+
+    const calculatedGrazingSchedules = grazingSchedules.map((schedule) => {
+      const { grazingScheduleEntries: gse } = schedule;
+      const grazingScheduleEntries = gse && gse.map((entry) => {
+        const {
+          pastureId,
+          livestockType,
+          livestockCount,
+          dateIn,
+          dateOut,
+        } = entry;
+        const days = calcDateDiff(dateOut, dateIn, false);
+        const pasture = pastures.find(p => p.id === pastureId);
+        const graceDays = pasture && pasture.graceDays;
+        const pldPercent = pasture && pasture.pldPercent;
+        const auFactor = livestockType && livestockType.auFactor;
+
+        const totalAUMs = calcTotalAUMs(livestockCount, days, auFactor);
+        const pldAUMs = roundTo1Decimal(calcPldAUMs(totalAUMs, pldPercent));
+        const crownAUMs = roundTo1Decimal(calcCrownAUMs(totalAUMs, pldAUMs));
+        return {
+          ...entry,
+          pasture,
+          graceDays,
+          pldAUMs,
+          crownAUMs,
+        };
+      });
+      const crownTotalAUMs = calcCrownTotalAUMs(grazingScheduleEntries);
+      return {
+        ...schedule,
+        grazingScheduleEntries,
+        crownTotalAUMs,
+      };
+    });
+
     user.name = givenName && familyName && `${givenName} ${familyName}`;
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
@@ -93,7 +213,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       plan,
       zone,
       pastures,
-      grazingSchedules,
+      calculatedGrazingSchedules,
       user,
     });
     const stream = await renderToPDF(html);

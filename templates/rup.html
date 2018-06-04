@@ -203,7 +203,7 @@
   
   <h2>Schedule</h2>
   <div class="divider"></div>
-  {{#each grazingSchedules}}
+  {{#each calculatedGrazingSchedules}}
     <div class="section-title">{{this.year}} Grazing Schedule</div>
     <table>
       <tr>
@@ -226,8 +226,8 @@
           <td>{{getStandardDateFormat this.dateOut}}</td>
           <td>{{getDaysOfGrazing this.dateIn this.dateOut}}</td>
           <td>{{this.graceDays}}</td>
-          <td>{{this.pasture.pldPercent}}</td>
-          <td>{{this.pasture.allowableAum}}</td>
+          <td>{{this.pldAUMs}}</td>
+          <td>{{this.crownAUMs}}</td>
         </tr>
       {{/each}}
     </table>
