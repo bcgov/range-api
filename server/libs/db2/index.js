@@ -36,6 +36,7 @@ import MinisterIssue from './model/ministerissue';
 import MinisterIssueAciton from './model/ministerissueaction';
 import MinisterIssueActionType from './model/ministerissueactiontype';
 import MinisterIssueType from './model/ministerissuetype';
+import MinisterIssuePasture from './model/ministerissuepasture';
 
 export default class DataManager {
   constructor(config) {
@@ -77,6 +78,7 @@ export default class DataManager {
     this.MinisterIssueAciton = MinisterIssueAciton;
     this.MinisterIssueActionType = MinisterIssueActionType;
     this.MinisterIssueType = MinisterIssueType;
+    this.MinisterIssuePasture = MinisterIssuePasture;
     this.Plan = Plan;
     this.PlanStatus = PlanStatus;
     this.PlanExtension = PlanExtension;
