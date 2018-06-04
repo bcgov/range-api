@@ -39,6 +39,8 @@ const {
   PlanStatus,
   GrazingSchedule,
   GrazingScheduleEntry,
+  MinisterIssue,
+  MinisterIssuePasture,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -495,5 +497,59 @@ router.delete(
     }
   }),
 );
+
+//
+// Minister Issues
+//
+
+// Add a Minister Issue to an existing Plan
+router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+  const {
+    body,
+  } = req;
+  const {
+    pastures,
+  } = body;
+
+  if (!planId) {
+    throw errorWithCode('planId is required in path', 400);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    if (!userCanAccessAgreement(req.user, agreementId)) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
+
+    // Use the planId from the URL so that we know exactly what plan
+    // is being updated and to ensure its not reassigned.
+    delete body.planId;
+    delete body.plan_id;
+
+    // Make sure the all the pastures associated to the issue belong to the
+    // current plan.
+    const plan = await Plan.findById(db, planId);
+    await plan.fetchPastures();
+    const okPastureIds = plan.pastures.map(pasture => pasture.id);
+    const status = pastures.every(i => okPastureIds.includes(i));
+    if (!status) {
+      throw errorWithCode('Some pastures do not belong to the current user ', 400);
+    }
+
+    const issue = await MinisterIssue.create(db, { ...body, ...{ plan_id: planId } });
+    const promises = pastures.map(id =>
+      MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
+
+    await Promise.all(promises);
+
+    return res.status(200).json(issue).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
 
 module.exports = router;
