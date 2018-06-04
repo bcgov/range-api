@@ -36,6 +36,8 @@ const {
   LivestockType,
   LivestockIdentifierType,
   PlanStatus,
+  MinisterIssueActionType,
+  MinisterIssueType,
 } = dm;
 
 const router = new Router();
@@ -50,14 +52,19 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const planStatus = await PlanStatus.find(db, where);
     const clientType = await ClientType.find(db, where);
     const livestockIdentifierType = await LivestockIdentifierType.find(db, where);
+    const ministerIssueActionType = await MinisterIssueActionType.find(db, where);
+    const ministerIssueType = await MinisterIssueType.find(db, where);
+    const errorMessage = 'Unable to fetch reference data';
 
     const response = {
-      AGREEMENT_TYPE: agreementType || { error: 'Unable to fetch reference data' },
-      AGREEMENT_EXEMPTION_STATUS: agreementExemptionStatus || { error: 'Unable to fetch reference data' },
-      LIVESTOCK_TYPE: livestockType || { error: 'Unable to fetch reference data' },
-      PLAN_STATUS: planStatus || { error: 'Unable to fetch reference data' },
-      CLIENT_TYPE: clientType || { error: 'Unable to fetch reference data' },
-      LIVESTOCK_IDENTIFIER_TYPE: livestockIdentifierType || { error: 'Unable to fetch reference data' },
+      AGREEMENT_TYPE: agreementType || { error: errorMessage },
+      AGREEMENT_EXEMPTION_STATUS: agreementExemptionStatus || { error: errorMessage },
+      LIVESTOCK_TYPE: livestockType || { error: errorMessage },
+      PLAN_STATUS: planStatus || { error: errorMessage },
+      CLIENT_TYPE: clientType || { error: errorMessage },
+      LIVESTOCK_IDENTIFIER_TYPE: livestockIdentifierType || { error: errorMessage },
+      MINISTER_ISSUE_ACTION_TYPE: ministerIssueActionType || { error: errorMessage },
+      MINISTER_ISSUE_TYPE: ministerIssueType || { error: errorMessage },
     };
 
     res.status(200).json(response);

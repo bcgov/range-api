@@ -27,6 +27,11 @@ module.exports = {
       tableName: 'migration',
       directory: 'server/libs/db2/migrations',
     },
+    seeds: {
+      // stub: './config/knex-migration-stub.js',
+      tableName: 'seed',
+      directory: 'server/libs/db2/seeds',
+    },
   },
 
   staging: {
