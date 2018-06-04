@@ -101,6 +101,7 @@ const calcDateDiff = (first, second, isUserFriendly) => {
 };
 
 /**
+ * Calculate Private Land Deduction Animal Unit Month
  *
  * @param {number} totalAUMs
  * @param {float} pasturePldPercent
@@ -111,6 +112,7 @@ const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) => (
 );
 
 /**
+ * Calculate Crown Animal Unit Month
  *
  * @param {number} totalAUMs
  * @param {number} pldAUMs
@@ -121,33 +123,18 @@ const calcCrownAUMs = (totalAUMs, pldAUMs) => (
 );
 
 /**
+ * Calculate the total Crown Animal Unit Month
  *
  * @param {Array} entries grazing schedule entries
  * @returns {float} the total crown AUMs
  */
-const calcCrownTotalAUMs = (entries = [], pastures = [], livestockTypes = []) => {
+const calcCrownTotalAUMs = (entries = []) => {
   const reducer = (accumulator, currentValue) => accumulator + currentValue;
   if (entries.length === 0) {
     return 0;
   }
   return entries
-    .map((entry) => {
-      const {
-        pastureId,
-        livestockTypeId,
-        livestockCount,
-        dateIn,
-        dateOut,
-      } = entry || {};
-      const days = calcDateDiff(dateOut, dateIn, false);
-      const pasture = pastures.find(p => p.id === pastureId);
-      const livestockType = livestockTypes.find(lt => lt.id === livestockTypeId);
-      const auFactor = livestockType && livestockType.auFactor;
-      const totalAUMs = calcTotalAUMs(livestockCount, days, auFactor);
-      const pldAUMs = calcPldAUMs(totalAUMs, pasture && pasture.pldPercent);
-      const crownAUMs = calcCrownAUMs(totalAUMs, pldAUMs);
-      return crownAUMs;
-    })
+    .map(entry => entry.crownAUMs)
     .reduce(reducer);
 };
 
@@ -210,10 +197,11 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
           crownAUMs,
         };
       });
-
+      const crownTotalAUMs = calcCrownTotalAUMs(grazingScheduleEntries);
       return {
         ...schedule,
         grazingScheduleEntries,
+        crownTotalAUMs,
       };
     });
 
