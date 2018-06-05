@@ -42,6 +42,7 @@ const {
   GrazingScheduleEntry,
   MinisterIssue,
   MinisterIssuePasture,
+  MinisterIssueAction,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -622,7 +623,6 @@ router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
   }
 }));
 
-
 // Remove a Minister Issue from an existing Plan
 router.delete('/:planId?/issue/issueId?', asyncMiddleware(async (req, res) => {
   const {
@@ -649,4 +649,89 @@ router.delete('/:planId?/issue/issueId?', asyncMiddleware(async (req, res) => {
   }
 }));
 
+//
+// Minister Issue Action
+//
+
+// Add a Minister Issue Action to an existing Minister Issue
+router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res) => {
+  const { body, params: { planId, issueId } } = req;
+  const { actionTypeId } = body;
+
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+    if (!actionTypeId) {
+      throw errorWithCode('The actionTypeId is required in path', 400);
+    }
+
+    verifyPlanOwnership(req.user, planId);
+    const action = await MinisterIssueAction.create(
+      db,
+      { ...body, issue_id: issueId, action_type_id: actionTypeId },
+    );
+
+    return res.status(200).json(action).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// Update a Minister Issue Action to an existing Minister Issue
+router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
+  const { body, params: { planId, issueId, actionId } } = req;
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+    if (!actionId) {
+      throw errorWithCode('The actionId is required in path', 400);
+    }
+    if (!body.actionTypeId) {
+      throw errorWithCode('The actionTypeId is required in path', 400);
+    }
+
+    verifyPlanOwnership(req.user, planId);
+    const updatedAction = await MinisterIssueAction.update(
+      db,
+      { id: actionId },
+      body,
+    );
+
+    return res.status(200).json(updatedAction).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// Update a Minister Issue Action to an existing Minister Issue
+router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
+  const { planId, issueId, actionId } = req.params;
+
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+    if (!actionId) {
+      throw errorWithCode('The actionId is required in path', 400);
+    }
+
+    verifyPlanOwnership(req.user, planId);
+    await MinisterIssueAction.removeById(db, actionId);
+
+    return res.status(204).json().end();
+  } catch (error) {
+    throw error;
+  }
+}));
 module.exports = router;
