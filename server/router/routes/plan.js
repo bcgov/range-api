@@ -42,6 +42,7 @@ const {
   GrazingScheduleEntry,
   MinisterIssue,
   MinisterIssuePasture,
+  MinisterIssueAction,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -615,5 +616,4 @@ router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
     throw error;
   }
 }));
-
 module.exports = router;
