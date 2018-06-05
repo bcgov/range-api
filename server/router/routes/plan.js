@@ -601,8 +601,9 @@ router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
     // remove the existing link between the issue and it's related pastures.
     const issuePastures = await Promise.all(pastures.map(id =>
       MinisterIssuePasture.find(db, { pasture_id: id, minister_issue_id: issue.id })));
+    const flatIssuePastures = flatten(issuePastures);
 
-    await Promise.all(flatten(issuePastures).map(item =>
+    await Promise.all(flatIssuePastures.map(item =>
       MinisterIssuePasture.removeById(db, item.id)));
 
     // build the new relation between the issue and it's pastures.
