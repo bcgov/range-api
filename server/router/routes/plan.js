@@ -23,6 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
+import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { logger } from '../../libs/logger';
@@ -39,6 +40,8 @@ const {
   PlanStatus,
   GrazingSchedule,
   GrazingScheduleEntry,
+  MinisterIssue,
+  MinisterIssuePasture,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -495,5 +498,122 @@ router.delete(
     }
   }),
 );
+
+//
+// Minister Issues
+//
+
+const validateMinisterIssueOpperation = async (planId, body) => {
+  const {
+    pastures,
+  } = body;
+
+  if (!planId) {
+    throw errorWithCode('The planId is required in path', 400);
+  }
+
+  if (!pastures || pastures.length === 0) {
+    throw errorWithCode('At least one pasture is required', 400);
+  }
+
+  try {
+    // Make sure the all the pastures associated to the issue belong to the
+    // current plan.
+    const plan = await Plan.findById(db, planId);
+    await plan.fetchPastures();
+    const okPastureIds = plan.pastures.map(pasture => pasture.id);
+    const status = pastures.every(i => okPastureIds.includes(i));
+    if (!status) {
+      throw errorWithCode('Some pastures do not belong to the current user ', 400);
+    }
+  } catch (error) {
+    throw errorWithCode('Unable to confirm Plan ownership', 500);
+  }
+};
+
+const sanitizeDataForMinisterIssue = (body) => {
+  /* eslint-disable no-param-reassign */
+  // Use the planId from the URL so that we know exactly what plan
+  // is being updated and to ensure its not reassigned.
+  delete body.planId;
+  delete body.plan_id;
+  /* eslint-enable no-param-reassign */
+
+  return body;
+};
+
+const verifyPlanOwnership = async (user, planId) => {
+  const agreementId = await Plan.agreementForPlanId(db, planId);
+  if (!userCanAccessAgreement(user, agreementId)) {
+    throw errorWithCode('You do not access to this agreement', 403);
+  }
+};
+
+// Add a Minister Issue to an existing Plan
+router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+  const {
+    body,
+  } = req;
+  const {
+    pastures,
+  } = body;
+
+  try {
+    verifyPlanOwnership(req.user, planId);
+    validateMinisterIssueOpperation(planId, body);
+    const data = sanitizeDataForMinisterIssue(body);
+
+    const issue = await MinisterIssue.create(db, { ...data, ...{ plan_id: planId } });
+    const promises = pastures.map(id =>
+      MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
+
+    await Promise.all(promises);
+
+    return res.status(200).json(issue).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// Update a Minister Issue to an existing Plan
+router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+  const {
+    body,
+  } = req;
+  const {
+    pastures,
+  } = body;
+
+  try {
+    verifyPlanOwnership(req.user, planId);
+    validateMinisterIssueOpperation(planId, body);
+    const data = sanitizeDataForMinisterIssue(body);
+
+    // update the existing issue.
+    const issue = await MinisterIssue.update(db, { plan_id: planId }, data);
+
+    // remove the existing link between the issue and it's related pastures.
+    const issuePastures = await Promise.all(pastures.map(id =>
+      MinisterIssuePasture.find(db, { pasture_id: id, minister_issue_id: issue.id })));
+    const flatIssuePastures = flatten(issuePastures);
+
+    await Promise.all(flatIssuePastures.map(item =>
+      MinisterIssuePasture.removeById(db, item.id)));
+
+    // build the new relation between the issue and it's pastures.
+    await Promise.all(pastures.map(id =>
+      MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id })));
+
+    return res.status(200).json(issue).end();
+  } catch (error) {
+    throw error;
+  }
+}));
 
 module.exports = router;
