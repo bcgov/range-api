@@ -579,9 +579,10 @@ router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
 }));
 
 // Update a Minister Issue to an existing Plan
-router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
+router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
   const {
     planId,
+    issueId,
   } = req.params;
   const {
     body,
@@ -592,11 +593,16 @@ router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
 
   try {
     verifyPlanOwnership(req.user, planId);
+
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+
     validateMinisterIssueOpperation(planId, body);
     const data = sanitizeDataForMinisterIssue(body);
 
     // update the existing issue.
-    const issue = await MinisterIssue.update(db, { plan_id: planId }, data);
+    const issue = await MinisterIssue.update(db, { issue_id: issueId }, data);
 
     // remove the existing link between the issue and it's related pastures.
     const issuePastures = await Promise.all(pastures.map(id =>
@@ -611,6 +617,33 @@ router.put('/:planId?/issue', asyncMiddleware(async (req, res) => {
       MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id })));
 
     return res.status(200).json(issue).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+
+// Remove a Minister Issue from an existing Plan
+router.delete('/:planId?/issue/issueId?', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+    issueId,
+  } = req.params;
+
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+
+    verifyPlanOwnership(req.user, planId);
+
+    await MinisterIssue.removeById(db, issueId);
+
+    return res.status(204).json().end();
   } catch (error) {
     throw error;
   }
