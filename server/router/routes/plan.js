@@ -656,6 +656,7 @@ router.delete('/:planId?/issue/issueId?', asyncMiddleware(async (req, res) => {
 // Add a Minister Issue Action to an existing Minister Issue
 router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res) => {
   const { body, params: { planId, issueId } } = req;
+  const { actionTypeId } = body;
 
   try {
     if (!planId) {
@@ -664,12 +665,15 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
     if (!issueId) {
       throw errorWithCode('The issueId is required in path', 400);
     }
-    if (!body.actionTypeId) {
+    if (!actionTypeId) {
       throw errorWithCode('The actionTypeId is required in path', 400);
     }
 
     verifyPlanOwnership(req.user, planId);
-    const action = await MinisterIssueAction.create(db, { ...body });
+    const action = await MinisterIssueAction.create(
+      db,
+      { ...body, issue_id: issueId, action_type_id: actionTypeId },
+    );
 
     return res.status(200).json(action).end();
   } catch (error) {
