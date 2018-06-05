@@ -706,4 +706,28 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
     throw error;
   }
 }));
+
+// Update a Minister Issue Action to an existing Minister Issue
+router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
+  const { planId, issueId, actionId } = req.params;
+
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+    if (!issueId) {
+      throw errorWithCode('The issueId is required in path', 400);
+    }
+    if (!actionId) {
+      throw errorWithCode('The actionId is required in path', 400);
+    }
+
+    verifyPlanOwnership(req.user, planId);
+    await MinisterIssueAction.removeById(db, actionId);
+
+    return res.status(204).json().end();
+  } catch (error) {
+    throw error;
+  }
+}));
 module.exports = router;
