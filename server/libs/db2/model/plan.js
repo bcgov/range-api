@@ -151,6 +151,16 @@ export default class Plan extends Model {
   async fetchMinisterIssues() {
     const where = { plan_id: this.id };
     const ministerIssues = await MinisterIssue.findWithType(this.db, where);
+
+    // egar load grazing schedule entries.
+    const promises = ministerIssues.map(i => i.fetchMinisterIssueActions(
+      this.db,
+      {
+        issue_id: i.id,
+      },
+    ));
+    await Promise.all(promises);
+
     this.ministerIssues = ministerIssues;
   }
 }

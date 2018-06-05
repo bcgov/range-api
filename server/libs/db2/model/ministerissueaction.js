@@ -23,8 +23,22 @@
 'use strict';
 
 import Model from './model';
+import MinisterIssueActionType from './ministerissueactiontype';
 
 export default class MinisterIssueAction extends Model {
+  constructor(data, db = undefined) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      if (MinisterIssueAction.fields.indexOf(`${MinisterIssueAction.table}.${key}`) > -1) {
+        obj[key] = data[key];
+      }
+    });
+
+    super(obj, db);
+
+    this.ministerIssueActionType = new MinisterIssueActionType(MinisterIssueActionType.extract(data));
+  }
+
   static get fields() {
     // primary key *must* be first!
     return ['id', 'detail', 'action_type_id', 'issue_id']
@@ -33,5 +47,25 @@ export default class MinisterIssueAction extends Model {
 
   static get table() {
     return 'minister_issue_action';
+  }
+
+  static async findWithType(db, where) {
+    const myFields = [
+      ...MinisterIssueAction.fields,
+      ...MinisterIssueActionType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+    ];
+
+    try {
+      const results = await db
+        .select(myFields)
+        .from(MinisterIssueAction.table)
+        .join('ref_minister_issue_action_type', { 'minister_issue_action.action_type_id': 'ref_minister_issue_action_type.id' })
+        .where(where)
+        .orderBy('id', 'asc');
+
+      return results.map(row => new MinisterIssueAction(row, db));
+    } catch (err) {
+      throw err;
+    }
   }
 }

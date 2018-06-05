@@ -24,6 +24,7 @@
 
 import Model from './model';
 import MinisterIssueType from './ministerissuetype';
+import MinisterIssueAction from './ministerissueaction';
 
 export default class MinisterIssue extends Model {
   constructor(data, db = undefined) {
@@ -69,4 +70,8 @@ export default class MinisterIssue extends Model {
     }
   }
 
+  async fetchMinisterIssueActions(db, where) {
+    const ministerIssueActions = await MinisterIssueAction.findWithType(db, where);
+    this.ministerIssueActions = ministerIssueActions;
+  }
 }
