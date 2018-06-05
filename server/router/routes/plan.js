@@ -602,7 +602,7 @@ router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
     const data = sanitizeDataForMinisterIssue(body);
 
     // update the existing issue.
-    const issue = await MinisterIssue.update(db, { issue_id: issueId }, data);
+    const issue = await MinisterIssue.update(db, { id: issueId }, data);
 
     // remove the existing link between the issue and it's related pastures.
     const issuePastures = await Promise.all(pastures.map(id =>
