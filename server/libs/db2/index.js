@@ -33,7 +33,7 @@ import Usage from './model/usage';
 import User from './model/user';
 import Zone from './model/zone';
 import MinisterIssue from './model/ministerissue';
-import MinisterIssueAciton from './model/ministerissueaction';
+import MinisterIssueAction from './model/ministerissueaction';
 import MinisterIssueActionType from './model/ministerissueactiontype';
 import MinisterIssueType from './model/ministerissuetype';
 import MinisterIssuePasture from './model/ministerissuepasture';
@@ -75,7 +75,7 @@ export default class DataManager {
     this.LivestockIdentifierType = LivestockIdentifierType;
     this.LivestockType = LivestockType;
     this.MinisterIssue = MinisterIssue;
-    this.MinisterIssueAciton = MinisterIssueAciton;
+    this.MinisterIssueAction = MinisterIssueAction;
     this.MinisterIssueActionType = MinisterIssueActionType;
     this.MinisterIssueType = MinisterIssueType;
     this.MinisterIssuePasture = MinisterIssuePasture;
