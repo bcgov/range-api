@@ -26,6 +26,7 @@ import Model from './model';
 import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
+import MinisterIssue from './ministerissue';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -145,5 +146,11 @@ export default class Plan extends Model {
     await Promise.all(promises);
 
     this.grazingSchedules = schedules;
+  }
+
+  async fetchMinisterIssues() {
+    const where = { plan_id: this.id };
+    const ministerIssues = await MinisterIssue.findWithType(this.db, where);
+    this.ministerIssues = ministerIssues;
   }
 }

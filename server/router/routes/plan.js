@@ -85,6 +85,7 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
 
     await myAgreement.plan.fetchPastures();
     await myAgreement.plan.fetchGrazingSchedules();
+    await myAgreement.plan.fetchMinisterIssues();
 
     return res.status(200).json(myAgreement).end();
   } catch (error) {
