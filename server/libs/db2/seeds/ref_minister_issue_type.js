@@ -43,7 +43,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
-      name: 'Lifestock Distribution',
+      name: 'Livestock Distribution',
       active: true,
     },
     {
