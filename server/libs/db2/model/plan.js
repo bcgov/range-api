@@ -59,7 +59,7 @@ export default class Plan extends Model {
     return 'plan';
   }
 
-  static async findWithStatusExtension(db, where, page = undefined, limit = undefined) {
+  static async findWithStatusExtension(db, where, order, page = undefined, limit = undefined) {
     const myFields = [
       ...Plan.fields,
       ...PlanStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -74,7 +74,8 @@ export default class Plan extends Model {
         .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
         // left join otherwise if extension is NULL we don't get any results
         .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
-        .where(where);
+        .where(where)
+        .orderBy(...order);
 
       if (page && limit) {
         const offset = limit * (page - 1);
