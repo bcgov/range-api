@@ -149,7 +149,13 @@ const authmware = async (app) => {
 
       // User roles are assigned in SSO and extracted from the JWT.
       // See the User object for additional functionality.
-      user.roles = jwtPayload.resource_access[config.get('sso:clientId')].roles;
+      const clientAccess = jwtPayload.resource_access[config.get('sso:clientId')];
+      if (clientAccess && clientAccess.roles) {
+        user.roles = clientAccess.roles;
+      } else {
+        return done(errorWithCode('This user has no roles.', 403), false); // Forbidden
+      }
+
       if (!user.isActive()) {
         return done(errorWithCode('This user account is not active.', 403), false); // Forbidden
       }
