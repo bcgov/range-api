@@ -86,7 +86,8 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
     const ids = zones.map(zone => zone.id);
-    results = await Agreement.findWithAllRelations(db, { zone_id: ids }, page, limit);
+    // send the latest plan which carrys the whole information for each agreement to the staff
+    results = await Agreement.findWithAllRelations(db, { zone_id: ids }, page, limit, true, true);
   } else if (user.isAdministrator()) {
     results = await Agreement.findWithAllRelations(db, { }, page, limit);
   } else {
