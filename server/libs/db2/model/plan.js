@@ -60,9 +60,10 @@ export default class Plan extends Model {
   }
 
   static async findLatestWithStatusExtension(db, where) {
-    // get the latest plan by giving offset and limit
     const order = ['id', 'desc'];
-    const plan = await this.findWithStatusExtension(db, where, order, 1, 1);
+    const page = 1;
+    const limit = 1;
+    const plan = await this.findWithStatusExtension(db, where, order, page, limit);
     return plan;
   }
 
