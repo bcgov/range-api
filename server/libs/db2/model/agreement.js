@@ -67,36 +67,55 @@ export default class Agreement extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id'].map(f => `${Agreement.table}.${f}`);
+    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id', 'agreement_exemption_status_id', 'agreement_type_id'].map(f => `${Agreement.table}.${f}`);
   }
 
   static get table() {
     return 'agreement';
   }
 
-  static async findWithAllRelations(db, where, page = undefined, limit = undefined) {
+  static async findWithAllRelations(...args) {
+    // Destructuring rest parameters(orders still matter when passing parameters!)
+    const [
+      db,
+      where,
+      page = undefined,
+      limit = undefined,
+      latestPlan = false,
+      sendFullPlan = false,
+    ] = args;
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit);
+
     // fetch all data that is directly related to the agreement
     // `await` used here to allow the queries to start imediatly and
     // run in parallel. This greatly speeds up the fetch.
     promises = myAgreements.map(async agreement =>
       [await agreement.fetchClients(),
         await agreement.fetchUsage(),
-        await agreement.fetchPlans(),
+        await agreement.fetchPlans(latestPlan),
         await agreement.fetchLivestockIdentifiers(),
       ]);
 
     await Promise.all(flatten(promises));
 
     // fetch all data that is indirectly (nested) related to an agreement
-    promises = [];
-    myAgreements.forEach((agreement) => {
-      promises = [...promises, ...agreement.plans.map(plan =>
-        [plan.fetchGrazingSchedules(), plan.fetchPastures()])];
-    });
+    if (sendFullPlan) {
+      promises = [];
+      myAgreements.forEach((agreement) => {
+        promises = [
+          ...promises,
+          ...agreement.plans.map(async plan =>
+            [
+              await plan.fetchGrazingSchedules(),
+              await plan.fetchPastures(),
+              await plan.fetchMinisterIssues(),
+            ]),
+        ];
+      });
 
-    await Promise.all(promises);
+      await Promise.all(promises);
+    }
 
     return flatten(myAgreements);
   }
@@ -221,10 +240,13 @@ export default class Agreement extends Model {
     this.clients = clients;
   }
 
-  async fetchPlans() {
-    const order = ['id', 'desc']; // was created_at desc but this should do
+  async fetchPlans(latestPlan = false) {
+    const order = ['id', 'desc'];
     const where = { agreement_id: this.forestFileId };
-    const plans = await Plan.findWithStatusExtension(this.db, where, order);
+    const plans = latestPlan
+      // get the latest plan by giving offset and limit
+      ? await Plan.findWithStatusExtension(this.db, where, order, 1, 1)
+      : await Plan.findWithStatusExtension(this.db, where, order);
     this.plans = plans;
   }
 

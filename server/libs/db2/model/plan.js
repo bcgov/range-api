@@ -130,7 +130,7 @@ export default class Plan extends Model {
   async fetchPastures() {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where);
-    this.pastures = pastures;
+    this.pastures = pastures || [];
   }
 
   async fetchGrazingSchedules() {
@@ -146,7 +146,7 @@ export default class Plan extends Model {
     ));
     await Promise.all(promises);
 
-    this.grazingSchedules = schedules;
+    this.grazingSchedules = schedules || [];
   }
 
   async fetchMinisterIssues() {
@@ -162,6 +162,6 @@ export default class Plan extends Model {
     ));
     await Promise.all(promises);
 
-    this.ministerIssues = ministerIssues;
+    this.ministerIssues = ministerIssues || [];
   }
 }
