@@ -26,6 +26,7 @@ import Model from './model';
 import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
+import MinisterIssue from './ministerissue';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -58,7 +59,7 @@ export default class Plan extends Model {
     return 'plan';
   }
 
-  static async findWithStatusExtension(db, where, page = undefined, limit = undefined) {
+  static async findWithStatusExtension(db, where, order, page = undefined, limit = undefined) {
     const myFields = [
       ...Plan.fields,
       ...PlanStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -73,7 +74,8 @@ export default class Plan extends Model {
         .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
         // left join otherwise if extension is NULL we don't get any results
         .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
-        .where(where);
+        .where(where)
+        .orderBy(...order);
 
       if (page && limit) {
         const offset = limit * (page - 1);
@@ -128,7 +130,7 @@ export default class Plan extends Model {
   async fetchPastures() {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where);
-    this.pastures = pastures;
+    this.pastures = pastures || [];
   }
 
   async fetchGrazingSchedules() {
@@ -144,6 +146,22 @@ export default class Plan extends Model {
     ));
     await Promise.all(promises);
 
-    this.grazingSchedules = schedules;
+    this.grazingSchedules = schedules || [];
+  }
+
+  async fetchMinisterIssues() {
+    const where = { plan_id: this.id };
+    const ministerIssues = await MinisterIssue.findWithType(this.db, where);
+
+    // egar load grazing schedule entries.
+    const promises = ministerIssues.map(i => i.fetchMinisterIssueActions(
+      this.db,
+      {
+        issue_id: i.id,
+      },
+    ));
+    await Promise.all(promises);
+
+    this.ministerIssues = ministerIssues || [];
   }
 }
