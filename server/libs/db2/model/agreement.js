@@ -244,7 +244,7 @@ export default class Agreement extends Model {
     const order = ['id', 'desc'];
     const where = { agreement_id: this.forestFileId };
     const plans = latestPlan
-      ? await Plan.findLatestWithStatusExtension(this.db, where, order)
+      ? await Plan.findLatestWithStatusExtension(this.db, where)
       : await Plan.findWithStatusExtension(this.db, where, order);
     this.plans = plans;
   }
