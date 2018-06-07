@@ -59,6 +59,12 @@ export default class Plan extends Model {
     return 'plan';
   }
 
+  static async findLatestWithStatusExtension(db, where, order) {
+    // get the latest plan by giving offset and limit
+    const plan = await this.findWithStatusExtension(db, where, order, 1, 1);
+    return plan;
+  }
+
   static async findWithStatusExtension(db, where, order, page = undefined, limit = undefined) {
     const myFields = [
       ...Plan.fields,

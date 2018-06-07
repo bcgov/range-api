@@ -120,7 +120,16 @@ router.post('/', asyncMiddleware(async (req, res) => {
       }
     }
 
-    const plan = await Plan.create(db, body);
+    const [latestPlan] = await Plan.findLatestWithStatusExtension(db, { agreement_id: agreementId });
+    const statusCode = latestPlan && latestPlan.status && latestPlan.status.code;
+
+    let plan = {};
+    // check to see if this latest plan is complete (currently O is the code for 'complete')
+    if (statusCode && statusCode === 'O') {
+      plan = await Plan.create(db, body);
+    } else {
+      throw errorWithCode('The current plan is in progress.', 409);
+    }
 
     return res.status(200).json(plan).end();
   } catch (err) {
