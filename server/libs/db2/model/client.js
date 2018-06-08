@@ -90,4 +90,19 @@ export default class Client extends Model {
     // return an array of `client_number`
     return flatten(results.map(result => Object.values(result)));
   }
+
+  static async searchForTermWithAllFields(db, term) {
+    if (!db) {
+      return [];
+    }
+
+    const results = await db
+      .select()
+      .from(Client.table)
+      .whereRaw(`name ILIKE '%${term}%'`);
+
+    const clients = results.map(row => new Client(row));
+
+    return clients;
+  }
 }
