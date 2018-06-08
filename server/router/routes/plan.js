@@ -120,6 +120,22 @@ router.post('/', asyncMiddleware(async (req, res) => {
       }
     }
 
+    /*
+    *  business logic to prevent from creating a plan when the lastest one is in progress
+    *  it's currently turned off since the IOS app hasn't catch up with this feature
+    */
+    // const [latestPlan] = await Plan
+    //   .findLatestWithStatusExtension(db, { agreement_id: agreementId });
+    // const statusCode = latestPlan && latestPlan.status && latestPlan.status.code;
+
+    // let plan = {};
+    // // check to see if this latest plan is complete (currently O is the code for 'complete')
+    // if (statusCode && statusCode === 'O') {
+    //   plan = await Plan.create(db, body);
+    // } else {
+    //   throw errorWithCode('The current plan is in progress.', 409);
+    // }
+
     const plan = await Plan.create(db, body);
 
     return res.status(200).json(plan).end();
