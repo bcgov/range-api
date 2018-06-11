@@ -25,6 +25,7 @@
 import Model from './model';
 import MinisterIssueType from './ministerissuetype';
 import MinisterIssueAction from './ministerissueaction';
+import MinisterIssuePasture from './ministerissuepasture';
 
 export default class MinisterIssue extends Model {
   constructor(data, db = undefined) {
@@ -72,6 +73,17 @@ export default class MinisterIssue extends Model {
 
   async fetchMinisterIssueActions(db, where) {
     const ministerIssueActions = await MinisterIssueAction.findWithType(db, where);
-    this.ministerIssueActions = ministerIssueActions;
+    this.ministerIssueActions = ministerIssueActions || [];
+  }
+
+  async fetchPastureIds(db, where) {
+    const pastures = await db
+      .select('pasture_id')
+      .from(MinisterIssuePasture.table)
+      .where(where);
+
+    // create an array of pasture ids
+    const pastureIds = pastures.map(p => p.pasture_id);
+    this.pastures = pastureIds || [];
   }
 }
