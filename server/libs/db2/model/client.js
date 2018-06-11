@@ -91,7 +91,7 @@ export default class Client extends Model {
     return flatten(results.map(result => Object.values(result)));
   }
 
-  static async searchForTermWithAllFields(db, term) {
+  static async searchByNameWithAllFields(db, term) {
     if (!db) {
       return [];
     }

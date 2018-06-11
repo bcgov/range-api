@@ -56,7 +56,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       throw errorWithCode('Unauthorized', 401);
     }
 
-    const results = await Client.searchForTermWithAllFields(db, term);
+    const results = await Client.searchByNameWithAllFields(db, term);
     res.status(200).json(results).end();
   } catch (err) {
     throw err;
