@@ -39,11 +39,10 @@ const {
 // Get all users
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    let users = [];
-    if (req.user && !req.user.isAgreementHolder()) {
-      users = await User.find(db, {});
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('You do not have the permission as an agreement holder', 403);
     }
-
+    const users = await User.find(db, {});
     res.status(200).json(users).end();
   } catch (error) {
     throw error;
@@ -79,7 +78,7 @@ router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
     }
     const client = await Client.find(db, { client_number: clientId });
     if (!client) {
-      throw errorWithCode('Client does not exist', 403);
+      throw errorWithCode('Client does not exist', 400);
     }
 
     const result = await User.update(db, { id: userId }, { client_id: clientId });
