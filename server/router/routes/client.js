@@ -33,14 +33,30 @@ const {
 
 const router = new Router();
 
-// Get all
+// Get all clients
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    if (!req.user.isAdministrator() || !req.user.isRangeOfficer()) {
+    if (req.user && req.user.isAgreementHolder()) {
       throw errorWithCode('Unauthorized', 401);
     }
 
     const results = await Client.find(db, {});
+    res.status(200).json(results).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// Search clients
+router.get('/search', asyncMiddleware(async (req, res) => {
+  const { term = '' } = req.query;
+
+  try {
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 401);
+    }
+
+    const results = await Client.searchByNameWithAllFields(db, term);
     res.status(200).json(results).end();
   } catch (err) {
     throw err;
@@ -54,7 +70,7 @@ router.get('/:clientId', asyncMiddleware(async (req, res) => {
   } = req.params;
 
   try {
-    if (!req.user.isAdministrator() || !req.user.isRangeOfficer()) {
+    if (req.user && req.user.isAgreementHolder()) {
       throw errorWithCode('Unauthorized', 401);
     }
 
