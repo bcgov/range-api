@@ -26,9 +26,12 @@ const table = 'minister_issue_action';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.text('detail').notNull();
+
     t.integer('action_type_id').notNull().references('id').inTable('ref_minister_issue_action_type');
-    t.integer('issue_id').notNull().references('id').inTable('minister_issue');
+    t.integer('issue_id').notNull();
+    t.foreign('issue_id').onDelete('CASCADE').references('minister_issue.id');
+
+    t.text('detail').notNull();
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

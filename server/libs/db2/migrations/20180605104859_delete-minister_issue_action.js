@@ -22,15 +22,15 @@
 'use strict';
 
 exports.up = async (knex) => {
-  const query = `
-  ALTER TABLE minister_issue_action 
-  DROP CONSTRAINT minister_issue_action_issue_id_foreign, 
-  ADD CONSTRAINT minister_issue_action_issue_id_foreign 
-  FOREIGN KEY (issue_id) REFERENCES minister_issue(id) 
-  ON DELETE CASCADE;
-  `;
+  // const query = `
+  // ALTER TABLE minister_issue_action 
+  // DROP CONSTRAINT minister_issue_action_issue_id_foreign, 
+  // ADD CONSTRAINT minister_issue_action_issue_id_foreign 
+  // FOREIGN KEY (issue_id) REFERENCES minister_issue(id) 
+  // ON DELETE CASCADE;
+  // `;
 
-  await knex.schema.raw(query);
+  // await knex.schema.raw(query);
 };
 
 exports.down = () => { };

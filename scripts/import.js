@@ -28,9 +28,10 @@ import fs from 'fs'
 import DataManager from '../server/libs/db2'
 import config from '../server/config'
 
-const USAGE = 'fta/FTA_RANGE_USAGE.csv'
-const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv'
-const CLIENT = 'fta/FTA_RANGE_CLIENT.csv'
+const USAGE = 'fta/FTA_RANGE_USAGE.csv';
+const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
+const CLIENT = 'fta/FTA_RANGE_CLIENT.csv';
+const USER = 'fta/ZONE_USER.csv';
 
 const dm = new DataManager(config);
 const {
@@ -196,7 +197,6 @@ const updateDistrict = async (data) => {
       }
 
       // district.description = record.XXXXXX || 'No District Description'
-      // await district.save()
     } catch (error) {
       console.log(`Error with message = ${error.message}, District ID ${record.ORG_UNIT_CODE}`)
     }
@@ -258,35 +258,42 @@ const updateUsage = async (data) => {
 
     try {
       const agreement = await Agreement.findOne(db, {
-        id: record.FOREST_FILE_ID,
+        forest_file_id: record.FOREST_FILE_ID,
       });
 
       if (!agreement) {
         throw new Error(`No Agreement with ID ${record.FOREST_FILE_ID}`)
       }
 
-      let usage = await Usage.findOne(db, {
-        agreementId: record.FOREST_FILE_ID,
+      const usage = await Usage.findOne(db, {
+        agreement_id: record.FOREST_FILE_ID,
         year: record.CALENDAR_YEAR,
       });
 
       if (!usage) {
-        usage = await Usage.create(db, {
-          year: record.CALENDAR_YEAR,
+        await Usage.create(db, {
+          year: parseInt(record.CALENDAR_YEAR),
           authorizedAum: parseInt(record.AUTHORIZED_USE) || 0,
           temporaryIncrease: parseInt(record.TEMP_INCREASE) || 0,
           totalNonUse: parseInt(record.TOTAL_NON_USE) || 0,
           totalAnnualUse: parseInt(record.TOTAL_ANNUAL_USE) || 0,
-          agreementId: agreement.id,
+          agreement_id: agreement.forestFileId,
         })
+      } else {
+        await Usage.update(db, 
+          {
+            id: usage.id,
+          }, 
+          {
+            year: parseInt(record.CALENDAR_YEAR),
+            authorizedAum: parseInt(record.AUTHORIZED_USE) || 0,
+            temporaryIncrease: parseInt(record.TEMP_INCREASE) || 0,
+            totalNonUse: parseInt(record.TOTAL_NON_USE) || 0,
+            totalAnnualUse: parseInt(record.TOTAL_ANNUAL_USE) || 0,
+            agreement_id: agreement.forestFileId,
+          }
+        );
       }
-
-      usage.authorizedAum = parseInt(record.AUTHORIZED_USE) || 0
-      usage.temporaryIncrease = parseInt(record.TEMP_INCREASE) || 0
-      usage.totalNonUse = parseInt(record.TOTAL_NON_USE) || 0
-      usage.totalAnnualUse = parseInt(record.TOTAL_ANNUAL_USE) || 0
-
-      // await usage.save()
 
       console.log(`Imported Usage year = ${usage.year}, for Agreement ID = ${agreement.id}`)
     } catch (error) {
@@ -329,8 +336,6 @@ const updateClient = async data => {
         client.name = record.CLIENT_NAME || 'Unknown Name';
         client.locationCode = record.CLIENT_LOCN_CODE;
         client.startDate = record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null;
-
-        await client.save();
       }
 
       const agreement = await Agreement.findById(record.FOREST_FILE_ID);
@@ -413,9 +418,9 @@ const main = async () => {
     //   LEGAL_EFFECTIVE_DT: '1/1/14',
     //   INITIAL_EXPIRY_DT: '12/31/23'
     // }
-    await updateDistrict(licensee)
-    await updateZone(licensee)
-    await updateAgreement(licensee)
+    // await updateDistrict(licensee)
+    // await updateZone(licensee)
+    // await updateAgreement(licensee)
 
     const usage = await loadFile(USAGE); 
     // {

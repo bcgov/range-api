@@ -28,8 +28,12 @@ const table = 'minister_issue_pasture';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().primary();
-    t.integer('minister_issue_id').notNull().index().references('id').inTable('minister_issue');
-    t.integer('pasture_id').notNull().index().references('id').inTable('pasture');
+
+    t.integer('minister_issue_id').notNull().index();
+    t.foreign('minister_issue_id').onDelete('CASCADE').references('minister_issue.id');
+    t.integer('pasture_id').notNull().index();
+    t.foreign('pasture_id').onDelete('CASCADE').references('pasture.id');
+
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
