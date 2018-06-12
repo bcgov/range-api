@@ -22,7 +22,7 @@
 
 'use strict';
 
-const table = 'ref_livestock_identifier_type';
+const table = 'ref_plan_status';
 
 exports.seed = async (knex) => {
   const ref = [
