@@ -22,7 +22,7 @@
 
 'use strict';
 
-const table = 'ref_agreement_type';
+const table = 'ref_client_type';
 
 exports.seed = async (knex) => {
   const ref = [
