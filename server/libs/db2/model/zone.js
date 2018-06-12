@@ -79,7 +79,7 @@ export default class Zone extends Model {
         .select(myFields)
         .from(Zone.table)
         .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
-        .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
+        .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
         .where(where);
 
       return results.map(row => new Zone(row, db));
