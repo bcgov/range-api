@@ -313,37 +313,44 @@ const updateClient = async data => {
     }
 
     try {
-      const ctype = await ClientType.findOne({
-        where: {
-          code: record.FOREST_FILE_CLIENT_TYPE_CODE,
-        },
+      const ctype = await ClientType.findOne(db, {
+        code: record.FOREST_FILE_CLIENT_TYPE_CODE,
       });
 
-      let client = await Client.findOne({
-        where: {
-          id: record.CLIENT_NUMBER,
-        },
+      let client = await Client.findOne(db, {
+        client_number: record.CLIENT_NUMBER,
       });
 
       if (!client) {
-        client = await Client.create({
-          id: record.CLIENT_NUMBER,
+        client = await Client.create(db, {
+          clientNumber: record.CLIENT_NUMBER,
           name: record.CLIENT_NAME || 'Unknown Name',
           locationCode: record.CLIENT_LOCN_CODE,
           startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
         });
+        const agreement = await Agreement.findById(db, record.FOREST_FILE_ID);
+        if (agreement) {
+          const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+          VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
+
+          await db.schema.raw(query);
+        }
       } else {
-        client.name = record.CLIENT_NAME || 'Unknown Name';
-        client.locationCode = record.CLIENT_LOCN_CODE;
-        client.startDate = record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null;
-      }
+        // TODO: need to know what's gonna change for client
+        client = await Client.update(db, { client_number: record.CLIENT_NUMBER }, 
+          {
+            name: record.CLIENT_NAME || 'Unknown Name',
+            locationCode: record.CLIENT_LOCN_CODE,
+            startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
+          }
+        );
+        const agreement = await Agreement.findById(db, record.FOREST_FILE_ID);
+        if (agreement) {
+          const query = `UPDATE client_agreement SET client_type_id = '${ctype.id}'
+          WHERE agreement_id = '${agreement.id}' AND client_id = '${client.id}'`;
 
-      const agreement = await Agreement.findById(record.FOREST_FILE_ID);
-      if (agreement) {
-        const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
-        VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
-
-        await dm.sequelize.query(query, { type: dm.sequelize.QueryTypes.UPDATE });
+          await db.schema.raw(query);
+        }
       }
 
       console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.FOREST_FILE_ID}`);
@@ -444,7 +451,7 @@ const main = async () => {
     //   FOREST_FILE_CLIENT_TYPE_CODE: 'A',
     //   LICENSEE_START_DATE: '2009-02-06 00:00:00'
     // }
-    // await updateClient(client);
+    await updateClient(client);
 
     // const user = await loadFile(USER);
     // { 
