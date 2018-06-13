@@ -108,11 +108,8 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
     if (results.length > 0) {
       results.map(agreement => agreement.transformToV1());
-
-      return res.status(200).json(results).end();
     }
-
-    return res.status(404).json({ error: 'Not found' }).end();
+    return res.status(200).json(results).end();
   } catch (err) {
     throw err;
   }

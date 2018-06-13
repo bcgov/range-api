@@ -383,15 +383,18 @@ const updateUser = async data => {
           familyName: last || 'Unknown',
           email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
         });
-        await Zone.update(db, { user_id: user.id }, {
-          code: record.RANGE_ZONE_CODE
+        await Zone.update(db, { code: record.RANGE_ZONE_CODE }, {
+          user_id: user.id
         });
       } else {
-        await User.update(db, { username: record.CONTACT_USER_ID.toLowerCase() }, {
+        user = await User.update(db, { username: record.CONTACT_USER_ID.toLowerCase() }, {
           username: record.CONTACT_USER_ID.toLowerCase(),
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
           email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+        });
+        await Zone.update(db, { code: record.RANGE_ZONE_CODE }, {
+          user_id: user.id
         });
       }
 
