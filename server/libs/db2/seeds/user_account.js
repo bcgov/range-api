@@ -44,6 +44,42 @@ exports.seed = async (knex) => {
       family_name: 'Han',
       email: 'kyubin@freshworks.io',
     },
+    {
+      username: 'shellhan',
+      given_name: 'Shelly',
+      family_name: 'Han',
+      email: 'shelly+1@freshworks.io',
+    },
+    {
+      username: 'bceid\\jasoncleach',
+      given_name: 'Jason',
+      family_name: 'Leach',
+      email: 'jason.leach@fullboar.ca',
+    },
+    {
+      username: 'bceid\\myraah1',
+      given_name: 'Agreement Holder 1',
+      family_name: 'Range',
+      email: 'roop@freshworks.io',
+    },
+    {
+      username: 'bceid\\phillbillips',
+      given_name: 'Phill',
+      family_name: 'Billips',
+      email: 'pb@example.com',
+    },
+    {
+      username: 'bceid\\myraah2',
+      given_name: 'Agreement Holder2',
+      family_name: 'Range',
+      email: 'amir@freshworks.io',
+    },
+    {
+      username: 'bceid\\ah1',
+      given_name: 'Myra',
+      family_name: 'Myra',
+      email: 'shellshell456@gmail.com',
+    },
   ];
 
   await knex(table).delete();
