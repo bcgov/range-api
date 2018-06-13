@@ -370,36 +370,30 @@ const updateUser = async data => {
     }
 
     try {
-
-      let user = await User.findOne({
-        where: {
-          username: record.CONTACT_USER_ID.toLowerCase(),
-        },
+      let user = await User.findOne(db, {
+        username: record.CONTACT_USER_ID.toLowerCase(),
       });
 
       const [first, last] = record.CONTACT.split(' ');
 
       if (!user) {
-        let user = await User.create({
+        user = await User.create(db, {
           username: record.CONTACT_USER_ID.toLowerCase(),
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
           email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
-          roleId: 2, // Range Officer
+        });
+        await Zone.update(db, { user_id: user.id }, {
+          code: record.RANGE_ZONE_CODE
         });
       } else {
-        user.givenName = first || 'Unknown';
-        user.familyName = last || 'Unknown';
-        user.email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+        await User.update(db, { username: record.CONTACT_USER_ID.toLowerCase() }, {
+          username: record.CONTACT_USER_ID.toLowerCase(),
+          givenName: first || 'Unknown',
+          familyName: last || 'Unknown',
+          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+        });
       }
-
-      let zone = await Zone.update({
-        userId: user.id,
-      }, {
-        where: {
-          code: record.RANGE_ZONE_CODE
-        }
-      });
 
       console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.RANGE_ZONE_CODE} owner.`);
     } catch (error) {
@@ -411,6 +405,9 @@ const updateUser = async data => {
 const main = async () => {
   try {
     const licensee = await loadFile(LICENSEE);
+    await updateDistrict(licensee)
+    await updateZone(licensee)
+    await updateAgreement(licensee)
     // {
     //   FOREST_FILE_ID: 'RAN075974',
     //   FILE_STATUS_ST: 'A',
@@ -425,11 +422,9 @@ const main = async () => {
     //   LEGAL_EFFECTIVE_DT: '1/1/14',
     //   INITIAL_EXPIRY_DT: '12/31/23'
     // }
-    // await updateDistrict(licensee)
-    // await updateZone(licensee)
-    // await updateAgreement(licensee)
 
     const usage = await loadFile(USAGE); 
+    await updateUsage(usage)
     // {
     //   FOREST_FILE_ID: 'RAN072542',
     //   CALENDAR_YEAR: '1995',
@@ -440,9 +435,9 @@ const main = async () => {
     //   TEMP_INCREASE: '0',
     //   TOTAL_ANNUAL_USE: '6'
     // }
-    // await updateUsage(usage)
 
     const client = await loadFile(CLIENT); 
+    await updateClient(client);
     // {
     //   FOREST_FILE_ID: 'RAN077194',
     //   CLIENT_NUMBER: '00001023',
@@ -451,9 +446,9 @@ const main = async () => {
     //   FOREST_FILE_CLIENT_TYPE_CODE: 'A',
     //   LICENSEE_START_DATE: '2009-02-06 00:00:00'
     // }
-    await updateClient(client);
 
-    // const user = await loadFile(USER);
+    const user = await loadFile(USER);
+    await updateUser(user);
     // { 
     // ADMIN_FOREST_DISTRICT_NO: '15',
     // RANGE_ZONE_CODE: 'CHWK',
@@ -461,7 +456,6 @@ const main = async () => {
     // CONTACT_USER_ID: 'RPARRIAD' 
     // CONTACT: 'Rene Phillips' 
     // }
-    // await updateUser(user);
 
     process.exit(0);
   } catch (err) {
