@@ -38,6 +38,12 @@ exports.seed = async (knex) => {
       family_name: 'MyRA1',
       email: 'range_myra_1@example.com',
     },
+    {
+      username: 'bceid\\kyubinhan711',
+      given_name: 'Kyub',
+      family_name: 'Han',
+      email: 'kyubin@freshworks.io',
+    },
   ];
 
   await knex(table).delete();

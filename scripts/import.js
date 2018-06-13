@@ -265,13 +265,13 @@ const updateUsage = async (data) => {
         throw new Error(`No Agreement with ID ${record.FOREST_FILE_ID}`)
       }
 
-      const usage = await Usage.findOne(db, {
+      let usage = await Usage.findOne(db, {
         agreement_id: record.FOREST_FILE_ID,
         year: record.CALENDAR_YEAR,
       });
 
       if (!usage) {
-        await Usage.create(db, {
+        usage = await Usage.create(db, {
           year: parseInt(record.CALENDAR_YEAR),
           authorizedAum: parseInt(record.AUTHORIZED_USE) || 0,
           temporaryIncrease: parseInt(record.TEMP_INCREASE) || 0,
@@ -280,7 +280,7 @@ const updateUsage = async (data) => {
           agreement_id: agreement.forestFileId,
         })
       } else {
-        await Usage.update(db, 
+        usage = await Usage.update(db, 
           {
             id: usage.id,
           }, 
