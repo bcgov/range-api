@@ -31,7 +31,7 @@ exports.up = async knex =>
     t.integer('issue_id').notNull();
     t.foreign('issue_id').onDelete('CASCADE').references('minister_issue.id');
 
-    t.text('detail').notNull();
+    t.text('detail');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

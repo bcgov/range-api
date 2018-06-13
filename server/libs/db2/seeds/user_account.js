@@ -28,14 +28,14 @@ exports.seed = async (knex) => {
   const ref = [
     {
       username: 'myra2',
-      givenName: 'Range',
-      familyName: 'MyRA2',
+      given_name: 'Range',
+      family_name: 'MyRA2',
       email: 'range_myra_2@example.com',
     },
     {
       username: 'myra1',
-      givenName: 'Range',
-      familyName: 'MyRA1',
+      given_name: 'Range',
+      family_name: 'MyRA1',
       email: 'range_myra_1@example.com',
     },
   ];
