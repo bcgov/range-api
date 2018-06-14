@@ -25,7 +25,7 @@ import Model from './model';
 export default class Usage extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'year', 'authorized_aum', 'temporary_increase', 'total_non_use', 'total_annual_use']
+    return ['id', 'year', 'authorized_aum', 'temporary_increase', 'total_non_use', 'total_annual_use', 'agreement_id']
       .map(field => `${this.table}.${field}`);
   }
 

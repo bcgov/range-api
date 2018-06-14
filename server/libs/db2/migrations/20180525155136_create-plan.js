@@ -26,16 +26,20 @@ const table = 'plan';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
+
+    t.string('agreement_id', 9).notNull();
+    t.foreign('agreement_id').references('agreement.forest_file_id');
+    t.integer('status_id').notNull().references('id').inTable('ref_plan_status');
+    t.integer('extension_id').references('id').inTable('extension');
+
     t.string('range_name', 32).notNull();
     t.string('alt_business_name', 32);
     t.dateTime('plan_start_date');
     t.dateTime('plan_end_date');
     t.text('notes');
-    t.integer('status_id').notNull().references('id').inTable('ref_plan_status');
-    t.string('agreement_id', 9).notNull().references('forest_file_id').inTable('agreement');
-    t.integer('extension_id').references('id').inTable('extension');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.boolean('uploaded').notNull().defaultTo(false);
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

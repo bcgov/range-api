@@ -28,9 +28,12 @@ const table = 'grazing_schedule';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
+
+    t.integer('plan_id').notNull().index();
+    t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
+
     t.smallint('year').notNull().index();
     t.text('narative');
-    t.integer('plan_id').notNull().index().references('id').inTable('plan');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
