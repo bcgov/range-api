@@ -26,7 +26,7 @@ const table = 'user_account';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('username', 32).notNull();
+    t.string('username', 32).notNull().unique();
     t.string('given_name', 32).notNull();
     t.string('family_name', 32).notNull();
     t.string('email', 32).notNull();
