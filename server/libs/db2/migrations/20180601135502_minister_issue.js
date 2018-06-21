@@ -32,6 +32,7 @@ exports.up = async knex =>
 
     t.text('detail');
     t.text('objective');
+    t.text('description');
     t.boolean('identified').notNull().defaultTo(false);
     t.integer('issue_type_id').notNull().references('id').inTable('ref_minister_issue_type');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
