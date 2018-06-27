@@ -23,15 +23,19 @@
 
 'use strict';
 
-import csv from 'csv'
-import fs from 'fs'
-import DataManager from '../server/libs/db2'
-import config from '../server/config'
+import csv from 'csv';
+import fs from 'fs';
+import request from 'request-promise-native';
+import config from '../server/config';
+import DataManager from '../server/libs/db2';
 
 const USAGE = 'fta/FTA_RANGE_USAGE.csv';
 const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
 const CLIENT = 'fta/FTA_RANGE_CLIENT.csv';
 const USER = 'fta/ZONE_USER.csv';
+const LICENSEE_URL = 'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeLicensees';
+const USAGE_URL = 'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeUsages';
+const CLIENT_URL = 'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeClients';
 
 const dm = new DataManager(config);
 const {
@@ -77,7 +81,7 @@ const dateFromString = (string) => {
 }
 
 const isValidRecord = (record) => {
-  if (!/^RAN\d{6}$/.test(record.FOREST_FILE_ID)) {
+  if (!/^RAN\d{6}$/.test(record.forest_file_id)) {
     return false
   }
 
@@ -96,7 +100,7 @@ const loadFile = (name) => new Promise((resolve, reject) => {
       data.forEach((line) => {
         const record = {}
         fields.forEach((value, i) => {
-          const key = value.replace(/ /g, '_');
+          const key = value.replace(/ /g, '_').toLowerCase();
           if (i > 1) {
             record[key] = line[i]
             return
@@ -110,40 +114,53 @@ const loadFile = (name) => new Promise((resolve, reject) => {
   });
 });
 
+const loadDataFromUrl = async (url) => {
+    const options = {
+      headers: { 'content-type': 'application/json' },
+      method: 'GET',
+      uri: url,
+      json: true,
+    };
+
+    const response = await request(options);
+
+    return response.items;
+};
+
 const updateAgreement = async (data) => {
 
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
-    if (!isValidRecord(record)) {
-      console.log(`Skipping record with ID ${record.FOREST_FILE_ID}`)
+    if (!isValidRecord(record) || !record.district_admin_zone || !record.file_type_code) {
+      console.log(`Skipping record with ID ${record.forest_file_id}`);
       continue
     }
 
     try {
       const zone = await Zone.findOne(db, {
-        code: record.DISTRICT_ADMIN_ZONE
+        code: record.district_admin_zone
       });
 
       if (!zone) {
-        throw new Error(`No zone with code ${record.DISTRICT_ADMIN_ZONE || 'NULL'}`)
+        throw new Error(`No zone with code ${record.district_admin_zone || 'NULL'}`)
       }
 
       const atype = await AgreementType.findOne(db, {
-        code: record.FILE_TYPE_CODE
+        code: record.file_type_code
       });
 
       if (!atype) {
-        throw new Error(`No AgreementType with code ${record.FILE_TYPE_CODE || 'NULL'}`)
+        throw new Error(`No AgreementType with code ${record.file_type_code || 'NULL'}`)
       }
 
       const exemption = await AgreementExemptionStatus.findOne(db, { code: 'N' }); // Not Exempt
 
-      const agreement = await Agreement.findById(db, record.FOREST_FILE_ID);
+      const agreement = await Agreement.findById(db, record.forest_file_id);
       if (!agreement) {
         await Agreement.create(db, {
-          forestFileId: record.FOREST_FILE_ID,
-          agreementStartDate: new Date(record.LEGAL_EFFECTIVE_DT), // Short Format
-          agreementEndDate: new Date(record.INITIAL_EXPIRY_DT), // Short Format
+          forestFileId: record.forest_file_id,
+          agreementStartDate: new Date(record.legal_effective_dt), // Short Format
+          agreementEndDate: new Date(record.initial_expiry_dt), // Short Format
           zoneId: zone.id,
           agreementTypeId: atype.id,
           agreementExemptionStatusId: exemption.id,
@@ -151,11 +168,11 @@ const updateAgreement = async (data) => {
       } else {
         await Agreement.update(db, 
           {
-            forest_file_id: record.FOREST_FILE_ID,
+            forest_file_id: record.forest_file_id,
           }, 
           {
-            agreementStartDate: new Date(record.LEGAL_EFFECTIVE_DT), // Short Format
-            agreementEndDate: new Date(record.INITIAL_EXPIRY_DT), // Short Format
+            agreementStartDate: new Date(record.legal_effective_dt), // Short Format
+            agreementEndDate: new Date(record.initial_expiry_dt), // Short Format
             zoneId: zone.id,
             agreementTypeId: atype.id,
             agreementExemptionStatusId: exemption.id,
@@ -163,9 +180,9 @@ const updateAgreement = async (data) => {
         );
       }
 
-      console.log(`Processed Agreement with ID ${record.FOREST_FILE_ID}`)
+      // console.log(`Processed Agreement with ID ${record.forest_file_id}`)
     } catch (error) {
-      console.log(`Error with message = ${error.message}, ID ${record.FOREST_FILE_ID}`)
+      console.log(`Error with message = ${error.message}, ID ${record.forest_file_id}`)
     }
   }
 }
@@ -174,22 +191,22 @@ const updateDistrict = async (data) => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
 
-    if (!isValidRecord(record) || !record.ORG_UNIT_CODE) {
-      console.log(`Skipping record with ID ${record.FOREST_FILE_ID}`)
+    if (!isValidRecord(record) || !record.org_unit_code) {
+      console.log(`Skipping record with ID ${record.forest_file_id}`)
       continue
     }
 
     try {
       let district = await District.findOne(db,
         {
-          code: record.ORG_UNIT_CODE
+          code: record.org_unit_code
         }
       );
 
       if (!district) {
-        console.log(`Adding District with ID ${record.ORG_UNIT_CODE}`)
+        console.log(`Adding District with ID ${record.org_unit_code}`)
         district = await District.create(db, {
-          code: record.ORG_UNIT_CODE,
+          code: record.org_unit_code,
           description: 'No description available',
         })
 
@@ -198,7 +215,7 @@ const updateDistrict = async (data) => {
 
       // district.description = record.XXXXXX || 'No District Description'
     } catch (error) {
-      console.log(`Error with message = ${error.message}, District ID ${record.ORG_UNIT_CODE}`)
+      console.log(`Error with message = ${error.message}, District ID ${record.org_unit_code}`)
     }
   }
 }
@@ -207,42 +224,40 @@ const updateZone = async (data) => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
 
-    if (!isValidRecord(record) || !record.DISTRICT_ADMIN_ZONE) {
-      console.log(`Skipping record with ID ${record.FOREST_FILE_ID}`)
+    if (!isValidRecord(record) || !record.district_admin_zone) {
+      console.log(`Skipping record with ID ${record.forest_file_id}`)
       continue
     }
 
     try {
       let zone
       zone = await Zone.findOne(db, {
-        code: record.DISTRICT_ADMIN_ZONE
+        code: record.district_admin_zone
       });
 
       if (!zone) {
         const district = await District.findOne(db, {
-          code: record.ORG_UNIT_CODE
+          code: record.org_unit_code
         })
 
         if (!district) {
-          throw new Error(`No District with ID ${record.ORG_UNIT_CODE}`)
+          throw new Error(`No District with ID ${record.org_unit_code}`)
         }
 
         zone = await Zone.create(db, {
-          code: record.DISTRICT_ADMIN_ZONE,
-          description: record.ZONE_DESCRIPTION || 'No description available',
+          code: record.district_admin_zone,
+          description: record.zone_description || 'No description available',
           districtId: district.id,
         })
       }
 
-      zone.contactName = zone.contactName ? zone.contactName : (record.CONTACT || null)
-      zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.CONTACT_PHONE_NUMBER || null)
-      zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.CONTACT_EMAIL_ADDRESS || null)
+      zone.contactName = zone.contactName ? zone.contactName : (record.contact || null)
+      zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.contact_phone_number || null)
+      zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.contact_email_address || null)
 
-      // await zone.save()
-
-      console.log(`Processed Zone with code = ${zone.code}, id = ${zone.id}`)
+      // console.log(`Processed Zone with code = ${zone.code}, id = ${zone.id}`)
     } catch (error) {
-      console.log(`Can not update Zone. Error = ${error.message}, Zone = ${record.DISTRICT_ADMIN_ZONE}, ID ${record.FOREST_FILE_ID}`)
+      console.log(`Can not update Zone. Error = ${error.message}, Zone = ${record.district_admin_zone}, ID ${record.forest_file_id}`)
     }
   }
 }
@@ -251,33 +266,33 @@ const updateUsage = async (data) => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
 
-    if (!isValidRecord(record) || !record.CALENDAR_YEAR) {
-      console.log(`Skipping record with ID ${record.FOREST_FILE_ID}, Year = ${record.CALENDAR_YEAR}`)
+    if (!isValidRecord(record) || !record.calendar_year) {
+      console.log(`Skipping record with ID ${record.forest_file_id}, Year = ${record.calendar_year}`)
       continue
     }
 
     try {
       const agreement = await Agreement.findOne(db, {
-        forest_file_id: record.FOREST_FILE_ID,
+        forest_file_id: record.forest_file_id,
       });
 
       if (!agreement) {
-        throw new Error(`No Agreement with ID ${record.FOREST_FILE_ID}`)
+        throw new Error(`No Agreement with ID ${record.forest_file_id}`)
       }
 
       let usage = await Usage.findOne(db, {
-        agreement_id: record.FOREST_FILE_ID,
-        year: record.CALENDAR_YEAR,
+        agreement_id: record.forest_file_id,
+        year: record.calendar_year,
       });
 
       if (!usage) {
         usage = await Usage.create(db, {
-          year: parseInt(record.CALENDAR_YEAR),
-          authorizedAum: parseInt(record.AUTHORIZED_USE) || 0,
-          temporaryIncrease: parseInt(record.TEMP_INCREASE) || 0,
-          totalNonUse: parseInt(record.TOTAL_NON_USE) || 0,
-          totalAnnualUse: parseInt(record.TOTAL_ANNUAL_USE) || 0,
-          agreement_id: agreement.forestFileId,
+          year: Number(record.calendar_year),
+          authorizedAum: Number(record.authorized_use) || 999,
+          temporaryIncrease: Number(record.temp_increase) || 0,
+          totalNonUse: Number(record.total_non_use) || 0,
+          totalAnnualUse: Number(record.total_annual_use) || 0,
+          agreementId: agreement.forestFileId,
         })
       } else {
         usage = await Usage.update(db, 
@@ -285,17 +300,17 @@ const updateUsage = async (data) => {
             id: usage.id,
           }, 
           {
-            year: parseInt(record.CALENDAR_YEAR),
-            authorizedAum: parseInt(record.AUTHORIZED_USE) || 0,
-            temporaryIncrease: parseInt(record.TEMP_INCREASE) || 0,
-            totalNonUse: parseInt(record.TOTAL_NON_USE) || 0,
-            totalAnnualUse: parseInt(record.TOTAL_ANNUAL_USE) || 0,
-            agreement_id: agreement.forestFileId,
+            year: Number(record.calendar_year),
+            authorizedAum: Number(record.authorized_use) || 0,
+            temporaryIncrease: Number(record.temp_increase) || 0,
+            totalNonUse: Number(record.total_non_use) || 0,
+            totalAnnualUse: Number(record.total_annual_use) || 0,
+            agreementId: agreement.forestFileId,
           }
         );
       }
 
-      console.log(`Imported Usage year = ${usage.year}, for Agreement ID = ${agreement.id}`)
+      // console.log(`Imported Usage year = ${usage.year}, for Agreement ID = ${agreement.id}`)
     } catch (error) {
       console.log(`Can not update Usage. Error = ${error.message}`)
     }
@@ -306,29 +321,29 @@ const updateClient = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i];
 
-    if (!isValidRecord(record) || !record.CLIENT_LOCN_CODE) {
-      console.log(`Skipping record with ID ${record.CLIENT_NUMBER}, Agreement ID = ${record.FOREST_FILE_ID}`,
+    if (!isValidRecord(record) || !record.client_locn_code) {
+      console.log(`Skipping record with ID ${record.client_number}, Agreement ID = ${record.forest_file_id}`,
       );
       continue;
     }
 
     try {
       const ctype = await ClientType.findOne(db, {
-        code: record.FOREST_FILE_CLIENT_TYPE_CODE,
+        code: record.forest_file_client_type_code,
       });
 
       let client = await Client.findOne(db, {
-        client_number: record.CLIENT_NUMBER,
+        client_number: record.client_number,
       });
 
       if (!client) {
         client = await Client.create(db, {
-          clientNumber: record.CLIENT_NUMBER,
-          name: record.CLIENT_NAME || 'Unknown Name',
-          locationCode: record.CLIENT_LOCN_CODE,
-          startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
+          clientNumber: record.client_number,
+          name: record.client_name || 'Unknown Name',
+          locationCode: record.client_locn_code,
+          startDate: record.licensee_start_date ? parseDate(record.licensee_start_date) : null,
         });
-        const agreement = await Agreement.findById(db, record.FOREST_FILE_ID);
+        const agreement = await Agreement.findById(db, record.forest_file_id);
         if (agreement) {
           const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
           VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
@@ -337,14 +352,14 @@ const updateClient = async data => {
         }
       } else {
         // TODO: need to know what's gonna change for client
-        client = await Client.update(db, { client_number: record.CLIENT_NUMBER }, 
+        client = await Client.update(db, { client_number: record.client_number }, 
           {
-            name: record.CLIENT_NAME || 'Unknown Name',
-            locationCode: record.CLIENT_LOCN_CODE,
-            startDate: record.LICENSEE_START_DATE ? parseDate(record.LICENSEE_START_DATE) : null,
+            name: record.client_name || 'Unknown Name',
+            locationCode: record.client_locn_code,
+            startDate: record.licensee_start_date ? parseDate(record.licensee_start_date) : null,
           }
         );
-        const agreement = await Agreement.findById(db, record.FOREST_FILE_ID);
+        const agreement = await Agreement.findById(db, record.forest_file_id);
         if (agreement) {
           const query = `UPDATE client_agreement SET client_type_id = '${ctype.id}'
           WHERE agreement_id = '${agreement.id}' AND client_id = '${client.id}'`;
@@ -353,7 +368,7 @@ const updateClient = async data => {
         }
       }
 
-      console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.FOREST_FILE_ID}`);
+      // console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.forest_file_id}`);
     } catch (error) {
       console.log(record);
       console.log(`Can not update Client. Error = ${error.message}`);
@@ -407,51 +422,55 @@ const updateUser = async data => {
 
 const main = async () => {
   try {
-    const licensee = await loadFile(LICENSEE);
+    // const licensee = await loadFile(LICENSEE);
+    const licensee = await loadDataFromUrl(LICENSEE_URL);
+    // {
+    //   forest_file_id: 'RAN000133',
+    //   file_status_st: 'A',
+    //   file_type_code: 'E01',
+    //   file_type_desc: 'Grazing Licence',
+    //   org_unit_code: 'DPC',
+    //   district_admin_zone: 'SPC',
+    //   zone_description: 'South Peace',
+    //   contact: 'Marika Cameron',
+    //   contact_phone_number: '',
+    //   contact_email_address: '',
+    //   legal_effective_dt: '1/1/14',
+    //   initial_expiry_dt: '12/31/23'
+    // }
     await updateDistrict(licensee)
     await updateZone(licensee)
     await updateAgreement(licensee)
-    // {
-    //   FOREST_FILE_ID: 'RAN075974',
-    //   FILE_STATUS_ST: 'A',
-    //   FILE_TYPE_CODE: 'E01',
-    //   FILE_TYPE_DESC: 'Grazing Licence',
-    //   ORG_UNIT_CODE: 'DPC',
-    //   DISTRICT_ADMIN_ZONE: 'SPC',
-    //   ZONE_DESCRIPTION: 'South Peace',
-    //   CONTACT: 'Marika Cameron',
-    //   CONTACT_PHONE_NUMBER: '',
-    //   CONTACT_EMAIL_ADDRESS: '',
-    //   LEGAL_EFFECTIVE_DT: '1/1/14',
-    //   INITIAL_EXPIRY_DT: '12/31/23'
-    // }
 
-    const usage = await loadFile(USAGE); 
+    const usage = await loadDataFromUrl(USAGE_URL);
+    // const usage = await loadFile(USAGE); 
+    // {         
+    //  "non_use_billable" : 0,
+    //  "temp_increase" : 0,
+    //  "calendar_year" : 1992,
+    //  "non_use_nonbillable" : 0,
+    //  "total_annual_use" : 550,
+    //  "forest_file_id" : "RAN000133",
+    //  "authorized_use" : 550
+    // }
+    // MISSING: TOTAL_NON_USE
     await updateUsage(usage)
-    // {
-    //   FOREST_FILE_ID: 'RAN072542',
-    //   CALENDAR_YEAR: '1995',
-    //   AUTHORIZED_USE: '6',
-    //   NON_USE_NONBILLABLE: '0',
-    //   NON_USE_BILLABLE: '0',
-    //   TOTAL_NON_USE: '0',
-    //   TEMP_INCREASE: '0',
-    //   TOTAL_ANNUAL_USE: '6'
-    // }
 
-    const client = await loadFile(CLIENT); 
+    const client = await loadDataFromUrl(CLIENT_URL);
+    // const client = await loadFile(CLIENT); 
+    // {
+    //  "forest_file_id" : "RAN000133",
+    //  "licensee_end_date" : null,
+    //  "client_number" : "00002544",
+    //  "licensee_start_date" : null,
+    //  "forest_file_client_type_code" : "A",
+    //  "client_name" : "FOO, BARR Jannah",
+    //  "client_locn_code" : "00"
+    // }
     await updateClient(client);
-    // {
-    //   FOREST_FILE_ID: 'RAN077194',
-    //   CLIENT_NUMBER: '00001023',
-    //   CLIENT_LOCN_CODE: '00',
-    //   CLIENT_NAME: 'MARTIN, WALTER EUGENE',
-    //   FOREST_FILE_CLIENT_TYPE_CODE: 'A',
-    //   LICENSEE_START_DATE: '2009-02-06 00:00:00'
-    // }
 
-    const user = await loadFile(USER);
-    await updateUser(user);
+    // const user = await loadFile(USER);
+    // await updateUser(user);
     // { 
     // ADMIN_FOREST_DISTRICT_NO: '15',
     // RANGE_ZONE_CODE: 'CHWK',
