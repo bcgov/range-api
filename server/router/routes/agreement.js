@@ -175,25 +175,24 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
 // Get a single agreement by id
 router.get('/:id', asyncMiddleware(async (req, res) => {
-  const {
-    id,
-  } = req.params;
+  const { id } = req.params;
+  const { latestPlan = false, sendFullPlan = false } = req.query;
 
   try {
     // TODO:(jl) Confirm role(s) / access before proceeding with request.
-    const results = await Agreement.findWithAllRelations(db, { forest_file_id: id });
-
+    const results = await Agreement
+      .findWithAllRelations(db, { forest_file_id: id }, null, null, latestPlan, sendFullPlan);
     if (results.length === 0) {
       throw errorWithCode(`Unable to find agreement with ID ${id}`, 404);
     }
 
     const agreement = results.pop();
 
-    if (!req.user.canAccessAgreement(agreement.pop())) {
+    if (!req.user.canAccessAgreement(agreement)) {
       throw errorWithCode('You do not access to this agreement', 403);
     }
-
-    return res.status(200).json(agreement.transformToV1()).end();
+    agreement.transformToV1();
+    res.status(200).json(agreement).end();
   } catch (err) {
     throw err;
   }
