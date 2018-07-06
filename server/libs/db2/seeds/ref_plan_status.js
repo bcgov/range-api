@@ -51,6 +51,16 @@ exports.seed = async (knex) => {
       name: 'Change Requested',
       active: true,
     },
+    {
+      code: 'SD',
+      name: 'Staff Draft',
+      active: true,
+    },
+    {
+      code: 'A',
+      name: 'Approved',
+      active: true,
+    },
   ];
 
   await knex(table).delete();
