@@ -281,7 +281,7 @@ export default class Agreement extends Model {
         name: client.name,
         clientTypeCode: client.clientType.code,
         startDate: client.licenseeStartDate,
-        endDate: client.licenseeStartEnd,
+        endDate: client.licenseeEndDate,
       };
 
       return aClient;
