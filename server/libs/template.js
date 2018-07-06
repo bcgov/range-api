@@ -22,13 +22,13 @@
 
 'use strict';
 
+import { logger } from '@bcgov/common-nodejs';
 import fs from 'fs';
 import handlebars from 'handlebars';
 import moment from 'moment';
 import path from 'path';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, REPORT_DEFAULTS } from '../constants';
-import { logger } from './logger';
 
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
