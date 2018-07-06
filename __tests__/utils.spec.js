@@ -22,11 +22,7 @@
 
 'use strict';
 
-import {
-  isValid,
-  isNumeric,
-  errorWithCode,
-} from '../server/libs/utils';
+import { isNumeric, isValid } from '../server/libs/utils';
 
 describe('utility helpers', () => {
   beforeEach(() => {
@@ -47,16 +43,6 @@ describe('utility helpers', () => {
     const testString = 'a-b_c#123';
 
     expect(isValid(testString)).toBe(false);
-  });
-
-  test('errorWithCode properly creates an Error object', async () => {
-    const message = 'Hello Cat';
-    const code = 500;
-    const error = errorWithCode(message, code);
-
-    expect(error).toBeDefined();
-    expect(error.message).toEqual(message);
-    expect(error.code).toEqual(code);
   });
 
   test('isNumeric corectly deals with strings', async () => {
