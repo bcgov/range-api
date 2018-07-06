@@ -35,7 +35,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: false
+    alwaysPullImage: true
     // envVars: [
     //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
     //   ]
