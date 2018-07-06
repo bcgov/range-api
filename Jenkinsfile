@@ -65,6 +65,8 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
 
       // setup the node dev environment
       sh "npm ci"
+
+      sleep 3600
     }
     
     stage('Test') {
