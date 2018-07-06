@@ -22,17 +22,17 @@
 
 'use strict';
 
-import passport from 'passport';
 import cors from 'cors';
+import passport from 'passport';
 import agreement from './routes/agreement';
 import client from './routes/client';
 import district from './routes/district';
 import ehlo from './routes/ehlo';
 import plan from './routes/plan';
 import reference from './routes/reference';
-import zone from './routes/zone';
 import report from './routes/report';
 import user from './routes/user';
+import zone from './routes/zone';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
