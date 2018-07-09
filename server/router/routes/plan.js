@@ -101,6 +101,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   } = req;
   const {
     agreementId,
+    statusId,
   } = body;
 
   try {
@@ -120,21 +121,26 @@ router.post('/', asyncMiddleware(async (req, res) => {
       }
     }
 
-    // business logic to prevent from creating a plan when the lastest one is in progress
-    const [latestPlan] = await Plan
-      .findLatestWithStatusExtension(db, { agreement_id: agreementId });
-    const statusCode = latestPlan && latestPlan.status && latestPlan.status.code;
-    if (latestPlan && statusCode && statusCode !== 'O') {
-      throw errorWithCode('The current plan is in progress.', 409);
+    // delete the old plan whose status is 'Staff Draft' when saving the new staff draft plan.
+    const staffDraftStatus = await PlanStatus.findOne(db, {
+      code: 'SD',
+    });
+    if (staffDraftStatus && (statusId === staffDraftStatus.id)) {
+      await Plan.remove(db, {
+        agreement_id: agreement.id,
+        status_id: staffDraftStatus.id,
+      });
     }
 
-    // let plan = {};
-    // check to see if this latest plan is complete (currently O is the code for 'complete')
-    // if (latestPlan && statusCode && statusCode === 'O') {
-    const plan = await Plan.create(db, body);
-    // } else {
-    // throw errorWithCode('The current plan is in progress.', 409);
+    // business logic to prevent from creating a plan when the lastest one is in progress
+    // const [latestPlan] = await Plan
+    //   .findLatestWithStatusExtension(db, { agreement_id: agreementId });
+    // const statusCode = latestPlan && latestPlan.status && latestPlan.status.code;
+    // if (latestPlan && latestPlan.uploaded && statusCode && statusCode !== 'O') {
+    //   throw errorWithCode('The current plan is in progress.', 409);
     // }
+
+    const plan = await Plan.create(db, body);
 
     return res.status(200).json(plan).end();
   } catch (err) {
