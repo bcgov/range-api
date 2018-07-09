@@ -132,14 +132,6 @@ router.post('/', asyncMiddleware(async (req, res) => {
       });
     }
 
-    // business logic to prevent from creating a plan when the lastest one is in progress
-    // const [latestPlan] = await Plan
-    //   .findLatestWithStatusExtension(db, { agreement_id: agreementId });
-    // const statusCode = latestPlan && latestPlan.status && latestPlan.status.code;
-    // if (latestPlan && latestPlan.uploaded && statusCode && statusCode !== 'O') {
-    //   throw errorWithCode('The current plan is in progress.', 409);
-    // }
-
     const plan = await Plan.create(db, body);
 
     return res.status(200).json(plan).end();
