@@ -203,6 +203,10 @@ export default class Model {
     const where = {};
     where[this.primaryKey] = id;
 
+    return this.remove(db, where);
+  }
+
+  static remove(db, where) {
     const results = db
       .table(this.table)
       .where(where)
