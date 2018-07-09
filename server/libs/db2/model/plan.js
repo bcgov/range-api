@@ -51,8 +51,8 @@ export default class Plan extends Model {
     // fields.
 
     // primary key *must* be first!
-    return ['id', 'range_name', 'plan_start_date', 'plan_end_date',
-      'notes', 'alt_business_name', 'agreement_id', 'status_id', 'uploaded'].map(f => `${Plan.table}.${f}`);
+    return ['id', 'range_name', 'plan_start_date', 'plan_end_date', 'notes', 'alt_business_name',
+      'agreement_id', 'status_id', 'uploaded', 'created_at', 'updated_at'].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
