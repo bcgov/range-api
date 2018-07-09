@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { logger } from '@bcgov/nodejs-common-utils';
+import { logger } from '@bcgov/common-nodejs';
 import fs from 'fs';
 import handlebars from 'handlebars';
 import moment from 'moment';

@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
+import { asyncMiddleware, errorWithCode } from '@bcgov/common-nodejs';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';

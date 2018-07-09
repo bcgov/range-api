@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { logger, started } from '@bcgov/nodejs-common-utils';
+import { logger, started } from '@bcgov/common-nodejs';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import flash from 'connect-flash';

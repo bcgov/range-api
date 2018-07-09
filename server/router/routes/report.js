@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { asyncMiddleware, errorWithCode, logger, streamToBuffer } from '@bcgov/nodejs-common-utils';
+import { asyncMiddleware, errorWithCode, logger, streamToBuffer } from '@bcgov/common-nodejs';
 import { Router } from 'express';
 import fs from 'fs';
 import moment from 'moment';

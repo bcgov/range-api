@@ -7,7 +7,7 @@
     "node": "~6.11.0"
   },
   "dependencies": {
-    "@bcgov/common-nodejs": "git+https://git@github.com/bcgov/nodejs-common-utils.git#v0.0.3",
+    "@bcgov/common-nodejs": "git+https://git@github.com/bcgov/common-nodejs.git#v0.0.3",
     "babel-runtime": "^6.26.0",
     "body-parser": "^1.18.2",
     "compression": "^1.7.2",

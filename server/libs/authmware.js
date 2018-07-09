@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { errorWithCode, getJwtCertificate, logger } from '@bcgov/nodejs-common-utils';
+import { errorWithCode, getJwtCertificate, logger } from '@bcgov/common-nodejs';
 import express from 'express';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
