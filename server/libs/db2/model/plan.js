@@ -135,6 +135,12 @@ export default class Plan extends Model {
   //   }
   // }
 
+  async eagerloadAllOneToMany() {
+    await this.fetchPastures();
+    await this.fetchGrazingSchedules();
+    await this.fetchMinisterIssues();
+  }
+
   async fetchPastures() {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where);

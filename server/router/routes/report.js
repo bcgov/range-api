@@ -158,8 +158,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     agreement.transformToV1();
 
     const plan = agreement.plans.find(p => p.id === planId);
-    await plan.fetchPastures();
-    await plan.fetchGrazingSchedules();
+    await plan.eagerloadAllOneToMany();
 
     const { pastures, grazingSchedules } = plan || [];
     const { zone } = agreement || {};
