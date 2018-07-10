@@ -51,8 +51,8 @@ export default class Plan extends Model {
     // fields.
 
     // primary key *must* be first!
-    return ['id', 'range_name', 'plan_start_date', 'plan_end_date',
-      'notes', 'alt_business_name', 'agreement_id', 'status_id'].map(f => `${Plan.table}.${f}`);
+    return ['id', 'range_name', 'plan_start_date', 'plan_end_date', 'notes', 'alt_business_name',
+      'agreement_id', 'status_id', 'uploaded', 'created_at', 'updated_at'].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
@@ -82,7 +82,7 @@ export default class Plan extends Model {
         .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
         // left join otherwise if extension is NULL we don't get any results
         .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
-        .where(where)
+        .where({ ...where, uploaded: true })
         .orderBy(...order);
 
       if (page && limit) {
