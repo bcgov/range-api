@@ -83,9 +83,7 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
     delete myAgreement.plans;
     myAgreement.plan = plans.pop();
 
-    await myAgreement.plan.fetchPastures();
-    await myAgreement.plan.fetchGrazingSchedules();
-    await myAgreement.plan.fetchMinisterIssues();
+    await myAgreement.plan.eagerloadAllOneToMany();
 
     return res.status(200).json(myAgreement).end();
   } catch (error) {
@@ -163,8 +161,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     delete body.agreementId;
 
     const plan = await Plan.update(db, { id: planId }, body);
-    await plan.fetchGrazingSchedules();
-    await plan.fetchPastures();
+    await plan.eagerloadAllOneToMany();
 
     return res.status(200).json(plan).end();
   } catch (err) {

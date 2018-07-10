@@ -107,9 +107,7 @@ export default class Agreement extends Model {
           ...promises,
           ...agreement.plans.map(async plan =>
             [
-              await plan.fetchGrazingSchedules(),
-              await plan.fetchPastures(),
-              await plan.fetchMinisterIssues(),
+              await plan.eagerloadAllOneToMany(),
             ]),
         ];
       });
