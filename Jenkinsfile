@@ -74,7 +74,7 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
             ).trim()
       echo "SONARQUBE_URL: ${SONARQUBE_URL}"
       dir('sonar-runner') {
-        sh returnStdout: true, script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info -Dsonar.projectName=${APP_NAME} -Dsonar.branch=develop -Dsonar.projectKey=org.sonarqube:${APP_NAME} -Dsonar.sources=.. -Dsonar.exclusions=test/**, node_modules/**"
+        sh returnStdout: true, script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info -Dsonar.projectName=${APP_NAME} -Dsonar.branch=develop -Dsonar.projectKey=org.sonarqube:${APP_NAME} -Dsonar.sources=.."
       }
     }
 
