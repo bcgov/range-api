@@ -52,7 +52,12 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
       GIT_COMMIT_AUTHOR = sh (
         script: """git show -s --pretty=%an""",
         returnStdout: true).trim()
-
+  // GIT_BRANCH_NAME = sh (
+  //   script: """git branch -a -v --no-abbrev --contains ${GIT_COMMIT_SHORT_HASH} | \
+  //   grep 'remotes' | \
+  //   awk -F ' ' '{print \$1}' | \
+  //   awk -F '/' '{print \$3}'""",
+  //   returnStdout: true).trim()
       SLACK_TOKEN = sh (
         script: """oc get secret/slack -o template --template="{{.data.token}}" | base64 --decode""",
         returnStdout: true).trim()

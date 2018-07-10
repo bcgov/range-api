@@ -1,8 +1,8 @@
 // Uses DSL plugins resolution introduced in Gradle 2.1
 plugins {
   id "java"
-  // id "jacoco"
-  // id "org.sonarqube" version "2.6.1"
+  id "jacoco"
+  id "org.sonarqube" version "2.6.1"
 }
 
 sonarqube {
