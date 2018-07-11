@@ -134,6 +134,9 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
 
     stage('Build') {
       echo "Build: ${BUILD_ID}"
+
+      sh "npm run build"
+
       // run the oc build to package the artifacts into a docker image
       openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'true'
 
