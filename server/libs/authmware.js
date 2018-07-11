@@ -54,7 +54,7 @@ const getJwtSecret = () => new Promise((resolve, reject) => {
       reject(new Error('No algorithm'));
       return;
     }
-      // build a certificate
+    // build a certificate
     const pem = pemFromModAndExponent(modulus, exponent);
     resolve(pem);
   });

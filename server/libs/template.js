@@ -215,7 +215,7 @@ export const compile = (source, context) => {
   handlebars.registerHelper('handleNullValue', handleNullValue);
   handlebars.registerHelper('getAgreementType', getAgreementType);
   handlebars.registerHelper('getPastureNames', getPastureNames);
-  
+
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);
 };

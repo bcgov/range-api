@@ -135,6 +135,7 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
     stage('Build') {
       echo "Build: ${BUILD_ID}"
 
+      // see if it fails when building the application
       sh "npm run build"
 
       // run the oc build to package the artifacts into a docker image
