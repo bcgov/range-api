@@ -174,7 +174,7 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
   }
   stage('Approval') {
     timeout(time: 1, unit: 'DAYS') {
-      input message: "Deploy to test?", submitter: 'jleach-admin'
+      input message: "Deploy to test?", submitter: 'authenticated'
     }
     node ('master') {
       stage('Promotion') {
