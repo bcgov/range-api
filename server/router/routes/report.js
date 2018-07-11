@@ -29,7 +29,7 @@ import moment from 'moment';
 import config from '../../config';
 import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, loadTemplate, renderToPDF } from '../../libs/template';
+import { compile, loadTemplate, renderToPDF, getPastureNames } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -160,15 +160,16 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     const plan = agreement.plans.find(p => p.id === planId);
     await plan.eagerloadAllOneToMany();
 
-    const { pastures, grazingSchedules } = plan || [];
+    const { pastures, grazingSchedules: gss, ministerIssues: mis } = plan || [];
     const { zone } = agreement || {};
     const { user } = zone || {};
     const {
       givenName,
       familyName,
     } = user || {};
+    user.name = givenName && familyName && `${givenName} ${familyName}`;
 
-    const calculatedGrazingSchedules = grazingSchedules.map((schedule) => {
+    const grazingSchedules = gss.map((schedule) => {
       const { grazingScheduleEntries: gse } = schedule;
       const grazingScheduleEntries = gse && gse.map((entry) => {
         const {
@@ -203,16 +204,22 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       };
     });
 
-    user.name = givenName && familyName && `${givenName} ${familyName}`;
+    const ministerIssues = mis.map((mi) => {
+      const ministerIssue = { ...mi };
+      ministerIssue.pastureNames = getPastureNames(ministerIssue.pastures, pastures);
+
+      return ministerIssue;
+    });
 
     const template = await loadTemplate(TEMPLATES.RANGE_USE_PLAN);
     const html = await compile(template, {
+      user,
       agreement,
       plan,
       zone,
       pastures,
-      calculatedGrazingSchedules,
-      user,
+      grazingSchedules,
+      ministerIssues,
     });
     const stream = await renderToPDF(html);
     const buffer = await streamToBuffer(stream);
