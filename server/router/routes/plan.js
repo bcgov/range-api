@@ -26,7 +26,8 @@ import { Router } from 'express';
 import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import { asyncMiddleware, errorWithCode, logger, isNumeric } from '../../libs';
+import { logger } from '../../libs/logger';
+import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
 
 const router = new Router();
 

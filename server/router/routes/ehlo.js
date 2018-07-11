@@ -23,7 +23,7 @@
 'use strict';
 
 import { Router } from 'express';
-import { asyncMiddleware } from '../../libs';
+import { asyncMiddleware } from '../../libs/utils';
 
 const router = new Router();
 
