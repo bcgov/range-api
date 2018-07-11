@@ -22,12 +22,12 @@
 
 'use strict';
 
-import { errorWithCode, getJwtCertificate, logger } from '@bcgov/nodejs-common-utils';
 import express from 'express';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import config from '../config';
 import DataManager from './db2';
+import { errorWithCode, getJwtCertificate, logger } from './index';
 
 const dm = new DataManager(config);
 const {

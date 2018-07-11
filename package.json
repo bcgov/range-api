@@ -7,7 +7,9 @@
     "node": "~6.11.0"
   },
   "dependencies": {
-    "@bcgov/nodejs-common-utils": "git+https://git@github.com/bcgov/nodejs-common-utils.git#v0.0.1",
+    "chalk": "^2.3.2",
+    "ip": "^1.1.4",
+    "winston": "^2.4.1",
     "babel-runtime": "^6.26.0",
     "body-parser": "^1.18.2",
     "compression": "^1.7.2",
@@ -28,10 +30,7 @@
     "passport-jwt": "^4.0.0",
     "passport-oauth2": "^1.4.0",
     "pg": "^7.4.1",
-    "wkhtmltopdf": "^0.3.4",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^7.0.0",
-    "gulp-clean": "^0.4.0"
+    "wkhtmltopdf": "^0.3.4"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

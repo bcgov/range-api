@@ -35,3 +35,31 @@ export const isValid = str => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
  * @returns true if the string is a number, false otherwise
  */
 export const isNumeric = str => str && /^\d+$/.test(str);
+
+/**
+ * Check if a string consits of [Aa-Az], [0-9], -, _, and %.
+ *
+ * @param {String} message The error message
+ * @param {Number} code    The error code (property)
+ * @returns An `Error` object with the message and code set
+ */
+export const errorWithCode = (message, code) => {
+  const error = new Error(message);
+  error.code = code;
+
+  return error;
+};
+
+
+/**
+ * Convert a stream into a buffer
+ *
+ * @param {ReadStream} stream The stream containing the data to be converted
+ * @returns A resolved `Promise` with the buffer or rejected in the case of failure
+ */
+export const streamToBuffer = stream => new Promise((resolve, reject) => {
+  const buffers = [];
+  stream.on('error', reject);
+  stream.on('data', data => buffers.push(data));
+  stream.on('end', () => resolve(Buffer.concat(buffers)));
+});

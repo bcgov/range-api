@@ -22,12 +22,12 @@
 
 'use strict';
 
-import { logger } from '@bcgov/nodejs-common-utils';
 import fs from 'fs';
 import handlebars from 'handlebars';
 import moment from 'moment';
 import path from 'path';
 import wkhtmltopdf from 'wkhtmltopdf';
+import { logger } from '../libs';
 import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, REPORT_DEFAULTS } from '../constants';
 
 if (process.platform === 'linux') {
