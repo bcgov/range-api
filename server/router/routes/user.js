@@ -25,8 +25,8 @@
 
 import { Router } from 'express';
 import config from '../../config';
-import { asyncMiddleware, errorWithCode } from '../../libs';
 import DataManager from '../../libs/db2';
+import { asyncMiddleware, errorWithCode } from '../../libs/utils';
 
 const router = new Router();
 const dm = new DataManager(config);

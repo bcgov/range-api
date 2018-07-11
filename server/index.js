@@ -29,7 +29,7 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import config from './config';
 import auth from './libs/authmware';
-import { logger, started } from './libs';
+import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
 

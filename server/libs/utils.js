@@ -50,6 +50,19 @@ export const errorWithCode = (message, code) => {
   return error;
 };
 
+/**
+ * Helper function to wrap express rountes to handle rejected promises
+ *
+ * @param {Function} fn The `next()` function to call
+ */
+export const asyncMiddleware = fn =>
+  // Make sure to `.catch()` any errors and pass them along to the `next()`
+  // middleware in the chain, in this case the error handler.
+  (req, res, next) => {
+    Promise.resolve(fn(req, res, next))
+      .catch(next);
+  };
+
 
 /**
  * Convert a stream into a buffer
