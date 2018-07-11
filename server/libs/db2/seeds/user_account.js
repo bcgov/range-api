@@ -89,6 +89,55 @@ exports.seed = async (knex) => {
       email: 'shellshell456@gmail.com',
       active: true,
     },
+    {
+      username: 'bceid\\testah1',
+      given_name: 'Test',
+      family_name: 'AgreementHolder1',
+      email: 'roop.1@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah2',
+      given_name: 'Test',
+      family_name: 'AgreementHolder2',
+      email: 'roop.2@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah3',
+      given_name: 'Test',
+      family_name: 'AgreementHolder3',
+      email: 'roop.3@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah4',
+      given_name: 'Test',
+      family_name: 'AgreementHolder4',
+      email: 'roop.4@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah5',
+      given_name: 'Test',
+      family_name: 'AgreementHolder5',
+      email: 'roop.5@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah6',
+      given_name: 'Test',
+      family_name: 'AgreementHolder6',
+      email: 'roop.6@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'bceid\\testah7',
+      given_name: 'Test',
+      family_name: 'AgreementHolder7',
+      email: 'roop.7@freshworks.io',
+      active: true,
+    },
   ];
 
   await knex(table).delete();

@@ -343,13 +343,13 @@ const updateClient = async data => {
           locationCode: record.client_locn_code,
           startDate: record.licensee_start_date ? parseDate(record.licensee_start_date) : null,
         });
-        const agreement = await Agreement.findById(db, record.forest_file_id);
-        if (agreement) {
-          const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
-          VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
+        // const agreement = await Agreement.findById(db, record.forest_file_id);
+        // if (agreement) {
+        //   const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+        //   VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
 
-          await db.schema.raw(query);
-        }
+        //   await db.schema.raw(query);
+        // }
       } else {
         // TODO: need to know what's gonna change for client
         client = await Client.update(db, { client_number: record.client_number }, 
@@ -359,15 +359,21 @@ const updateClient = async data => {
             startDate: record.licensee_start_date ? parseDate(record.licensee_start_date) : null,
           }
         );
-        const agreement = await Agreement.findById(db, record.forest_file_id);
-        if (agreement) {
-          const query = `UPDATE client_agreement SET client_type_id = '${ctype.id}'
-          WHERE agreement_id = '${agreement.id}' AND client_id = '${client.id}'`;
+        // const agreement = await Agreement.findById(db, record.forest_file_id);
+        // if (agreement) {
+        //   const query = `UPDATE client_agreement SET client_type_id = '${ctype.id}'
+        //   WHERE agreement_id = '${agreement.id}' AND client_id = '${client.id}'`;
 
-          await db.schema.raw(query);
-        }
+        //   await db.schema.raw(query);
+        // }
       }
+      const agreement = await Agreement.findById(db, record.forest_file_id);
+      if (agreement) {
+        const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+        VALUES ('${agreement.id}', '${client.id}', '${ctype.id}')`;
 
+        await db.schema.raw(query);
+      }
       // console.log(`Imported Client ID = ${client.id}, Agreement ID = ${record.forest_file_id}`);
     } catch (error) {
       console.log(record);
@@ -379,51 +385,71 @@ const updateClient = async data => {
 const updateUser = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
-    if (!record.CONTACT_USER_ID || !record.RANGE_ZONE_CODE) {
-      console.log(`Skipping record with CODE ${record.RANGE_ZONE_CODE}, username = ${record.CONTACT_USER_ID}`)
+    if (!record.contact_user_id || !record.range_zone_code) {
+      console.log(`Skipping record with CODE ${record.range_zone_code}, username = ${record.contact_user_id} row = ${i}`)
       continue
     }
 
     try {
       let user = await User.findOne(db, {
-        username: record.CONTACT_USER_ID.toLowerCase(),
+        username: record.contact_user_id.toLowerCase(),
       });
 
-      const [first, last] = record.CONTACT.split(' ');
+      const [first, last] = record.contact.split(' ');
 
       if (!user) {
         user = await User.create(db, {
-          username: record.CONTACT_USER_ID.toLowerCase(),
+          username: record.contact_user_id.toLowerCase(),
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
           email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
         });
-        await Zone.update(db, { code: record.RANGE_ZONE_CODE }, {
+        await Zone.update(db, { code: record.range_zone_code }, {
           user_id: user.id
         });
       } else {
-        user = await User.update(db, { username: record.CONTACT_USER_ID.toLowerCase() }, {
-          username: record.CONTACT_USER_ID.toLowerCase(),
+        user = await User.update(db, { username: record.contact_user_id.toLowerCase() }, {
+          username: record.contact_user_id.toLowerCase(),
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
           email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
         });
-        await Zone.update(db, { code: record.RANGE_ZONE_CODE }, {
+        await Zone.update(db, { code: record.range_zone_code }, {
           user_id: user.id
         });
       }
 
-      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.RANGE_ZONE_CODE} owner.`);
+      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.range_zone_code} owner.`);
     } catch (error) {
-      console.log(`Can not update User with username ${record.CONTACT_USER_ID}. error = ${error.message}`);
+      console.log(`Can not update User with username ${record.contact_user_id}. error = ${error.message}`);
     }
   }
 }
 
+const loadData = async (fromUrl) => {
+  let licensee, usage, client, user;
+  if (fromUrl) {
+    licensee = await loadDataFromUrl(LICENSEE_URL);
+    usage = await loadDataFromUrl(USAGE_URL);
+    client = await loadDataFromUrl(CLIENT_URL);
+  } else {
+    licensee = await loadFile(LICENSEE);
+    usage = await loadFile(USAGE);
+    client = await loadFile(CLIENT);
+    user = await loadFile(USER);
+  }
+  await updateDistrict(licensee)
+  await updateZone(licensee)
+  await updateAgreement(licensee)
+  await updateUsage(usage)
+  await updateUser(user);
+  await updateClient(client);
+};
+
 const main = async () => {
   try {
-    // const licensee = await loadFile(LICENSEE);
-    const licensee = await loadDataFromUrl(LICENSEE_URL);
+    const isFromUrl = false;
+    await loadData(isFromUrl);
     // {
     //   forest_file_id: 'RAN000133',
     //   file_status_st: 'A',
@@ -438,12 +464,7 @@ const main = async () => {
     //   legal_effective_dt: '1/1/14',
     //   initial_expiry_dt: '12/31/23'
     // }
-    await updateDistrict(licensee)
-    await updateZone(licensee)
-    await updateAgreement(licensee)
 
-    const usage = await loadDataFromUrl(USAGE_URL);
-    // const usage = await loadFile(USAGE); 
     // {         
     //  "non_use_billable" : 0,
     //  "temp_increase" : 0,
@@ -454,10 +475,7 @@ const main = async () => {
     //  "authorized_use" : 550
     // }
     // MISSING: TOTAL_NON_USE
-    await updateUsage(usage)
 
-    const client = await loadDataFromUrl(CLIENT_URL);
-    // const client = await loadFile(CLIENT); 
     // {
     //  "forest_file_id" : "RAN000133",
     //  "licensee_end_date" : null,
@@ -467,15 +485,12 @@ const main = async () => {
     //  "client_name" : "FOO, BARR Jannah",
     //  "client_locn_code" : "00"
     // }
-    await updateClient(client);
 
-    // const user = await loadFile(USER);
-    // await updateUser(user);
     // { 
     // ADMIN_FOREST_DISTRICT_NO: '15',
-    // RANGE_ZONE_CODE: 'CHWK',
+    // range_zone_code: 'CHWK',
     // ZONE_DESCRIPTION: 'Chilliwack',
-    // CONTACT_USER_ID: 'RPARRIAD' 
+    // contact_user_id: 'RPARRIAD' 
     // CONTACT: 'Rene Phillips' 
     // }
 
