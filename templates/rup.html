@@ -18,6 +18,7 @@
       font-family: arial, sans-serif;
     }
     table {
+        page-break-inside: avoid;
         font-family: arial, sans-serif;
         border-collapse: collapse;
         width: 100%;
@@ -64,10 +65,12 @@
       margin: 10px 0;
     }
     .textfield {
+      page-break-inside: avoid;
       margin: 5px 0;
     }
     .textfield__title {
-      font-weight: bold;
+      color: gray;
+      font-size: 1.1rem;
     }
     .cell-6 {
       width: 49%;
@@ -76,6 +79,9 @@
     .cell-4 {
       width: 32%;
       display: inline-block;
+    }
+    .minister-action {
+      margin: 10px;
     }
   }
 </style>
@@ -231,6 +237,42 @@
         </tr>
       {{/each}}
     </table>
-  {{/each}}  
+  {{/each}}
+
+  <h2>Minister&apos;s Issues and Actions</h2>
+  <div class="divider"></div>
+  <div>
+    Note: Any action that would result in a range development cannot
+    be conducted until an authorization (separate to this RUP) is obtained.
+  </div>
+  {{#each this.ministerIssues}}
+    <div class="section-title">
+      <div class="cell-6">
+        Issue Type: {{this.ministerIssueType.name}}
+      </div>
+      <div class="cell-6">
+        Identified: {{ this.identified }}
+      </div>
+    </div>
+    <div class="textfield">
+      <div class="textfield__title">Detail</div>
+      <div class="textfield__content">{{this.detail}}</div>
+    </div>
+    <div class="textfield">
+      <div class="textfield__title">Objective</div>
+      <div class="textfield__content">{{this.objective}}</div>
+    </div>
+    <div class="textfield">
+      <div class="textfield__title">Pastures</div>
+      <div class="textfield__content">{{this.pastureNames}}</div>
+    </div>
+    <div class="textfield__title">Actions</div>
+    {{#each this.ministerIssueActions}}
+      <div class="minister-action">
+        <b>{{this.ministerIssueActionType.name}}</b>
+        <div>{{this.detail}}</div>
+      </div>
+    {{/each}}  
+  {{/each}}
 </body>
 </html>
