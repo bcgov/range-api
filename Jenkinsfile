@@ -68,8 +68,7 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
 
       sh "node -v"
       sh "npm -v"
-
-      sleep 7200
+  
       sh "npm ci"
     }
     
