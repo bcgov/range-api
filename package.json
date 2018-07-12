@@ -7,11 +7,10 @@
     "node": "~6.11.0"
   },
   "dependencies": {
-    "chalk": "^2.3.2",
-    "ip": "^1.1.4",
-    "winston": "^2.4.1",
+    "@bcgov/nodejs-common-utils": "git+https://git@github.com/bcgov/nodejs-common-utils.git#v0.0.1",
     "babel-runtime": "^6.26.0",
     "body-parser": "^1.18.2",
+    "chalk": "^2.3.2",
     "compression": "^1.7.2",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.3",
@@ -21,6 +20,7 @@
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "handlebars": "^4.0.11",
+    "ip": "^1.1.4",
     "jsonwebtoken": "^8.2.1",
     "knex": "^0.14.6",
     "lodash": "^4.17.10",
@@ -30,9 +30,10 @@
     "passport-jwt": "^4.0.0",
     "passport-oauth2": "^1.4.0",
     "pg": "^7.4.1",
-    "wkhtmltopdf": "^0.3.4",
     "request": "^2.85.0",
-    "rsa-pem-from-mod-exp": "^0.8.4"
+    "rsa-pem-from-mod-exp": "^0.8.4",
+    "winston": "^2.4.1",
+    "wkhtmltopdf": "^0.3.4"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
