@@ -9,14 +9,31 @@ if (env === 'development') {
 }
 
 module.exports = {
-
+  testing: {
+    client: 'postgresql',
+    connection: {
+      host: process.env.POSTGRESQL_HOST,
+      database: process.env.POSTGRESQL_DATABASE,
+      user: process.env.POSTGRESQL_TEST_USER,
+      password: process.env.POSTGRESQL_TEST_PASSWORD,
+    },
+    pool: {
+      min: 2,
+      max: 10,
+    },
+    migrations: {
+      // stub: './config/knex-migration-stub.js',
+      tableName: 'migration',
+      directory: 'server/libs/db2/migrations',
+    },
+  },
   development: {
     client: 'postgresql',
     connection: {
       host: process.env.POSTGRESQL_HOST,
       database: process.env.POSTGRESQL_DATABASE,
-      user: process.env.POSTGRESQL_USER,
-      password: process.env.POSTGRESQL_PASSWORD,
+      user: process.env.POSTGRESQL_DEV_USER,
+      password: process.env.POSTGRESQL_DEV_PASSWORD,
     },
     pool: {
       min: 2,
@@ -31,24 +48,6 @@ module.exports = {
       // stub: './config/knex-migration-stub.js',
       tableName: 'seed',
       directory: 'server/libs/db2/seeds',
-    },
-  },
-
-  staging: {
-    client: 'postgresql',
-    connection: {
-      host: process.env.POSTGRESQL_HOST,
-      database: process.env.POSTGRESQL_DATABASE,
-      user: process.env.POSTGRESQL_USER,
-      password: process.env.POSTGRESQL_PASSWORD,
-    },
-    pool: {
-      min: 2,
-      max: 10,
-    },
-    migrations: {
-      tableName: 'migration',
-      directory: 'server/libs/db2/migrations',
     },
   },
 
