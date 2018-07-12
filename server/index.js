@@ -22,6 +22,7 @@
 
 'use strict';
 
+import { logger, started } from '@bcgov/nodejs-common-utils';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import flash from 'connect-flash';
@@ -29,7 +30,6 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import config from './config';
 import auth from './libs/authmware';
-import { logger, started } from './libs/logger';
 
 const env = config.get('environment');
 

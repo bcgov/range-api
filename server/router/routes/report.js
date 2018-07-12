@@ -22,15 +22,14 @@
 
 'use strict';
 
+import { asyncMiddleware, errorWithCode, logger, streamToBuffer } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import fs from 'fs';
 import moment from 'moment';
 import config from '../../config';
 import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, loadTemplate, renderToPDF, getPastureNames } from '../../libs/template';
-import { logger } from '../../libs/logger';
-import { asyncMiddleware, errorWithCode, streamToBuffer } from '../../libs/utils';
+import { compile, getPastureNames, loadTemplate, renderToPDF } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);

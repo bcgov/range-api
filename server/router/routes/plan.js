@@ -22,12 +22,12 @@
 
 'use strict';
 
+import { asyncMiddleware, errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import { logger } from '../../libs/logger';
-import { asyncMiddleware, errorWithCode, isNumeric } from '../../libs/utils';
+import { isNumeric } from '../../libs/utils';
 
 const router = new Router();
 
