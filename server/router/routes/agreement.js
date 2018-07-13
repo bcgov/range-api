@@ -137,7 +137,16 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         ...(await Promise.all(zpromises)),
       ]);
 
-      const okIDs = await allowableIDsForUser(req.user, allIDs);
+      // remove duplicate ids
+      const hash = {};
+      const nonDuplicateIDs = [];
+      allIDs.map((id) => {
+        if (hash[id]) return undefined;
+        hash[id] = true;
+        nonDuplicateIDs.push(id);
+        return id;
+      });
+      const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
 
       totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
