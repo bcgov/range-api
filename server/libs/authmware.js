@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { logger } from '@bcgov/nodejs-common-utils';
+import { logger, errorWithCode } from '@bcgov/nodejs-common-utils';
 import express from 'express';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
@@ -30,7 +30,6 @@ import request from 'request';
 import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
 import config from '../config';
 import DataManager from './db2';
-import { errorWithCode } from './utils';
 
 const getJwtSecret = () => new Promise((resolve, reject) => {
   request.get(config.get('sso:certsUrl'), {}, (err, res, certsBody) => {
