@@ -61,7 +61,7 @@ const agreementCountForUser = async (user) => {
     const ids = await Agreement.agreementsForClientId(db, user.clientId);
     count = ids.length;
   } else if (user.isRangeOfficer()) {
-    const zones = await Zone.findWithDistrictUser(db, { user_id: 34 });
+    const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
     const zids = zones.map(zone => zone.id);
     const ids = await Agreement.find(db, { zone_id: zids });
     count = ids.length;
@@ -137,8 +137,16 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         ...(await Promise.all(zpromises)),
       ]);
 
-      const okIDs = await allowableIDsForUser(req.user, allIDs);
-
+      // remove duplicate ids
+      const hash = {};
+      const nonDuplicateIDs = [];
+      allIDs.map((id) => {
+        if (hash[id]) return undefined;
+        hash[id] = true;
+        nonDuplicateIDs.push(id);
+        return id;
+      });
+      const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
       totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
