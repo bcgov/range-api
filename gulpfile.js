@@ -26,28 +26,29 @@ const gulp = require('gulp');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
 
-gulp.task('clean', () => gulp.src('build', { read: false })
+gulp.task('clean', () => gulp.src('build', { read: false, allowEmpty: true })
   .pipe(clean({
     force: true,
   })));
 
-gulp.task('transpile', ['clean'], () => gulp.src('server/**/*.js')
+gulp.task('transpile', () => gulp.src('server/**/*.js')
   .pipe(babel())
   .pipe(gulp.dest('build/server')));
 
-gulp.task('copy-config', ['clean'], () => gulp.src('server/config/*.json')
+gulp.task('copy-config', () => gulp.src('server/config/*.json')
   .pipe(gulp.dest('build/server/config')));
 
-gulp.task('copy-node-config', ['clean'], () => gulp.src(['apidoc.json', 'package.json', 'package-lock.json'])
+gulp.task('copy-node-config', () => gulp.src(['package.json', 'package-lock.json'])
   .pipe(gulp.dest('build')));
 
-gulp.task('copy-tools', ['clean'], () =>
-  gulp.src(['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false })
-    .pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
+gulp.task('copy-tools', () => gulp.src(
+  ['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false },
+).pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
 
-gulp.task('copy-templates', ['clean'], () =>
-  gulp.src(['templates/*'], { dot: false })
-    .pipe(gulp.dest('build/templates')));
+gulp.task('copy-templates', () => gulp.src(['templates/*'], { dot: false })
+  .pipe(gulp.dest('build/templates')));
 
-gulp.task('default', ['clean', 'transpile', 'copy-config',
-  'copy-node-config', 'copy-tools', 'copy-templates']);
+gulp.task('default', gulp.series('clean', gulp.parallel(
+  'transpile', 'copy-config', 'copy-node-config',
+  'copy-tools', 'copy-templates',
+)));
