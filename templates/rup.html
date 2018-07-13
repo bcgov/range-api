@@ -88,6 +88,9 @@
     .minister-action {
       margin: 10px;
     }
+    .not-provided {
+      margin-top: 10px;
+    }
   }
 </style>
 </head>
@@ -212,6 +215,8 @@
         <div class="textfield__content">{{this.graceDays}}</div>
       </div>  
     </div>
+  {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
   
   <h2>Schedule</h2>
@@ -243,9 +248,13 @@
             <td>{{this.pldAUMs}}</td>
             <td>{{this.crownAUMs}}</td>
           </tr>
+        {{else}}
+          <div class="not-provided">Not provided</div>
         {{/each}}
       </table>
     </div>
+  {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
 
   <h2>Minister&apos;s Issues and Actions</h2>
@@ -283,8 +292,12 @@
           <b>{{this.ministerIssueActionType.name}}</b>
           <div>{{this.detail}}</div>
         </div>
+      {{else}}
+        <div class="not-provided">Not provided</div>
       {{/each}}  
     </div>
+    {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
 
 </body>
