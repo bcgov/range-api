@@ -36,8 +36,9 @@ export default class MinisterIssueAction extends Model {
 
     super(obj, db);
 
-    this.ministerIssueActionType =
-      new MinisterIssueActionType(MinisterIssueActionType.extract(data));
+    this.ministerIssueActionType = new MinisterIssueActionType(
+      MinisterIssueActionType.extract(data),
+    );
   }
 
   static get fields() {

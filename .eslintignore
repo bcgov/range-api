@@ -3,3 +3,4 @@ build
 dist
 scripts
 test
+server/libs/db.old-sequelize-dont-use
