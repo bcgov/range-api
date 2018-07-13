@@ -77,11 +77,29 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
 
       script {
         //
+        // Check the code builds
+        //
+
+        try {
+          echo "Checking Build"
+          sh "npm run build"
+        } catch (error) {
+          def attachment = [:]
+          attachment.fallback = 'See build log for more details'
+          attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
+          attachment.color = '#FFA500' // Orange
+          attachment.text = "The code does not build.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
+          // attachment.title_link = "${env.BUILD_URL}"
+
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+        }
+
+        //
         // Run our code quality tests
         //
 
         try {
-          echo "Checking Code Quality"
+          echo "Checking code quality with SonarQube"
           SONARQUBE_URL = sh (
               script: 'oc get routes -o wide --no-headers | awk \'/sonarqube/{ print match($0,/edge/) ?  "https://"$2 : "http://"$2 }\'',
               returnStdout: true
@@ -102,46 +120,11 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
         }
 
         //
-        // Run a security check on our packages
-        //
-
-        try {
-          sh "./node_modules/.bin/nsp check"
-        } catch (error) {
-          // def output = readFile('nsp-report.txt').trim()
-          def attachment = [:]
-          attachment.fallback = 'See build log for more details'
-          attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
-          attachment.color = '#FFA500' // Orange
-          attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
-
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
-        }
-   
-        //
-        // Check the code builds
-        //
-
-        try {
-          echo "Checking Build"
-          sh "npm run build"
-        } catch (error) {
-          def attachment = [:]
-          attachment.fallback = 'See build log for more details'
-          attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
-          attachment.color = '#FFA500' // Orange
-          attachment.text = "The code does not build.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
-          // attachment.title_link = "${env.BUILD_URL}"
-
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
-        }
-
-        //
         // Check code quality with a LINTer
         //
 
         try {
-          echo "Running LINTer"
+          echo "Checking code quality with LINTer"
           sh "npm run test:lint"
         } catch (error) {
           def attachment = [:]
@@ -155,7 +138,25 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
         }
 
         //
-        // Run our code quality tests et al.
+        // Run a security check on our packages
+        //
+
+        try {
+          echo "Checking dependencies for security issues"
+          sh "./node_modules/.bin/nsp check"
+        } catch (error) {
+          // def output = readFile('nsp-report.txt').trim()
+          def attachment = [:]
+          attachment.fallback = 'See build log for more details'
+          attachment.title = "API Build ${BUILD_ID} WARNING! :unamused: :zany_face: :fox4:"
+          attachment.color = '#FFA500' // Orange
+          attachment.text = "There are security warnings related to your packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
+
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+        }
+
+        //
+        // Run our unit tests et al.
         //
 
         try {
