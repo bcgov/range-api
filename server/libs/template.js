@@ -154,7 +154,7 @@ const contactFullName = (contact) => {
  * @param {[Contact]} contacts The `Agreement` contacts
  * @returns A string representing the full name of the promary contact
  */
-export const primaryContactFullName = (contacts) => {
+const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientTypeCode === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
@@ -168,14 +168,14 @@ export const primaryContactFullName = (contacts) => {
  * @param {Date} dateOut The date in ISO format
  * @returns A number
  */
-export const getDaysOfGrazing = (dateIn, dateOut) => {
+const getDaysOfGrazing = (dateIn, dateOut) => {
   if ((dateIn instanceof Date) && (dateOut instanceof Date)) {
     return dateOut.getDate() - dateIn.getDate();
   }
   return NOT_PROVIDED;
 };
 
-export const getPastureNames = (pastureIds = [], pastures = {}) => {
+const getPastureNames = (pastureIds = [], pastures = {}) => {
   const pastureNames = pastureIds.map((pId) => {
     const pasture = pastures.find(p => p.id === pId);
     return pasture && pasture.name;
@@ -191,6 +191,10 @@ export const getPastureNames = (pastureIds = [], pastures = {}) => {
       return `${pastureNames.slice(0, length - 1).join(', ')}, and ${pastureNames[length - 1]}`;
   }
 };
+
+const getYesOrNo = boolean => (
+  boolean ? 'Yes' : 'No'
+);
 
 //
 // Document Rendering
@@ -215,6 +219,7 @@ export const compile = (source, context) => {
   handlebars.registerHelper('handleNullValue', handleNullValue);
   handlebars.registerHelper('getAgreementType', getAgreementType);
   handlebars.registerHelper('getPastureNames', getPastureNames);
+  handlebars.registerHelper('getYesOrNo', getYesOrNo);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
   return Promise.resolve(html);
