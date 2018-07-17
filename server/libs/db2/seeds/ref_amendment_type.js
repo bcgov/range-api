@@ -1,14 +1,9 @@
 'use strict';
 
-const table = 'ref_plan_type';
+const table = 'ref_amendment_type';
 
 exports.seed = async (knex) => {
   const ref = [
-    {
-      code: 'CL',
-      description: 'Clarification',
-      active: true,
-    },
     {
       code: 'MNA',
       description: 'Minor Amendment',

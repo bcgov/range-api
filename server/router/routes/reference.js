@@ -38,7 +38,7 @@ const {
   PlanStatus,
   MinisterIssueActionType,
   MinisterIssueType,
-  PlanType,
+  AmendmentType,
 } = dm;
 
 const router = new Router();
@@ -55,7 +55,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const livestockIdentifierType = await LivestockIdentifierType.find(db, where);
     const ministerIssueActionType = await MinisterIssueActionType.find(db, where);
     const ministerIssueType = await MinisterIssueType.find(db, where);
-    const planType = await PlanType.find(db, where);
+    const amendmentType = await AmendmentType.find(db, where);
 
     const errorMessage = 'Unable to fetch reference data';
 
@@ -68,7 +68,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
       LIVESTOCK_IDENTIFIER_TYPE: livestockIdentifierType || { error: errorMessage },
       MINISTER_ISSUE_ACTION_TYPE: ministerIssueActionType || { error: errorMessage },
       MINISTER_ISSUE_TYPE: ministerIssueType || { error: errorMessage },
-      PLAN_TYPE: planType || { error: errorMessage },
+      AMENDMENT_TYPE: amendmentType || { error: errorMessage },
     };
 
     res.status(200).json(response);

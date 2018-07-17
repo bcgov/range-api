@@ -1,4 +1,4 @@
-const table = 'ref_plan_type';
+const table = 'ref_amendment_type';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {

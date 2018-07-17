@@ -24,14 +24,14 @@
 
 import Model from './model';
 
-export default class PlanType extends Model {
+export default class AmendmentType extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description','active']
+    return ['id', 'code', 'description', 'active']
       .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
-    return 'ref_plan_type';
+    return 'ref_amendment_type';
   }
 }
