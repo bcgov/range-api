@@ -69,8 +69,7 @@
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js server",
-    "db:migrate": "sequelize --url $POSTGRES_URL db:migrate",
-    "db:seed": "sequelize --url $POSTGRES_URL db:seed:all"
+    "knex": "./node_modules/.bin/knex"
   },
   "repository": {
     "type": "git",

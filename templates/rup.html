@@ -31,6 +31,9 @@
     tr:nth-child(even) {
         background-color: #fafafa;
     }
+    h2 {
+      margin: 12px 0;
+    }
     .pasture,
     .schedule,
     .minister-issue {
@@ -58,6 +61,7 @@
       border-top: 1px solid #aaaaaa;
     }
     .divider {
+      margin-bottom: 10px;
       border-top: 2px solid #003366;
     }
     .sub-divider {
@@ -67,7 +71,6 @@
     .section-title {
       font-weight: bold;
       font-size: 1.2rem;
-      margin: 10px 0;
     }
     .textfield {
       page-break-inside: avoid;
@@ -88,8 +91,8 @@
     .minister-action {
       margin: 10px;
     }
-    .not-provided {
-      margin-top: 10px;
+    .text-right {
+      text-align: right;
     }
   }
 </style>
@@ -270,7 +273,7 @@
         <div class="cell-6">
           Issue Type: {{this.ministerIssueType.name}}
         </div>
-        <div class="cell-6">
+        <div class="cell-6 text-right">
           Identified: {{ this.identified }}
         </div>
       </div>
