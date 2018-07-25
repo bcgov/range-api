@@ -154,7 +154,7 @@ const contactFullName = (contact) => {
  * @param {[Contact]} contacts The `Agreement` contacts
  * @returns A string representing the full name of the promary contact
  */
-const primaryContactFullName = (contacts) => {
+export const primaryContactFullName = (contacts) => {
   const [pcontact] = contacts
     .filter(contact => contact.clientTypeCode === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
