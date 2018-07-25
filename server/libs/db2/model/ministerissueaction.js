@@ -19,6 +19,7 @@
 //
 
 /* eslint-env es6 */
+/* eslint-disable function-paren-newline */
 
 'use strict';
 

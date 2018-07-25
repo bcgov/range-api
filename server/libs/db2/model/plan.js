@@ -52,7 +52,7 @@ export default class Plan extends Model {
 
     // primary key *must* be first!
     return ['id', 'range_name', 'plan_start_date', 'plan_end_date', 'notes', 'alt_business_name',
-      'agreement_id', 'status_id', 'uploaded', 'created_at', 'updated_at'].map(f => `${Plan.table}.${f}`);
+      'agreement_id', 'status_id', 'uploaded', 'amendment_type_id', 'created_at', 'updated_at'].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
