@@ -99,7 +99,7 @@ export default class Client extends Model {
     const results = await db
       .select()
       .from(Client.table)
-      .whereRaw(`name ILIKE '%${term}%'`);
+      .where('name', 'ilike', `%${term}%`);
 
     const clients = results.map(row => new Client(row));
 
