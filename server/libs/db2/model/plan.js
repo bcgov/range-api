@@ -63,11 +63,18 @@ export default class Plan extends Model {
     const order = ['id', 'desc'];
     const page = 1;
     const limit = 1;
-    const plan = await this.findWithStatusExtension(db, where, order, page, limit);
+    const statuses = await PlanStatus.find(db, { code: 'WM' });
+    // filter amendments with the wrongly made status
+    const whereNot = ['status_id', 'not in', statuses.map(s => s.id)];
+
+    const plan = await this.findWithStatusExtension(db, where, order, page, limit, whereNot);
     return plan;
   }
 
-  static async findWithStatusExtension(db, where, order, page = undefined, limit = undefined) {
+  static async findWithStatusExtension(
+    db, where, order,
+    page = undefined, limit = undefined, whereNot = undefined,
+  ) {
     const myFields = [
       ...Plan.fields,
       ...PlanStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -84,6 +91,10 @@ export default class Plan extends Model {
         .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
         .where({ ...where, uploaded: true })
         .orderBy(...order);
+
+      if (whereNot) {
+        results = q.andWhere(...whereNot);
+      }
 
       if (page && limit) {
         const offset = limit * (page - 1);
