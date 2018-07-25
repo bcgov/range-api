@@ -158,14 +158,20 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         nonDuplicateIDs.push(id);
         return id;
       });
+
       const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
       totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
+      const latestPlan = true;
+      const sendFullPlan = false;
       const promises = okIDs
         .slice(offset, offset + limit)
         .map(agreementId =>
-          Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
+          Agreement.findWithAllRelations(
+            db, { forest_file_id: agreementId }, undefined, undefined, latestPlan, sendFullPlan,
+          ));
+
       agreements = flatten(await Promise.all(promises));
     } else {
       const count = await agreementCountForUser(req.user);
