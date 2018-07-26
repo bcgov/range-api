@@ -59,13 +59,13 @@ export default class Plan extends Model {
     return 'plan';
   }
 
-  static async findLatestWithStatusExtension(db, where) {
+  static async findLatestWithStatusExtension(db, where, staffDraft) {
     const order = ['id', 'desc'];
     const page = 1;
     const limit = 1;
-    const statuses = await PlanStatus.find(db, { code: 'WM' });
+    const notAllowedStatuses = await PlanStatus.find(db, staffDraft ? { code: 'WM' } : { code: ['WM', 'SD'] });
     // filter amendments with the wrongly made status
-    const whereNot = ['status_id', 'not in', statuses.map(s => s.id)];
+    const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
 
     const plan = await this.findWithStatusExtension(db, where, order, page, limit, whereNot);
     return plan;

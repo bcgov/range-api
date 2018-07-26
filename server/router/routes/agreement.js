@@ -93,8 +93,9 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
     const ids = zones.map(zone => zone.id);
     const latestPlan = true;
     const sendFullPlan = true;
+    const staffDraft = true;
     results = await Agreement.findWithAllRelations(
-      db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan,
+      db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
     );
   } else if (user.isAdministrator()) {
     const latestPlan = true;
