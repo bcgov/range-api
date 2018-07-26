@@ -83,6 +83,7 @@ export default class Agreement extends Model {
       limit = undefined,
       latestPlan = false,
       sendFullPlan = false,
+      staffDraft = false,
     ] = args;
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit);
@@ -93,7 +94,7 @@ export default class Agreement extends Model {
     promises = myAgreements.map(async agreement =>
       [await agreement.fetchClients(),
         await agreement.fetchUsage(),
-        await agreement.fetchPlans(latestPlan),
+        await agreement.fetchPlans(latestPlan, staffDraft),
         await agreement.fetchLivestockIdentifiers(),
       ]);
 
@@ -238,11 +239,11 @@ export default class Agreement extends Model {
     this.clients = clients;
   }
 
-  async fetchPlans(latestPlan = false) {
+  async fetchPlans(latestPlan = false, staffDraft = false) {
     const order = ['id', 'desc'];
     const where = { agreement_id: this.forestFileId };
     const plans = latestPlan
-      ? await Plan.findLatestWithStatusExtension(this.db, where)
+      ? await Plan.findLatestWithStatusExtension(this.db, where, staffDraft)
       : await Plan.findWithStatusExtension(this.db, where, order);
     this.plans = plans;
   }
