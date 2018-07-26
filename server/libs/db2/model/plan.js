@@ -27,6 +27,7 @@ import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
+import { PLAN_STATUS } from '../../../constants';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -63,7 +64,11 @@ export default class Plan extends Model {
     const order = ['id', 'desc'];
     const page = 1;
     const limit = 1;
-    const notAllowedStatuses = await PlanStatus.find(db, staffDraft ? { code: 'WM' } : { code: ['WM', 'SD'] });
+    const planStatusWhere = staffDraft
+      ? { code: PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT }
+      : { code: [PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT, PLAN_STATUS.STAFF_DRAFT] };
+    const notAllowedStatuses = await PlanStatus.find(db, planStatusWhere);
+
     // filter amendments with the wrongly made status
     const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
 

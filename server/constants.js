@@ -47,4 +47,19 @@ export const SSO_ROLE_MAP = {
   AGREEMENT_HOLDER: 'myra_client',
 };
 
+export const PLAN_STATUS = {
+  PENDING: 'P',
+  COMPLETED: 'O',
+  DRAFT: 'D',
+  CREATED: 'C',
+  CHANGE_REQUESTED: 'R',
+  STAFF_DRAFT: 'SD',
+  WRONGLY_MADE_WITHOUT_EFFECT: 'WM',
+  STANDS_WRONGLY_MADE: 'SW',
+  STANDS: 'S',
+  NOT_APPROVED_FURTHER_WORK_REQUIRED: 'NF',
+  NOT_APPROVED: 'NA',
+  APPROVED: 'A',
+};
+
 export const NOT_PROVIDED = 'Not provided';
