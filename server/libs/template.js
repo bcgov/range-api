@@ -175,23 +175,6 @@ const getDaysOfGrazing = (dateIn, dateOut) => {
   return NOT_PROVIDED;
 };
 
-const getPastureNames = (pastureIds = [], pastures = {}) => {
-  const pastureNames = pastureIds.map((pId) => {
-    const pasture = pastures.find(p => p.id === pId);
-    return pasture && pasture.name;
-  });
-  const { length } = pastureNames;
-  switch (length) {
-    case 0:
-      return NOT_PROVIDED;
-    case 1:
-    case 2:
-      return pastureNames.join(' and ');
-    default:
-      return `${pastureNames.slice(0, length - 1).join(', ')}, and ${pastureNames[length - 1]}`;
-  }
-};
-
 const getYesOrNo = boolean => (
   boolean ? 'Yes' : 'No'
 );
@@ -218,7 +201,6 @@ export const compile = (source, context) => {
   handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
   handlebars.registerHelper('handleNullValue', handleNullValue);
   handlebars.registerHelper('getAgreementType', getAgreementType);
-  handlebars.registerHelper('getPastureNames', getPastureNames);
   handlebars.registerHelper('getYesOrNo', getYesOrNo);
 
   const html = handlebars.compile(source.toString('utf-8'))(context);
