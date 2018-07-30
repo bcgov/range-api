@@ -27,9 +27,9 @@ import { Router } from 'express';
 import fs from 'fs';
 import moment from 'moment';
 import config from '../../config';
-import { TEMPLATES } from '../../constants';
+import { TEMPLATES, NOT_PROVIDED } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, getPastureNames, loadTemplate, renderToPDF } from '../../libs/template';
+import { compile, loadTemplate, renderToPDF } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -135,6 +135,23 @@ const calcCrownTotalAUMs = (entries = []) => {
   return entries
     .map(entry => entry.crownAUMs)
     .reduce(reducer);
+};
+
+const getPastureNames = (pastureIds = [], pastures = {}) => {
+  const pastureNames = pastureIds.map((pId) => {
+    const pasture = pastures.find(p => p.id === pId);
+    return pasture && pasture.name;
+  });
+  const { length } = pastureNames;
+  switch (length) {
+    case 0:
+      return NOT_PROVIDED;
+    case 1:
+    case 2:
+      return pastureNames.join(' and ');
+    default:
+      return `${pastureNames.slice(0, length - 1).join(', ')}, and ${pastureNames[length - 1]}`;
+  }
 };
 
 //
