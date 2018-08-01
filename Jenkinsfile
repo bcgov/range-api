@@ -181,7 +181,7 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
       echo "Build: ${BUILD_ID}"
 
       // run the oc build to package the artifacts into a docker image
-      openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'true'
+      openshiftBuild bldCfg: APP_NAME, showBuildLogs: 'true', verbose: 'false'
 
       // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
       // Tag the images for deployment based on the image's hash
