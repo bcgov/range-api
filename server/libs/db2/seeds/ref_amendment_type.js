@@ -10,8 +10,13 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
-      code: 'MJA',
-      description: 'Major Amendment',
+      code: 'MA',
+      description: 'Mandatory Amendment',
+      active: true,
+    },
+    {
+      code: 'A',
+      description: 'Amendment',
       active: true,
     },
   ];
