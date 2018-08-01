@@ -199,8 +199,12 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
       // For this to work the Jenkins service mush have edit permissions within the deployment project.
       // Example OC cmd to accomplish this task (it's better if you have project init scripts that do this);
       // oc policy add-role-to-user edit system:serviceaccount:range-myra-tools:jenkins -n range-myra-dev
-      openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
-      openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+      try {
+        openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+        openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
+      } catch (error) {
+        echo "Unable to scale schema spy"
+      }
       
       try {
         def attachment = [:]
