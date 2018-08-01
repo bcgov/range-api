@@ -192,14 +192,16 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
 
       openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[0], srcStream: IMAGESTREAM_NAME, srcTag: "${IMAGE_HASH}"
     
-      // Sale Schema Spy down and up will cause it to rebuild the schema documentation. This isn't the most
-      // efficiant way to do this but at least its automated.
-      echo "Scaling Schema Spy to trigger refresh"
-
-      // For this to work the Jenkins service mush have edit permissions within the deployment project.
-      // Example OC cmd to accomplish this task (it's better if you have project init scripts that do this);
-      // oc policy add-role-to-user edit system:serviceaccount:range-myra-tools:jenkins -n range-myra-dev
       try {
+        // Sale Schema Spy down and up will cause it to rebuild the schema documentation. This isn't the most
+        // efficiant way to do this but at least its automated.
+
+        // For this to work the Jenkins service mush have edit permissions within the deployment project.
+        // Example OC cmd to accomplish this task (it's better if you have project init scripts that do this);
+        // oc policy add-role-to-user edit system:serviceaccount:range-myra-tools:jenkins -n range-myra-dev
+        
+        echo "Scaling Schema Spy to trigger refresh"
+
         openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 0, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
         openshiftScale deploymentConfig: SCHEMA_SPY_IMAGSTREAM_NAME, replicaCount: 1, namespace: PROJECT_NAMESPACE_BASE + TAG_NAMES[0]
       } catch (error) {
