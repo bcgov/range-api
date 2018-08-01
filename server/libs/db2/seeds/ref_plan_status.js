@@ -58,12 +58,12 @@ exports.seed = async (knex) => {
     },
     {
       code: 'WM',
-      name: 'Wrongly Made Without Effect',
+      name: 'Wrongly Made - Without Effect',
       active: true,
     },
     {
       code: 'SW',
-      name: 'Stands Wrongly Made',
+      name: 'Stands - Wrongly Made',
       active: true,
     },
     {
@@ -73,7 +73,7 @@ exports.seed = async (knex) => {
     },
     {
       code: 'NF',
-      name: 'Not Approved Further Work Required',
+      name: 'Not Approved - Further Work Required',
       active: true,
     },
     {
