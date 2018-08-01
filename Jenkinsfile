@@ -221,15 +221,16 @@ podTemplate(label: 'range-api-node8-build', name: 'range-api-node8-build', servi
       }
     }
   }
-  stage('Approval') {
-    timeout(time: 1, unit: 'DAYS') {
-      input message: "Deploy to test?", submitter: 'authenticated'
-    }
-    node ('master') {
+
+  node ('master') {
+    stage('Approval') {
+      timeout(time: 4, unit: 'HOURS') {
+        input message: "Deploy to test?", submitter: 'authenticated'
+      }
       stage('Promotion') {
         openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[1], srcStream: IMAGESTREAM_NAME, srcTag: "${IMAGE_HASH}"
         notifySlack("Promotion Completed\n Build #${BUILD_ID} was promoted to test.", "#range-api", "https://hooks.slack.com/services/${SLACK_TOKEN}", [], OPENSHIFT_ICO)
       }
-    }  
+    }
   }
 }
