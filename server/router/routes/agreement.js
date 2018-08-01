@@ -19,6 +19,7 @@
 //
 
 /* eslint-env es6 */
+/* eslint-disable function-paren-newline */
 
 'use strict';
 
@@ -82,14 +83,26 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
 
   if (user.isAgreementHolder()) {
     const ids = await Agreement.agreementsForClientId(db, user.clientId);
-    results = await Agreement.findWithAllRelations(db, { forest_file_id: ids }, page, limit);
+    const latestPlan = true;
+    const sendFullPlan = false;
+    results = await Agreement.findWithAllRelations(
+      db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan,
+    );
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
     const ids = zones.map(zone => zone.id);
-    // send the latest plan which carrys the whole information for each agreement to the staff
-    results = await Agreement.findWithAllRelations(db, { zone_id: ids }, page, limit, true, true);
+    const latestPlan = true;
+    const sendFullPlan = true;
+    const staffDraft = true;
+    results = await Agreement.findWithAllRelations(
+      db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
+    );
   } else if (user.isAdministrator()) {
-    results = await Agreement.findWithAllRelations(db, { }, page, limit);
+    const latestPlan = true;
+    const sendFullPlan = false;
+    results = await Agreement.findWithAllRelations(
+      db, { }, page, limit, latestPlan, sendFullPlan,
+    );
   } else {
     throw errorWithCode('Unable to determine user roll', 500);
   }
@@ -146,14 +159,20 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         nonDuplicateIDs.push(id);
         return id;
       });
+
       const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
       totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
+      const latestPlan = true;
+      const sendFullPlan = false;
       const promises = okIDs
         .slice(offset, offset + limit)
         .map(agreementId =>
-          Agreement.findWithAllRelations(db, { forest_file_id: agreementId }));
+          Agreement.findWithAllRelations(
+            db, { forest_file_id: agreementId }, undefined, undefined, latestPlan, sendFullPlan,
+          ));
+
       agreements = flatten(await Promise.all(promises));
     } else {
       const count = await agreementCountForUser(req.user);

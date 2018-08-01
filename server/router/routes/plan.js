@@ -60,6 +60,12 @@ const userCanAccessAgreement = async (user, agreementId) => {
   return true;
 };
 
+const verifyAgreementOwnership = async (user, agreementId) => {
+  if (!userCanAccessAgreement(user, agreementId)) {
+    throw errorWithCode('You do not access to this agreement', 403);
+  }
+};
+
 // Get a specific plan.
 router.get('/:planId', asyncMiddleware(async (req, res) => {
   const {
@@ -68,9 +74,7 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     const results = await Agreement.findWithAllRelations(db, { forest_file_id: agreementId });
     const myAgreement = results.pop();
@@ -103,9 +107,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   } = body;
 
   try {
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     const agreement = await Agreement.findById(db, agreementId);
     if (!agreement) {
@@ -153,9 +155,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
@@ -188,9 +188,7 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // make sure the status exists.
     // TODO:(jl) Should we make sure the statis is active?
@@ -228,9 +226,7 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated.
@@ -265,9 +261,7 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -299,7 +293,7 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
   } = body;
 
   if (!planId) {
-    throw errorWithCode('planId is required in path', 400);
+    throw errorWithCode('The planId is required in path', 400);
   }
 
   if (!grazingScheduleEntries) {
@@ -314,9 +308,7 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -372,9 +364,7 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -445,9 +435,7 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
-      throw errorWithCode('You do not access to this agreement', 403);
-    }
+    verifyAgreementOwnership(req.user, agreementId);
 
     // WARNING: This will do a cascading delete on any grazing schedule
     // entries. It will not modify other relations.
@@ -461,6 +449,40 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
     const message = `Unable to delete schedule ${scheduleId}`;
     logger.error(`${message}, error = ${error.message}`);
 
+    throw error;
+  }
+}));
+
+// Add a grazing schedule entry to an existing grazing schedule
+router.post('/:planId?/schedule/:scheduleId?/entry', asyncMiddleware(async (req, res) => {
+  const { body, params: { planId, scheduleId } } = req;
+  const { livestockTypeId } = body;
+
+  try {
+    if (!planId) {
+      throw errorWithCode('The planId is required in path', 400);
+    }
+    if (!scheduleId) {
+      throw errorWithCode('The scheduleId is required in path', 400);
+    }
+    if (!livestockTypeId) {
+      throw errorWithCode('The grazing schedule entry must have livestockType');
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
+    // Use the planId from the URL so that we know exactly what plan
+    // is being updated and to ensure its not reassigned.
+    delete body.planId;
+    delete body.plan_id;
+
+    const entry = await GrazingScheduleEntry.create(db, {
+      ...body,
+      ...{ grazing_schedule_id: scheduleId },
+    });
+
+    return res.status(200).json(entry).end();
+  } catch (error) {
     throw error;
   }
 }));
@@ -489,10 +511,7 @@ router.delete(
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
-      if (!userCanAccessAgreement(req.user, agreementId)) {
-        throw errorWithCode('You do not access to this agreement', 403);
-      }
-
+      verifyAgreementOwnership(req.user, agreementId);
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
       const result = await GrazingScheduleEntry.removeById(db, grazingScheduleEntryId);
@@ -553,13 +572,6 @@ const sanitizeDataForMinisterIssue = (body) => {
   return body;
 };
 
-const verifyPlanOwnership = async (user, planId) => {
-  const agreementId = await Plan.agreementForPlanId(db, planId);
-  if (!userCanAccessAgreement(user, agreementId)) {
-    throw errorWithCode('You do not access to this agreement', 403);
-  }
-};
-
 // Add a Minister Issue to an existing Plan
 router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
   const {
@@ -573,7 +585,8 @@ router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
   } = body;
 
   try {
-    verifyPlanOwnership(req.user, planId);
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
     validateMinisterIssueOpperation(planId, body);
     const data = sanitizeDataForMinisterIssue(body);
 
@@ -603,7 +616,8 @@ router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
   } = body;
 
   try {
-    verifyPlanOwnership(req.user, planId);
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
 
     if (!issueId) {
       throw errorWithCode('The issueId is required in path', 400);
@@ -648,8 +662,8 @@ router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
     if (!issueId) {
       throw errorWithCode('The issueId is required in path', 400);
     }
-
-    verifyPlanOwnership(req.user, planId);
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
 
     await MinisterIssue.removeById(db, issueId);
 
@@ -678,8 +692,9 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
     if (!actionTypeId) {
       throw errorWithCode('The actionTypeId is required in path', 400);
     }
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
 
-    verifyPlanOwnership(req.user, planId);
     const action = await MinisterIssueAction.create(
       db,
       {
@@ -712,8 +727,9 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
     if (!actionTypeId) {
       throw errorWithCode('The actionTypeId is required in path', 400);
     }
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
 
-    verifyPlanOwnership(req.user, planId);
     const updatedAction = await MinisterIssueAction.update(
       db,
       { id: actionId },
@@ -743,8 +759,9 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
     if (!actionId) {
       throw errorWithCode('The actionId is required in path', 400);
     }
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
 
-    verifyPlanOwnership(req.user, planId);
     await MinisterIssueAction.removeById(db, actionId);
 
     return res.status(204).json().end();

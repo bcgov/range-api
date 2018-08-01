@@ -81,7 +81,11 @@ router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
       throw errorWithCode('Client does not exist', 400);
     }
 
-    const result = await User.update(db, { id: userId }, { client_id: clientId });
+    const result = await User.update(db, { id: userId }, {
+      client_id: clientId,
+      active: true,
+    });
+
     res.status(200).json(result).end();
   } catch (error) {
     throw error;

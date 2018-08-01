@@ -31,10 +31,14 @@
     tr:nth-child(even) {
         background-color: #fafafa;
     }
+    h2 {
+      margin: 15px 0 5px 0;
+    }
     .pasture,
     .schedule,
     .minister-issue {
       page-break-inside: avoid;
+      margin-bottom: 10px;
     }
     .header__logo {
       height: 100px;
@@ -58,6 +62,7 @@
       border-top: 1px solid #aaaaaa;
     }
     .divider {
+      margin-bottom: 10px;
       border-top: 2px solid #003366;
     }
     .sub-divider {
@@ -67,7 +72,7 @@
     .section-title {
       font-weight: bold;
       font-size: 1.2rem;
-      margin: 10px 0;
+      margin-bottom: 5px;
     }
     .textfield {
       page-break-inside: avoid;
@@ -86,7 +91,10 @@
       display: inline-block;
     }
     .minister-action {
-      margin: 10px;
+      margin: 0 10px 10px 10px;
+    }
+    .text-right {
+      text-align: right;
     }
   }
 </style>
@@ -212,6 +220,8 @@
         <div class="textfield__content">{{this.graceDays}}</div>
       </div>  
     </div>
+  {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
   
   <h2>Schedule</h2>
@@ -243,9 +253,13 @@
             <td>{{this.pldAUMs}}</td>
             <td>{{this.crownAUMs}}</td>
           </tr>
+        {{else}}
+          <div class="not-provided">Not provided</div>
         {{/each}}
       </table>
     </div>
+  {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
 
   <h2>Minister&apos;s Issues and Actions</h2>
@@ -261,8 +275,8 @@
         <div class="cell-6">
           Issue Type: {{this.ministerIssueType.name}}
         </div>
-        <div class="cell-6">
-          Identified: {{ this.identified }}
+        <div class="cell-6 text-right">
+          Identified: {{getYesOrNo this.identified }}
         </div>
       </div>
       <div class="textfield">
@@ -283,8 +297,12 @@
           <b>{{this.ministerIssueActionType.name}}</b>
           <div>{{this.detail}}</div>
         </div>
+      {{else}}
+        <div class="not-provided">Not provided</div>
       {{/each}}  
     </div>
+    {{else}}
+    <div class="not-provided">Not provided</div>
   {{/each}}
 
 </body>

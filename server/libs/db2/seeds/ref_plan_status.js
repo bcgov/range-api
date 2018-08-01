@@ -57,6 +57,31 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      code: 'WM',
+      name: 'Wrongly Made - Without Effect',
+      active: true,
+    },
+    {
+      code: 'SW',
+      name: 'Stands - Wrongly Made',
+      active: true,
+    },
+    {
+      code: 'S',
+      name: 'Stands',
+      active: true,
+    },
+    {
+      code: 'NF',
+      name: 'Not Approved - Further Work Required',
+      active: true,
+    },
+    {
+      code: 'NA',
+      name: 'Not Approved',
+      active: true,
+    },
+    {
       code: 'A',
       name: 'Approved',
       active: true,
