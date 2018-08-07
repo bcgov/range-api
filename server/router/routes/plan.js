@@ -160,7 +160,8 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
 
-    const plan = await Plan.update(db, { id: planId }, body);
+    await Plan.update(db, { id: planId }, body);
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
 
     return res.status(200).json(plan).end();
