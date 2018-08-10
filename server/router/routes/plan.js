@@ -28,6 +28,7 @@ import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { isNumeric } from '../../libs/utils';
+import { PLAN_STATUS } from '../../constants';
 
 const router = new Router();
 
@@ -192,17 +193,24 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     verifyAgreementOwnership(req.user, agreementId);
 
     // make sure the status exists.
-    // TODO:(jl) Should we make sure the statis is active?
-    const results = await PlanStatus.find(db, { id: statusId });
-    if (results.length === 0) {
+    const planStatuses = await PlanStatus.find(db, { active: true });
+    const status = planStatuses.find(s => s.id === statusId);
+    if (!status) {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
+    const body = { status_id: statusId };
+    const effectiveStatusCodes = [PLAN_STATUS.APPROVED, PLAN_STATUS.STANDS];
+    if (planStatuses.find(s => effectiveStatusCodes.findIndex(c => c === s.code))) {
+      body.effective_at = new Date();
+    }
+    const submittedStatusCodes = [];
+    if (planStatuses.find(s => submittedStatusCodes.findIndex(c => c === s.code))) {
+      body.submitted_at = new Date();
+    }
 
-    const planStatus = results.pop();
+    await Plan.update(db, { id: planId }, body);
 
-    await Plan.update(db, { id: planId }, { status_id: statusId });
-
-    return res.status(200).json(planStatus).end();
+    return res.status(200).json(status).end();
   } catch (err) {
     throw err;
   }
