@@ -20,6 +20,8 @@
 
 'use strict';
 
+/* eslint-disable max-len */
+
 import { flatten } from 'lodash';
 import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
@@ -31,6 +33,8 @@ import Plan from './plan';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
+import { PLAN_STATUS } from '../../../constants';
+import PlanStatus from './planstatus';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -242,9 +246,31 @@ export default class Agreement extends Model {
   async fetchPlans(latestPlan = false, staffDraft = false) {
     const order = ['id', 'desc'];
     const where = { agreement_id: this.forestFileId };
-    const plans = latestPlan
-      ? await Plan.findLatestWithStatusExtension(this.db, where, staffDraft)
-      : await Plan.findWithStatusExtension(this.db, where, order);
+    let plans = [];
+
+    // if latestPlan && staffDraft returns the most recent plan except the one whose status is staff draft
+    // if latestPlan && !staffDraft returns the most recent plan
+    if (latestPlan) {
+      const planStatusWhere = staffDraft
+        ? { code: PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT }
+        : { code: [PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT, PLAN_STATUS.STAFF_DRAFT] };
+      const notAllowedStatuses = await PlanStatus.find(this.db, planStatusWhere);
+      const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
+      plans = await Plan.findWithStatusExtension(this.db, where, order, 1, 1, whereNot);
+    }
+
+    // if !latestPlan && staffDraft returns all the plans
+    // if !latestPlan && !staffDraft returns all the plans without the ones whose status are staff draft
+    if (!latestPlan) {
+      if (staffDraft) {
+        plans = await Plan.findWithStatusExtension(this.db, where, order);
+      } else {
+        const notAllowedStatuses = await PlanStatus.find(this.db, { code: PLAN_STATUS.STAFF_DRAFT });
+        const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
+        plans = await Plan.findWithStatusExtension(this.db, where, order, undefined, undefined, whereNot);
+      }
+    }
+
     this.plans = plans;
   }
 

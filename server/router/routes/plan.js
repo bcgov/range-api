@@ -192,19 +192,21 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     const agreementId = await Plan.agreementForPlanId(db, planId);
     verifyAgreementOwnership(req.user, agreementId);
 
-    // make sure the status exists.
     const planStatuses = await PlanStatus.find(db, { active: true });
+
+    // make sure the status exists.
     const status = planStatuses.find(s => s.id === statusId);
     if (!status) {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
     const body = { status_id: statusId };
     const effectiveStatusCodes = [PLAN_STATUS.APPROVED, PLAN_STATUS.STANDS];
-    if (planStatuses.find(s => effectiveStatusCodes.findIndex(c => c === s.code))) {
+
+    if (effectiveStatusCodes.find(code => code === status.code)) {
       body.effective_at = new Date();
     }
-    const submittedStatusCodes = [];
-    if (planStatuses.find(s => submittedStatusCodes.findIndex(c => c === s.code))) {
+    const submittedStatusCodes = [PLAN_STATUS.STANDS];
+    if (submittedStatusCodes.find(code => code === status.code)) {
       body.submitted_at = new Date();
     }
 
