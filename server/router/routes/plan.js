@@ -199,14 +199,12 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     if (!status) {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
-    const body = { status_id: statusId };
-    const effectiveStatusCodes = [PLAN_STATUS.APPROVED, PLAN_STATUS.STANDS];
 
-    if (effectiveStatusCodes.find(code => code === status.code)) {
+    const body = { status_id: statusId };
+    if (status.code === PLAN_STATUS.APPROVED) {
       body.effective_at = new Date();
-    }
-    const submittedStatusCodes = [PLAN_STATUS.STANDS];
-    if (submittedStatusCodes.find(code => code === status.code)) {
+    } else if (status.code === PLAN_STATUS.STANDS) {
+      body.effective_at = new Date();
       body.submitted_at = new Date();
     }
 
