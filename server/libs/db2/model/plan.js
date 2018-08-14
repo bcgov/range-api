@@ -27,7 +27,6 @@ import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
-import { PLAN_STATUS } from '../../../constants';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
