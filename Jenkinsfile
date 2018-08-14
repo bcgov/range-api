@@ -30,12 +30,12 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-node:8',
     resourceRequestCpu: '1500m',
     resourceLimitCpu: '2000m',
-    resourceRequestMemory: '2Gi',
-    resourceLimitMemory: '4Gi',
+    resourceRequestMemory: '1Gi',
+    resourceLimitMemory: '2Gi',
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: false
+    alwaysPullImage: true
     // envVars: [
     //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
     //   ]
