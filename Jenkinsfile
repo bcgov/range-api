@@ -35,7 +35,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: true
+    alwaysPullImage: false
     // envVars: [
     //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
     //   ]
@@ -91,7 +91,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "The code does not build.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
           sh "exit 1001"
         }
 
@@ -117,7 +117,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "The SonarQube code quality check failed.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         }
 
         //
@@ -135,7 +135,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "There LINTer code quality check failed.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         }
 
         //
@@ -153,7 +153,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.color = '#FFA500' // Orange
           attachment.text = "There are security warnings related to some packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
         }
 
         //
@@ -171,7 +171,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "There are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
           sh "exit 1001"
         }
       }
@@ -215,7 +215,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
         attachment.text = "Another huge sucess for the Range Team.\nA freshly minted build is being deployed and will be available shortly.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
         attachment.color = '#00FF00' // Lime Green
 
-        notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+        notifySlack("${APP_NAME}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
       } catch (error) {
         echo "Unable send update to slack, error = ${error}"
       }
