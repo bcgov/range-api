@@ -27,7 +27,6 @@ import Pasture from './pasture';
 import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
-import { PLAN_STATUS } from '../../../constants';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -52,28 +51,16 @@ export default class Plan extends Model {
     // fields.
 
     // primary key *must* be first!
-    return ['id', 'range_name', 'plan_start_date', 'plan_end_date', 'notes', 'alt_business_name',
-      'agreement_id', 'status_id', 'uploaded', 'amendment_type_id', 'created_at', 'updated_at'].map(f => `${Plan.table}.${f}`);
+    return [
+      'id', 'range_name', 'plan_start_date', 'plan_end_date',
+      'notes', 'alt_business_name', 'agreement_id', 'status_id',
+      'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
+      'effective_at', 'submitted_at',
+    ].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
     return 'plan';
-  }
-
-  static async findLatestWithStatusExtension(db, where, staffDraft) {
-    const order = ['id', 'desc'];
-    const page = 1;
-    const limit = 1;
-    const planStatusWhere = staffDraft
-      ? { code: PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT }
-      : { code: [PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT, PLAN_STATUS.STAFF_DRAFT] };
-    const notAllowedStatuses = await PlanStatus.find(db, planStatusWhere);
-
-    // filter amendments with the wrongly made status
-    const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
-
-    const plan = await this.findWithStatusExtension(db, where, order, page, limit, whereNot);
-    return plan;
   }
 
   static async findWithStatusExtension(
