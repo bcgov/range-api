@@ -41,14 +41,10 @@ gulp.task('copy-config', () => gulp.src('server/config/*.json')
 gulp.task('copy-node-config', () => gulp.src(['package.json', 'package-lock.json'])
   .pipe(gulp.dest('build')));
 
-gulp.task('copy-tools', () => gulp.src(
-  ['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false },
-).pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
+gulp.task('copy-tools', () => gulp.src(['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false })
+  .pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
 
 gulp.task('copy-templates', () => gulp.src(['templates/*'], { dot: false })
   .pipe(gulp.dest('build/templates')));
 
-gulp.task('default', gulp.series('clean', gulp.parallel(
-  'transpile', 'copy-config', 'copy-node-config',
-  'copy-tools', 'copy-templates',
-)));
+gulp.task('default', gulp.series('clean', gulp.parallel('transpile', 'copy-config', 'copy-node-config', 'copy-tools', 'copy-templates')));
