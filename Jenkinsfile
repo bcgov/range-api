@@ -35,9 +35,11 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: false
+    alwaysPullImage: true
     // envVars: [
-    //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
+    //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
     //   ]
   )
 ]) {
