@@ -36,7 +36,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
     workingDir: '/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: true
+    alwaysPullImage: false
     // envVars: [
     //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
     //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
