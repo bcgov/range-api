@@ -9,7 +9,7 @@ def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo
 def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
 def SCHEMA_SPY_IMAGSTREAM_NAME = 'schema-spy'
 def PROJECT_NAMESPACE_BASE = 'range-myra-'
-def POD_LABEL = "mypod-${UUID.randomUUID().toString()}"
+def POD_LABEL = "${APP_NAME}-${UUID.randomUUID().toString()}"
 
 //  jenkins-slave-python3nod
 def notifySlack(text, channel, url, attachments, icon) {
@@ -25,7 +25,7 @@ def notifySlack(text, channel, url, attachments, icon) {
 }
 
 // See https://github.com/jenkinsci/kubernetes-plugin
-podTemplate(label: "${APP_NAME}-${POD_LABEL}", name: "${APP_NAME}-${POD_LABEL}", serviceAccount: 'jenkins', cloud: 'openshift', containers: [
+podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkins', cloud: 'openshift', containers: [
   containerTemplate(
     name: 'jnlp',
     image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-nodejs:8',
@@ -44,7 +44,7 @@ podTemplate(label: "${APP_NAME}-${POD_LABEL}", name: "${APP_NAME}-${POD_LABEL}",
     //   ]
   )
 ]) {
-  node("${APP_NAME}-${POD_LABEL}") {
+  node("${POD_LABEL}") {
     stage('Checkout') {
       echo "Checking out source"
       checkout scm
