@@ -9,6 +9,7 @@ def JENKINS_ICO = 'https://wiki.jenkins-ci.org/download/attachments/2916393/logo
 def OPENSHIFT_ICO = 'https://commons.wikimedia.org/wiki/File:OpenShift-LogoType.svg'
 def SCHEMA_SPY_IMAGSTREAM_NAME = 'schema-spy'
 def PROJECT_NAMESPACE_BASE = 'range-myra-'
+def POD_LABEL = "${APP_NAME}-${UUID.randomUUID().toString()}"
 
 //  jenkins-slave-python3nod
 def notifySlack(text, channel, url, attachments, icon) {
@@ -24,10 +25,10 @@ def notifySlack(text, channel, url, attachments, icon) {
 }
 
 // See https://github.com/jenkinsci/kubernetes-plugin
-podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', serviceAccount: 'jenkins', cloud: 'openshift', containers: [
+podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkins', cloud: 'openshift', containers: [
   containerTemplate(
     name: 'jnlp',
-    image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-node:8',
+    image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-nodejs:8',
     resourceRequestCpu: '1500m',
     resourceLimitCpu: '2000m',
     resourceRequestMemory: '1Gi',
@@ -37,11 +38,13 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
     args: '${computer.jnlpmac} ${computer.name}',
     alwaysPullImage: false
     // envVars: [
-    //     secretEnvVar(key: 'SLACK_TOKEN', secretName: 'slack', secretKey: 'token')
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
+    //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
+    //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
     //   ]
   )
 ]) {
-  node('range-api-node-build') {
+  node("${POD_LABEL}") {
     stage('Checkout') {
       echo "Checking out source"
       checkout scm
@@ -91,7 +94,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "The code does not build.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
           sh "exit 1001"
         }
 
@@ -117,7 +120,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "The SonarQube code quality check failed.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         }
 
         //
@@ -135,7 +138,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "There LINTer code quality check failed.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         }
 
         //
@@ -153,7 +156,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.color = '#FFA500' // Orange
           attachment.text = "There are security warnings related to some packages.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], PIRATE_ICO)
         }
 
         //
@@ -171,7 +174,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
           attachment.text = "There are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
           // attachment.title_link = "${env.BUILD_URL}"
 
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
           sh "exit 1001"
         }
       }
@@ -215,7 +218,7 @@ podTemplate(label: 'range-api-node-build', name: 'range-api-node-build', service
         attachment.text = "Another huge sucess for the Range Team.\nA freshly minted build is being deployed and will be available shortly.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
         attachment.color = '#00FF00' // Lime Green
 
-        notifySlack("${APP_NAME}", "#rangedevteamx", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+        notifySlack("${APP_NAME}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
       } catch (error) {
         echo "Unable send update to slack, error = ${error}"
       }
