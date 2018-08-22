@@ -27,7 +27,7 @@ import { Router } from 'express';
 import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import { isNumeric } from '../../libs/utils';
+import { isNumeric, checkRequiredFields } from '../../libs/utils';
 import { PLAN_STATUS } from '../../constants';
 
 const router = new Router();
@@ -44,6 +44,7 @@ const {
   MinisterIssue,
   MinisterIssuePasture,
   MinisterIssueAction,
+  PlanStatusHistory,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -213,6 +214,32 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
     await Plan.update(db, { id: planId }, body);
 
     return res.status(200).json(status).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// create a plan status history
+router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
+  const { body, params } = req;
+  const { planId } = params;
+
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+  const missingFields = checkRequiredFields(
+    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], body,
+  );
+  if (missingFields) {
+    throw errorWithCode(`There are missing fields in the body. (${missingFields})`);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
+
+    const planStatusHistory = await PlanStatusHistory.create(db, { ...body, planId });
+    return res.status(200).json(planStatusHistory).end();
   } catch (err) {
     throw err;
   }
