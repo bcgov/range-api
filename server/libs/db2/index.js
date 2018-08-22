@@ -38,6 +38,7 @@ import MinisterIssueActionType from './model/ministerissueactiontype';
 import MinisterIssueType from './model/ministerissuetype';
 import MinisterIssuePasture from './model/ministerissuepasture';
 import AmendmentType from './model/amendmenttype';
+import PlanStatusHistory from './model/planstatushistory';
 
 export default class DataManager {
   constructor(config) {
@@ -88,5 +89,6 @@ export default class DataManager {
     this.Usage = Usage;
     this.Zone = Zone;
     this.AmendmentType = AmendmentType;
+    this.PlanStatusHistory = PlanStatusHistory;
   }
 }
