@@ -143,7 +143,7 @@ export default class Plan extends Model {
     await this.fetchPastures();
     await this.fetchGrazingSchedules();
     await this.fetchMinisterIssues();
-    await this.fetchPlanStatusHistories();
+    await this.fetchPlanStatusHistory();
   }
 
   async fetchPastures() {
@@ -184,10 +184,10 @@ export default class Plan extends Model {
     this.ministerIssues = ministerIssues || [];
   }
 
-  async fetchPlanStatusHistories() {
+  async fetchPlanStatusHistory() {
     const where = { plan_id: this.id };
-    const planStatusHistories = await PlanStatusHistory.findWithUser(this.db, where);
+    const planStatusHistory = await PlanStatusHistory.findWithUser(this.db, where);
 
-    this.planStatusHistories = planStatusHistories || [];
+    this.planStatusHistory = planStatusHistory || [];
   }
 }
