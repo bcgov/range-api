@@ -209,6 +209,9 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       body.submitted_at = new Date();
     } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
       body.effective_at = null;
+    } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
+      || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
+      body.submitted_at = new Date();
     }
 
     await Plan.update(db, { id: planId }, body);
