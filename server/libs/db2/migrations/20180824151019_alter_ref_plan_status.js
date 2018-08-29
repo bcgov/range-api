@@ -27,6 +27,6 @@ exports.up = async knex =>
   });
 
 exports.down = async knex =>
-  knex.schema.table(table, async (t) => {
+  knex.schema.table(table, async () => {
 
   });
