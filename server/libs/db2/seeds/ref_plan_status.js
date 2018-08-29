@@ -89,12 +89,12 @@ exports.seed = async (knex) => {
 
     {
       code: 'SR',
-      name: 'Submitted for Review',
+      name: 'Submitted For Review',
       active: true,
     },
     {
       code: 'SFD',
-      name: 'Submitted for Final Decision',
+      name: 'Submitted For Final Decision',
       active: true,
     },
     {
@@ -104,12 +104,12 @@ exports.seed = async (knex) => {
     },
     {
       code: 'RNR',
-      name: 'Recommend not Ready',
+      name: 'Recommend Not Ready',
       active: true,
     },
     {
       code: 'RFD',
-      name: 'Ready for Final Decision',
+      name: 'Ready For Final Decision',
       active: true,
     },
   ];
