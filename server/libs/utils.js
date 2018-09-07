@@ -35,3 +35,24 @@ export const isValid = str => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
  * @returns true if the string is a number, false otherwise
  */
 export const isNumeric = str => str && /^\d+$/.test(str);
+
+/**
+ * Check required fields in the object
+ *
+ * @param {Array} properties
+ * @param {Object} obj
+ */
+export const checkRequiredFields = (properties = [], obj) => {
+  const missingFields = [];
+  properties.map((p) => {
+    if (obj[p] === undefined) {
+      missingFields.push(p);
+    }
+    return undefined;
+  });
+
+  if (missingFields.length !== 0) {
+    return missingFields;
+  }
+  return undefined;
+};

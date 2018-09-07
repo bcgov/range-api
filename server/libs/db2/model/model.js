@@ -128,10 +128,10 @@ export default class Model {
       .forEach((key) => {
         const aKey = key.split('.').pop();
         // check for both camel case and snake case values
-        if (values[Model.toCamelCase(aKey)]) {
+        if (values[Model.toCamelCase(aKey)] !== undefined) {
           obj[aKey] = values[Model.toCamelCase(aKey)];
         }
-        if (values[aKey]) {
+        if (values[aKey] !== undefined) {
           obj[aKey] = values[aKey];
         }
       });
