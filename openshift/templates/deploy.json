@@ -131,7 +131,7 @@
             "type": "ConfigChange"
           }
         ],
-        "replicas": 2,
+        "replicas": "${API_REPLICA_COUNT}",
         "selector": {
           "name": "${API_NAME}"
         },
@@ -297,8 +297,8 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "namespace": "openshift",
-                "name": "postgresql:latest"
+                "namespace": "range-myra-tools",
+                "name": "postgres-postgis-rhel7:latest"
               }
             }
           },
@@ -433,6 +433,13 @@
       "displayName": "CPU core Limit",
       "required": true,
       "description": "Maximum amount of CPU core the container can use.",
+      "value": "1"
+    },
+    {
+      "name": "API_REPLICA_COUNT",
+      "displayName": "Replica pod count",
+      "required": true,
+      "description": "Minimum number of pods that need to be running.",
       "value": "1"
     },
     {
