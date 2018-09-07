@@ -512,13 +512,6 @@
       "name": "POSTGRES_VOLUME_NAME",
       "displayName": "The Postgres storage name",
       "description": "The Postgres storage name as postgres-data",
-      "value": "postgres",
-      "required": true
-    },
-    {
-      "name": "POSTGRES_VOLUMN_NAME",
-      "displayName": "The volumn name for psql",
-      "description": "The volumn name for postgres image",
       "value": "pgdata",
       "required": true
     },
