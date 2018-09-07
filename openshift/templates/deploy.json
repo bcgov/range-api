@@ -215,10 +215,9 @@
                   "name": "NODE_ENV",
                   "value": "${NODE_ENV}"
                 },
-
                 {
-                  "name": "API_URL",
-                  "value": "${API_URL}"
+                  "name": "APP_URL",
+                  "value": "${APP_URL}"
                 }
               ],
               "resources": {
@@ -323,7 +322,7 @@
           "spec": {
             "volumes": [
               {
-                "name": "${POSTGRES_VOLUMN_NAME}",
+                "name": "${POSTGRES_VOLUME_NAME}",
                 "persistentVolumeClaim": {
                   "claimName": "${POSTGRES_VOLUME_NAME}"
                 }
@@ -363,7 +362,7 @@
                 ],
                 "volumeMounts": [
                   {
-                    "name": "${POSTGRES_VOLUMN_NAME}",
+                    "name": "${POSTGRES_VOLUME_NAME}",
                     "mountPath": "/var/lib/pgsql/data"
                   }
                 ],
@@ -512,7 +511,7 @@
       "name": "POSTGRES_VOLUME_NAME",
       "displayName": "The Postgres storage name",
       "description": "The Postgres storage name as postgres-data",
-      "value": "pgdata",
+      "value": "postgres-data",
       "required": true
     },
     {
@@ -536,7 +535,7 @@
       "required": true
     },
     {
-      "name": "API_URL",
+      "name": "APP_URL",
       "displayName": "Public API URL",
       "description": "The fully qualified external URL to access this service.",
       "value": "http://example.com/",
