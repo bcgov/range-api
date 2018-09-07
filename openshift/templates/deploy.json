@@ -531,7 +531,7 @@
     {
       "name": "PORT",
       "displayName": "Server Port",
-      "description": "The perferd port for the server to listen on.",
+      "description": "The preferred port for the server to listen on.",
       "value": "8080",
       "required": true
     },
