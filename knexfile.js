@@ -32,8 +32,8 @@ module.exports = {
     connection: {
       host: process.env.POSTGRESQL_HOST,
       database: process.env.POSTGRESQL_DATABASE,
-      user: process.env.POSTGRESQL_USER,
-      password: process.env.POSTGRESQL_PASSWORD,
+      user: process.env.POSTGRESQL_DEV_USER,
+      password: process.env.POSTGRESQL_DEV_PASSWORD,
     },
     pool: {
       min: 2,
@@ -56,8 +56,8 @@ module.exports = {
     connection: {
       host: process.env.POSTGRESQL_HOST,
       database: process.env.POSTGRESQL_DATABASE,
-      user: process.env.POSTGRESQL_USER,
-      password: process.env.POSTGRESQL_PASSWORD,
+      user: process.env.POSTGRESQL_PROD_USER,
+      password: process.env.POSTGRESQL_PROD_PASSWORD,
     },
     pool: {
       min: 2,
@@ -66,6 +66,11 @@ module.exports = {
     migrations: {
       tableName: 'migration',
       directory: 'server/libs/db2/migrations',
+    },
+    seeds: {
+      // stub: './config/knex-migration-stub.js',
+      tableName: 'seed',
+      directory: 'server/libs/db2/seeds',
     },
   },
 };
