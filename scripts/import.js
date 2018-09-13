@@ -251,9 +251,9 @@ const updateZone = async (data) => {
         })
       }
 
-      zone.contactName = zone.contactName ? zone.contactName : (record.contact || null)
-      zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.contact_phone_number || null)
-      zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.contact_email_address || null)
+      // zone.contactName = zone.contactName ? zone.contactName : (record.contact || null)
+      // zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.contact_phone_number || null)
+      // zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.contact_email_address || null)
 
       // console.log(`Processed Zone with code = ${zone.code}, id = ${zone.id}`)
     } catch (error) {
@@ -386,26 +386,28 @@ const updateUser = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
 
-    // old csv file
-    // const username = record.contact_user_id.toLowerCase();
-    // const [first, last] = record.contact.split(' ');
-    // const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
-    // const zoneCode = record.range_zone_code;
-    // const phoneNumber = record.telephone_number;
-
-    const username = record.idir.toLowerCase();
-    const first = record.first_name;
-    const last = record.last_name;
-    const email = record.email || `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+    const username = record.idir;
     const zoneCode = record.range_zone_code;
-    const phoneNumber = record.telephone_number;
-
     if (!username || !zoneCode) {
-      console.log(`Skipping record with CODE ${zoneCode}, username = ${username} row = ${i}`)
+      console.log(`Skipping record with CODE ${zoneCode}, username = ${username} row = ${i}`);
       continue
     }
     
     try {
+      // old csv file
+      // const username = record.contact_user_id.toLowerCase();
+      // const [first, last] = record.contact.split(' ');
+      // const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+      // const zoneCode = record.range_zone_code;
+      // const phoneNumber = record.telephone_number;
+      
+      const username = record.idir.trim();
+      const first = record.first_name.trim() || 'Unknown';
+      const last = record.last_name.trim() || 'Unknown';
+      const email = record.email.trim();
+      const zoneCode = record.range_zone_code.trim();
+      const phoneNumber = record.telephone_number.trim();
+
       let user = await User.findOne(db, {
         username,
       });
@@ -413,27 +415,29 @@ const updateUser = async data => {
       if (!user) {
         user = await User.create(db, {
           username,
-          givenName: first || 'Unknown',
-          familyName: last || 'Unknown',
+          givenName: first,
+          familyName: last,
           email,
           active: true,
           phoneNumber,
         });
+      } else {
+        await User.update(db, { username }, {
+          username,
+          givenName: first,
+          familyName: last,
+          email,
+          active: true,
+          phoneNumber,
+        });
+      }
+      
+      if (await Zone.findOne(db, { code: zoneCode })) {
         await Zone.update(db, { code: zoneCode }, {
           user_id: user.id
         });
       } else {
-        user = await User.update(db, { username }, {
-          username,
-          givenName: first || 'Unknown',
-          familyName: last || 'Unknown',
-          email,
-          active: true,
-          phoneNumber,
-        });
-        await Zone.update(db, { code: zoneCode }, {
-          user_id: user.id
-        });
+        throw new Error(`Zone ${zoneCode} doesn't exist`)
       }
 
       console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${zoneCode} owner.`);
