@@ -251,10 +251,6 @@ const updateZone = async (data) => {
         })
       }
 
-      zone.contactName = zone.contactName ? zone.contactName : (record.contact || null)
-      zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.contact_phone_number || null)
-      zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.contact_email_address || null)
-
       // console.log(`Processed Zone with code = ${zone.code}, id = ${zone.id}`)
     } catch (error) {
       console.log(`Can not update Zone. Error = ${error.message}, Zone = ${record.district_admin_zone}, ID ${record.forest_file_id}`)
@@ -385,43 +381,63 @@ const updateClient = async data => {
 const updateUser = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
-    if (!record.contact_user_id || !record.range_zone_code) {
-      console.log(`Skipping record with CODE ${record.range_zone_code}, username = ${record.contact_user_id} row = ${i}`)
+    const username = record.idir;
+    const zoneCode = record.range_zone_code;
+    if (!username || !zoneCode) {
+      console.log(`Skipping record with CODE ${zoneCode}, username = ${username} row = ${i}`);
       continue
     }
-
+    
     try {
-      let user = await User.findOne(db, {
-        username: record.contact_user_id.toLowerCase(),
-      });
+      // old csv file
+      // const username = record.contact_user_id.toLowerCase();
+      // const [first, last] = record.contact.split(' ');
+      // const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+      // const zoneCode = record.range_zone_code;
+      // const phoneNumber = record.telephone_number;
+      
+      const username = record.idir.trim();
+      const first = record.first_name.trim() || 'Unknown';
+      const last = record.last_name.trim() || 'Unknown';
+      const email = record.email.trim();
+      const zoneCode = record.range_zone_code.trim();
+      const phoneNumber = record.telephone_number.trim();
 
-      const [first, last] = record.contact.split(' ');
+      let user = await User.findOne(db, {
+        username,
+      });
 
       if (!user) {
         user = await User.create(db, {
-          username: record.contact_user_id.toLowerCase(),
-          givenName: first || 'Unknown',
-          familyName: last || 'Unknown',
-          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+          username,
+          givenName: first,
+          familyName: last,
+          email,
+          active: true,
+          phoneNumber,
         });
-        await Zone.update(db, { code: record.range_zone_code }, {
+      } else {
+        await User.update(db, { username }, {
+          username,
+          givenName: first,
+          familyName: last,
+          email,
+          active: true,
+          phoneNumber,
+        });
+      }
+      
+      if (await Zone.findOne(db, { code: zoneCode })) {
+        await Zone.update(db, { code: zoneCode }, {
           user_id: user.id
         });
       } else {
-        user = await User.update(db, { username: record.contact_user_id.toLowerCase() }, {
-          username: record.contact_user_id.toLowerCase(),
-          givenName: first || 'Unknown',
-          familyName: last || 'Unknown',
-          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
-        });
-        await Zone.update(db, { code: record.range_zone_code }, {
-          user_id: user.id
-        });
+        throw new Error(`Zone ${zoneCode} doesn't exist`)
       }
 
-      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.range_zone_code} owner.`);
+      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${zoneCode} owner.`);
     } catch (error) {
-      console.log(`Can not update User with username ${record.contact_user_id}. error = ${error.message}`);
+      console.log(`Can not update User with username ${username}. error = ${error.message}`);
     }
   }
 }
@@ -448,8 +464,8 @@ const loadData = async (fromUrl) => {
 
 const main = async () => {
   try {
-    const isFromUrl = false;
-    await loadData(isFromUrl);
+    const isFromAPI = false;
+    await loadData(isFromAPI);
     // {
     //   forest_file_id: 'RAN000133',
     //   file_status_st: 'A',

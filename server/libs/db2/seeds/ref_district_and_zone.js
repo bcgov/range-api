@@ -83,6 +83,9 @@ exports.seed = async (knex) => {
     }, {
       code: 'DMK',
       description: '',
+    }, {
+      code: 'DKA',
+      description: '',
     },
   ].map((district) => {
     did += 1;
@@ -202,10 +205,6 @@ exports.seed = async (knex) => {
       district: 'DSQ',
       description: 'Squamish',
     }, {
-      code: 'ALL4',
-      district: 'DSE',
-      description: 'Selkirk',
-    }, {
       code: 'PRI1',
       district: 'DPG',
       description: 'Prince George',
@@ -301,6 +300,11 @@ exports.seed = async (knex) => {
       code: 'SAYW',
       district: 'DCR',
       description: 'Campbell River',
+    },
+    {
+      code: 'ALL',
+      district: 'DSE',
+      description: 'Selkirk',
     }, {
       code: 'ALL0',
       district: 'DVA',
@@ -313,6 +317,26 @@ exports.seed = async (knex) => {
       code: 'ALL2',
       district: 'DMK',
       description: 'Mackenzie',
+    }, {
+      code: 'CE',
+      district: 'DOS',
+      description: 'Centraleast',
+    }, {
+      code: 'KAMC',
+      district: 'DKA',
+      description: 'Kamloops Zone',
+    }, {
+      code: 'KAMB',
+      district: 'DKA',
+      description: 'Kamloops Zone',
+    }, {
+      code: 'KAMA',
+      district: 'DKA',
+      description: 'Kamloops Zone',
+    }, {
+      code: 'PRIN',
+      district: 'DPG',
+      description: 'Prince George',
     },
   ].map((zone) => {
     zid += 1;
