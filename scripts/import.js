@@ -396,7 +396,7 @@ const updateUser = async data => {
     const username = record.idir.toLowerCase();
     const first = record.first_name;
     const last = record.last_name;
-    const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+    const email = record.email || `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
     const zoneCode = record.range_zone_code;
     const phoneNumber = record.telephone_number;
 
