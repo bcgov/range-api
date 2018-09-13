@@ -385,43 +385,60 @@ const updateClient = async data => {
 const updateUser = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
-    if (!record.contact_user_id || !record.range_zone_code) {
-      console.log(`Skipping record with CODE ${record.range_zone_code}, username = ${record.contact_user_id} row = ${i}`)
+
+    // old csv file
+    // const username = record.contact_user_id.toLowerCase();
+    // const [first, last] = record.contact.split(' ');
+    // const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+    // const zoneCode = record.range_zone_code;
+    // const phoneNumber = record.telephone_number;
+
+    const username = record.idir.toLowerCase();
+    const first = record.first_name;
+    const last = record.last_name;
+    const email = `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`;
+    const zoneCode = record.range_zone_code;
+    const phoneNumber = record.telephone_number;
+
+    if (!username || !zoneCode) {
+      console.log(`Skipping record with CODE ${zoneCode}, username = ${username} row = ${i}`)
       continue
     }
-
+    
     try {
       let user = await User.findOne(db, {
-        username: record.contact_user_id.toLowerCase(),
+        username,
       });
-
-      const [first, last] = record.contact.split(' ');
 
       if (!user) {
         user = await User.create(db, {
-          username: record.contact_user_id.toLowerCase(),
+          username,
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
-          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+          email,
+          active: true,
+          phoneNumber,
         });
-        await Zone.update(db, { code: record.range_zone_code }, {
+        await Zone.update(db, { code: zoneCode }, {
           user_id: user.id
         });
       } else {
-        user = await User.update(db, { username: record.contact_user_id.toLowerCase() }, {
-          username: record.contact_user_id.toLowerCase(),
+        user = await User.update(db, { username }, {
+          username,
           givenName: first || 'Unknown',
           familyName: last || 'Unknown',
-          email: `${first.toLowerCase()}.${last.toLowerCase()}@gov.bc.ca`,
+          email,
+          active: true,
+          phoneNumber,
         });
-        await Zone.update(db, { code: record.range_zone_code }, {
+        await Zone.update(db, { code: zoneCode }, {
           user_id: user.id
         });
       }
 
-      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${record.range_zone_code} owner.`);
+      console.log(`Imported User ID = ${user.id}, username  = ${user.username} and updated Zone ${zoneCode} owner.`);
     } catch (error) {
-      console.log(`Can not update User with username ${record.contact_user_id}. error = ${error.message}`);
+      console.log(`Can not update User with username ${username}. error = ${error.message}`);
     }
   }
 }
@@ -448,8 +465,8 @@ const loadData = async (fromUrl) => {
 
 const main = async () => {
   try {
-    const isFromUrl = false;
-    await loadData(isFromUrl);
+    const isFromAPI = false;
+    await loadData(isFromAPI);
     // {
     //   forest_file_id: 'RAN000133',
     //   file_status_st: 'A',

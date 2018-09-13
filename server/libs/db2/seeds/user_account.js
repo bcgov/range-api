@@ -27,17 +27,17 @@ const table = 'user_account';
 exports.seed = async (knex) => {
   const ref = [
     {
-      username: 'myra2',
+      username: 'rangestaff',
       given_name: 'Range',
-      family_name: 'MyRA2',
-      email: 'range_myra_2@example.com',
+      family_name: 'Staff',
+      email: 'amir+1@freshworks.io',
       active: true,
     },
     {
-      username: 'myra1',
+      username: 'rangeadmin',
       given_name: 'Range',
-      family_name: 'MyRA1',
-      email: 'range_myra_1@example.com',
+      family_name: 'Admin',
+      email: 'kyubin+1@freshworks.io',
       active: true,
     },
     {
