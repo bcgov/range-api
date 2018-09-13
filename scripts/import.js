@@ -251,10 +251,6 @@ const updateZone = async (data) => {
         })
       }
 
-      // zone.contactName = zone.contactName ? zone.contactName : (record.contact || null)
-      // zone.contactPhoneNumber = zone.contactPhoneNumber ? zone.contactPhoneNumber : (record.contact_phone_number || null)
-      // zone.contactEmail = zone.contactEmail ? zone.contactEmail : (record.contact_email_address || null)
-
       // console.log(`Processed Zone with code = ${zone.code}, id = ${zone.id}`)
     } catch (error) {
       console.log(`Can not update Zone. Error = ${error.message}, Zone = ${record.district_admin_zone}, ID ${record.forest_file_id}`)
@@ -385,7 +381,6 @@ const updateClient = async data => {
 const updateUser = async data => {
   for (var i = 0; i < data.length; i++) {
     const record = data[i]
-
     const username = record.idir;
     const zoneCode = record.range_zone_code;
     if (!username || !zoneCode) {
