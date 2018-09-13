@@ -75,23 +75,23 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
   } = req.params;
 
   try {
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
+    if (!plan) {
+      throw errorWithCode('Plan not found', 404);
+    }
+    const { agreementId } = plan;
     verifyAgreementOwnership(req.user, agreementId);
 
-    const results = await Agreement.findWithAllRelations(db, { forest_file_id: agreementId });
-    const myAgreement = results.pop();
-    myAgreement.transformToV1();
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
 
-    // TODO:(jl) This should return the Plan, not the agreement with the embeded
-    // plan.
+    await plan.eagerloadAllOneToMany();
+    plan.agreement = agreement;
 
-    const plans = myAgreement.plans.filter(p => p.id === Number(planId));
-    delete myAgreement.plans;
-    myAgreement.plan = plans.pop();
-
-    await myAgreement.plan.eagerloadAllOneToMany();
-
-    return res.status(200).json(myAgreement).end();
+    return res.status(200).json(plan).end();
   } catch (error) {
     logger.error(`Unable to fetch plan, error = ${error.message}`);
     throw errorWithCode('There was a problem fetching the record', 500);
