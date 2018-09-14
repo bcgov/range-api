@@ -95,12 +95,12 @@ export default class Agreement extends Model {
     // fetch all data that is directly related to the agreement
     // `await` used here to allow the queries to start imediatly and
     // run in parallel. This greatly speeds up the fetch.
-    promises = myAgreements.map(async agreement =>
-      [await agreement.fetchClients(),
-        await agreement.fetchUsage(),
+    promises = myAgreements.map(async agreement => (
+      [
+        await agreement.eagerloadAllOneToManyExceptPlan(),
         await agreement.fetchPlans(latestPlan, staffDraft),
-        await agreement.fetchLivestockIdentifiers(),
-      ]);
+      ]
+    ));
 
     await Promise.all(flatten(promises));
 
@@ -236,6 +236,12 @@ export default class Agreement extends Model {
     } catch (err) {
       throw err;
     }
+  }
+
+  async eagerloadAllOneToManyExceptPlan() {
+    await this.fetchClients();
+    await this.fetchUsage();
+    await this.fetchLivestockIdentifiers();
   }
 
   async fetchClients() {
