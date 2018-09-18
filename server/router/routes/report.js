@@ -86,7 +86,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     user.name = givenName && familyName && `${givenName} ${familyName}`;
 
     const grazingSchedules = gss.map((schedule) => {
-      const { grazingScheduleEntries: gse } = schedule;
+      const { grazingScheduleEntries: gse, year } = schedule;
       const grazingScheduleEntries = gse && gse.map((entry) => {
         const {
           pastureId,
@@ -112,11 +112,14 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
           crownAUMs,
         };
       });
-      const crownTotalAUMs = calcCrownTotalAUMs(grazingScheduleEntries);
+      const crownTotalAUMs = roundTo1Decimal(calcCrownTotalAUMs(grazingScheduleEntries));
+      const yearUsage = agreement.usage.find(u => u.year === year);
+      const authorizedAUMs = yearUsage && yearUsage.authorizedAum;
       return {
         ...schedule,
         grazingScheduleEntries,
         crownTotalAUMs,
+        authorizedAUMs,
       };
     });
 
