@@ -25,11 +25,10 @@
 import { asyncMiddleware, errorWithCode, logger, streamToBuffer } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import fs from 'fs';
-import moment from 'moment';
 import config from '../../config';
-import { TEMPLATES, NOT_PROVIDED } from '../../constants';
+import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, loadTemplate, renderToPDF } from '../../libs/template';
+import { compile, loadTemplate, renderToPDF, calcDateDiff, calcTotalAUMs, calcPldAUMs, calcCrownAUMs, roundTo1Decimal, calcCrownTotalAUMs, getPastureNames } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -52,106 +51,6 @@ const userCanAccessAgreement = async (user, agreementId) => {
   }
 
   return true;
-};
-
-const shift = (number, precision) => {
-  const numArray = (`${number}`).split('e');
-  return +(`${numArray[0]}e${(numArray[1] ? (+numArray[1] + precision) : precision)}`);
-};
-
-const round = (number, precision) => (
-  shift(Math.round(shift(number, +precision)), -precision)
-);
-
-/**
- * Round the float to 1 decimal
- *
- * @param {float} number
- * @returns the rounded float number
- */
-const roundTo1Decimal = number => (
-  round(number, 1)
-);
-
-/**
- *
- * @param {number} numberOfAnimals
- * @param {number} totalDays
- * @param {number} auFactor parameter provided from the livestock type
- * @returns {float} the total AUMs
- */
-const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) => (
-  ((numberOfAnimals * totalDays * auFactor) / 30.44)
-);
-
-/**
- * Present user friendly string when getting null or undefined value
- *
- * @param {string | Date} first the string in the class Date form
- * @param {string | Date} second the string in the class Date form
- * @param {bool} isUserFriendly
- * @returns {number | string} the number of days or 'N/P'
- */
-const calcDateDiff = (first, second, isUserFriendly) => {
-  if (first && second) {
-    return moment(first).diff(moment(second), 'days');
-  }
-  return isUserFriendly ? 'N/P' : 0;
-};
-
-/**
- * Calculate Private Land Deduction Animal Unit Month
- *
- * @param {number} totalAUMs
- * @param {float} pasturePldPercent
- * @returns {float} the pld AUMs
- */
-const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) => (
-  totalAUMs * pasturePldPercent
-);
-
-/**
- * Calculate Crown Animal Unit Month
- *
- * @param {number} totalAUMs
- * @param {number} pldAUMs
- * @returns {float} the crown AUMs
- */
-const calcCrownAUMs = (totalAUMs, pldAUMs) => (
-  (totalAUMs - pldAUMs)
-);
-
-/**
- * Calculate the total Crown Animal Unit Month
- *
- * @param {Array} entries grazing schedule entries
- * @returns {float} the total crown AUMs
- */
-const calcCrownTotalAUMs = (entries = []) => {
-  const reducer = (accumulator, currentValue) => accumulator + currentValue;
-  if (entries.length === 0) {
-    return 0;
-  }
-  return entries
-    .map(entry => entry.crownAUMs)
-    .reduce(reducer);
-};
-
-const getPastureNames = (pastureIds = [], pastures = {}) => {
-  const pastureNames = pastureIds.map((pId) => {
-    const pasture = pastures.find(p => p.id === pId);
-    return pasture && pasture.name;
-  });
-  const { length } = pastureNames;
-  switch (length) {
-    case 0:
-      return NOT_PROVIDED;
-    case 1:
-    case 2:
-      return pastureNames.join(' and ');
-    default:
-      return `${pastureNames.slice(0, length - 1).join(', ')}, and ${pastureNames[length - 1]}`;
-  }
 };
 
 //
