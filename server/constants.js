@@ -32,6 +32,8 @@ export const TEMPLATES = {
   RANGE_USE_PLAN: 'rup.html',
 };
 
+export const DAYS_ON_THE_AVERAGE = 30.44;
+
 export const AGREEMENT_HOLDER_ROLE = {
   PRIMARY: 'A',
   SECONDARY: 'B',

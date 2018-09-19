@@ -35,7 +35,7 @@
       margin: 15px 0 5px 0;
     }
     .pasture,
-    .schedule,
+    .grazing-schedule,
     .minister-issue {
       page-break-inside: avoid;
       margin-bottom: 10px;
@@ -89,6 +89,9 @@
     .cell-4 {
       width: 32%;
       display: inline-block;
+    }
+    .bold {
+      font-weight: bold;
     }
     .minister-action {
       margin: 0 10px 10px 10px;
@@ -227,7 +230,7 @@
   <h2>Schedule</h2>
   <div class="divider"></div>
   {{#each grazingSchedules}}
-    <div class="schedule">
+    <div class="grazing-schedule">
       <div class="section-title">{{this.year}} Grazing Schedule</div>
       <table>
         <tr>
@@ -257,6 +260,11 @@
           <div class="not-provided">Not provided</div>
         {{/each}}
       </table>
+      <p class="text-right">
+        <span class="bold">Authorized AUMs:</span> {{this.authorizedAUMs}} &nbsp; <span class="bold">Total AUMs:</span> {{this.crownTotalAUMs}}
+      </p>
+      <div class="bold">Schedule Description</div>
+      <div>{{handleNullValue this.narative}}</div>
     </div>
   {{else}}
     <div class="not-provided">Not provided</div>
@@ -281,15 +289,15 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Detail</div>
-        <div class="textfield__content">{{this.detail}}</div>
+        <div class="textfield__content">{{handleNullValue this.detail}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Objective</div>
-        <div class="textfield__content">{{this.objective}}</div>
+        <div class="textfield__content">{{handleNullValue this.objective}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Pastures</div>
-        <div class="textfield__content">{{this.pastureNames}}</div>
+        <div class="textfield__content">{{handleNullValue this.pastureNames}}</div>
       </div>
       <div class="textfield__title">Actions</div>
       {{#each this.ministerIssueActions}}
