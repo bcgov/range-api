@@ -28,7 +28,7 @@ import moment from 'moment';
 import path from 'path';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { logger } from '@bcgov/nodejs-common-utils';
-import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, REPORT_DEFAULTS } from '../constants';
+import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, REPORT_DEFAULTS, DAYS_ON_THE_AVERAGE } from '../constants';
 
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
@@ -195,7 +195,7 @@ const round = (number, precision) => (
  * @param {float} number
  * @returns the rounded float number
  */
-export const roundTo1Decimal = number => (
+export const roundToSingleDecimalPlace = number => (
   round(number, 1)
 );
 
@@ -207,7 +207,7 @@ export const roundTo1Decimal = number => (
  * @returns {float} the total AUMs
  */
 export const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) => (
-  ((numberOfAnimals * totalDays * auFactor) / 30.44)
+  ((numberOfAnimals * totalDays * auFactor) / DAYS_ON_THE_AVERAGE)
 );
 
 /**

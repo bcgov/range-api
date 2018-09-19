@@ -28,7 +28,7 @@ import fs from 'fs';
 import config from '../../config';
 import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, loadTemplate, renderToPDF, calcDateDiff, calcTotalAUMs, calcPldAUMs, calcCrownAUMs, roundTo1Decimal, calcCrownTotalAUMs, getPastureNames } from '../../libs/template';
+import { compile, loadTemplate, renderToPDF, calcDateDiff, calcTotalAUMs, calcPldAUMs, calcCrownAUMs, roundToSingleDecimalPlace, calcCrownTotalAUMs, getPastureNames } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -102,8 +102,8 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
         const auFactor = livestockType && livestockType.auFactor;
 
         const totalAUMs = calcTotalAUMs(livestockCount, days, auFactor);
-        const pldAUMs = roundTo1Decimal(calcPldAUMs(totalAUMs, pldPercent));
-        const crownAUMs = roundTo1Decimal(calcCrownAUMs(totalAUMs, pldAUMs));
+        const pldAUMs = roundToSingleDecimalPlace(calcPldAUMs(totalAUMs, pldPercent));
+        const crownAUMs = roundToSingleDecimalPlace(calcCrownAUMs(totalAUMs, pldAUMs));
         return {
           ...entry,
           pasture,
@@ -112,7 +112,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
           crownAUMs,
         };
       });
-      const crownTotalAUMs = roundTo1Decimal(calcCrownTotalAUMs(grazingScheduleEntries));
+      const crownTotalAUMs = roundToSingleDecimalPlace(calcCrownTotalAUMs(grazingScheduleEntries));
       const yearUsage = agreement.usage.find(u => u.year === year);
       const authorizedAUMs = yearUsage && yearUsage.authorizedAum;
       return {
