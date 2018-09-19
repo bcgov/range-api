@@ -34,13 +34,15 @@ export const TEMPLATES = {
 
 export const DAYS_ON_THE_AVERAGE = 30.44;
 
+export const DATE_FORMAT = {
+  SERVER_SIDE: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+  CLIENT_SIDE: 'MMMM D, YYYY',
+  CLIENT_SIDE_WITHOUT_YEAR: 'MMM D',
+};
+
 export const AGREEMENT_HOLDER_ROLE = {
   PRIMARY: 'A',
   SECONDARY: 'B',
-};
-
-export const REPORT_DEFAULTS = {
-  DATE_FORMAT: 'MMMM Do, YYYY',
 };
 
 export const SSO_ROLE_MAP = {

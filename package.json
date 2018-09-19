@@ -68,8 +68,7 @@
     "test": "cross-env NODE_ENV=test jest __tests__",
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
-    "test:lint": "eslint --env node --ext .js server",
-    "knex": "./node_modules/.bin/knex"
+    "test:lint": "eslint --env node --ext .js server"
   },
   "repository": {
     "type": "git",

@@ -249,9 +249,9 @@
             <td>{{this.pasture.name}}</td>
             <td>{{this.livestockType.name}}</td>
             <td>{{this.livestockCount}}</td>
-            <td>{{getStandardDateFormat this.dateIn}}</td>
-            <td>{{getStandardDateFormat this.dateOut}}</td>
-            <td>{{getDaysOfGrazing this.dateIn this.dateOut}}</td>
+            <td>{{getStandardDateFormat this.dateIn false 'N/P'}}</td>
+            <td>{{getStandardDateFormat this.dateOut false 'N/P'}}</td>
+            <td>{{this.days}}</td>
             <td>{{this.graceDays}}</td>
             <td>{{this.pldAUMs}}</td>
             <td>{{this.crownAUMs}}</td>

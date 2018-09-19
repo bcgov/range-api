@@ -28,7 +28,7 @@ import moment from 'moment';
 import path from 'path';
 import wkhtmltopdf from 'wkhtmltopdf';
 import { logger } from '@bcgov/nodejs-common-utils';
-import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, REPORT_DEFAULTS, DAYS_ON_THE_AVERAGE } from '../constants';
+import { AGREEMENT_HOLDER_ROLE, NOT_PROVIDED, DAYS_ON_THE_AVERAGE, DATE_FORMAT } from '../constants';
 
 if (process.platform === 'linux') {
   // On Linux (OpenShift) we need to run our own copy of the binary with any related
@@ -52,17 +52,22 @@ if (process.platform === 'linux') {
 const asYesOrNoValue = boolValue => boolValue ? 'YES' : 'NO';
 
 /**
- * Convert the standard ISO date format to the report perferd format
+ * Present the date time in a more readable way
  *
- * @param {Date} isoFormatDate The date in ISO format
- * @returns A string with the reformated date
+ * @param {string | Date} isoFormatDate The stringified date time
+ * @param {boolean} isYearIncluded The boolean to specify whether the year is needed
+ * @returns {string} a formatted string or 'Not provided'
  */
-const asStandardDateFormat = (isoFormatDate) => {
-  if (!isoFormatDate) {
-    return NOT_PROVIDED;
+const formatDateFromServer = (isoFormatDate, isYearIncluded = true, notProvided = NOT_PROVIDED) => {
+  if (isoFormatDate) {
+    const m = moment(isoFormatDate, DATE_FORMAT.SERVER_SIDE);
+
+    if (isYearIncluded) {
+      return m.format(DATE_FORMAT.CLIENT_SIDE);
+    }
+    return m.format(DATE_FORMAT.CLIENT_SIDE_WITHOUT_YEAR);
   }
-  return moment(isoFormatDate, 'YYYY-MM-DDTHH:mm:ss.SSSZ')
-    .format(REPORT_DEFAULTS.DATE_FORMAT);
+  return notProvided;
 };
 
 /**
@@ -159,20 +164,6 @@ export const primaryContactFullName = (contacts) => {
     .filter(contact => contact.clientTypeCode === AGREEMENT_HOLDER_ROLE.PRIMARY);
 
   return contactFullName(pcontact);
-};
-
-/**
- * Calculate the number of days between the date in and out
- *
- * @param {Date} dateIn The date in ISO format
- * @param {Date} dateOut The date in ISO format
- * @returns A number
- */
-const getDaysOfGrazing = (dateIn, dateOut) => {
-  if ((dateIn instanceof Date) && (dateOut instanceof Date)) {
-    return dateOut.getDate() - dateIn.getDate();
-  }
-  return NOT_PROVIDED;
 };
 
 const getYesOrNo = boolean => (
@@ -297,9 +288,8 @@ export const compile = (source, context) => {
   handlebars.registerHelper('getDistrict', getDistrict);
   handlebars.registerHelper('getContactFullName', contactFullName);
   handlebars.registerHelper('getPrimaryContactName', primaryContactFullName);
-  handlebars.registerHelper('getStandardDateFormat', asStandardDateFormat);
+  handlebars.registerHelper('getStandardDateFormat', formatDateFromServer);
   handlebars.registerHelper('getBoolAsYesNoValue', asYesOrNoValue);
-  handlebars.registerHelper('getDaysOfGrazing', getDaysOfGrazing);
   handlebars.registerHelper('handleNullValue', handleNullValue);
   handlebars.registerHelper('getAgreementType', getAgreementType);
   handlebars.registerHelper('getYesOrNo', getYesOrNo);

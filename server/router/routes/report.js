@@ -108,6 +108,7 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
           ...entry,
           pasture,
           graceDays,
+          days,
           pldAUMs,
           crownAUMs,
         };
