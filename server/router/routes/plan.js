@@ -45,6 +45,7 @@ const {
   MinisterIssuePasture,
   MinisterIssueAction,
   PlanStatusHistory,
+  AmendmentConfirmation,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -102,10 +103,12 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
     body,
+    user,
   } = req;
   const {
     agreementId,
     statusId,
+    amendmentTypeId,
   } = body;
 
   try {
@@ -134,7 +137,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
       });
     }
 
-    const plan = await Plan.create(db, body);
+    const plan = await Plan.create(db, { ...body, created_by: user.id });
+
+    // create unsiged confirmations for AHs when creating an amendment
+    if (amendmentTypeId) {
+      await AmendmentConfirmation.createConfirmations(db, agreementId, plan.id);
+    }
 
     return res.status(200).json(plan).end();
   } catch (err) {
@@ -174,12 +182,9 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
 
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
-  const {
-    statusId,
-  } = req.body;
-  const {
-    planId,
-  } = req.params;
+  const { user, body } = req;
+  const { statusId } = body;
+  const { planId } = req.params;
 
   if (!statusId || !isNumeric(statusId)) {
     throw errorWithCode('statusId must be provided in body and be numeric', 400);
@@ -191,7 +196,7 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    verifyAgreementOwnership(req.user, agreementId);
+    verifyAgreementOwnership(user, agreementId);
 
     const planStatuses = await PlanStatus.find(db, { active: true });
 
@@ -201,20 +206,26 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
 
-    const body = { status_id: statusId };
+    const plan = await Plan.findOne(db, { id: planId });
+    const data = { status_id: statusId };
     if (status.code === PLAN_STATUS.APPROVED) {
-      body.effective_at = new Date();
+      data.effective_at = new Date();
     } else if (status.code === PLAN_STATUS.STANDS) {
-      body.effective_at = new Date();
-      body.submitted_at = new Date();
+      data.effective_at = new Date();
+      data.submitted_at = new Date();
     } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
-      body.effective_at = null;
+      data.effective_at = null;
     } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
       || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
-      body.submitted_at = new Date();
+      data.submitted_at = new Date();
+    } else if (status.code === PLAN_STATUS.AWAITING_CONFIRMATION) {
+      if (user.id !== plan.createdBy) {
+        throw errorWithCode('Only the user who created the amendment can submit', 403);
+      }
+      await AmendmentConfirmation.refreshAmendmentConfirmations(db, planId, user);
     }
 
-    await Plan.update(db, { id: planId }, body);
+    await Plan.update(db, { id: planId }, data);
 
     return res.status(200).json(status).end();
   } catch (err) {

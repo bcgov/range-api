@@ -69,6 +69,7 @@ export const PLAN_STATUS = {
   RECOMMEND_READY: 'RR',
   RECOMMEND_NOT_READY: 'RNR',
   READY_FOR_FINAL_DECISION: 'RFD',
+  AWAITING_CONFIRMATION: 'AC',
 };
 
 export const NOT_PROVIDED = 'Not provided';

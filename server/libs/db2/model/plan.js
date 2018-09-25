@@ -28,6 +28,7 @@ import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
 import PlanStatusHistory from './planstatushistory';
+import AmendmentConfirmation from './amendmentconfirmation';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -56,7 +57,7 @@ export default class Plan extends Model {
       'id', 'range_name', 'plan_start_date', 'plan_end_date',
       'notes', 'alt_business_name', 'agreement_id', 'status_id',
       'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
-      'effective_at', 'submitted_at',
+      'effective_at', 'submitted_at', 'created_by',
     ].map(f => `${Plan.table}.${f}`);
   }
 
@@ -144,6 +145,14 @@ export default class Plan extends Model {
     await this.fetchGrazingSchedules();
     await this.fetchMinisterIssues();
     await this.fetchPlanStatusHistory();
+    await this.fetchAmendmentConfirmations();
+  }
+
+  async fetchAmendmentConfirmations() {
+    const confirmations = await AmendmentConfirmation.find(
+      this.db, { plan_id: this.id },
+    );
+    this.confirmations = confirmations || [];
   }
 
   async fetchPastures() {
