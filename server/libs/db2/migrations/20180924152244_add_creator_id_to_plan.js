@@ -22,11 +22,11 @@ const table = 'plan';
 
 exports.up = async knex =>
   knex.schema.table(table, async (t) => {
-    t.integer('created_by').notNull().defaultTo(1);
-    t.foreign('created_by').references('user_account.id');
+    t.integer('creator_id').notNull().defaultTo(1);
+    t.foreign('creator_id').references('user_account.id');
   });
 
 exports.down = async knex =>
   knex.schema.table(table, async (t) => {
-    t.dropColumn('created_by');
+    t.dropColumn('creator_id');
   });
