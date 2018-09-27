@@ -197,7 +197,7 @@ const updatePlanStatus = async (planId, status = {}, user) => {
     if (user.id !== plan.creatorId) {
       throw errorWithCode('Only the user who created the amendment can submit', 403);
     }
-    await AmendmentConfirmation.refreshAmendmentConfirmations(db, planId, user);
+    await AmendmentConfirmation.refreshConfirmations(db, planId, user);
   }
 
   const updatedPlan = await Plan.update(db, { id: planId }, body);

@@ -56,7 +56,7 @@ export default class AmendmentConfirmation extends Model {
     return records;
   }
 
-  static async refreshAmendmentConfirmations(db, planId, user) {
+  static async refreshConfirmations(db, planId, user) {
     const confirmations = await AmendmentConfirmation.find(
       db, { plan_id: planId },
     );
