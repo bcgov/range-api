@@ -72,4 +72,10 @@ export const PLAN_STATUS = {
   AWAITING_CONFIRMATION: 'AC',
 };
 
+export const AMENDMENT_TYPE = {
+  MINOR: 'MNA',
+  MANDATORY: 'MA',
+  INITIAL: 'A',
+};
+
 export const NOT_PROVIDED = 'Not provided';

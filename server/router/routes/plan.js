@@ -137,7 +137,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
       });
     }
 
-    const plan = await Plan.create(db, { ...body, created_by: user.id });
+    const plan = await Plan.create(db, { ...body, creator_id: user.id });
 
     // create unsiged confirmations for AHs when creating an amendment
     if (amendmentTypeId) {
@@ -180,6 +180,30 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
   }
 }));
 
+const updatePlanStatus = async (planId, status = {}, user) => {
+  const plan = await Plan.findOne(db, { id: planId });
+  const body = { status_id: status.id };
+  if (status.code === PLAN_STATUS.APPROVED) {
+    body.effective_at = new Date();
+  } else if (status.code === PLAN_STATUS.STANDS) {
+    body.effective_at = new Date();
+    body.submitted_at = new Date();
+  } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+    body.effective_at = null;
+  } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
+    || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
+    body.submitted_at = new Date();
+  } else if (status.code === PLAN_STATUS.AWAITING_CONFIRMATION) {
+    if (user.id !== plan.creatorId) {
+      throw errorWithCode('Only the user who created the amendment can submit', 403);
+    }
+    await AmendmentConfirmation.refreshAmendmentConfirmations(db, planId, user);
+  }
+
+  const updatedPlan = await Plan.update(db, { id: planId }, body);
+  return updatedPlan;
+};
+
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
   const { user, body } = req;
@@ -206,28 +230,53 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
 
-    const plan = await Plan.findOne(db, { id: planId });
-    const data = { status_id: statusId };
-    if (status.code === PLAN_STATUS.APPROVED) {
-      data.effective_at = new Date();
-    } else if (status.code === PLAN_STATUS.STANDS) {
-      data.effective_at = new Date();
-      data.submitted_at = new Date();
-    } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
-      data.effective_at = null;
-    } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
-      || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
-      data.submitted_at = new Date();
-    } else if (status.code === PLAN_STATUS.AWAITING_CONFIRMATION) {
-      if (user.id !== plan.createdBy) {
-        throw errorWithCode('Only the user who created the amendment can submit', 403);
-      }
-      await AmendmentConfirmation.refreshAmendmentConfirmations(db, planId, user);
-    }
-
-    await Plan.update(db, { id: planId }, data);
+    await updatePlanStatus(planId, status, user);
 
     return res.status(200).json(status).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// update existing amendment confirmation
+router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req, res) => {
+  const { body, params, query, user } = req;
+  const { planId, confirmationId } = params;
+  const { isMinorAmendment } = query;
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+  if (!confirmationId) {
+    throw errorWithCode('confirmationId must be provided in path', 400);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
+
+    const confirmation = await AmendmentConfirmation.update(db, { id: confirmationId }, body);
+    const allConfirmations = await AmendmentConfirmation.find(db, { plan_id: planId });
+    let allConfirmed = true;
+    allConfirmations.map((c) => {
+      if (!c.confirmed) {
+        allConfirmed = false;
+      }
+      return undefined;
+    });
+
+    // update the amendment status when the last agreement holder confirms
+    if (allConfirmed) {
+      const planStatuses = await PlanStatus.find(db, { active: true });
+      const status = planStatuses.find(s => (
+        s.code === (isMinorAmendment === 'true'
+          ? PLAN_STATUS.STANDS
+          : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION)
+      ));
+      const plan = await updatePlanStatus(planId, status, user);
+      return res.status(200).json({ allConfirmed, plan, confirmation }).end();
+    }
+
+    return res.status(200).json({ allConfirmed, confirmation }).end();
   } catch (err) {
     throw err;
   }
