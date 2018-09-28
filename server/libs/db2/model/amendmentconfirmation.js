@@ -60,6 +60,7 @@ export default class AmendmentConfirmation extends Model {
     const confirmations = await AmendmentConfirmation.find(
       db, { plan_id: planId },
     );
+    // refresh all confirmations within the plan except the one that triggering this function
     const promises = confirmations.map((c) => {
       const confirmed = c.clientId === user.clientId;
       return AmendmentConfirmation.update(db, { id: c.id }, { confirmed });

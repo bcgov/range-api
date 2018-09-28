@@ -174,6 +174,13 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
 
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+    plan.agreement = agreement;
+
     return res.status(200).json(plan).end();
   } catch (err) {
     throw err;
@@ -181,27 +188,40 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
 }));
 
 const updatePlanStatus = async (planId, status = {}, user) => {
-  const plan = await Plan.findOne(db, { id: planId });
-  const body = { status_id: status.id };
-  if (status.code === PLAN_STATUS.APPROVED) {
-    body.effective_at = new Date();
-  } else if (status.code === PLAN_STATUS.STANDS) {
-    body.effective_at = new Date();
-    body.submitted_at = new Date();
-  } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
-    body.effective_at = null;
-  } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
-    || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
-    body.submitted_at = new Date();
-  } else if (status.code === PLAN_STATUS.AWAITING_CONFIRMATION) {
-    if (user.id !== plan.creatorId) {
-      throw errorWithCode('Only the user who created the amendment can submit', 403);
+  try {
+    const plan = await Plan.findOne(db, { id: planId });
+    const body = { status_id: status.id };
+    switch (status.code) {
+      case PLAN_STATUS.APPROVED:
+        body.effective_at = new Date();
+        break;
+      case PLAN_STATUS.STANDS:
+        body.effective_at = new Date();
+        body.submitted_at = new Date();
+        break;
+      case PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT:
+        body.effective_at = null;
+        break;
+      case PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION:
+      case PLAN_STATUS.SUBMITTED_FOR_REVIEW:
+        body.submitted_at = new Date();
+        break;
+      case PLAN_STATUS.AWAITING_CONFIRMATION:
+        if (user.id !== plan.creatorId) {
+          throw errorWithCode('Only the user who created the amendment can submit.', 403);
+        }
+        // it can be the case where an amendment is resubmitted
+        await AmendmentConfirmation.refreshConfirmations(db, planId, user);
+        break;
+      default:
+        break;
     }
-    await AmendmentConfirmation.refreshConfirmations(db, planId, user);
-  }
 
-  const updatedPlan = await Plan.update(db, { id: planId }, body);
-  return updatedPlan;
+    const updatedPlan = await Plan.update(db, { id: planId }, body);
+    return updatedPlan;
+  } catch (err) {
+    throw err;
+  }
 };
 
 // Update the status of an existing plan.
