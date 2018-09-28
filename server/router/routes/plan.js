@@ -45,6 +45,7 @@ const {
   MinisterIssuePasture,
   MinisterIssueAction,
   PlanStatusHistory,
+  AmendmentConfirmation,
 } = dm;
 
 const userCanAccessAgreement = async (user, agreementId) => {
@@ -102,10 +103,12 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
 router.post('/', asyncMiddleware(async (req, res) => {
   const {
     body,
+    user,
   } = req;
   const {
     agreementId,
     statusId,
+    amendmentTypeId,
   } = body;
 
   try {
@@ -134,7 +137,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
       });
     }
 
-    const plan = await Plan.create(db, body);
+    const plan = await Plan.create(db, { ...body, creator_id: user.id });
+
+    // create unsiged confirmations for AHs when creating an amendment
+    if (amendmentTypeId) {
+      await AmendmentConfirmation.createConfirmations(db, agreementId, plan.id);
+    }
 
     return res.status(200).json(plan).end();
   } catch (err) {
@@ -166,20 +174,61 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
 
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+    plan.agreement = agreement;
+
     return res.status(200).json(plan).end();
   } catch (err) {
     throw err;
   }
 }));
 
+const updatePlanStatus = async (planId, status = {}, user) => {
+  try {
+    const plan = await Plan.findOne(db, { id: planId });
+    const body = { status_id: status.id };
+    switch (status.code) {
+      case PLAN_STATUS.APPROVED:
+        body.effective_at = new Date();
+        break;
+      case PLAN_STATUS.STANDS:
+        body.effective_at = new Date();
+        body.submitted_at = new Date();
+        break;
+      case PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT:
+        body.effective_at = null;
+        break;
+      case PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION:
+      case PLAN_STATUS.SUBMITTED_FOR_REVIEW:
+        body.submitted_at = new Date();
+        break;
+      case PLAN_STATUS.AWAITING_CONFIRMATION:
+        if (user.id !== plan.creatorId) {
+          throw errorWithCode('Only the user who created the amendment can submit.', 403);
+        }
+        // it can be the case where an amendment is resubmitted
+        await AmendmentConfirmation.refreshConfirmations(db, planId, user);
+        break;
+      default:
+        break;
+    }
+
+    const updatedPlan = await Plan.update(db, { id: planId }, body);
+    return updatedPlan;
+  } catch (err) {
+    throw err;
+  }
+};
+
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
-  const {
-    statusId,
-  } = req.body;
-  const {
-    planId,
-  } = req.params;
+  const { user, body } = req;
+  const { statusId } = body;
+  const { planId } = req.params;
 
   if (!statusId || !isNumeric(statusId)) {
     throw errorWithCode('statusId must be provided in body and be numeric', 400);
@@ -191,7 +240,7 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    verifyAgreementOwnership(req.user, agreementId);
+    verifyAgreementOwnership(user, agreementId);
 
     const planStatuses = await PlanStatus.find(db, { active: true });
 
@@ -201,22 +250,53 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
 
-    const body = { status_id: statusId };
-    if (status.code === PLAN_STATUS.APPROVED) {
-      body.effective_at = new Date();
-    } else if (status.code === PLAN_STATUS.STANDS) {
-      body.effective_at = new Date();
-      body.submitted_at = new Date();
-    } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
-      body.effective_at = null;
-    } else if (status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION
-      || status.code === PLAN_STATUS.SUBMITTED_FOR_REVIEW) {
-      body.submitted_at = new Date();
-    }
-
-    await Plan.update(db, { id: planId }, body);
+    await updatePlanStatus(planId, status, user);
 
     return res.status(200).json(status).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// update existing amendment confirmation
+router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req, res) => {
+  const { body, params, query, user } = req;
+  const { planId, confirmationId } = params;
+  const { isMinorAmendment } = query;
+  if (!planId) {
+    throw errorWithCode('planId must be provided in path', 400);
+  }
+  if (!confirmationId) {
+    throw errorWithCode('confirmationId must be provided in path', 400);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    verifyAgreementOwnership(req.user, agreementId);
+
+    const confirmation = await AmendmentConfirmation.update(db, { id: confirmationId }, body);
+    const allConfirmations = await AmendmentConfirmation.find(db, { plan_id: planId });
+    let allConfirmed = true;
+    allConfirmations.map((c) => {
+      if (!c.confirmed) {
+        allConfirmed = false;
+      }
+      return undefined;
+    });
+
+    // update the amendment status when the last agreement holder confirms
+    if (allConfirmed) {
+      const planStatuses = await PlanStatus.find(db, { active: true });
+      const status = planStatuses.find(s => (
+        s.code === (isMinorAmendment === 'true'
+          ? PLAN_STATUS.STANDS
+          : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION)
+      ));
+      const plan = await updatePlanStatus(planId, status, user);
+      return res.status(200).json({ allConfirmed, plan, confirmation }).end();
+    }
+
+    return res.status(200).json({ allConfirmed, confirmation }).end();
   } catch (err) {
     throw err;
   }

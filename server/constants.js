@@ -34,13 +34,15 @@ export const TEMPLATES = {
 
 export const DAYS_ON_THE_AVERAGE = 30.44;
 
+export const DATE_FORMAT = {
+  SERVER_SIDE: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+  CLIENT_SIDE: 'MMMM D, YYYY',
+  CLIENT_SIDE_WITHOUT_YEAR: 'MMM D',
+};
+
 export const AGREEMENT_HOLDER_ROLE = {
   PRIMARY: 'A',
   SECONDARY: 'B',
-};
-
-export const REPORT_DEFAULTS = {
-  DATE_FORMAT: 'MMMM Do, YYYY',
 };
 
 export const SSO_ROLE_MAP = {
@@ -67,6 +69,13 @@ export const PLAN_STATUS = {
   RECOMMEND_READY: 'RR',
   RECOMMEND_NOT_READY: 'RNR',
   READY_FOR_FINAL_DECISION: 'RFD',
+  AWAITING_CONFIRMATION: 'AC',
+};
+
+export const AMENDMENT_TYPE = {
+  MINOR: 'MNA',
+  MANDATORY: 'MA',
+  INITIAL: 'A',
 };
 
 export const NOT_PROVIDED = 'Not provided';

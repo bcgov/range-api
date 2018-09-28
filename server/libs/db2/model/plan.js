@@ -28,6 +28,8 @@ import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
 import PlanStatusHistory from './planstatushistory';
+import AmendmentConfirmation from './amendmentconfirmation';
+import User from './user';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -45,6 +47,7 @@ export default class Plan extends Model {
     // so we manually exclude them.
     const extension = new PlanExtension(PlanExtension.extract(data));
     this.extension = extension.id === null ? null : extension;
+    this.creator = new User(User.extract(data));
   }
 
   static get fields() {
@@ -56,7 +59,7 @@ export default class Plan extends Model {
       'id', 'range_name', 'plan_start_date', 'plan_end_date',
       'notes', 'alt_business_name', 'agreement_id', 'status_id',
       'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
-      'effective_at', 'submitted_at',
+      'effective_at', 'submitted_at', 'creator_id',
     ].map(f => `${Plan.table}.${f}`);
   }
 
@@ -72,6 +75,7 @@ export default class Plan extends Model {
       ...Plan.fields,
       ...PlanStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...PlanExtension.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
@@ -82,6 +86,7 @@ export default class Plan extends Model {
         .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
         // left join otherwise if extension is NULL we don't get any results
         .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
+        .join('user_account', { 'plan.creator_id': 'user_account.id' })
         .where({ ...where, uploaded: true })
         .orderBy(...order);
 
@@ -144,6 +149,14 @@ export default class Plan extends Model {
     await this.fetchGrazingSchedules();
     await this.fetchMinisterIssues();
     await this.fetchPlanStatusHistory();
+    await this.fetchAmendmentConfirmations();
+  }
+
+  async fetchAmendmentConfirmations() {
+    const confirmations = await AmendmentConfirmation.find(
+      this.db, { plan_id: this.id },
+    );
+    this.confirmations = confirmations || [];
   }
 
   async fetchPastures() {

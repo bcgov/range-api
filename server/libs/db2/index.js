@@ -39,6 +39,7 @@ import MinisterIssueType from './model/ministerissuetype';
 import MinisterIssuePasture from './model/ministerissuepasture';
 import AmendmentType from './model/amendmenttype';
 import PlanStatusHistory from './model/planstatushistory';
+import AmendmentConfirmation from './model/amendmentconfirmation';
 
 export default class DataManager {
   constructor(config) {
@@ -90,5 +91,6 @@ export default class DataManager {
     this.Zone = Zone;
     this.AmendmentType = AmendmentType;
     this.PlanStatusHistory = PlanStatusHistory;
+    this.AmendmentConfirmation = AmendmentConfirmation;
   }
 }
