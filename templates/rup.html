@@ -221,7 +221,9 @@
       <div class="cell-4">
         <div class="textfield__title">Grace Days</div>
         <div class="textfield__content">{{this.graceDays}}</div>
-      </div>  
+      </div>
+      <div class="textfield__title">Pasture Notes (non legal content)</div>
+      <div class="textfield__content">{{handleNullValue this.notes}}</div>
     </div>
   {{else}}
     <div class="not-provided">Not provided</div>
