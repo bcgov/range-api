@@ -153,6 +153,13 @@ exports.seed = async (knex) => {
       name: 'Awaiting Confirmation',
       active: true,
     },
+    {
+      description_full: '',
+      description_short: '',
+      code: 'RFS',
+      name: 'Recommended For Submission',
+      active: true,
+    },
   ];
 
   await knex(table).delete();
