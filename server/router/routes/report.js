@@ -127,6 +127,8 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
     const ministerIssues = mis.map((mi) => {
       const ministerIssue = { ...mi };
       ministerIssue.pastureNames = getPastureNames(ministerIssue.pastures, pastures);
+      ministerIssue.actionsExist = ministerIssue.ministerIssueActions
+        && (ministerIssue.ministerIssueActions.length > 0);
 
       return ministerIssue;
     });
