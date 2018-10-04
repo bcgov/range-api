@@ -100,8 +100,9 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
   } else if (user.isAdministrator()) {
     const latestPlan = true;
     const sendFullPlan = false;
+    const staffDraft = true;
     results = await Agreement.findWithAllRelations(
-      db, { }, page, limit, latestPlan, sendFullPlan,
+      db, { }, page, limit, latestPlan, sendFullPlan, staffDraft,
     );
   } else {
     throw errorWithCode('Unable to determine user roll', 500);
@@ -114,7 +115,7 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
 // Routes
 //
 
-// Get all agreements based on the user type
+// Get all agreements based on the user type. This is only used by IOS
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const results = await agreementsForUser(req.user);
@@ -128,9 +129,10 @@ router.get('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
-// Search agreements by RAN, contact name, and client name.
+// Search agreements by RAN, contact name, and client name. This is only used by Web
 router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '', limit: l = 10, page: p = 1 } = req.query;
+  const { user, query } = req;
+  const { term = '', limit: l = 10, page: p = 1 } = query;
   const page = Number(p);
   const limit = Number(l);
   const offset = limit * (page - 1);
@@ -166,11 +168,13 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
       const latestPlan = true;
       const sendFullPlan = false;
+      const staffDraft = !user.isAgreementHolder();
       const promises = okIDs
         .slice(offset, offset + limit)
         .map(agreementId =>
           Agreement.findWithAllRelations(
-            db, { forest_file_id: agreementId }, undefined, undefined, latestPlan, sendFullPlan,
+            db, { forest_file_id: agreementId }, undefined, undefined,
+            latestPlan, sendFullPlan, staffDraft,
           ));
 
       agreements = flatten(await Promise.all(promises));
@@ -200,15 +204,18 @@ router.get('/search', asyncMiddleware(async (req, res) => {
   }
 }));
 
-// Get a single agreement by id
+// Get a single agreement by id. This is only used for Web
 router.get('/:id', asyncMiddleware(async (req, res) => {
-  const { id } = req.params;
-  const { latestPlan = false, sendFullPlan = false } = req.query;
+  const { user, params, query } = req;
+  const { id } = params;
+  const { latestPlan = false, sendFullPlan = false } = query;
 
   try {
     // TODO:(jl) Confirm role(s) / access before proceeding with request.
+    const staffDraft = !user.isAgreementHolder();
     const results = await Agreement
-      .findWithAllRelations(db, { forest_file_id: id }, null, null, latestPlan, sendFullPlan);
+      .findWithAllRelations(db, { forest_file_id: id }, null, null,
+        latestPlan, sendFullPlan, staffDraft);
     if (results.length === 0) {
       throw errorWithCode(`Unable to find agreement with ID ${id}`, 404);
     }
