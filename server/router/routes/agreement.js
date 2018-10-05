@@ -75,40 +75,38 @@ const agreementCountForUser = async (user) => {
   return count;
 };
 
-const agreementsForUser = async (user, page = undefined, limit = undefined) => {
-  let results = [];
-  // TODO:(jl) findWithAllRelations is a pretty hevy weight query. Consider
-  // giving just base agreement details and let the clients pull in the
-  // `Plan` later.
+const getAgreeementsForAH = async ({
+  page = undefined, limit = undefined,
+  user, latestPlan = true, sendFullPlan = false, staffDraft = false,
+}) => {
+  const ids = await Agreement.agreementsForClientId(db, user.clientId);
+  const agreements = await Agreement.findWithAllRelations(
+    db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
+  );
+  return agreements;
+};
 
-  if (user.isAgreementHolder()) {
-    const ids = await Agreement.agreementsForClientId(db, user.clientId);
-    const latestPlan = true;
-    const sendFullPlan = false;
-    results = await Agreement.findWithAllRelations(
-      db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan,
-    );
-  } else if (user.isRangeOfficer()) {
-    const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
-    const ids = zones.map(zone => zone.id);
-    const latestPlan = false;
-    const sendFullPlan = true;
-    const staffDraft = true;
-    results = await Agreement.findWithAllRelations(
-      db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
-    );
-  } else if (user.isAdministrator()) {
-    const latestPlan = true;
-    const sendFullPlan = false;
-    const staffDraft = true;
-    results = await Agreement.findWithAllRelations(
-      db, { }, page, limit, latestPlan, sendFullPlan, staffDraft,
-    );
-  } else {
-    throw errorWithCode('Unable to determine user roll', 500);
-  }
+const getAgreementsForRangeOfficer = async ({
+  page = undefined, limit = undefined,
+  user, latestPlan = false, sendFullPlan = true, staffDraft = true,
+}) => {
+  const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
+  const ids = zones.map(zone => zone.id);
+  const agreements = await Agreement.findWithAllRelations(
+    db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
+  );
 
-  return results;
+  return agreements;
+};
+
+const getAgreementsForAdmin = async ({
+  page = undefined, limit = undefined,
+  latestPlan = true, sendFullPlan = false, staffDraft = true,
+}) => {
+  const agreements = await Agreement.findWithAllRelations(
+    db, { }, page, limit, latestPlan, sendFullPlan, staffDraft,
+  );
+  return agreements;
 };
 
 //
@@ -118,7 +116,18 @@ const agreementsForUser = async (user, page = undefined, limit = undefined) => {
 // Get all agreements based on the user type. This is only used by IOS
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    const results = await agreementsForUser(req.user);
+    const { user } = req;
+    let results = [];
+
+    if (user.isAgreementHolder()) {
+      results = await getAgreeementsForAH({ user });
+    } else if (user.isRangeOfficer()) {
+      results = await getAgreementsForRangeOfficer({ user });
+    } else if (user.isAdministrator()) {
+      results = await getAgreementsForAdmin({});
+    } else {
+      throw errorWithCode('Unable to determine user roll', 500);
+    }
 
     if (results.length > 0) {
       results.map(agreement => agreement.transformToV1());
@@ -180,7 +189,16 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       agreements = flatten(await Promise.all(promises));
     } else {
       const count = await agreementCountForUser(req.user);
-      agreements = await agreementsForUser(req.user, page, limit);
+
+      if (user.isAgreementHolder()) {
+        agreements = await getAgreeementsForAH({ user, page, limit });
+      } else if (user.isRangeOfficer()) {
+        agreements = await getAgreementsForRangeOfficer({ user, page, limit, sendFullPlan: false });
+      } else if (user.isAdministrator()) {
+        agreements = await getAgreementsForAdmin({ page, limit });
+      } else {
+        throw errorWithCode('Unable to determine user roll', 500);
+      }
       totalPages = Math.ceil(count / limit) || 1;
       totalItems = count;
     }
