@@ -107,7 +107,6 @@ router.post('/', asyncMiddleware(async (req, res) => {
   } = req;
   const {
     agreementId,
-    statusId,
     amendmentTypeId,
   } = body;
 
@@ -126,16 +125,14 @@ router.post('/', asyncMiddleware(async (req, res) => {
       }
     }
 
-    // delete the old plan whose status is 'Staff Draft' when saving the new staff draft plan.
+    // delete the old plan whose status is 'Staff Draft'
     const staffDraftStatus = await PlanStatus.findOne(db, {
       code: 'SD',
     });
-    if (staffDraftStatus && (statusId === staffDraftStatus.id)) {
-      await Plan.remove(db, {
-        agreement_id: agreement.id,
-        status_id: staffDraftStatus.id,
-      });
-    }
+    await Plan.remove(db, {
+      agreement_id: agreement.id,
+      status_id: staffDraftStatus.id,
+    });
 
     const plan = await Plan.create(db, { ...body, creator_id: user.id });
 
