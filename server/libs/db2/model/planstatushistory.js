@@ -62,7 +62,7 @@ export default class PlanStatusHistory extends Model {
         .from(PlanStatusHistory.table)
         .join('user_account', { 'plan_status_history.user_id': 'user_account.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('id', 'desc');
 
       return results.map(row => new PlanStatusHistory(row, db));
     } catch (err) {
