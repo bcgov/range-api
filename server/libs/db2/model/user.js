@@ -97,36 +97,34 @@ User.prototype.isActive = async function () {
 };
 
 User.prototype.canAccessAgreement = async function (db, agreement) {
-  let status = false;
-
   if (!db || !agreement) {
     return false;
   }
 
   if (this.isAdministrator()) {
-    status = true;
+    return true;
   }
 
   if (this.isAgreementHolder()) {
-    const results = await db
+    const [result] = await db
       .table('client_agreement')
       .where({ agreement_id: agreement.forestFileId, client_id: this.clientId })
       .count();
-    const { count = 0 } = results.pop();
-    status = count > 0;
+    const { count } = result || {};
+    return count !== '0';
   }
 
   if (this.isRangeOfficer()) {
-    const results = await db
+    const [result] = await db
       .table('agreement')
       .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
       .where({ 'ref_zone.user_id': this.id, 'agreement.forest_file_id': agreement.forestFileId })
       .count();
-    const { count = 0 } = results.pop();
-    status = count > 0;
+    const { count } = result || {};
+    return count !== '0';
   }
 
-  return status;
+  return false;
 };
 
 User.prototype.isAdministrator = function () {
