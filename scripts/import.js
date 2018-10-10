@@ -396,7 +396,7 @@ const updateUser = async data => {
       // const zoneCode = record.range_zone_code;
       // const phoneNumber = record.telephone_number;
       
-      const username = record.idir.trim();
+      const username = `idir\\${record.idir.toLowerCase().trim()}`;
       const first = record.first_name.trim() || 'Unknown';
       const last = record.last_name.trim() || 'Unknown';
       const email = record.email.trim();
@@ -458,8 +458,8 @@ const loadData = async (fromUrl) => {
   await updateZone(licensee)
   await updateAgreement(licensee)
   await updateUsage(usage)
-  await updateUser(user);
   await updateClient(client);
+  await updateUser(user);
 };
 
 const main = async () => {

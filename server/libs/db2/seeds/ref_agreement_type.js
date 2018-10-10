@@ -46,7 +46,7 @@ exports.seed = async (knex) => {
       description: 'Haycutting Permit',
       active: true,
     },
-  ];
+  ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();
   await knex(table).insert(ref);

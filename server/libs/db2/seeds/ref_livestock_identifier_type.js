@@ -33,7 +33,8 @@ exports.seed = async (knex) => {
     {
       description: 'Tag',
       active: true,
-    }];
+    },
+  ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();
   await knex(table).insert(ref);

@@ -89,7 +89,7 @@ exports.seed = async (knex) => {
     },
   ].map((district) => {
     did += 1;
-    return { ...district, ...{ id: did } };
+    return { ...district, id: did };
   });
   const zones = [
     {
@@ -340,7 +340,7 @@ exports.seed = async (knex) => {
     },
   ].map((zone) => {
     zid += 1;
-    return { ...zone, ...{ id: zid } };
+    return { ...zone, id: zid };
   });
 
   zones.forEach((zone) => {

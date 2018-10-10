@@ -31,6 +31,10 @@ exports.up = async knex =>
     t.foreign('agreement_id').references('agreement.forest_file_id');
     t.integer('status_id').notNull().references('id').inTable('ref_plan_status');
     t.integer('extension_id').references('id').inTable('extension');
+    t.integer('amendment_type_id').defaultTo(null);
+    t.foreign('amendment_type_id').references('ref_amendment_type.id');
+    t.integer('creator_id').notNull().defaultTo(1);
+    t.foreign('creator_id').references('user_account.id');
 
     t.string('range_name', 32).notNull();
     t.string('alt_business_name', 32);
@@ -40,6 +44,8 @@ exports.up = async knex =>
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.boolean('uploaded').notNull().defaultTo(false);
+    t.dateTime('effective_at');
+    t.dateTime('submitted_at');
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

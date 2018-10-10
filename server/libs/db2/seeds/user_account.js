@@ -48,6 +48,13 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      username: 'bceid\\nackyu711',
+      given_name: 'han',
+      family_name: 'Han Nackyu',
+      email: 'nackyu711@gmail.com',
+      active: true,
+    },
+    {
       username: 'shellhan',
       given_name: 'Shelly',
       family_name: 'Han',
@@ -138,7 +145,7 @@ exports.seed = async (knex) => {
       email: 'roop.7@freshworks.io',
       active: true,
     },
-  ];
+  ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();
   await knex(table).insert(ref);

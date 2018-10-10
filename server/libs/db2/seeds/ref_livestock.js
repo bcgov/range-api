@@ -78,7 +78,7 @@ exports.seed = async (knex) => {
       au_factor: 1.25,
       active: true,
     },
-  ].map((item, index) => { return { ...item, ...{ id: index + 1 } }; });
+  ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();
   await knex(table).insert(ref);
