@@ -309,7 +309,10 @@ router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(req.user, agreementId);
 
-    const planStatusHistory = await PlanStatusHistory.create(db, { ...body, planId });
+    const { id: historyId } = await PlanStatusHistory.create(db, { ...body, planId });
+    const [planStatusHistory] = await PlanStatusHistory.findWithUser(
+      db, { 'plan_status_history.id': historyId },
+    );
     return res.status(200).json(planStatusHistory).end();
   } catch (err) {
     throw err;

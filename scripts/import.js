@@ -230,7 +230,7 @@ const updateZone = async (data) => {
     }
 
     try {
-      let zone
+      let zone;
       zone = await Zone.findOne(db, {
         code: record.district_admin_zone
       });
@@ -442,6 +442,10 @@ const updateUser = async data => {
   }
 }
 
+const createUser = async data => {
+  await updateUser(data);
+}
+
 const loadData = async (fromUrl) => {
   let licensee, usage, client, user;
   if (fromUrl) {
@@ -454,11 +458,12 @@ const loadData = async (fromUrl) => {
     client = await loadFile(CLIENT);
     user = await loadFile(USER);
   }
-  await updateDistrict(licensee)
-  await updateZone(licensee)
-  await updateAgreement(licensee)
-  await updateUsage(usage)
+  await updateDistrict(licensee);
+  await updateZone(licensee);
+  await updateAgreement(licensee);
+  await updateUsage(usage);
   await updateClient(client);
+  await createUser(user);
   await updateUser(user);
 };
 
@@ -516,4 +521,4 @@ const main = async () => {
   }
 }
 
-main()
+main();
