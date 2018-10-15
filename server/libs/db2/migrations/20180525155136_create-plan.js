@@ -33,7 +33,7 @@ exports.up = async knex =>
     t.integer('extension_id').references('id').inTable('extension');
     t.integer('amendment_type_id').defaultTo(null);
     t.foreign('amendment_type_id').references('ref_amendment_type.id');
-    t.integer('creator_id').notNull().defaultTo(1);
+    t.integer('creator_id').notNull();
     t.foreign('creator_id').references('user_account.id');
 
     t.string('range_name', 32).notNull();

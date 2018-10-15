@@ -145,7 +145,7 @@ exports.seed = async (knex) => {
       email: 'roop.7@freshworks.io',
       active: true,
     },
-  ].map((item, index) => ({ ...item, id: index + 1 }));
+  ];
 
   await knex(table).delete();
   await knex(table).insert(ref);

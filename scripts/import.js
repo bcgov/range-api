@@ -440,11 +440,7 @@ const updateUser = async data => {
       console.log(`Can not update User with username ${username}. error = ${error.message}`);
     }
   }
-}
-
-const createUser = async data => {
-  await updateUser(data);
-}
+};
 
 const loadData = async (fromUrl) => {
   let licensee, usage, client, user;
@@ -463,7 +459,6 @@ const loadData = async (fromUrl) => {
   await updateAgreement(licensee);
   await updateUsage(usage);
   await updateClient(client);
-  await createUser(user);
   await updateUser(user);
 };
 
