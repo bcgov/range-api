@@ -89,6 +89,9 @@ exports.seed = async (knex) => {
     }, {
       code: 'DPC',
       description: '',
+    }, {
+      code: 'DNI',
+      description: '',
     },
   ].map((district) => {
     did += 1;
