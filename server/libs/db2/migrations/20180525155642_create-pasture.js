@@ -32,7 +32,7 @@ exports.up = async knex =>
     t.integer('plan_id').notNull().index();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
 
-    t.string('name', 64).notNull();
+    t.text('name').notNull();
     t.integer('allowable_aum');
     t.integer('grace_days').notNull().defaultTo(3);
     t.float('pld_percent').notNull().defaultTo(0);

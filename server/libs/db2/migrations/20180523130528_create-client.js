@@ -29,7 +29,7 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.string('client_number', 8).index().primary();
     t.string('location_code', 2).notNull();
-    t.string('name', 64).notNull();
+    t.text('name').notNull();
     t.dateTime('licensee_start_date').nullable();
     t.dateTime('licensee_end_date').nullable();
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

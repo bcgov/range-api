@@ -26,8 +26,8 @@ const table = 'ref_agreement_type';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('code', 4).notNull();
-    t.string('description', 32).notNull();
+    t.text('code').notNull();
+    t.text('description').notNull();
     t.boolean('active').notNull().defaultTo(true);
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

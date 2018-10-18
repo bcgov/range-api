@@ -26,8 +26,8 @@ const table = 'ref_plan_status';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('code', 4).unique().index().notNull();
-    t.string('name', 50).notNull();
+    t.text('code').unique().index().notNull();
+    t.text('name').notNull();
     t.boolean('active').notNull().defaultTo(true);
     t.text('description_full');
     t.text('description_short');

@@ -28,8 +28,8 @@ const table = 'ref_zone';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('code', 5).unique().index().notNull();
-    t.string('description', 64).notNull();
+    t.text('code').index().notNull();
+    t.text('description').notNull();
     t.integer('district_id').notNull().references('id').inTable('ref_district');
     t.integer('user_id').references('id').inTable('user_account');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

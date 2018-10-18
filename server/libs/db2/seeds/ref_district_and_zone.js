@@ -192,7 +192,7 @@ exports.seed = async (knex) => {
       district: 'DCS',
       description: 'Merritt Zone ',
     }, {
-      code: 'PRI0',
+      code: 'PRIN',
       district: 'DCS',
       description: 'Princeton Zone',
     }, {
@@ -208,7 +208,7 @@ exports.seed = async (knex) => {
       district: 'DSQ',
       description: 'Squamish',
     }, {
-      code: 'PRI1',
+      code: 'PRIN',
       district: 'DPG',
       description: 'Prince George',
     }, {
@@ -336,10 +336,6 @@ exports.seed = async (knex) => {
       code: 'KAMA',
       district: 'DKA',
       description: 'Kamloops Zone',
-    }, {
-      code: 'PRIN',
-      district: 'DPG',
-      description: 'Prince George',
     },
   ].map((zone) => {
     zid += 1;
