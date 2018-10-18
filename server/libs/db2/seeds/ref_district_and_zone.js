@@ -309,15 +309,15 @@ exports.seed = async (knex) => {
       district: 'DSE',
       description: 'Selkirk',
     }, {
-      code: 'ALL0',
+      code: 'ALL',
       district: 'DVA',
       description: 'Vanderhoof',
     }, {
-      code: 'ALL1',
+      code: 'ALL',
       district: 'DJA',
       description: 'Fort St James',
     }, {
-      code: 'ALL2',
+      code: 'ALL',
       district: 'DMK',
       description: 'Mackenzie',
     }, {
