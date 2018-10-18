@@ -35,10 +35,10 @@ exports.up = async knex =>
     t.integer('pasture_id').notNull().index();
     t.foreign('pasture_id').onDelete('CASCADE').references('pasture.id');
 
-    t.dateTime('date_in').notNull();
-    t.dateTime('date_out').notNull();
-    t.integer('grace_days').notNull().defaultTo(0);
-    t.integer('livestock_count').notNull();
+    t.dateTime('date_in');
+    t.dateTime('date_out');
+    t.integer('grace_days');
+    t.integer('livestock_count');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

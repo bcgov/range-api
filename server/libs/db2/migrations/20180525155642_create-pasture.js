@@ -34,8 +34,8 @@ exports.up = async knex =>
 
     t.text('name').notNull();
     t.integer('allowable_aum');
-    t.integer('grace_days').notNull().defaultTo(3);
-    t.float('pld_percent').notNull().defaultTo(0);
+    t.integer('grace_days');
+    t.float('pld_percent');
     t.text('notes');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

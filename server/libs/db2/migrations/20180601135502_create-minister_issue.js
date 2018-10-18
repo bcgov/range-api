@@ -29,7 +29,7 @@ exports.up = async knex =>
 
     t.integer('plan_id').notNull();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
-    t.integer('issue_type_id').notNull().references('id').inTable('ref_minister_issue_type');
+    t.integer('issue_type_id').notNull().references('ref_minister_issue_type.id');
 
     t.string('other_type_name', 32);
     t.text('detail');
