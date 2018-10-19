@@ -26,11 +26,11 @@ const table = 'user_account';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('username', 32).notNull().unique();
-    t.string('given_name', 32).notNull();
-    t.string('family_name', 32).notNull();
-    t.string('email', 32).notNull();
-    t.string('phone_number', 22);
+    t.text('username').notNull().unique();
+    t.text('given_name').notNull();
+    t.text('family_name').notNull();
+    t.text('email').notNull();
+    t.text('phone_number');
     t.boolean('active').notNull().defaultTo(false);
     t.string('client_id', 8).references('client_number').inTable('ref_client');
     t.dateTime('last_login_at');

@@ -26,7 +26,7 @@ const table = 'ref_livestock_identifier_type';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('description', 32).notNull();
+    t.text('description').notNull();
     t.boolean('active').notNull().defaultTo(false);
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

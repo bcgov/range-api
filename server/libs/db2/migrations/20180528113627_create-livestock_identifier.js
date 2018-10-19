@@ -25,8 +25,8 @@ const table = 'livestock_identifier';
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
-    t.string('description', 64);
-    t.string('image_ref', 256);
+    t.text('description');
+    t.text('image_ref');
     t.boolean('accepted').notNull().defaultTo(false);
     t.integer('livestock_identifier_location_id').notNull().references('id').inTable('ref_livestock_identifier_location');
     t.integer('livestock_identifier_type_id').notNull().references('id').inTable('ref_livestock_identifier_type');

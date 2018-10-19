@@ -10,7 +10,7 @@ exports.up = async knex =>
     t.integer('to_plan_status_id').notNull().references('ref_plan_status.id');
     t.integer('user_id').notNull().references('user_account.id');
 
-    t.string('note', 150).notNull();
+    t.text('note').notNull();
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
