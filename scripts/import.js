@@ -268,7 +268,7 @@ const updateUsage = async (data) => {
         await Usage.update(db, { id: usage.id }, 
           {
             year: Number(calendar_year),
-            authorizedAum: Number(authorized_use) || 999,
+            authorizedAum: Number(authorized_use) || 0,
             temporaryIncrease: Number(temp_increase) || 0,
             totalNonUse: Number(total_non_use) || 0,
             totalAnnualUse: Number(total_annual_use) || 0,
@@ -279,7 +279,7 @@ const updateUsage = async (data) => {
       } else {
         await Usage.create(db, {
           year: Number(calendar_year),
-          authorizedAum: Number(authorized_use) || 999,
+          authorizedAum: Number(authorized_use) || 0,
           temporaryIncrease: Number(temp_increase) || 0,
           totalNonUse: Number(total_non_use) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
