@@ -50,6 +50,7 @@ import MonitoringArea from './model/monitoringarea';
 import MonitoringAreaHealth from './model/monitoringareahealth';
 import MonitoringAreaPurpose from './model/moniteringareapurpose';
 import MonitoringAreaPurposeType from './model/monitoringareapurposetype';
+import IndicatorPlant from './model/indicatorplant';
 
 export default class DataManager {
   constructor(config) {
@@ -102,6 +103,7 @@ export default class DataManager {
     this.AmendmentType = AmendmentType;
     this.PlanStatusHistory = PlanStatusHistory;
     this.AmendmentConfirmation = AmendmentConfirmation;
+    this.IndicatorPlant = IndicatorPlant;
     this.PlantSpecies = PlantSpecies;
     this.PlantCommunity = PlantCommunity;
     this.PlantCommunityType = PlantCommunityType;

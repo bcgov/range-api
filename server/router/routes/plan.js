@@ -48,6 +48,7 @@ const {
   AmendmentConfirmation,
   PlantCommunity,
   PlantCommunityAction,
+  IndicatorPlant,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -372,34 +373,37 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
   }
 }));
 
-router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(async (req, res) => {
-  const { params, body, user } = req;
-  const { planId, pastureId } = params;
+router.post(
+  '/:planId?/pasture/:pastureId?/plant-community',
+  asyncMiddleware(async (req, res) => {
+    const { params, body, user } = req;
+    const { planId, pastureId } = params;
 
-  const missingFieldsInPath = checkRequiredFields(
-    ['planId', 'pastureId'], params,
-  );
-  if (missingFieldsInPath) {
-    throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
-  }
+    const missingFieldsInPath = checkRequiredFields(
+      ['planId', 'pastureId'], params,
+    );
+    if (missingFieldsInPath) {
+      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
+    }
 
-  const missingFieldsInBody = checkRequiredFields(
-    ['communityTypeId', 'elevationId', 'purposeOfAction'], body,
-  );
-  if (missingFieldsInBody) {
-    throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
-  }
+    const missingFieldsInBody = checkRequiredFields(
+      ['communityTypeId', 'elevationId', 'purposeOfAction'], body,
+    );
+    if (missingFieldsInBody) {
+      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
+    }
 
-  try {
-    const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(user, agreementId);
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await canUserAccessThisAgreement(user, agreementId);
 
-    const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
-    return res.status(200).json(plantCommunity).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+      const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
+      return res.status(200).json(plantCommunity).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
 
 router.post(
   '/:planId?/pasture/:pastureId?/plant-community/:communityId/action',
@@ -414,7 +418,7 @@ router.post(
       throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
     }
     const missingFieldsInBody = checkRequiredFields(
-      ['plantCommunityId'], body,
+      ['actionTypeId'], body,
     );
     if (missingFieldsInBody) {
       throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
@@ -432,6 +436,43 @@ router.post(
         },
       );
       return res.status(200).json(plantCommunityAction).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
+
+router.post(
+  '/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
+  asyncMiddleware(async (req, res) => {
+    const { params, body, user } = req;
+    const { planId, communityId } = params;
+
+    const missingFieldsInPath = checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], params,
+    );
+    if (missingFieldsInPath) {
+      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
+    }
+    const missingFieldsInBody = checkRequiredFields(
+      ['plantSpeciesId'], body,
+    );
+    if (missingFieldsInBody) {
+      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
+    }
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await canUserAccessThisAgreement(user, agreementId);
+
+      const indicatorPlant = await IndicatorPlant.create(
+        db,
+        {
+          ...body,
+          plantCommunityId: communityId,
+        },
+      );
+      return res.status(200).json(indicatorPlant).end();
     } catch (error) {
       throw error;
     }
