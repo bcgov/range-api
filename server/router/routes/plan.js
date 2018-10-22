@@ -46,7 +46,8 @@ const {
   MinisterIssueAction,
   PlanStatusHistory,
   AmendmentConfirmation,
-  // PlantCommunity,
+  PlantCommunity,
+  PlantCommunityAction,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -340,14 +341,14 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
 // Update the existing Pasture of an existing Plan
 router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => {
-  const { params: { planId, pastureId }, body, user } = req;
+  const { params, body, user } = req;
+  const { planId, pastureId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId must be provided in path', 400);
-  }
-
-  if (!pastureId) {
-    throw errorWithCode('pastureId must be provided in path', 400);
+  const missingFieldsInPath = checkRequiredFields(
+    ['planId', 'pastureId'], params,
+  );
+  if (missingFieldsInPath) {
+    throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
   }
 
   try {
@@ -359,13 +360,83 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
     delete body.planId;
     delete body.plan_id;
 
-    const pasture = await Pasture.update(db, { ...body, ...{ plan_id: planId } });
+    const pasture = await Pasture.update(
+      db,
+      { id: pastureId },
+      { ...body, plan_id: planId },
+    );
 
     return res.status(200).json(pasture).end();
   } catch (err) {
     throw err;
   }
 }));
+
+router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(async (req, res) => {
+  const { params, body, user } = req;
+  const { planId, pastureId } = params;
+
+  const missingFieldsInPath = checkRequiredFields(
+    ['planId', 'pastureId'], params,
+  );
+  if (missingFieldsInPath) {
+    throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
+  }
+
+  const missingFieldsInBody = checkRequiredFields(
+    ['communityTypeId', 'elevationId', 'purposeOfAction'], body,
+  );
+  if (missingFieldsInBody) {
+    throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
+  }
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
+    return res.status(200).json(plantCommunity).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+router.post(
+  '/:planId?/pasture/:pastureId?/plant-community/:communityId/action',
+  asyncMiddleware(async (req, res) => {
+    const { params, body, user } = req;
+    const { planId, communityId } = params;
+
+    const missingFieldsInPath = checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], params,
+    );
+    if (missingFieldsInPath) {
+      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
+    }
+    const missingFieldsInBody = checkRequiredFields(
+      ['plantCommunityId'], body,
+    );
+    if (missingFieldsInBody) {
+      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
+    }
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await canUserAccessThisAgreement(user, agreementId);
+
+      const plantCommunityAction = await PlantCommunityAction.create(
+        db,
+        {
+          ...body,
+          plantCommunityId: communityId,
+        },
+      );
+      return res.status(200).json(plantCommunityAction).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
 
 //
 // Schedule
@@ -451,13 +522,8 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
     // or nothing clreate.
     const schedule = await GrazingSchedule.update(
       db,
-      {
-        id: scheduleId,
-      },
-      {
-        ...body,
-        ...{ plan_id: planId },
-      },
+      { id: scheduleId },
+      { ...body, plan_id: planId },
     );
     // eslint-disable-next-line arrow-body-style
     const promises = grazingScheduleEntries.map((entry) => {
@@ -466,22 +532,14 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
       if (entry.id) {
         return GrazingScheduleEntry.update(
           db,
-          {
-            id: entry.id,
-          },
-          {
-            ...entry,
-            ...{ grazing_schedule_id: scheduleId },
-          },
+          { id: entry.id },
+          { ...entry, grazing_schedule_id: scheduleId },
         );
       }
 
       return GrazingScheduleEntry.create(
         db,
-        {
-          ...entry,
-          ...{ grazing_schedule_id: scheduleId },
-        },
+        { ...entry, grazing_schedule_id: scheduleId },
       );
     });
 
@@ -842,33 +900,4 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
     throw error;
   }
 }));
-
-// router.post('/:planId?/pasture/:pastureId?/plant-community',
-// asyncMiddleware(async (req, res) => {
-//   const { params, body } = req;
-//   const { planId, pastureId } = params;
-
-//   if (!planId) {
-//     throw errorWithCode('The planId is required in path', 400);
-//   }
-//   if (!pastureId) {
-//     throw errorWithCode('The pastureId is required in path', 400);
-//   }
-//   const missingFields = checkRequiredFields(
-//     ['elevationId', 'purposeOfAction'], body,
-//   );
-//   if (missingFields) {
-//     throw errorWithCode(`There are missing fields in the body. (${missingFields})`);
-//   }
-
-//   try {
-//     const agreementId = await Plan.agreementForPlanId(db, planId);
-//     await canUserAccessThisAgreement(req.user, agreementId);
-
-//     const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
-//     return res.status(200).json(plantCommunity).end();
-//   } catch (error) {
-//     throw error;
-//   }
-// }));
 module.exports = router;

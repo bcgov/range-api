@@ -30,7 +30,8 @@ exports.up = async knex =>
     t.increments('id').unsigned().index().primary();
 
     t.integer('purpose_type_id').notNull().references('ref_monitoring_area_purpose_type.id');
-    t.integer('monitoring_area_id').notNull().references('monitoring_area.id');
+    t.integer('monitoring_area_id').notNull();
+    t.foreign('monitoring_area_id').onDelete('CASCADE').references('monitoring_area.id');
 
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

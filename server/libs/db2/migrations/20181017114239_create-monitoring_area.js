@@ -30,7 +30,8 @@ exports.up = async knex =>
     t.increments('id').unsigned().index().primary();
 
     t.integer('health_id').notNull().references('ref_monitoring_area_health.id');
-    t.integer('plant_community_id').notNull().references('plant_community.id');
+    t.integer('plant_community_id').notNull();
+    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
     t.text('name');
     t.text('location');

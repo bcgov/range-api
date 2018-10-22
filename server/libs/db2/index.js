@@ -41,6 +41,7 @@ import AmendmentType from './model/amendmenttype';
 import PlanStatusHistory from './model/planstatushistory';
 import AmendmentConfirmation from './model/amendmentconfirmation';
 import PlantCommunity from './model/plantcommunity';
+import PlantCommunityType from './model/plantcommunitytype';
 import PlantCommunityAction from './model/plantcommunityaction';
 import PlantCommunityActionType from './model/plantcommunityactiontype';
 import PlantCommunityElevation from './model/plantcommunityelevation';
@@ -103,6 +104,7 @@ export default class DataManager {
     this.AmendmentConfirmation = AmendmentConfirmation;
     this.PlantSpecies = PlantSpecies;
     this.PlantCommunity = PlantCommunity;
+    this.PlantCommunityType = PlantCommunityType;
     this.PlantCommunityAction = PlantCommunityAction;
     this.PlantCommunityActionType = PlantCommunityActionType;
     this.PlantCommunityElevation = PlantCommunityElevation;

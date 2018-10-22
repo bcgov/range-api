@@ -30,7 +30,8 @@ exports.up = async knex =>
     t.increments('id').unsigned().index().primary();
 
     t.integer('plant_species_id').notNull().references('ref_plant_species.id');
-    t.integer('plant_community_id').notNull().references('plant_community.id');
+    t.integer('plant_community_id').notNull();
+    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
     t.enu('plan_community_criteria', ['rangeReadiness', 'stubbleHeight', 'shrubUse']).notNull();
     t.float('leaf_stage');

@@ -29,15 +29,16 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('plant_community_id').references('plant_community.id');
-    t.integer('action_type_id').references('ref_plant_community_action_type.id');
+    t.integer('action_type_id').notNull().references('ref_plant_community_action_type.id');
+    t.integer('plant_community_id').notNull();
+    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
     t.text('name');
     t.text('details');
     t.integer('no_graze_start_day');
     t.integer('no_graze_start_month');
-    t.interger('no_graze_end_day');
-    t.interger('no_graze_end_month');
+    t.integer('no_graze_end_day');
+    t.integer('no_graze_end_month');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

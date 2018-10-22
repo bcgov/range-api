@@ -40,6 +40,7 @@ const {
   MinisterIssueType,
   AmendmentType,
   PlantSpecies,
+  PlantCommunityType,
   PlantCommunityElevation,
   PlantCommunityActionType,
   MonitoringAreaHealth,
@@ -62,6 +63,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const ministerIssueType = await MinisterIssueType.find(db, where);
     const amendmentType = await AmendmentType.find(db, where);
     const plantSpecies = await PlantSpecies.find(db, where);
+    const plantCommunityType = await PlantCommunityType.find(db, where);
     const plantCommunityElevation = await PlantCommunityElevation.find(db, where);
     const plantCommunityActionType = await PlantCommunityActionType.find(db, where);
     const monitoringAreaHealth = await MonitoringAreaHealth.find(db, where);
@@ -80,6 +82,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
       MINISTER_ISSUE_TYPE: ministerIssueType || { error: errorMessage },
       AMENDMENT_TYPE: amendmentType || { error: errorMessage },
       PLANT_SPECIES: plantSpecies || { error: errorMessage },
+      PLANT_COMMUNITY_TYPE: plantCommunityType || { error: errorMessage },
       PLANT_COMMUNITY_ELEVATION: plantCommunityElevation || { error: errorMessage },
       PLANT_COMMUNITY_ACTION_TYPE: plantCommunityActionType || { error: errorMessage },
       MONITORING_AREA_HEALTH: monitoringAreaHealth || { error: errorMessage },
