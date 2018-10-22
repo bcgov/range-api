@@ -32,7 +32,7 @@ exports.up = async knex =>
     t.integer('elevation_id').notNull().references('ref_plant_community_elevation.id');
     t.integer('pasture_id').notNull().references('pasture.id');
 
-    t.enu('purpose_of_action', ['establish', 'maintain', 'none']);
+    t.enu('purpose_of_action', ['establish', 'maintain', 'none']).notNull();
     t.text('name');
     t.text('aspect');
     t.text('url');

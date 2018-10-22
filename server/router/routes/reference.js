@@ -39,6 +39,11 @@ const {
   MinisterIssueActionType,
   MinisterIssueType,
   AmendmentType,
+  PlantSpecies,
+  PlantCommunityElevation,
+  PlantCommunityActionType,
+  MonitoringAreaHealth,
+  MonitoringAreaPurposeType,
 } = dm;
 
 const router = new Router();
@@ -56,6 +61,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const ministerIssueActionType = await MinisterIssueActionType.find(db, where);
     const ministerIssueType = await MinisterIssueType.find(db, where);
     const amendmentType = await AmendmentType.find(db, where);
+    const plantSpecies = await PlantSpecies.find(db, where);
+    const plantCommunityElevation = await PlantCommunityElevation.find(db, where);
+    const plantCommunityActionType = await PlantCommunityActionType.find(db, where);
+    const monitoringAreaHealth = await MonitoringAreaHealth.find(db, where);
+    const monitoringAreaPurposeType = await MonitoringAreaPurposeType.find(db, where);
 
     const errorMessage = 'Unable to fetch reference data';
 
@@ -69,6 +79,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
       MINISTER_ISSUE_ACTION_TYPE: ministerIssueActionType || { error: errorMessage },
       MINISTER_ISSUE_TYPE: ministerIssueType || { error: errorMessage },
       AMENDMENT_TYPE: amendmentType || { error: errorMessage },
+      PLANT_SPECIES: plantSpecies || { error: errorMessage },
+      PLANT_COMMUNITY_ELEVATION: plantCommunityElevation || { error: errorMessage },
+      PLANT_COMMUNITY_ACTION_TYPE: plantCommunityActionType || { error: errorMessage },
+      MONITORING_AREA_HEALTH: monitoringAreaHealth || { error: errorMessage },
+      MONITORING_AREA_PURPOSE_TYPE: monitoringAreaPurposeType || { error: errorMessage },
     };
 
     res.status(200).json(response);

@@ -6,7 +6,7 @@ export default class MonitoringAreaPurposeType extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'name', 'description', 'active',
+      'id', 'name', 'active',
     ].map(field => `${this.table}.${field}`);
   }
 
