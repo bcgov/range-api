@@ -27,7 +27,7 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
     t.smallint('year', 4).index();
-    t.integer('authorized_aum').notNull();
+    t.integer('authorized_aum').defaultTo(0);
     t.integer('temporary_increase').defaultTo(0);
     t.integer('total_non_use').defaultTo(0);
     t.integer('total_annual_use').defaultTo(0);

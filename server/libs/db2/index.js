@@ -40,6 +40,17 @@ import MinisterIssuePasture from './model/ministerissuepasture';
 import AmendmentType from './model/amendmenttype';
 import PlanStatusHistory from './model/planstatushistory';
 import AmendmentConfirmation from './model/amendmentconfirmation';
+import PlantCommunity from './model/plantcommunity';
+import PlantCommunityType from './model/plantcommunitytype';
+import PlantCommunityAction from './model/plantcommunityaction';
+import PlantCommunityActionType from './model/plantcommunityactiontype';
+import PlantCommunityElevation from './model/plantcommunityelevation';
+import PlantSpecies from './model/plantspecies';
+import MonitoringArea from './model/monitoringarea';
+import MonitoringAreaHealth from './model/monitoringareahealth';
+import MonitoringAreaPurpose from './model/moniteringareapurpose';
+import MonitoringAreaPurposeType from './model/monitoringareapurposetype';
+import IndicatorPlant from './model/indicatorplant';
 
 export default class DataManager {
   constructor(config) {
@@ -92,5 +103,16 @@ export default class DataManager {
     this.AmendmentType = AmendmentType;
     this.PlanStatusHistory = PlanStatusHistory;
     this.AmendmentConfirmation = AmendmentConfirmation;
+    this.IndicatorPlant = IndicatorPlant;
+    this.PlantSpecies = PlantSpecies;
+    this.PlantCommunity = PlantCommunity;
+    this.PlantCommunityType = PlantCommunityType;
+    this.PlantCommunityAction = PlantCommunityAction;
+    this.PlantCommunityActionType = PlantCommunityActionType;
+    this.PlantCommunityElevation = PlantCommunityElevation;
+    this.MonitoringArea = MonitoringArea;
+    this.MonitoringAreaHealth = MonitoringAreaHealth;
+    this.MonitoringAreaPurpose = MonitoringAreaPurpose;
+    this.MonitoringAreaPurposeType = MonitoringAreaPurposeType;
   }
 }
