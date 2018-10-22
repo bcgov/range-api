@@ -46,6 +46,7 @@ const {
   MinisterIssueAction,
   PlanStatusHistory,
   AmendmentConfirmation,
+  // PlantCommunity,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -62,9 +63,7 @@ const canUserAccessThisAgreement = async (user, agreementId) => {
 
 // Get a specific plan.
 router.get('/:planId', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
+  const { user, params: { planId } } = req;
 
   try {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
@@ -72,7 +71,7 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
       throw errorWithCode('Plan not found', 404);
     }
     const { agreementId } = plan;
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
       db, { forest_file_id: agreementId },
@@ -92,14 +91,8 @@ router.get('/:planId', asyncMiddleware(async (req, res) => {
 
 // Create a new plan.
 router.post('/', asyncMiddleware(async (req, res) => {
-  const {
-    body,
-    user,
-  } = req;
-  const {
-    agreementId,
-    amendmentTypeId,
-  } = body;
+  const { body, user } = req;
+  const { agreementId, amendmentTypeId } = body;
 
   try {
     await canUserAccessThisAgreement(req.user, agreementId);
@@ -140,12 +133,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
 
 // Update an existing plan
 router.put('/:planId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
-  const {
-    body,
-  } = req;
+  const { params: { planId }, body, user } = req;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
@@ -153,7 +141,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
@@ -214,9 +202,8 @@ const updatePlanStatus = async (planId, status = {}, user) => {
 
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
-  const { user, body } = req;
+  const { params: { planId }, body, user } = req;
   const { statusId } = body;
-  const { planId } = req.params;
 
   if (!statusId || !isNumeric(statusId)) {
     throw errorWithCode('statusId must be provided in body and be numeric', 400);
@@ -248,9 +235,13 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 
 // update existing amendment confirmation
 router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req, res) => {
-  const { body, params, query, user } = req;
-  const { planId, confirmationId } = params;
-  const { isMinorAmendment } = query;
+  const {
+    params: { planId, confirmationId },
+    query: { isMinorAmendment },
+    body,
+    user,
+  } = req;
+
   if (!planId) {
     throw errorWithCode('planId must be provided in path', 400);
   }
@@ -292,8 +283,7 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
 
 // create a plan status history
 router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
-  const { body, params } = req;
-  const { planId } = params;
+  const { params: { planId }, body, user } = req;
 
   if (!planId) {
     throw errorWithCode('planId must be provided in path', 400);
@@ -307,7 +297,7 @@ router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     const { id: historyId } = await PlanStatusHistory.create(db, { ...body, planId });
     const [planStatusHistory] = await PlanStatusHistory.findWithUser(
@@ -325,12 +315,7 @@ router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
 
 // Add a Pasture to an existing Plan
 router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
-  const {
-    body,
-  } = req;
-  const {
-    planId,
-  } = req.params;
+  const { params: { planId }, body, user } = req;
 
   if (!planId) {
     throw errorWithCode('planId must be provided in path', 400);
@@ -338,7 +323,7 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated.
@@ -355,13 +340,7 @@ router.post('/:planId?/pasture', asyncMiddleware(async (req, res) => {
 
 // Update the existing Pasture of an existing Plan
 router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    pastureId,
-  } = req.params;
-  const {
-    body,
-  } = req;
+  const { params: { planId, pastureId }, body, user } = req;
 
   if (!planId) {
     throw errorWithCode('planId must be provided in path', 400);
@@ -373,7 +352,7 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -394,15 +373,8 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
 
 // Add a Schedule (and relted Grazing Schedule Entries) to an existing Plan
 router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
-  const {
-    body,
-  } = req;
-  const {
-    grazingScheduleEntries,
-  } = body;
+  const { params: { planId }, body, user } = req;
+  const { grazingScheduleEntries } = body;
 
   if (!planId) {
     throw errorWithCode('The planId is required in path', 400);
@@ -420,7 +392,7 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -449,16 +421,8 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
 
 // Update an existing Schedule (and relted Grazing Schedule Entries) of an existing Plan
 router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    scheduleId,
-  } = req.params;
-  const {
-    body,
-  } = req;
-  const {
-    grazingScheduleEntries,
-  } = body;
+  const { body, user, params: { planId, scheduleId } } = req;
+  const { grazingScheduleEntries } = body;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
@@ -476,7 +440,7 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
@@ -532,10 +496,7 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
 
 // Remove a Schedule (and relted Grazing Schedule Entries) from an existing Plan
 router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    scheduleId,
-  } = req.params;
+  const { user, params: { planId, scheduleId } } = req;
 
   if (!planId) {
     throw errorWithCode('planId is required in path', 400);
@@ -547,7 +508,7 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     // WARNING: This will do a cascading delete on any grazing schedule
     // entries. It will not modify other relations.
@@ -881,4 +842,33 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
     throw error;
   }
 }));
+
+// router.post('/:planId?/pasture/:pastureId?/plant-community',
+// asyncMiddleware(async (req, res) => {
+//   const { params, body } = req;
+//   const { planId, pastureId } = params;
+
+//   if (!planId) {
+//     throw errorWithCode('The planId is required in path', 400);
+//   }
+//   if (!pastureId) {
+//     throw errorWithCode('The pastureId is required in path', 400);
+//   }
+//   const missingFields = checkRequiredFields(
+//     ['elevationId', 'purposeOfAction'], body,
+//   );
+//   if (missingFields) {
+//     throw errorWithCode(`There are missing fields in the body. (${missingFields})`);
+//   }
+
+//   try {
+//     const agreementId = await Plan.agreementForPlanId(db, planId);
+//     await canUserAccessThisAgreement(req.user, agreementId);
+
+//     const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
+//     return res.status(200).json(plantCommunity).end();
+//   } catch (error) {
+//     throw error;
+//   }
+// }));
 module.exports = router;
