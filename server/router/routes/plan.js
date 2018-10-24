@@ -28,7 +28,7 @@ import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { isNumeric, checkRequiredFields } from '../../libs/utils';
-import { PLAN_STATUS } from '../../constants';
+import { PLAN_STATUS, PURPOSE_OF_ACTION, PLANT_COMMUNITY_CRITERIA } from '../../constants';
 
 const router = new Router();
 
@@ -65,7 +65,12 @@ const canUserAccessThisAgreement = async (user, agreementId) => {
 
 // Get a specific plan.
 router.get('/:planId', asyncMiddleware(async (req, res) => {
-  const { user, params: { planId } } = req;
+  const { user, params } = req;
+  const { planId } = params;
+
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
 
   try {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
@@ -135,11 +140,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
 
 // Update an existing plan
 router.put('/:planId?', asyncMiddleware(async (req, res) => {
-  const { params: { planId }, body, user } = req;
+  const { params, body, user } = req;
+  const { planId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId is required in path', 400);
-  }
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -204,15 +210,20 @@ const updatePlanStatus = async (planId, status = {}, user) => {
 
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
-  const { params: { planId }, body, user } = req;
+  const { params, body, user } = req;
   const { statusId } = body;
+  const { planId } = params;
 
-  if (!statusId || !isNumeric(statusId)) {
-    throw errorWithCode('statusId must be provided in body and be numeric', 400);
-  }
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
 
-  if (!planId) {
-    throw errorWithCode('planId must be provided in path', 400);
+  checkRequiredFields(
+    ['statusId'], 'body', body,
+  );
+
+  if (!isNumeric(statusId)) {
+    throw errorWithCode('statusId must be numeric', 400);
   }
 
   try {
@@ -238,18 +249,16 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
 // update existing amendment confirmation
 router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req, res) => {
   const {
-    params: { planId, confirmationId },
     query: { isMinorAmendment },
+    params,
     body,
     user,
   } = req;
+  const { planId, confirmationId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId must be provided in path', 400);
-  }
-  if (!confirmationId) {
-    throw errorWithCode('confirmationId must be provided in path', 400);
-  }
+  checkRequiredFields(
+    ['planId', 'confirmationId'], 'path', params,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -285,17 +294,15 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
 
 // create a plan status history
 router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
-  const { params: { planId }, body, user } = req;
+  const { params, body, user } = req;
+  const { planId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId must be provided in path', 400);
-  }
-  const missingFields = checkRequiredFields(
-    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], body,
+  checkRequiredFields(
+    ['planId'], 'path', params,
   );
-  if (missingFields) {
-    throw errorWithCode(`There are missing fields in the body. (${missingFields})`);
-  }
+  checkRequiredFields(
+    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', body,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -345,12 +352,9 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
   const { params, body, user } = req;
   const { planId, pastureId } = params;
 
-  const missingFieldsInPath = checkRequiredFields(
-    ['planId', 'pastureId'], params,
+  checkRequiredFields(
+    ['planId', 'pastureId'], 'path', params,
   );
-  if (missingFieldsInPath) {
-    throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
-  }
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -373,30 +377,29 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
   }
 }));
 
+// create a plant community
 router.post(
   '/:planId?/pasture/:pastureId?/plant-community',
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
     const { planId, pastureId } = params;
 
-    const missingFieldsInPath = checkRequiredFields(
-      ['planId', 'pastureId'], params,
+    checkRequiredFields(
+      ['planId', 'pastureId'], 'params', params,
     );
-    if (missingFieldsInPath) {
-      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
-    }
 
-    const missingFieldsInBody = checkRequiredFields(
-      ['communityTypeId', 'elevationId', 'purposeOfAction'], body,
+    checkRequiredFields(
+      ['communityTypeId', 'elevationId', 'purposeOfAction'], 'body', body,
     );
-    if (missingFieldsInBody) {
-      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
-    }
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
 
+      const { purposeOfAction } = body;
+      if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
+        throw errorWithCode(`Unacceptable purpose of action with "${purposeOfAction}"`);
+      }
       const plantCommunity = await PlantCommunity.create(db, { ...body, pastureId });
       return res.status(200).json(plantCommunity).end();
     } catch (error) {
@@ -405,29 +408,29 @@ router.post(
   }),
 );
 
+// create a plant community action
 router.post(
   '/:planId?/pasture/:pastureId?/plant-community/:communityId/action',
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
     const { planId, communityId } = params;
 
-    const missingFieldsInPath = checkRequiredFields(
-      ['planId', 'pastureId', 'communityId'], params,
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], 'path', params,
     );
-    if (missingFieldsInPath) {
-      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
-    }
-    const missingFieldsInBody = checkRequiredFields(
-      ['actionTypeId'], body,
+
+    checkRequiredFields(
+      ['actionTypeId'], 'body', body,
     );
-    if (missingFieldsInBody) {
-      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
-    }
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
 
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
       const plantCommunityAction = await PlantCommunityAction.create(
         db,
         {
@@ -442,28 +445,34 @@ router.post(
   }),
 );
 
+// create a indicator plant
 router.post(
   '/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
     const { planId, communityId } = params;
+    const { criteria } = body;
 
-    const missingFieldsInPath = checkRequiredFields(
-      ['planId', 'pastureId', 'communityId'], params,
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], 'path', params,
     );
-    if (missingFieldsInPath) {
-      throw errorWithCode(`There are missing fields in the path. (${missingFieldsInPath})`);
-    }
-    const missingFieldsInBody = checkRequiredFields(
-      ['plantSpeciesId'], body,
+
+    checkRequiredFields(
+      ['plantSpeciesId', 'criteria'], 'body', body,
     );
-    if (missingFieldsInBody) {
-      throw errorWithCode(`There are missing fields in the body. (${missingFieldsInBody})`);
-    }
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
+
+      if (!PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
+        throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
+      }
+
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
 
       const indicatorPlant = await IndicatorPlant.create(
         db,
@@ -485,16 +494,16 @@ router.post(
 
 // Add a Schedule (and relted Grazing Schedule Entries) to an existing Plan
 router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
-  const { params: { planId }, body, user } = req;
+  const { params, body, user } = req;
+  const { planId } = params;
   const { grazingScheduleEntries } = body;
 
-  if (!planId) {
-    throw errorWithCode('The planId is required in path', 400);
-  }
-
-  if (!grazingScheduleEntries) {
-    throw errorWithCode('grazingScheduleEntries is required in body', 400);
-  }
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
+  checkRequiredFields(
+    ['grazingScheduleEntries'], 'body', body,
+  );
 
   grazingScheduleEntries.forEach((entry) => {
     if (!entry.livestockTypeId) {
@@ -533,16 +542,16 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
 
 // Update an existing Schedule (and relted Grazing Schedule Entries) of an existing Plan
 router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
-  const { body, user, params: { planId, scheduleId } } = req;
+  const { body, user, params } = req;
   const { grazingScheduleEntries } = body;
+  const { planId, scheduleId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId is required in path', 400);
-  }
-
-  if (!grazingScheduleEntries) {
-    throw errorWithCode('grazingScheduleEntries is required in body', 400);
-  }
+  checkRequiredFields(
+    ['planId', 'scheduleId'], 'path', params,
+  );
+  checkRequiredFields(
+    ['grazingScheduleEntries'], 'body', body,
+  );
 
   grazingScheduleEntries.forEach((entry) => {
     if (!entry.livestockTypeId) {
@@ -595,15 +604,12 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
 
 // Remove a Schedule (and relted Grazing Schedule Entries) from an existing Plan
 router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) => {
-  const { user, params: { planId, scheduleId } } = req;
+  const { user, params } = req;
+  const { planId, scheduleId } = params;
 
-  if (!planId) {
-    throw errorWithCode('planId is required in path', 400);
-  }
-
-  if (!scheduleId) {
-    throw errorWithCode('scheduleId is required in path', 400);
-  }
+  checkRequiredFields(
+    ['planId', 'scheduleId'], 'path', params,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -627,20 +633,18 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
 
 // Add a grazing schedule entry to an existing grazing schedule
 router.post('/:planId?/schedule/:scheduleId?/entry', asyncMiddleware(async (req, res) => {
-  const { body, params: { planId, scheduleId } } = req;
-  const { livestockTypeId } = body;
+  const { body, params } = req;
+  const { planId, scheduleId } = params;
+
+  checkRequiredFields(
+    ['planId', 'scheduleId'], 'path', params,
+  );
+
+  checkRequiredFields(
+    ['livestockTypeId'], 'body', body,
+  );
 
   try {
-    if (!planId) {
-      throw errorWithCode('The planId is required in path', 400);
-    }
-    if (!scheduleId) {
-      throw errorWithCode('The scheduleId is required in path', 400);
-    }
-    if (!livestockTypeId) {
-      throw errorWithCode('The grazing schedule entry must have livestockType');
-    }
-
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(req.user, agreementId);
     // Use the planId from the URL so that we know exactly what plan
@@ -663,27 +667,16 @@ router.post('/:planId?/schedule/:scheduleId?/entry', asyncMiddleware(async (req,
 router.delete(
   '/:planId?/schedule/:scheduleId?/entry/:grazingScheduleEntryId?',
   asyncMiddleware(async (req, res) => {
-    const {
-      planId,
-      scheduleId,
-      grazingScheduleEntryId,
-    } = req.params;
+    const { params, user } = req;
+    const { planId, grazingScheduleEntryId } = params;
 
-    if (!planId) {
-      throw errorWithCode('planId is required in path', 400);
-    }
-
-    if (!scheduleId) {
-      throw errorWithCode('scheduleId is required in path', 400);
-    }
-
-    if (!grazingScheduleEntryId) {
-      throw errorWithCode('grazingScheduleEntryId is required in path', 400);
-    }
+    checkRequiredFields(
+      ['planId', 'scheduleId', 'grazingScheduleEntryId'], 'path', params,
+    );
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
-      await canUserAccessThisAgreement(req.user, agreementId);
+      await canUserAccessThisAgreement(user, agreementId);
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
       const result = await GrazingScheduleEntry.removeById(db, grazingScheduleEntryId);
@@ -706,13 +699,7 @@ router.delete(
 //
 
 const validateMinisterIssueOpperation = async (planId, body) => {
-  const {
-    pastures,
-  } = body;
-
-  if (!planId) {
-    throw errorWithCode('The planId is required in path', 400);
-  }
+  const { pastures } = body;
 
   if (!pastures || pastures.length === 0) {
     throw errorWithCode('At least one pasture is required', 400);
@@ -746,19 +733,17 @@ const sanitizeDataForMinisterIssue = (body) => {
 
 // Add a Minister Issue to an existing Plan
 router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
-  const {
-    body,
-  } = req;
-  const {
-    pastures,
-  } = body;
+  const { body, params, user } = req;
+  const { planId } = params;
+  const { pastures } = body;
+
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
     validateMinisterIssueOpperation(planId, body);
     const data = sanitizeDataForMinisterIssue(body);
 
@@ -776,24 +761,17 @@ router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
 
 // Update a Minister Issue to an existing Plan
 router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    issueId,
-  } = req.params;
-  const {
-    body,
-  } = req;
-  const {
-    pastures,
-  } = body;
+  const { body, params, user } = req;
+  const { planId, issueId } = params;
+  const { pastures } = body;
+
+  checkRequiredFields(
+    ['planId', 'issueId'], 'path', params,
+  );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
-
-    if (!issueId) {
-      throw errorWithCode('The issueId is required in path', 400);
-    }
+    await canUserAccessThisAgreement(user, agreementId);
 
     validateMinisterIssueOpperation(planId, body);
     const data = sanitizeDataForMinisterIssue(body);
@@ -821,21 +799,16 @@ router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
 
 // Remove a Minister Issue from an existing Plan
 router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    issueId,
-  } = req.params;
+  const { params, user } = req;
+  const { planId, issueId } = params;
+
+  checkRequiredFields(
+    ['planId', 'issueId'], 'path', params,
+  );
 
   try {
-    if (!planId) {
-      throw errorWithCode('The planId is required in path', 400);
-    }
-
-    if (!issueId) {
-      throw errorWithCode('The issueId is required in path', 400);
-    }
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     await MinisterIssue.removeById(db, issueId);
 
@@ -851,21 +824,21 @@ router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
 
 // Add a Minister Issue Action to an existing Minister Issue
 router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res) => {
-  const { body, params: { planId, issueId } } = req;
+  const { body, params, user } = req;
+  const { planId, issueId } = params;
   const { actionTypeId, detail } = body;
 
+  checkRequiredFields(
+    ['planId', 'issueId'], 'path', params,
+  );
+
+  checkRequiredFields(
+    ['actionTypeId'], 'body', body,
+  );
+
   try {
-    if (!planId) {
-      throw errorWithCode('The planId is required in path', 400);
-    }
-    if (!issueId) {
-      throw errorWithCode('The issueId is required in path', 400);
-    }
-    if (!actionTypeId) {
-      throw errorWithCode('The actionTypeId is required in path', 400);
-    }
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     const action = await MinisterIssueAction.create(
       db,
@@ -884,23 +857,21 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
 
 // Update a Minister Issue Action to an existing Minister Issue
 router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
-  const { body, params: { planId, issueId, actionId } } = req;
-  const { actionTypeId, detail } = body;
+  const { body, params, user } = req;
+  const { planId, actionId } = params;
+  const { detail } = body;
+
+  checkRequiredFields(
+    ['planId', 'issueId', 'actionId'], 'path', params,
+  );
+
+  checkRequiredFields(
+    ['actionTypeId'], 'body', body,
+  );
+
   try {
-    if (!planId) {
-      throw errorWithCode('The planId is required in path', 400);
-    }
-    if (!issueId) {
-      throw errorWithCode('The issueId is required in path', 400);
-    }
-    if (!actionId) {
-      throw errorWithCode('The actionId is required in path', 400);
-    }
-    if (!actionTypeId) {
-      throw errorWithCode('The actionTypeId is required in path', 400);
-    }
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     const updatedAction = await MinisterIssueAction.update(
       db,
@@ -919,20 +890,16 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
 
 // Update a Minister Issue Action to an existing Minister Issue
 router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
-  const { planId, issueId, actionId } = req.params;
+  const { params, user } = req;
+  const { planId, actionId } = params;
+
+  checkRequiredFields(
+    ['planId', 'issueId', 'actionId'], 'path', params,
+  );
 
   try {
-    if (!planId) {
-      throw errorWithCode('The planId is required in path', 400);
-    }
-    if (!issueId) {
-      throw errorWithCode('The issueId is required in path', 400);
-    }
-    if (!actionId) {
-      throw errorWithCode('The actionId is required in path', 400);
-    }
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     await MinisterIssueAction.removeById(db, actionId);
 

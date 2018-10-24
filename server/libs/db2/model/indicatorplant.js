@@ -7,7 +7,7 @@ export default class IndicatorPlant extends Model {
     // primary key *must* be first!
     return [
       'id', 'plant_species_id', 'plant_community_id',
-      'plan_community_criteria', 'leaf_stage',
+      'criteria', 'leaf_stage',
       'stubble_height', 'annual_growth',
     ].map(field => `${this.table}.${field}`);
   }

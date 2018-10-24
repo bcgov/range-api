@@ -72,6 +72,14 @@ export const PLAN_STATUS = {
   AWAITING_CONFIRMATION: 'AC',
 };
 
+export const PURPOSE_OF_ACTION = [
+  'establish', 'maintain', 'none',
+];
+
+export const PLANT_COMMUNITY_CRITERIA = [
+  'rangeReadiness', 'stubbleHeight', 'shrubUse',
+];
+
 export const AMENDMENT_TYPE = {
   MINOR: 'MNA',
   MANDATORY: 'MA',

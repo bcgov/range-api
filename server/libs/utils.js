@@ -20,6 +20,8 @@
 
 'use strict';
 
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
+
 /**
  * Check if a string consits of [Aa-Az], [0-9], -, _, and %.
  *
@@ -42,7 +44,7 @@ export const isNumeric = str => str && /^\d+$/.test(str);
  * @param {Array} properties
  * @param {Object} obj
  */
-export const checkRequiredFields = (properties = [], obj) => {
+export const checkRequiredFields = (properties = [], name, obj) => {
   const missingFields = [];
   properties.map((p) => {
     if (obj[p] === undefined) {
@@ -51,8 +53,15 @@ export const checkRequiredFields = (properties = [], obj) => {
     return undefined;
   });
 
-  if (missingFields.length !== 0) {
-    return missingFields;
+  const { length } = missingFields;
+  if (length !== 0) {
+    switch (length) {
+      case 1:
+      case 2:
+        throw errorWithCode(`There are missing fields in ${name}. Required field: (${missingFields.join(' and ')})`);
+      default:
+        throw errorWithCode(`There are missing fields in ${name}. Required field: (${`${missingFields.slice(0, length - 1).join(', ')}, and ${missingFields[length - 1]}`})`);
+    }
   }
   return undefined;
 };
