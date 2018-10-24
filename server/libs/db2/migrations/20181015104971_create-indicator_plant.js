@@ -29,7 +29,7 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('plant_species_id').notNull().references('ref_plant_species.id');
+    t.integer('plant_species_id').references('ref_plant_species.id');
     t.integer('plant_community_id').notNull();
     t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 

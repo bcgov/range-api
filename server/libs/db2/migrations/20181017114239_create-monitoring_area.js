@@ -29,11 +29,11 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('health_id').notNull().references('ref_monitoring_area_health.id');
+    t.integer('health_id').references('ref_monitoring_area_health.id');
     t.integer('plant_community_id').notNull();
     t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
-    t.text('name');
+    t.text('name').notNull();
     t.text('location');
     t.float('transect_azimuth');
     t.float('latitude');

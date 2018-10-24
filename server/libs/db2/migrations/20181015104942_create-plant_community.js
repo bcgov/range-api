@@ -30,7 +30,7 @@ exports.up = async knex =>
     t.increments('id').unsigned().index().primary();
 
     t.integer('community_type_id').notNull().references('ref_plant_community_type.id');
-    t.integer('elevation_id').notNull().references('ref_plant_community_elevation.id');
+    t.integer('elevation_id').references('ref_plant_community_elevation.id');
     t.integer('pasture_id').notNull();
     t.foreign('pasture_id').onDelete('CASCADE').references('pasture.id');
 
