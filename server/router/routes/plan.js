@@ -49,6 +49,8 @@ const {
   PlantCommunity,
   PlantCommunityAction,
   IndicatorPlant,
+  MonitoringArea,
+  MonitoringAreaPurpose,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -396,6 +398,10 @@ router.post(
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
 
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
       const { purposeOfAction } = body;
       if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
         throw errorWithCode(`Unacceptable purpose of action with "${purposeOfAction}"`);
@@ -413,7 +419,7 @@ router.post(
   '/:planId?/pasture/:pastureId?/plant-community/:communityId/action',
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
-    const { planId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId'], 'path', params,
@@ -427,6 +433,10 @@ router.post(
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
 
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
       const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
@@ -450,7 +460,7 @@ router.post(
   '/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
-    const { planId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
     const { criteria } = body;
 
     checkRequiredFields(
@@ -469,6 +479,10 @@ router.post(
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
       const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
@@ -488,6 +502,80 @@ router.post(
   }),
 );
 
+// create a monitoring area
+router.post(
+  '/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',
+  asyncMiddleware(async (req, res) => {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], 'path', params,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await canUserAccessThisAgreement(user, agreementId);
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+
+      const monitoringArea = await MonitoringArea.create(
+        db,
+        { ...body, plantCommunityId: communityId },
+      );
+      return res.status(200).json(monitoringArea).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
+
+// create a monitoring area purpose
+router.post(
+  '/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId/purpose',
+  asyncMiddleware(async (req, res) => {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId, areaId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId', 'areaId'], 'path', params,
+    );
+
+    checkRequiredFields(
+      ['purposeTypeId'], 'body', body,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await canUserAccessThisAgreement(user, agreementId);
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+      const monitoringArea = await MonitoringArea.findOne(db, { id: areaId });
+      if (!monitoringArea) {
+        throw errorWithCode(`No monitoring area found with id: ${areaId}`);
+      }
+
+      const purpose = await MonitoringAreaPurpose.create(db, { ...body, monitoringAreaId: areaId });
+      return res.status(200).json(purpose).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
 //
 // Schedule
 //
