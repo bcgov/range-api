@@ -77,7 +77,7 @@ export const PURPOSE_OF_ACTION = [
 ];
 
 export const PLANT_COMMUNITY_CRITERIA = [
-  'rangeReadiness', 'stubbleHeight', 'shrubUse',
+  'rangereadiness', 'stubbleheight', 'shrubuse',
 ];
 
 export const AMENDMENT_TYPE = {

@@ -123,27 +123,6 @@ export default class Plan extends Model {
     return flatten(results.map(result => Object.values(result))).pop();
   }
 
-  // static async update(db, where, values) {
-  //   const obj = { ...values, ...{} };
-  //   Object.keys(values).forEach((key) => {
-  //     obj[Model.toSnakeCase(key)] = values[key];
-  //   });
-
-  //   try {
-  //     const results = await db
-  //       .table(Plan.table)
-  //       .where(where)
-  //       .update(obj)
-  //       .returning(this.primaryKey);
-  //     const promises = results.map(result =>
-  //       Plan.findWithTypeZoneDistrict(db, { forest_file_id: result }));
-
-  //     return Promise.all(promises);
-  //   } catch (err) {
-  //     throw err;
-  //   }
-  // }
-
   async eagerloadAllOneToMany() {
     await this.fetchPastures();
     await this.fetchGrazingSchedules();
@@ -162,6 +141,14 @@ export default class Plan extends Model {
   async fetchPastures() {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where);
+
+    const promises = pastures.map(p =>
+      [
+        p.fetchPlantCommunities(this.db, { pasture_id: p.id }),
+      ]);
+
+    await Promise.all(flatten(promises));
+
     this.pastures = pastures || [];
   }
 
