@@ -15,7 +15,9 @@ export default class MonitoringArea extends Model {
 
     super(obj, db);
 
-    this.rangelandHealth = new MonitoringAreaHealth(MonitoringAreaHealth.extract(data));
+    if (data.rangeland_health_id) {
+      this.rangelandHealth = new MonitoringAreaHealth(MonitoringAreaHealth.extract(data));
+    }
   }
 
   static get fields() {
@@ -52,6 +54,6 @@ export default class MonitoringArea extends Model {
 
   async fetchMonitoringAreaPurposes(db, where) {
     const monitoringAreaPurposes = await MonitoringAreaPurpose.findWithType(db, where);
-    this.purposes = monitoringAreaPurposes;
+    this.purposes = monitoringAreaPurposes || [];
   }
 }

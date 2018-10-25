@@ -17,9 +17,11 @@ export default class PlantCommunity extends Model {
 
     super(obj, db);
 
-    this.elevation = new PlantCommunityElevation(
-      PlantCommunityElevation.extract(data),
-    );
+    if (data.elevation_id) {
+      this.elevation = new PlantCommunityElevation(
+        PlantCommunityElevation.extract(data),
+      );
+    }
     this.communityType = new PlantCommunityType(
       PlantCommunityType.extract(data),
     );
@@ -73,6 +75,6 @@ export default class PlantCommunity extends Model {
 
     await Promise.all(promises);
 
-    this.monitoringAreas = monitoringAreas;
+    this.monitoringAreas = monitoringAreas || [];
   }
 }

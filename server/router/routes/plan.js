@@ -468,7 +468,7 @@ router.post(
     );
 
     checkRequiredFields(
-      ['plantSpeciesId', 'criteria'], 'body', body,
+      ['criteria'], 'body', body,
     );
 
     try {
@@ -543,6 +543,9 @@ router.post(
         })
       ));
       await Promise.all(promises);
+      await monitoringArea.fetchMonitoringAreaPurposes(
+        db, { monitoring_area_id: monitoringArea.id },
+      );
 
       return res.status(200).json(monitoringArea).end();
     } catch (error) {

@@ -14,9 +14,11 @@ export default class IndicatorPlant extends Model {
 
     super(obj, db);
 
-    this.plantSpecies = new PlantSpecies(
-      PlantSpecies.extract(data),
-    );
+    if (data.plant_species_id) {
+      this.plantSpecies = new PlantSpecies(
+        PlantSpecies.extract(data),
+      );
+    }
   }
 
   static get fields() {
@@ -41,7 +43,7 @@ export default class IndicatorPlant extends Model {
       const results = await db
         .select(myFields)
         .from(IndicatorPlant.table)
-        .join('ref_plant_species', { 'indicator_plant.plant_species_id': 'ref_plant_species.id' })
+        .leftJoin('ref_plant_species', { 'indicator_plant.plant_species_id': 'ref_plant_species.id' })
         .where(where)
         .orderBy('id', 'asc');
 
