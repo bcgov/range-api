@@ -3,6 +3,8 @@
 import Model from './model';
 import PlantCommunityElevation from './plantcommunityelevation';
 import PlantCommunityType from './plantcommunitytype';
+import IndicatorPlant from './indicatorplant';
+import MoniteringArea from './monitoringarea';
 
 export default class PlantCommunity extends Model {
   constructor(data, db = undefined) {
@@ -48,7 +50,7 @@ export default class PlantCommunity extends Model {
         .select(myFields)
         .from(PlantCommunity.table)
         .join('ref_plant_community_type', { 'plant_community.community_type_id': 'ref_plant_community_type.id' })
-        .join('ref_plant_community_elevation', { 'plant_community.elevation_id': 'ref_plant_community_elevation.id' })
+        .leftJoin('ref_plant_community_elevation', { 'plant_community.elevation_id': 'ref_plant_community_elevation.id' })
         .where(where)
         .orderBy('id', 'asc');
 
@@ -56,5 +58,10 @@ export default class PlantCommunity extends Model {
     } catch (error) {
       throw error;
     }
+  }
+
+  async fetchIndicatorPlants(db, where) {
+    const indicatorPlants = await IndicatorPlant.findWithType(db, where);
+    this.indicatorPlants = indicatorPlants || [];
   }
 }

@@ -391,7 +391,7 @@ router.post(
     );
 
     checkRequiredFields(
-      ['communityTypeId', 'elevationId', 'purposeOfAction'], 'body', body,
+      ['communityTypeId', 'purposeOfAction'], 'body', body,
     );
 
     try {

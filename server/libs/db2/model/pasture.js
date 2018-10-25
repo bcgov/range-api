@@ -20,6 +20,7 @@
 
 'use strict';
 
+import { flatten } from 'lodash';
 import Model from './model';
 import PlantCommunity from './plantcommunity';
 
@@ -48,6 +49,14 @@ export default class Pasture extends Model {
 
   async fetchPlantCommunities(db, where) {
     const plantCommunities = await PlantCommunity.findWithElevationAndType(db, where);
+
+    const promises = plantCommunities.map(p =>
+      [
+        p.fetchIndicatorPlants(this.db, { plant_community_id: p.id }),
+      ]);
+
+    await Promise.all(flatten(promises));
+
     this.plantCommunities = plantCommunities || [];
   }
 }
