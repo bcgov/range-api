@@ -103,8 +103,12 @@ router.post('/', asyncMiddleware(async (req, res) => {
   const { body, user } = req;
   const { agreementId, amendmentTypeId } = body;
 
+  checkRequiredFields(
+    ['statusId'], 'body', body,
+  );
+
   try {
-    await canUserAccessThisAgreement(req.user, agreementId);
+    await canUserAccessThisAgreement(user, agreementId);
 
     const agreement = await Agreement.findById(db, agreementId);
     if (!agreement) {
