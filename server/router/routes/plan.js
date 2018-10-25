@@ -508,13 +508,14 @@ router.post(
   asyncMiddleware(async (req, res) => {
     const { params, body, user } = req;
     const { planId, pastureId, communityId } = params;
+    const { purposeTypeIds } = body;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId'], 'path', params,
     );
 
     checkRequiredFields(
-      ['name'], 'body', body,
+      ['name', 'purposeTypeIds'], 'body', body,
     );
 
     try {
@@ -534,6 +535,15 @@ router.post(
         db,
         { ...body, plantCommunityId: communityId },
       );
+
+      const promises = purposeTypeIds.map(pId => (
+        MonitoringAreaPurpose.create(db, {
+          monitoringAreaId: monitoringArea.id,
+          purposeTypeId: pId,
+        })
+      ));
+      await Promise.all(promises);
+
       return res.status(200).json(monitoringArea).end();
     } catch (error) {
       throw error;
@@ -541,45 +551,6 @@ router.post(
   }),
 );
 
-// create a monitoring area purpose
-router.post(
-  '/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId/purpose',
-  asyncMiddleware(async (req, res) => {
-    const { params, body, user } = req;
-    const { planId, pastureId, communityId, areaId } = params;
-
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'areaId'], 'path', params,
-    );
-
-    checkRequiredFields(
-      ['purposeTypeId'], 'body', body,
-    );
-
-    try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
-      await canUserAccessThisAgreement(user, agreementId);
-
-      const pasture = await Pasture.findOne(db, { id: pastureId });
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
-      const monitoringArea = await MonitoringArea.findOne(db, { id: areaId });
-      if (!monitoringArea) {
-        throw errorWithCode(`No monitoring area found with id: ${areaId}`);
-      }
-
-      const purpose = await MonitoringAreaPurpose.create(db, { ...body, monitoringAreaId: areaId });
-      return res.status(200).json(purpose).end();
-    } catch (error) {
-      throw error;
-    }
-  }),
-);
 //
 // Schedule
 //

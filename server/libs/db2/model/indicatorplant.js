@@ -2,6 +2,7 @@
 
 import Model from './model';
 import PlantSpecies from './plantspecies';
+
 export default class IndicatorPlant extends Model {
   constructor(data, db = undefined) {
     const obj = {};

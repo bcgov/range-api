@@ -4,7 +4,7 @@ import Model from './model';
 import PlantCommunityElevation from './plantcommunityelevation';
 import PlantCommunityType from './plantcommunitytype';
 import IndicatorPlant from './indicatorplant';
-import MoniteringArea from './monitoringarea';
+import MonitoringArea from './monitoringarea';
 
 export default class PlantCommunity extends Model {
   constructor(data, db = undefined) {
@@ -20,7 +20,7 @@ export default class PlantCommunity extends Model {
     this.elevation = new PlantCommunityElevation(
       PlantCommunityElevation.extract(data),
     );
-    this.plantCommunityType = new PlantCommunityType(
+    this.communityType = new PlantCommunityType(
       PlantCommunityType.extract(data),
     );
   }
@@ -63,5 +63,16 @@ export default class PlantCommunity extends Model {
   async fetchIndicatorPlants(db, where) {
     const indicatorPlants = await IndicatorPlant.findWithType(db, where);
     this.indicatorPlants = indicatorPlants || [];
+  }
+
+  async fetchMonitoringAreas(db, where) {
+    const monitoringAreas = await MonitoringArea.findWithHealth(db, where);
+
+    const promises = monitoringAreas
+      .map(ma => ma.fetchMonitoringAreaPurposes(this.db, { monitoring_area_id: ma.id }));
+
+    await Promise.all(promises);
+
+    this.monitoringAreas = monitoringAreas;
   }
 }

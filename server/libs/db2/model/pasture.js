@@ -53,6 +53,7 @@ export default class Pasture extends Model {
     const promises = plantCommunities.map(p =>
       [
         p.fetchIndicatorPlants(this.db, { plant_community_id: p.id }),
+        p.fetchMonitoringAreas(this.db, { plant_community_id: p.id }),
       ]);
 
     await Promise.all(flatten(promises));

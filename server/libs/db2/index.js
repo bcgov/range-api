@@ -48,7 +48,7 @@ import PlantCommunityElevation from './model/plantcommunityelevation';
 import PlantSpecies from './model/plantspecies';
 import MonitoringArea from './model/monitoringarea';
 import MonitoringAreaHealth from './model/monitoringareahealth';
-import MonitoringAreaPurpose from './model/moniteringareapurpose';
+import MonitoringAreaPurpose from './model/monitoringareapurpose';
 import MonitoringAreaPurposeType from './model/monitoringareapurposetype';
 import IndicatorPlant from './model/indicatorplant';
 
