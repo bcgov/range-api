@@ -58,9 +58,9 @@ export const checkRequiredFields = (properties = [], name, obj) => {
     switch (length) {
       case 1:
       case 2:
-        throw errorWithCode(`There are missing fields in ${name}. Required field: (${missingFields.join(' and ')})`);
+        throw errorWithCode(`There are missing fields in ${name}. Required field: ${missingFields.join(' and ')}`);
       default:
-        throw errorWithCode(`There are missing fields in ${name}. Required field: (${`${missingFields.slice(0, length - 1).join(', ')}, and ${missingFields[length - 1]}`})`);
+        throw errorWithCode(`There are missing fields in ${name}. Required field: ${`${missingFields.slice(0, length - 1).join(', ')}, and ${missingFields[length - 1]}`}`);
     }
   }
   return undefined;

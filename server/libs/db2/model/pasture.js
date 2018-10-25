@@ -21,8 +21,20 @@
 'use strict';
 
 import Model from './model';
+import PlantCommunity from './plantcommunity';
 
 export default class Pasture extends Model {
+  constructor(data, db = undefined) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      if (Pasture.fields.indexOf(`${Pasture.table}.${key}`) > -1) {
+        obj[key] = data[key];
+      }
+    });
+
+    super(obj, db);
+  }
+
   static get fields() {
     // primary key *must* be first!
     return ['id', 'name', 'allowable_aum', 'grace_days', 'pld_percent',
@@ -32,5 +44,10 @@ export default class Pasture extends Model {
 
   static get table() {
     return 'pasture';
+  }
+
+  async fetchPlantCommunities(db, where) {
+    const plantCommunities = await PlantCommunity.findWithElevationAndType(db, where);
+    this.plantCommunities = plantCommunities || [];
   }
 }

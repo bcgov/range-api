@@ -513,6 +513,10 @@ router.post(
       ['planId', 'pastureId', 'communityId'], 'path', params,
     );
 
+    checkRequiredFields(
+      ['name'], 'body', body,
+    );
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await canUserAccessThisAgreement(user, agreementId);
