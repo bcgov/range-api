@@ -51,6 +51,7 @@ import MonitoringAreaHealth from './model/monitoringareahealth';
 import MonitoringAreaPurpose from './model/monitoringareapurpose';
 import MonitoringAreaPurposeType from './model/monitoringareapurposetype';
 import IndicatorPlant from './model/indicatorplant';
+import InvasivePlantChecklist from './model/invasiveplantchecklist';
 
 export default class DataManager {
   constructor(config) {
@@ -114,5 +115,6 @@ export default class DataManager {
     this.MonitoringAreaHealth = MonitoringAreaHealth;
     this.MonitoringAreaPurpose = MonitoringAreaPurpose;
     this.MonitoringAreaPurposeType = MonitoringAreaPurposeType;
+    this.InvasivePlantChecklist = InvasivePlantChecklist;
   }
 }
