@@ -30,6 +30,7 @@ import MinisterIssue from './ministerissue';
 import PlanStatusHistory from './planstatushistory';
 import AmendmentConfirmation from './amendmentconfirmation';
 import User from './user';
+import InvasivePlantChecklist from './invasiveplantchecklist';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -129,6 +130,7 @@ export default class Plan extends Model {
     await this.fetchMinisterIssues();
     await this.fetchPlanStatusHistory();
     await this.fetchAmendmentConfirmations();
+    await this.fetchInvasivePlantChecklist();
   }
 
   async fetchAmendmentConfirmations() {
@@ -189,5 +191,12 @@ export default class Plan extends Model {
     const planStatusHistory = await PlanStatusHistory.findWithUser(this.db, where);
 
     this.planStatusHistory = planStatusHistory || [];
+  }
+
+  async fetchInvasivePlantChecklist() {
+    const where = { plan_id: this.id };
+    const checklist = await InvasivePlantChecklist.findOne(this.db, where);
+
+    this.invasivePlantChecklist = checklist || {};
   }
 }

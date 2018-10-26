@@ -51,6 +51,7 @@ const {
   IndicatorPlant,
   MonitoringArea,
   MonitoringAreaPurpose,
+  InvasivePlantChecklist,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -978,4 +979,25 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
     throw error;
   }
 }));
+
+// create a invasive plant checklist
+router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, res) => {
+  const { body, params, user } = req;
+  const { planId } = params;
+
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
+    return res.status(200).json(checklist).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
 module.exports = router;
