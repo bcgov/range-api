@@ -54,6 +54,7 @@ export default class Pasture extends Model {
       [
         p.fetchIndicatorPlants(this.db, { plant_community_id: p.id }),
         p.fetchMonitoringAreas(this.db, { plant_community_id: p.id }),
+        p.fetchPlantCommunityActions(this.db, { plant_community_id: p.id }),
       ]);
 
     await Promise.all(flatten(promises));

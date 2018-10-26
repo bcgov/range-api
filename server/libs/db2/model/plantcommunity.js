@@ -1,6 +1,7 @@
 'use strict';
 
 import Model from './model';
+import PlantCommunityAction from './plantcommunityaction';
 import PlantCommunityElevation from './plantcommunityelevation';
 import PlantCommunityType from './plantcommunitytype';
 import IndicatorPlant from './indicatorplant';
@@ -76,5 +77,10 @@ export default class PlantCommunity extends Model {
     await Promise.all(promises);
 
     this.monitoringAreas = monitoringAreas || [];
+  }
+
+  async fetchPlantCommunityActions(db, where) {
+    const plantCommunityActions = await PlantCommunityAction.findWithType(db, where);
+    this.plantCommunityActions = plantCommunityActions || [];
   }
 }
