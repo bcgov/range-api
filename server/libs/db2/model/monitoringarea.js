@@ -23,7 +23,7 @@ export default class MonitoringArea extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'rangeland_health_id', 'plant_community_id', 'name',
+      'id', 'rangeland_health_id', 'plant_community_id', 'name', 'other_purpose',
       'location', 'transect_azimuth', 'latitude', 'longitude',
     ].map(field => `${this.table}.${field}`);
   }
