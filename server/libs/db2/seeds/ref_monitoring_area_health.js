@@ -5,7 +5,7 @@ const table = 'ref_monitoring_area_health';
 exports.seed = async (knex) => {
   const ref = [
     {
-      name: 'Properly Funcitoning Condition',
+      name: 'Properly Functioning Condition',
       active: true,
     },
     {
@@ -13,7 +13,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
-      name: 'Moderatly at Risk',
+      name: 'Moderately at Risk',
       active: true,
     },
     {
