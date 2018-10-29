@@ -67,7 +67,7 @@ const canUserAccessThisAgreement = async (user, agreementId) => {
 };
 
 // Get a specific plan.
-router.get('/:planId', asyncMiddleware(async (req, res) => {
+router.get('/:planId?', asyncMiddleware(async (req, res) => {
   const { user, params } = req;
   const { planId } = params;
 
@@ -992,6 +992,10 @@ router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, re
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
+
+    if (await InvasivePlantChecklist.findOne(db, { plan_id: planId })) {
+      throw errorWithCode(`Invasive plant checklist already exist with the plan id: ${planId}`);
+    }
 
     const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
     return res.status(200).json(checklist).end();
