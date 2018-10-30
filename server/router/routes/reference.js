@@ -45,6 +45,8 @@ const {
   PlantCommunityActionType,
   MonitoringAreaHealth,
   MonitoringAreaPurposeType,
+  ManagementConsiderationType,
+  AdditionalRequirementCategory,
 } = dm;
 
 const router = new Router();
@@ -68,6 +70,8 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const plantCommunityActionType = await PlantCommunityActionType.find(db, where);
     const monitoringAreaHealth = await MonitoringAreaHealth.find(db, where);
     const monitoringAreaPurposeType = await MonitoringAreaPurposeType.find(db, where);
+    const managementConsiderationType = await ManagementConsiderationType.find(db, where);
+    const additionalRequirementCategory = await AdditionalRequirementCategory.find(db, where);
 
     const errorMessage = 'Unable to fetch reference data';
 
@@ -87,6 +91,8 @@ router.get('/', asyncMiddleware(async (req, res) => {
       PLANT_COMMUNITY_ACTION_TYPE: plantCommunityActionType || { error: errorMessage },
       MONITORING_AREA_HEALTH: monitoringAreaHealth || { error: errorMessage },
       MONITORING_AREA_PURPOSE_TYPE: monitoringAreaPurposeType || { error: errorMessage },
+      MANAGEMENT_CONSIDERATION_TYPE: managementConsiderationType || { error: errorMessage },
+      ADDITIONAL_REQUIREMENT_CATEGORY: additionalRequirementCategory || { error: errorMessage },
     };
 
     res.status(200).json(response);
