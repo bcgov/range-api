@@ -34,6 +34,7 @@ exports.up = async knex =>
     t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
     t.text('name').notNull();
+    t.text('other_purpose');
     t.text('location');
     t.float('transect_azimuth');
     t.float('latitude');
