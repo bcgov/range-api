@@ -1,15 +1,53 @@
 'use strict';
 
 import Model from './model';
+import ManagementConsiderationType from './managementconsiderationtype';
 
 export default class ManagementConsideration extends Model {
+  constructor(data, db = undefined) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      if (ManagementConsideration.fields.indexOf(`${ManagementConsideration.table}.${key}`) > -1) {
+        obj[key] = data[key];
+      }
+    });
+
+    super(obj, db);
+
+    if (data.consideration_type_id) {
+      this.considerationType = new ManagementConsiderationType(
+        ManagementConsiderationType.extract(data),
+      );
+    }
+  }
+
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'url', 'type_id', 'plan_id']
+    return ['id', 'detail', 'url', 'consideration_type_id', 'plan_id']
       .map(field => `${this.table}.${field}`);
   }
 
   static get table() {
     return 'management_consideration';
+  }
+
+  static async findWithType(db, where) {
+    const myFields = [
+      ...ManagementConsideration.fields,
+      ...ManagementConsiderationType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+    ];
+
+    try {
+      const results = await db
+        .select(myFields)
+        .from(ManagementConsideration.table)
+        .leftJoin('ref_management_consideration_type', { 'management_consideration.consideration_type_id': 'ref_management_consideration_type.id' })
+        .where(where)
+        .orderBy('id', 'asc');
+
+      return results.map(row => new ManagementConsideration(row, db));
+    } catch (error) {
+      throw error;
+    }
   }
 }

@@ -227,6 +227,9 @@ exports.seed = async (knex) => {
     {
       name: 'Wildrye, Giant',
     },
+    {
+      name: 'Other',
+    },
   ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();

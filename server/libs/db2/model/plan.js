@@ -31,6 +31,8 @@ import PlanStatusHistory from './planstatushistory';
 import AmendmentConfirmation from './amendmentconfirmation';
 import User from './user';
 import InvasivePlantChecklist from './invasiveplantchecklist';
+import AdditionalRequirement from './additionalrequirement';
+import ManagementConsideration from './managementconsideration';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -131,6 +133,8 @@ export default class Plan extends Model {
     await this.fetchPlanStatusHistory();
     await this.fetchAmendmentConfirmations();
     await this.fetchInvasivePlantChecklist();
+    await this.fetchAdditionalRequirements();
+    await this.fetchManagementConsiderations();
   }
 
   async fetchAmendmentConfirmations() {
@@ -198,5 +202,19 @@ export default class Plan extends Model {
     const checklist = await InvasivePlantChecklist.findOne(this.db, where);
 
     this.invasivePlantChecklist = checklist || {};
+  }
+
+  async fetchAdditionalRequirements() {
+    const where = { plan_id: this.id };
+    const requirements = await AdditionalRequirement.findWithCategory(this.db, where);
+
+    this.additionalRequirements = requirements || [];
+  }
+
+  async fetchManagementConsiderations() {
+    const where = { plan_id: this.id };
+    const considerations = await ManagementConsideration.findWithType(this.db, where);
+
+    this.managementConsiderations = considerations || [];
   }
 }

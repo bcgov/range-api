@@ -35,6 +35,7 @@ exports.up = async knex =>
     t.foreign('pasture_id').onDelete('CASCADE').references('pasture.id');
 
     t.enu('purpose_of_action', ['establish', 'maintain', 'none']).notNull();
+    t.boolean('approved').notNull().defaultTo(false);
     t.text('name');
     t.text('aspect');
     t.text('url');

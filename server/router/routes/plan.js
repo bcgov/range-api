@@ -52,6 +52,8 @@ const {
   MonitoringArea,
   MonitoringAreaPurpose,
   InvasivePlantChecklist,
+  AdditionalRequirement,
+  ManagementConsideration,
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
@@ -995,6 +997,46 @@ router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, re
 
     const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
     return res.status(200).json(checklist).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// create an additonal requirement
+router.post('/:planId?/additional-requirement', asyncMiddleware(async (req, res) => {
+  const { body, params, user } = req;
+  const { planId } = params;
+
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const requirement = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+    return res.status(200).json(requirement).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// create a management consideration
+router.post('/:planId?/management-consideration', asyncMiddleware(async (req, res) => {
+  const { body, params, user } = req;
+  const { planId } = params;
+
+  checkRequiredFields(
+    ['planId'], 'path', params,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const consideration = await ManagementConsideration.create(db, { ...body, plan_id: planId });
+    return res.status(200).json(consideration).end();
   } catch (error) {
     throw error;
   }
