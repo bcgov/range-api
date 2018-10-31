@@ -16,30 +16,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Kyubin Han on 2018-10-15.
+// Created by Kyubin Han on 2018-10-29.
 //
 
 'use strict';
 
 /* eslint-disable no-unused-vars */
 
-const table = 'indicator_plant';
+const table = 'additional_requirement';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('plant_species_id').references('ref_plant_species.id');
-    t.integer('plant_community_id').notNull();
-    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
+    t.integer('category_id').references('ref_additional_requirement_category.id');
+    t.integer('plan_id').notNull();
+    t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
 
-    t.enu('criteria', ['rangereadiness', 'stubbleheight', 'shrubuse']).notNull();
-    t.text('name');
-    t.float('value');
-    // t.float('leaf_stage');
-    // t.float('stubble_height');
-    // t.float('annual_growth');
-
+    t.text('detail');
+    t.text('url');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

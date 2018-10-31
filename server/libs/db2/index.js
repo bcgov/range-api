@@ -52,6 +52,10 @@ import MonitoringAreaPurpose from './model/monitoringareapurpose';
 import MonitoringAreaPurposeType from './model/monitoringareapurposetype';
 import IndicatorPlant from './model/indicatorplant';
 import InvasivePlantChecklist from './model/invasiveplantchecklist';
+import AdditionalRequirement from './model/additionalrequirement';
+import AdditionalRequirementCategory from './model/additionalrequirementcategory';
+import ManagementConsideration from './model/managementconsideration';
+import ManagementConsiderationType from './model/managementconsiderationtype';
 
 export default class DataManager {
   constructor(config) {
@@ -116,5 +120,9 @@ export default class DataManager {
     this.MonitoringAreaPurpose = MonitoringAreaPurpose;
     this.MonitoringAreaPurposeType = MonitoringAreaPurposeType;
     this.InvasivePlantChecklist = InvasivePlantChecklist;
+    this.AdditionalRequirement = AdditionalRequirement;
+    this.AdditionalRequirementCategory = AdditionalRequirementCategory;
+    this.ManagementConsideration = ManagementConsideration;
+    this.ManagementConsiderationType = ManagementConsiderationType;
   }
 }
