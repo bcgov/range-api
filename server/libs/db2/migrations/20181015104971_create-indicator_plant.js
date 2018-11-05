@@ -36,10 +36,6 @@ exports.up = async knex =>
     t.enu('criteria', ['rangereadiness', 'stubbleheight', 'shrubuse']).notNull();
     t.text('name');
     t.float('value');
-    // t.float('leaf_stage');
-    // t.float('stubble_height');
-    // t.float('annual_growth');
-
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

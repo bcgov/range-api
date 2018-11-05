@@ -230,6 +230,106 @@ exports.seed = async (knex) => {
     {
       name: 'Other',
     },
+    {
+      name: 'Alder',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Antelope-Brush',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Birch, bog',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Bitterbrush',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Ceanothus, Snowbrush',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Ceanothus, Redstem',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Cherry, Choke',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Cherry, Pin',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Cinquefoil, Shrubby',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Dogwood, Red-osier',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Ninebark',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Oceanspray',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Raspberry sp.',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Rose, Prickly',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Rose, Woods',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Sagebrush, Big',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Sagebrush, Prairie',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Saskatoon',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Snowberry',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Sumac',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Trembling Aspen',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Twinberry, Black',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Twinberry, Red',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Willow spp',
+      is_shrub_use: true,
+    },
+    {
+      name: 'Other',
+      is_shrub_use: true,
+    },
   ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();

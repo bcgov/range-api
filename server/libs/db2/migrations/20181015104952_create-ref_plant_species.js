@@ -32,6 +32,7 @@ exports.up = async knex =>
     t.float('leaf_stage');
     t.float('stubble_height');
     t.float('annual_growth');
+    t.boolean('is_shrub_use').notNull().defaultTo(false);
     t.boolean('active').notNull().defaultTo(true);
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

@@ -7,7 +7,7 @@ export default class PlantSpecies extends Model {
     // primary key *must* be first!
     return [
       'id', 'name', 'leaf_stage', 'stubble_height',
-      'annual_growth', 'active',
+      'annual_growth', 'active', 'is_shrub_use',
     ].map(field => `${this.table}.${field}`);
   }
 
