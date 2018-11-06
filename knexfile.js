@@ -9,7 +9,7 @@ if (env === 'development') {
 }
 
 module.exports = {
-  testing: {
+  test: {
     client: 'postgresql',
     connection: {
       host: process.env.POSTGRESQL_HOST,
