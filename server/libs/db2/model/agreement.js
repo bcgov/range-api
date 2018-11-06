@@ -281,7 +281,7 @@ export default class Agreement extends Model {
   }
 
   async fetchUsage() {
-    const order = ['year', 'desc'];
+    const order = ['year', 'asc'];
     const where = { agreement_id: this.forestFileId };
     const usage = await Usage.find(this.db, where, order);
     this.usage = usage;
