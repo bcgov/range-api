@@ -137,23 +137,115 @@ const updateZone = async (data) => {
       continue;
     }
 
-    const zone = await Zone.findOne(db, { code: zoneCode, district_id: district.id });
-    if (zone) continue;
-
     try {
-      console.log(`Adding Zone with Code ${zoneCode}`)
-      await Zone.create(db, {
-        code: zoneCode,
-        description: zoneDescription || 'No description available',
-        districtId: district.id,
-      });
-      created += 1;
+      const zone = await Zone.findOne(db, { code: zoneCode, district_id: district.id });
+      if (!zone) {
+        console.log(`Adding Zone with Code ${zoneCode}`)
+        await Zone.create(db, {
+          code: zoneCode,
+          description: zoneDescription || 'No description available',
+          districtId: district.id,
+        });
+        created += 1;
+      }
     } catch (error) {
       console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`)
       throw error;
     }
   }
   console.log(`${created} zones were created.`);
+};
+
+const updateUser = async (data) => {
+  let created = 0;
+  let updated = 0;
+  let zoneUpdated = 0;
+  const districts = await District.find(db, {});
+  const districtCodesMap = {};
+  districts.map(d => {
+    districtCodesMap[d.code] = d;
+  });
+  const zones = await Zone.find(db, {});
+  
+  for (let index = 0; index < data.length; index++) {
+    const record = data[index];
+    const {
+      idir,
+      range_zone_code,
+      first_name,
+      last_name,
+      email: rawEmail,
+      telephone_number,
+      district: districtCode,
+    } = record;
+
+    if (!range_zone_code || !idir) {
+      console.log(`Skipping Record with this user record row: ${index + 2}`);
+      continue;
+    }
+
+    const username = `idir\\${idir.toLowerCase().trim()}`;
+    const first = first_name.trim() || 'Unknown';
+    const last = last_name.trim() || 'Unknown';
+    const email = rawEmail.trim();
+    const zoneCode = range_zone_code.trim();
+    const phoneNumber = telephone_number.trim();
+
+    try {
+      let user = await User.findOne(db, {
+        username,
+      });
+
+      if (user) {
+        await User.update(db, { username }, {
+          username,
+          givenName: first,
+          familyName: last,
+          email,
+          active: true,
+          phoneNumber,
+        });
+        updated += 1;
+      } else {
+        user = await User.create(db, {
+          username,
+          givenName: first,
+          familyName: last,
+          email,
+          active: true,
+          phoneNumber,
+        });
+        created += 1;
+      }
+      const district = districtCodesMap[districtCode];
+      const zone = zones.find(zone => {
+        const { code, districtId } = zone;
+        return (code === zoneCode && districtId === district.id);
+      });
+
+      if (zone) {
+        await Zone.update(db, { id: zone.id }, {
+          user_id: user.id
+        });
+        zoneUpdated += 1;
+      }
+
+      if (email === 'Rob.Dinwoodie@gov.bc.ca') {
+        const promises = ['DOS1', 'DOS2', 'DOS3', 'DOS4'].map(zoneCode => {
+          zoneUpdated += 1;
+          return Zone.update(db, { code: zoneCode }, {
+            user_id: user.id
+          });
+        });
+        await Promise.all(promises);
+      }
+
+    } catch (error) {
+      console.log(`Error with message = ${error.message}, username ${username} row: ${index + 2}`)
+      throw error;
+    }
+  }
+  console.log(`${created} users were created, ${updated} users were updated, ${zoneUpdated} zones were updated`);
 };
 
 const updateAgreement = async (data) => {
@@ -232,6 +324,7 @@ const updateAgreement = async (data) => {
   }
   console.log(`${created} agreements were created. ${updated} agreements were updated`);
 };
+
 const updateUsage = async (data) => {
   let created = 0;
   let updated = 0;
@@ -360,87 +453,6 @@ const updateClient = async (data) => {
   console.log(`${created} clients were created, ${updated} clients were updated`);
 };
 
-const updateUser = async (data) => {
-  let created = 0;
-  let updated = 0;
-  let zoneUpdated = 0;
-  const districts = await District.find(db, {});
-  const districtCodesMap = {};
-  districts.map(d => {
-    districtCodesMap[d.code] = d;
-  });
-  const zones = await Zone.find(db, {});
-  
-  for (let index = 0; index < data.length; index++) {
-    const record = data[index];
-    const {
-      idir,
-      range_zone_code,
-      first_name,
-      last_name,
-      email: rawEmail,
-      telephone_number,
-      district: districtCode,
-    } = record;
-
-    if (!range_zone_code || !idir) {
-      console.log(`Skipping Record with this user record row: ${index + 2}`);
-      continue;
-    }
-
-    const username = `idir\\${idir.toLowerCase().trim()}`;
-    const first = first_name.trim() || 'Unknown';
-    const last = last_name.trim() || 'Unknown';
-    const email = rawEmail.trim();
-    const zoneCode = range_zone_code.trim();
-    const phoneNumber = telephone_number.trim();
-
-    try {
-      let user = await User.findOne(db, {
-        username,
-      });
-
-      if (user) {
-        await User.update(db, { username }, {
-          username,
-          givenName: first,
-          familyName: last,
-          email,
-          active: true,
-          phoneNumber,
-        });
-        updated += 1;
-      } else {
-        user = await User.create(db, {
-          username,
-          givenName: first,
-          familyName: last,
-          email,
-          active: true,
-          phoneNumber,
-        });
-        created += 1;
-      }
-      const district = districtCodesMap[districtCode];
-      const zone = zones.find(zone => {
-        const { code, districtId } = zone;
-        return (code === zoneCode && districtId === district.id);
-      });
-
-      if (zone) {
-        await Zone.update(db, { code: zoneCode }, {
-          user_id: user.id
-        });
-        zoneUpdated += 1;
-      }
-    } catch (error) {
-      console.log(`Error with message = ${error.message}, username ${username} row: ${index + 2}`)
-      throw error;
-    }
-  }
-  console.log(`${created} users were created, ${updated} users were updated, ${zoneUpdated} zones were updated`);
-};
-
 const loadData = async (fromUrl) => {
   let licensee, usage, client, user;
   if (fromUrl) {
@@ -455,10 +467,10 @@ const loadData = async (fromUrl) => {
   }
   await updateDistrict(licensee);
   await updateZone(licensee);
+  await updateUser(user);
   await updateAgreement(licensee);
   await updateUsage(usage);
   await updateClient(client);
-  await updateUser(user);
 };
 
 const main = async () => {

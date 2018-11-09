@@ -224,11 +224,11 @@ exports.seed = async (knex) => {
       description: 'McBride',
     }, {
       code: 'NPC',
-      district: 'DCP',
+      district: 'DPC',
       description: 'North Peace',
     }, {
       code: 'SPC',
-      district: 'DCP',
+      district: 'DPC',
       description: 'South Peace',
     }, {
       code: 'FTN',
@@ -283,7 +283,7 @@ exports.seed = async (knex) => {
       district: 'DQU',
       description: 'East Fraser',
     }, {
-      code: 'HAIDA',
+      code: 'HAID',
       district: 'DQC',
       description: 'Haida Gwaii District',
     }, {
