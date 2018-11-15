@@ -18,11 +18,10 @@ export default class PlantCommunity extends Model {
 
     super(obj, db);
 
-    if (data.elevation_id) {
-      this.elevation = new PlantCommunityElevation(
-        PlantCommunityElevation.extract(data),
-      );
-    }
+    this.elevation = data.elevation_id
+      ? this.elevation = new PlantCommunityElevation(PlantCommunityElevation.extract(data))
+      : null;
+
     this.communityType = new PlantCommunityType(
       PlantCommunityType.extract(data),
     );

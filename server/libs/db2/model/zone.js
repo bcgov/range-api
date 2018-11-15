@@ -40,9 +40,7 @@ export default class Zone extends Model {
 
     this.district = new District(District.extract(data));
 
-    if (data.user_id) {
-      this.user = new User(User.extract(data));
-    }
+    this.user = data.user_id ? new User(User.extract(data)) : null;
   }
 
   static get fields() {
