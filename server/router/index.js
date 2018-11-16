@@ -33,6 +33,7 @@ import reference from './routes/reference';
 import report from './routes/report';
 import user from './routes/user';
 import zone from './routes/zone';
+import feedback from './routes/feedback';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -53,4 +54,5 @@ module.exports = (app) => {
   app.use('/api/v1/zone', zone);
   app.use('/api/v1/report', report);
   app.use('/api/v1/user', user);
+  app.use('/api/v1/feedback', feedback);
 };
