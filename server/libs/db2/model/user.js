@@ -26,8 +26,6 @@ import Model from './model';
 export default class User extends Model {
   constructor(data, db = undefined) {
     super(data, db);
-
-    this.roles = [];
   }
 
   static get fields() {

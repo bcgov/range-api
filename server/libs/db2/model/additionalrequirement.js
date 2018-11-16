@@ -14,11 +14,9 @@ export default class AdditionalRequirement extends Model {
 
     super(obj, db);
 
-    if (data.category_id) {
-      this.category = new AdditionalRequirementCategory(
-        AdditionalRequirementCategory.extract(data),
-      );
-    }
+    this.category = data.category_id
+      ? new AdditionalRequirementCategory(AdditionalRequirementCategory.extract(data))
+      : null;
   }
 
   static get fields() {

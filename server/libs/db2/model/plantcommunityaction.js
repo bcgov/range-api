@@ -14,11 +14,9 @@ export default class PlantCommunityAction extends Model {
 
     super(obj, db);
 
-    if (data.action_type_id) {
-      this.actionType = new PlantCommunityActionType(
-        PlantCommunityActionType.extract(data),
-      );
-    }
+    this.actionType = data.action_type_id
+      ? new PlantCommunityActionType(PlantCommunityActionType.extract(data))
+      : null;
   }
 
   static get fields() {

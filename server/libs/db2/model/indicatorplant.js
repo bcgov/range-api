@@ -14,11 +14,9 @@ export default class IndicatorPlant extends Model {
 
     super(obj, db);
 
-    if (data.plant_species_id) {
-      this.plantSpecies = new PlantSpecies(
-        PlantSpecies.extract(data),
-      );
-    }
+    this.plantSpecies = data.plant_species_id
+      ? new PlantSpecies(PlantSpecies.extract(data))
+      : null;
   }
 
   static get fields() {

@@ -14,11 +14,9 @@ export default class ManagementConsideration extends Model {
 
     super(obj, db);
 
-    if (data.consideration_type_id) {
-      this.considerationType = new ManagementConsiderationType(
-        ManagementConsiderationType.extract(data),
-      );
-    }
+    this.considerationType = data.consideration_type_id
+      ? new ManagementConsiderationType(ManagementConsiderationType.extract(data))
+      : null;
   }
 
   static get fields() {

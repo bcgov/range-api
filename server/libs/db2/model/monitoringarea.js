@@ -15,9 +15,9 @@ export default class MonitoringArea extends Model {
 
     super(obj, db);
 
-    if (data.rangeland_health_id) {
-      this.rangelandHealth = new MonitoringAreaHealth(MonitoringAreaHealth.extract(data));
-    }
+    this.rangelandHealth = data.rangeland_health_id
+      ? new MonitoringAreaHealth(MonitoringAreaHealth.extract(data))
+      : null;
   }
 
   static get fields() {
