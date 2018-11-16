@@ -172,6 +172,7 @@ const updateUser = async (data) => {
     const {
       idir,
       range_zone_code,
+      range_zone_full,
       first_name,
       last_name,
       email: rawEmail,
@@ -179,7 +180,7 @@ const updateUser = async (data) => {
       district: districtCode,
     } = record;
 
-    if (!range_zone_code || !idir) {
+    if (!idir) {
       console.log(`Skipping Record with this user record row: ${index + 2}`);
       continue;
     }
@@ -188,8 +189,9 @@ const updateUser = async (data) => {
     const first = first_name.trim() || 'Unknown';
     const last = last_name.trim() || 'Unknown';
     const email = rawEmail.toLowerCase().trim();
-    const zoneCode = range_zone_code.trim();
+    const zoneCode = range_zone_code && range_zone_code.trim();
     const phoneNumber = telephone_number.trim();
+    const zoneDescription = range_zone_full ? range_zone_full.trim() : 'No description available';
 
     try {
       let user = await User.findOne(db, {
@@ -225,7 +227,8 @@ const updateUser = async (data) => {
 
       if (zone) {
         await Zone.update(db, { id: zone.id }, {
-          user_id: user.id
+          user_id: user.id,
+          description: zoneDescription,
         });
         zoneUpdated += 1;
       }

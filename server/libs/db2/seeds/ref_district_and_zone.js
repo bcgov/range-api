@@ -185,15 +185,15 @@ exports.seed = async (knex) => {
     }, {
       code: 'MER1',
       district: 'DCS',
-      description: 'Merritt Zone ',
+      description: 'Merritt Zone',
     }, {
       code: 'MER2',
       district: 'DCS',
-      description: 'Merritt Zone ',
+      description: 'Merritt Zone',
     }, {
       code: 'MER3',
       district: 'DCS',
-      description: 'Merritt Zone ',
+      description: 'Merritt Zone',
     }, {
       code: 'PRIN',
       district: 'DCS',
@@ -287,22 +287,6 @@ exports.seed = async (knex) => {
       district: 'DQC',
       description: 'Haida Gwaii District',
     }, {
-      code: 'SECW',
-      district: 'DOS',
-      description: 'Southeast Centralwest',
-    }, {
-      code: 'SWNW',
-      district: 'DOS',
-      description: 'Southeast Northeast',
-    }, {
-      code: 'SWNE',
-      district: 'DOS',
-      description: 'Southwest Northeast',
-    }, {
-      code: 'SWCW',
-      district: 'DOS',
-      description: 'Southwest Centralwest',
-    }, {
       code: 'SAYW',
       district: 'DCR',
       description: 'Campbell River',
@@ -323,10 +307,6 @@ exports.seed = async (knex) => {
       code: 'ALL',
       district: 'DMK',
       description: 'Mackenzie',
-    }, {
-      code: 'CE',
-      district: 'DOS',
-      description: 'Centraleast',
     }, {
       code: 'KAMC',
       district: 'DKA',
