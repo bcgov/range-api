@@ -187,7 +187,7 @@ const updateUser = async (data) => {
     const username = `idir\\${idir.toLowerCase().trim()}`;
     const first = first_name.trim() || 'Unknown';
     const last = last_name.trim() || 'Unknown';
-    const email = rawEmail.trim();
+    const email = rawEmail.toLowerCase().trim();
     const zoneCode = range_zone_code.trim();
     const phoneNumber = telephone_number.trim();
 
@@ -228,16 +228,6 @@ const updateUser = async (data) => {
           user_id: user.id
         });
         zoneUpdated += 1;
-      }
-
-      if (email === 'Rob.Dinwoodie@gov.bc.ca') {
-        const promises = ['DOS1', 'DOS2', 'DOS3', 'DOS4'].map(zoneCode => {
-          zoneUpdated += 1;
-          return Zone.update(db, { code: zoneCode }, {
-            user_id: user.id
-          });
-        });
-        await Promise.all(promises);
       }
 
     } catch (error) {

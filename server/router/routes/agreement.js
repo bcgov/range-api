@@ -124,7 +124,8 @@ router.get('/', asyncMiddleware(async (req, res) => {
     } else if (user.isRangeOfficer()) {
       results = await getAgreementsForRangeOfficer({ user });
     } else if (user.isAdministrator()) {
-      results = await getAgreementsForAdmin({});
+      throw errorWithCode('This endpoint is forbidden for the admin user', 401);
+      // results = await getAgreementsForAdmin({});
     } else {
       throw errorWithCode('Unable to determine user roll', 500);
     }
