@@ -55,5 +55,6 @@ export default class MonitoringArea extends Model {
   async fetchMonitoringAreaPurposes(db, where) {
     const monitoringAreaPurposes = await MonitoringAreaPurpose.findWithType(db, where);
     this.purposes = monitoringAreaPurposes || [];
+    this.purposeTypeIds = this.purposes.map(p => p.purposeTypeId);
   }
 }
