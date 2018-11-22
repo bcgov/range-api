@@ -299,36 +299,6 @@ export const compile = (source, context) => {
 };
 
 /**
- * Render the given HTML as a PDF document and return a stream of the newly generated PDF.
- *
- * @param {String} html A string containing HTML
- * @returns A resolved `Promise` with the `ReadStream` of the renderd PDF; rejected otherwise.
- */
-export const renderToPDF = html =>
-  new Promise((resolve, reject) => {
-    const fileName = Math.random()
-      .toString(36)
-      .slice(2);
-    const output = path.join('/tmp', fileName);
-    const writeStream = fs.createWriteStream(output);
-    const options = {
-      pageSize: 'letter',
-      printMediaType: true,
-    };
-
-    wkhtmltopdf(html, options, (error, stream) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      stream.pipe(writeStream).on('finish', () => {
-        resolve(fs.createReadStream(output));
-      });
-    });
-  });
-
-/**
  * Load the html template from the local file system and return it as a Buffer.
  *
  * @param {String} fileName The path and name of the file to be loaded

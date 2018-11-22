@@ -22,13 +22,13 @@
 
 'use strict';
 
-import { asyncMiddleware, errorWithCode, logger, streamToBuffer } from '@bcgov/nodejs-common-utils';
+import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
-import fs from 'fs';
+import wkhtmltopdf from 'wkhtmltopdf';
 import config from '../../config';
 import { TEMPLATES } from '../../constants';
 import DataManager from '../../libs/db2';
-import { compile, loadTemplate, renderToPDF, calcDateDiff, calcTotalAUMs, calcPldAUMs, calcCrownAUMs, roundToSingleDecimalPlace, calcCrownTotalAUMs, getPastureNames } from '../../libs/template';
+import { compile, loadTemplate, calcDateDiff, calcTotalAUMs, calcPldAUMs, calcCrownAUMs, roundToSingleDecimalPlace, calcCrownTotalAUMs, getPastureNames } from '../../libs/template';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -143,25 +143,8 @@ router.get('/:planId/', asyncMiddleware(async (req, res) => {
       grazingSchedules,
       ministerIssues,
     });
-    const stream = await renderToPDF(html);
-    const buffer = await streamToBuffer(stream);
 
-    // cleanup
-    fs.unlink(stream.path, (err) => {
-      if (err) {
-        logger.warn(`Unable to remove file ${stream.path}`);
-      }
-    });
-
-    if (!buffer) {
-      return res.status(500).json({
-        message: 'Unable to fetch report data.',
-      });
-    }
-
-    res.contentType('application/pdf');
-
-    return res.end(buffer, 'binary');
+    return wkhtmltopdf(html).pipe(res);
   } catch (err) {
     throw err;
   }
