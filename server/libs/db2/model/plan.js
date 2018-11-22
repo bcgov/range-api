@@ -123,7 +123,10 @@ export default class Plan extends Model {
       .from(Plan.table)
       .where({ id: planId });
 
-    return flatten(results.map(result => Object.values(result))).pop();
+    if (results.length === 0) return null;
+
+    const [result] = results;
+    return result.agreement_id;
   }
 
   async eagerloadAllOneToMany() {

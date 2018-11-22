@@ -39,18 +39,15 @@ const {
 } = dm2;
 
 const userCanAccessAgreement = async (user, agreementId) => {
-  const agreements = await Agreement.find(db, { forest_file_id: agreementId });
-  if (agreements.length === 0) {
+  const [agreement] = await Agreement.find(db, { forest_file_id: agreementId });
+  if (!agreement) {
     throw errorWithCode('Unable to find the related agreement', 500);
   }
 
-  const agreement = agreements.pop();
-
-  if (!user.canAccessAgreement(agreement)) {
-    return false;
+  const can = await user.canAccessAgreement(db, agreement);
+  if (!can) {
+    throw errorWithCode('You do not access to this agreement', 403);
   }
-
-  return true;
 };
 
 //
@@ -58,31 +55,25 @@ const userCanAccessAgreement = async (user, agreementId) => {
 //
 
 router.get('/:planId/', asyncMiddleware(async (req, res) => {
-  const {
-    planId: pId,
-  } = req.params;
-  const planId = Number(pId);
+  const { user, params } = req;
+  const { planId } = params;
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
-    if (!userCanAccessAgreement(req.user, agreementId)) {
+    if (!userCanAccessAgreement(user, agreementId)) {
       throw errorWithCode('You do not access to this agreement', 403);
     }
 
-    const results = await Agreement.findWithAllRelations(db, { forest_file_id: agreementId });
-    const agreement = results.pop();
+    const [agreement] = await Agreement.findWithAllRelations(db, { forest_file_id: agreementId });
     agreement.transformToV1();
 
-    const plan = agreement.plans.find(p => p.id === planId);
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
 
     const { pastures, grazingSchedules: gss, ministerIssues: mis } = plan || [];
     const { zone } = agreement || {};
-    const { user } = zone || {};
-    const {
-      givenName,
-      familyName,
-    } = user || {};
+    const { user: staff } = zone || {};
+    const { givenName, familyName } = staff;
     user.name = givenName && familyName && `${givenName} ${familyName}`;
 
     const grazingSchedules = gss.map((schedule) => {
