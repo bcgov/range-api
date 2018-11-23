@@ -87,9 +87,9 @@ const contactRole = (contact) => {
   return 'Secondary';
 };
 
-const handleNullValue = (value) => {
+const handleNullValue = (value, notProvided) => {
   if (!value) {
-    return NOT_PROVIDED;
+    return typeof notProvided === 'string' ? notProvided : NOT_PROVIDED;
   }
   return value;
 };
