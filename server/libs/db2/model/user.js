@@ -86,7 +86,7 @@ export default class User extends Model {
 
 /* eslint-disable func-names, arrow-body-style */
 
-User.prototype.isActive = async function () {
+User.prototype.isActive = function () {
   if (this.active && Object.values(SSO_ROLE_MAP).some(item => this.roles.includes(item))) {
     return true;
   }

@@ -147,11 +147,11 @@ const authmware = async (app) => {
       if (clientAccess && clientAccess.roles) {
         user.roles = clientAccess.roles;
       } else {
-        return done(errorWithCode('This user has no roles.', 403), false); // Forbidden
+        return done(errorWithCode('This account has not been assigned a role, please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
       }
 
       if (!user.isActive()) {
-        return done(errorWithCode('This user account is not active.', 403), false); // Forbidden
+        return done(errorWithCode('This account is not active yet. Please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
       }
 
       // Update the last-login time of this user.

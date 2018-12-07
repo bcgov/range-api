@@ -27,8 +27,8 @@ exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
     t.text('username').notNull().unique();
-    t.text('given_name').notNull();
-    t.text('family_name').notNull();
+    t.text('given_name');
+    t.text('family_name');
     t.text('email').notNull();
     t.text('phone_number');
     t.boolean('active').notNull().defaultTo(false);
