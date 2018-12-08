@@ -68,11 +68,11 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
     
     stage('Setup') {
       echo "Setup: ${BUILD_ID}"
-
+      sh "ls"
       sh "node -v"
       sh "npm -v"
   
-      sh "npm install"
+      sh "npm ci"
     }
 
     stage('Test') {
