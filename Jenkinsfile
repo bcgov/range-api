@@ -72,7 +72,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
       sh "node -v"
       sh "npm -v"
   
-      sh "npm ci"
+      sh "npm install"
     }
 
     stage('Test') {
