@@ -27,6 +27,7 @@ import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
+import { checkRequiredFields } from '../../libs/utils';
 
 const router = new Router();
 const dm = new DataManager(config);
@@ -39,7 +40,8 @@ const {
 // Get all users
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
-    if (req.user && req.user.isAgreementHolder()) {
+    const { user } = req;
+    if (user && user.isAgreementHolder()) {
       throw errorWithCode('You do not have the permission as an agreement holder', 403);
     }
     const users = await User.find(db, {});
@@ -52,12 +54,35 @@ router.get('/', asyncMiddleware(async (req, res) => {
 // Get user information
 router.get('/me', asyncMiddleware(async (req, res) => {
   try {
-    const me = req.user;
-    delete me.created_at;
-    delete me.updated_at;
-    const { roles } = req.user;
+    const { user } = req;
+    delete user.created_at;
+    delete user.updated_at;
 
-    res.status(200).json({ ...me, roles }).end();
+    res.status(200).json(user).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+router.put('/me', asyncMiddleware(async (req, res) => {
+  try {
+    const { body, user } = req;
+    const { id: userId } = user;
+    const {
+      givenName,
+      familyName,
+      email,
+      phoneNumber,
+    } = body;
+
+    const updated = await User.update(db, { id: userId }, {
+      givenName,
+      familyName,
+      email,
+      phoneNumber,
+    });
+
+    res.status(200).json(updated).end();
   } catch (error) {
     throw error;
   }
@@ -66,16 +91,17 @@ router.get('/me', asyncMiddleware(async (req, res) => {
 // Assign a client id to user
 router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
   try {
-    const { clientId, userId } = req.params;
-    if (!clientId) {
-      throw errorWithCode('clientId must be provided in path', 400);
-    }
-    if (!userId) {
-      throw errorWithCode('userId must be provided in path', 400);
-    }
-    if (req.user && req.user.isAgreementHolder()) {
+    const { user, params } = req;
+    const { clientId, userId } = params;
+
+    checkRequiredFields(
+      ['clientId', 'userId'], 'path', params,
+    );
+
+    if (user && user.isAgreementHolder()) {
       throw errorWithCode('You do not have the permission as an agreement holder', 403);
     }
+
     const client = await Client.find(db, { client_number: clientId });
     if (!client) {
       throw errorWithCode('Client does not exist', 400);
@@ -91,4 +117,5 @@ router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
     throw error;
   }
 }));
+
 module.exports = router;
