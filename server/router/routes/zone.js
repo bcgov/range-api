@@ -26,7 +26,7 @@ import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import { isNumeric } from '../../libs/utils';
+import { isNumeric, checkRequiredFields } from '../../libs/utils';
 
 const dm = new DataManager(config);
 const {
@@ -61,17 +61,17 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Get the user associated with a specific zone.
 router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
-  const {
-    zoneId,
-  } = req.params;
+  const { body, params } = req;
+  const { zoneId } = params;
+  const { userId } = body;
 
-  const {
-    userId,
-  } = req.body;
+  checkRequiredFields(
+    ['userId'], 'body', body,
+  );
 
-  if (!userId) {
-    throw errorWithCode('You must supply the user ID', 400);
-  }
+  checkRequiredFields(
+    ['zoneId'], 'path', params,
+  );
 
   if (!isNumeric(zoneId) || !isNumeric(userId)) {
     throw errorWithCode('The zone and user ID must be numeric', 400);
@@ -84,7 +84,9 @@ router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
     }
 
     await Zone.update(db, { id: parseInt(zoneId, 10) }, { user_id: userId });
-    const user = await User.findById(db, userId);
+    const user = await User.update(db, { id: userId }, {
+      active: true,
+    });
 
     res.status(200).json(user).end();
   } catch (err) {
