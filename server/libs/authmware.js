@@ -135,9 +135,9 @@ const authmware = async (app) => {
       if (!user) {
         user = await User.create(db, {
           username: jwtPayload.preferred_username,
-          givenName: jwtPayload.given_name,
-          familyName: jwtPayload.family_name,
           email: jwtPayload.email,
+          // givenName: jwtPayload.given_name,
+          // familyName: jwtPayload.family_name,
         });
       }
 
