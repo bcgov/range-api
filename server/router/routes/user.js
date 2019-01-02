@@ -41,10 +41,13 @@ const {
 router.get('/', asyncMiddleware(async (req, res) => {
   try {
     const { user } = req;
+
     if (user && user.isAgreementHolder()) {
       throw errorWithCode('You do not have the permission as an agreement holder', 403);
     }
+
     const users = await User.find(db, {});
+
     res.status(200).json(users).end();
   } catch (error) {
     throw error;
@@ -71,14 +74,12 @@ router.put('/me', asyncMiddleware(async (req, res) => {
     const {
       givenName,
       familyName,
-      email,
       phoneNumber,
     } = body;
 
     const updated = await User.update(db, { id: userId }, {
       givenName,
       familyName,
-      email,
       phoneNumber,
     });
 
