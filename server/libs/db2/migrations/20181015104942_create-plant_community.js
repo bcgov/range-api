@@ -43,6 +43,7 @@ exports.up = async knex =>
     t.integer('range_readiness_day');
     t.integer('range_readiness_month');
     t.text('range_readiness_note');
+
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 

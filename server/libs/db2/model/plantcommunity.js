@@ -30,9 +30,10 @@ export default class PlantCommunity extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'community_type_id', 'elevation_id', 'pasture_id', 'purpose_of_action',
-      'name', 'aspect', 'url', 'notes', 'range_readiness_day',
-      'range_readiness_month', 'range_readiness_note', 'approved',
+      'id', 'community_type_id', 'elevation_id', 'pasture_id',
+      'purpose_of_action', 'name', 'aspect', 'url', 'notes',
+      'range_readiness_day', 'range_readiness_month', 'range_readiness_note',
+      'approved', 'shrub_use',
     ].map(field => `${this.table}.${field}`);
   }
 
