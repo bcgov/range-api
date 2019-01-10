@@ -446,6 +446,40 @@ const updateClient = async (data) => {
   console.log(`${created} clients were created, ${updated} clients were updated`);
 };
 
+const prepareTestSetup = async () => {
+  try {
+    // assign zones
+    const lisa = await User.findOne(db, { username: 'idir\\lmoore' });
+    await Zone.update(db, { code: 'DOS1' }, { user_id: lisa.id });
+    const katie = await User.findOne(db, { username: 'idir\\kmenke' });
+    await Zone.update(db, { code: 'DOS2' }, { user_id: katie.id });
+
+    // assign clients
+    const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });
+    await User.update(db, { id: leslie.id }, { client_id: '00017862' });
+    const ron = await User.findOne(db, { username: 'bceid\\ron.swanson' });
+    await User.update(db, { id: ron.id }, { client_id: '00008732' });
+    const tom = await User.findOne(db, { username: 'bceid\\tom.haverford'});
+    await User.update(db, { id: tom.id }, { client_id: '00116762' });
+    const andy = await User.findOne(db, { username: 'bceid\\andy.dwyer'});
+    await User.update(db, { id: andy.id }, { client_id: '00026223' });
+    const april = await User.findOne(db, { username: 'bceid\\april.ludgate'});
+    await User.update(db, { id: april.id }, { client_id: '00117913' });
+    const ann = await User.findOne(db, { username: 'bceid\\ann.perkins'});
+    await User.update(db, { id: ann.id }, { client_id: '00024901' });
+    const ben = await User.findOne(db, { username: 'bceid\\ben.wyatt'});
+    await User.update(db, { id: ben.id }, { client_id: '00030650' });
+    const chris = await User.findOne(db, { username: 'bceid\\chris.traeger'});
+    await User.update(db, { id: chris.id }, { client_id: '00178082' });
+
+    console.log('Done preparing for test accounts');
+    
+  } catch (error) {
+    console.log(`Error with message = ${error.message}`)
+    throw error;
+  }
+};
+
 const loadData = async (fromUrl) => {
   let licensee, usage, client, user;
   if (fromUrl) {
@@ -470,12 +504,12 @@ const main = async () => {
   try {
     const isFromAPI = false;
     await loadData(isFromAPI);
-
-    process.exit(0);
+    await prepareTestSetup();
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
     throw err;
   }
+  process.exit(0);
 }
 
 main();

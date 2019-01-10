@@ -44,6 +44,13 @@ exports.seed = async (knex) => {
       username: 'bceid\\kyubinhan711',
       given_name: 'Kyub',
       family_name: 'Han',
+      email: 'kyubinbceid@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'idir\\khan',
+      given_name: 'Kyubin',
+      family_name: 'Han',
       email: 'kyubin@freshworks.io',
       active: true,
     },
