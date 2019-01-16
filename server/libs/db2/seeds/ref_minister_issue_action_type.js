@@ -28,26 +28,32 @@ exports.seed = async (knex) => {
   const ref = [
     {
       name: 'Herding',
+      placeholder: 'Frequency, distance and direction livestock will be herded. Identify the high pressure area and/or lower use areas if relevant. Ex. livestock will be herded at least 1 km away from Fish Lake towards the north 3 times per week.',
       active: true,
     },
     {
       name: 'Livestock Variables',
+      placeholder: 'Type and/or age of livestock to be used to address the issue. If necessary update the grazing schedule to reflect the livestock type. Ex. calves will be 5 months or older before grazing in the riparian area.',
       active: true,
     },
     {
       name: 'Salting',
+      placeholder: 'Location and timing of salting using an identifiable location and a distance in metres. Ex. remove salt from the NE station (on map) after July 1st.',
       active: true,
     },
     {
       name: 'Supplemental Feeding',
+      placeholder: 'Type, location and time frame of supplemental feed. Ex. locate protein tub in the south east block in the Pine pasture during the fall rotation.',
       active: true,
     },
     {
       name: 'Timing',
+      placeholder: 'How livestock use will be timed. Complete the dates for the no grazing window and update the schedule as needed.  Ex. rest the Owl pasture every other year.',
       active: true,
     },
     {
       name: 'Other',
+      placeholder: 'Describe the action to be taken including what, where and when.',
       active: true,
     },
   ].map((item, index) => ({ ...item, id: index + 1 }));
