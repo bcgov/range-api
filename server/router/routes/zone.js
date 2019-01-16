@@ -66,11 +66,11 @@ router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
   const { userId } = body;
 
   checkRequiredFields(
-    ['userId'], 'body', body,
+    ['userId'], 'body', req,
   );
 
   checkRequiredFields(
-    ['zoneId'], 'path', params,
+    ['zoneId'], 'params', req,
   );
 
   if (!isNumeric(zoneId) || !isNumeric(userId)) {

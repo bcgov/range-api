@@ -18,7 +18,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   const { body, user } = req;
 
   checkRequiredFields(
-    ['anonymous', 'section', 'feedback'], 'body', body,
+    ['anonymous', 'section', 'feedback'], 'body', req,
   );
 
   try {

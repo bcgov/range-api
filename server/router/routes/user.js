@@ -96,7 +96,7 @@ router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
     const { clientId, userId } = params;
 
     checkRequiredFields(
-      ['clientId', 'userId'], 'path', params,
+      ['clientId', 'userId'], 'params', req,
     );
 
     if (user && user.isAgreementHolder()) {

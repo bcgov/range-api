@@ -41,26 +41,33 @@ export const isNumeric = str => str && /^\d+$/.test(str);
 /**
  * Check required fields in the object
  *
- * @param {Array} properties
- * @param {Object} obj
+ * @param {Array} fields
+ * @param {Object} req
  */
-export const checkRequiredFields = (properties = [], name, obj) => {
+export const checkRequiredFields = (fields = [], prop, req) => {
   const missingFields = [];
-  properties.map((p) => {
-    if (obj[p] === undefined) {
-      missingFields.push(p);
+  const obj = req[prop];
+
+  fields.map((f) => {
+    if (obj[f] === undefined) {
+      missingFields.push(f);
     }
     return undefined;
   });
 
   const { length } = missingFields;
+  const name = prop === 'params' ? 'path' : 'body';
+
   if (length !== 0) {
     switch (length) {
       case 1:
       case 2:
-        throw errorWithCode(`There are missing fields in ${name}. Required field: ${missingFields.join(' and ')}`);
+        throw errorWithCode(`There are missing fields in the ${name}. `
+          + `Required field(s): ${missingFields.join(' and ')}`);
       default:
-        throw errorWithCode(`There are missing fields in ${name}. Required field: ${`${missingFields.slice(0, length - 1).join(', ')}, and ${missingFields[length - 1]}`}`);
+        throw errorWithCode(`There are missing fields in the ${name}. `
+          + `Required field(s): ${`${missingFields.slice(0, length - 1).join(', ')}, `
+          + `and ${missingFields[length - 1]}`}`);
     }
   }
   return undefined;

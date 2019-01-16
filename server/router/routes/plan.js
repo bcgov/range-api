@@ -74,13 +74,13 @@ router.get('/:planId?', asyncMiddleware(async (req, res) => {
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
-      throw errorWithCode('Plan not found', 404);
+      throw errorWithCode('Plan doesn\'t exist', 404);
     }
     const { agreementId } = plan;
     await canUserAccessThisAgreement(user, agreementId);
@@ -96,8 +96,8 @@ router.get('/:planId?', asyncMiddleware(async (req, res) => {
 
     return res.status(200).json(plan).end();
   } catch (error) {
-    logger.error(`Unable to fetch plan, error = ${error.message}`);
-    throw errorWithCode('There was a problem fetching the record', 500);
+    logger.error(`Unable to fetch plan, error: ${error.message}`);
+    throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, 500);
   }
 }));
 
@@ -107,7 +107,7 @@ router.post('/', asyncMiddleware(async (req, res) => {
   const { agreementId, amendmentTypeId } = body;
 
   checkRequiredFields(
-    ['statusId'], 'body', body,
+    ['statusId'], 'body', req,
   );
 
   try {
@@ -153,7 +153,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
@@ -224,11 +224,10 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
-
   checkRequiredFields(
-    ['statusId'], 'body', body,
+    ['statusId'], 'body', req,
   );
 
   if (!isNumeric(statusId)) {
@@ -266,7 +265,7 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
   const { planId, confirmationId } = params;
 
   checkRequiredFields(
-    ['planId', 'confirmationId'], 'path', params,
+    ['planId', 'confirmationId'], 'params', req,
   );
 
   try {
@@ -307,10 +306,10 @@ router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
   checkRequiredFields(
-    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', body,
+    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req,
   );
 
   try {
@@ -362,7 +361,7 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
   const { planId, pastureId } = params;
 
   checkRequiredFields(
-    ['planId', 'pastureId'], 'path', params,
+    ['planId', 'pastureId'], 'params', req,
   );
 
   try {
@@ -394,11 +393,11 @@ router.post(
     const { planId, pastureId } = params;
 
     checkRequiredFields(
-      ['planId', 'pastureId'], 'params', params,
+      ['planId', 'pastureId'], 'params', req,
     );
 
     checkRequiredFields(
-      ['communityTypeId', 'purposeOfAction'], 'body', body,
+      ['communityTypeId', 'purposeOfAction'], 'body', req,
     );
 
     try {
@@ -429,11 +428,11 @@ router.post(
     const { planId, pastureId, communityId } = params;
 
     checkRequiredFields(
-      ['planId', 'pastureId', 'communityId'], 'path', params,
+      ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
     checkRequiredFields(
-      ['actionTypeId'], 'body', body,
+      ['actionTypeId'], 'body', req,
     );
 
     try {
@@ -471,11 +470,11 @@ router.post(
     const { criteria } = body;
 
     checkRequiredFields(
-      ['planId', 'pastureId', 'communityId'], 'path', params,
+      ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
     checkRequiredFields(
-      ['criteria'], 'body', body,
+      ['criteria'], 'body', req,
     );
 
     try {
@@ -518,11 +517,11 @@ router.post(
     const { purposeTypeIds } = body;
 
     checkRequiredFields(
-      ['planId', 'pastureId', 'communityId'], 'path', params,
+      ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
     checkRequiredFields(
-      ['name', 'purposeTypeIds'], 'body', body,
+      ['name', 'purposeTypeIds'], 'body', req,
     );
 
     try {
@@ -572,10 +571,10 @@ router.post('/:planId?/schedule', asyncMiddleware(async (req, res) => {
   const { grazingScheduleEntries } = body;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
   checkRequiredFields(
-    ['grazingScheduleEntries'], 'body', body,
+    ['grazingScheduleEntries'], 'body', req,
   );
 
   grazingScheduleEntries.forEach((entry) => {
@@ -620,10 +619,10 @@ router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res) =
   const { planId, scheduleId } = params;
 
   checkRequiredFields(
-    ['planId', 'scheduleId'], 'path', params,
+    ['planId', 'scheduleId'], 'params', req,
   );
   checkRequiredFields(
-    ['grazingScheduleEntries'], 'body', body,
+    ['grazingScheduleEntries'], 'body', req,
   );
 
   grazingScheduleEntries.forEach((entry) => {
@@ -681,7 +680,7 @@ router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(async (req, res
   const { planId, scheduleId } = params;
 
   checkRequiredFields(
-    ['planId', 'scheduleId'], 'path', params,
+    ['planId', 'scheduleId'], 'params', req,
   );
 
   try {
@@ -710,11 +709,11 @@ router.post('/:planId?/schedule/:scheduleId?/entry', asyncMiddleware(async (req,
   const { planId, scheduleId } = params;
 
   checkRequiredFields(
-    ['planId', 'scheduleId'], 'path', params,
+    ['planId', 'scheduleId'], 'params', req,
   );
 
   checkRequiredFields(
-    ['livestockTypeId'], 'body', body,
+    ['livestockTypeId'], 'body', req,
   );
 
   try {
@@ -744,7 +743,7 @@ router.delete(
     const { planId, grazingScheduleEntryId } = params;
 
     checkRequiredFields(
-      ['planId', 'scheduleId', 'grazingScheduleEntryId'], 'path', params,
+      ['planId', 'scheduleId', 'grazingScheduleEntryId'], 'params', req,
     );
 
     try {
@@ -811,7 +810,7 @@ router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
   const { pastures } = body;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
@@ -839,7 +838,7 @@ router.put('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
   const { pastures } = body;
 
   checkRequiredFields(
-    ['planId', 'issueId'], 'path', params,
+    ['planId', 'issueId'], 'params', req,
   );
 
   try {
@@ -876,7 +875,7 @@ router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
   const { planId, issueId } = params;
 
   checkRequiredFields(
-    ['planId', 'issueId'], 'path', params,
+    ['planId', 'issueId'], 'params', req,
   );
 
   try {
@@ -902,11 +901,11 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
   const { actionTypeId, detail } = body;
 
   checkRequiredFields(
-    ['planId', 'issueId'], 'path', params,
+    ['planId', 'issueId'], 'params', req,
   );
 
   checkRequiredFields(
-    ['actionTypeId'], 'body', body,
+    ['actionTypeId'], 'body', req,
   );
 
   try {
@@ -935,11 +934,11 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
   const { detail } = body;
 
   checkRequiredFields(
-    ['planId', 'issueId', 'actionId'], 'path', params,
+    ['planId', 'issueId', 'actionId'], 'params', req,
   );
 
   checkRequiredFields(
-    ['actionTypeId'], 'body', body,
+    ['actionTypeId'], 'body', req,
   );
 
   try {
@@ -961,13 +960,13 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
   }
 }));
 
-// Update a Minister Issue Action to an existing Minister Issue
+// Delete a Minister Issue Action
 router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
   const { params, user } = req;
   const { planId, actionId } = params;
 
   checkRequiredFields(
-    ['planId', 'issueId', 'actionId'], 'path', params,
+    ['planId', 'issueId', 'actionId'], 'params', req,
   );
 
   try {
@@ -988,7 +987,7 @@ router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, re
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
@@ -1012,7 +1011,7 @@ router.post('/:planId?/additional-requirement', asyncMiddleware(async (req, res)
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
@@ -1032,7 +1031,7 @@ router.post('/:planId?/management-consideration', asyncMiddleware(async (req, re
   const { planId } = params;
 
   checkRequiredFields(
-    ['planId'], 'path', params,
+    ['planId'], 'params', req,
   );
 
   try {
