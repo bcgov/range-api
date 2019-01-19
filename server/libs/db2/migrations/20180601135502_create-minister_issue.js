@@ -31,7 +31,6 @@ exports.up = async knex =>
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
     t.integer('issue_type_id').notNull().references('ref_minister_issue_type.id');
 
-    t.string('other_type_name', 32);
     t.text('detail');
     t.text('objective');
     t.boolean('identified').notNull().defaultTo(false);

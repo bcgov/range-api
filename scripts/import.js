@@ -471,6 +471,8 @@ const prepareTestSetup = async () => {
     await User.update(db, { id: ben.id }, { client_id: '00030650' });
     const chris = await User.findOne(db, { username: 'bceid\\chris.traeger'});
     await User.update(db, { id: chris.id }, { client_id: '00178082' });
+    const nackyu = await User.findOne(db, { username: 'bceid\\nackyu711' });
+    await User.update(db, { id: nackyu.id }, { client_id: '00178076' });
 
     console.log('Done preparing for test accounts');
     

@@ -44,7 +44,7 @@ export default class MinisterIssueAction extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'action_type_id', 'issue_id']
+    return ['id', 'detail', 'action_type_id', 'issue_id', 'other']
       .map(field => `${this.table}.${field}`);
   }
 

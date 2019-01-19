@@ -898,7 +898,7 @@ router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
 router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, issueId } = params;
-  const { actionTypeId, detail } = body;
+  const { actionTypeId, detail, other } = body;
 
   checkRequiredFields(
     ['planId', 'issueId'], 'params', req,
@@ -915,6 +915,7 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
     const action = await MinisterIssueAction.create(
       db,
       {
+        other,
         detail,
         issue_id: issueId,
         action_type_id: actionTypeId,
