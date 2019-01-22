@@ -824,8 +824,11 @@ router.post('/:planId?/issue', asyncMiddleware(async (req, res) => {
       MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
 
     await Promise.all(promises);
-
-    return res.status(200).json(issue).end();
+    const createdIssue = {
+      ...issue,
+      pastures,
+    };
+    return res.status(200).json(createdIssue).end();
   } catch (error) {
     throw error;
   }
@@ -932,7 +935,7 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
 router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, actionId } = params;
-  const { detail } = body;
+  const { detail, other } = body;
 
   checkRequiredFields(
     ['planId', 'issueId', 'actionId'], 'params', req,
@@ -952,6 +955,7 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
       {
         detail,
         actionId,
+        other,
       },
     );
 

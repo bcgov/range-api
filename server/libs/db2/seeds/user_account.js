@@ -48,20 +48,6 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
-      username: 'idir\\khan',
-      given_name: 'Kyubin',
-      family_name: 'Han',
-      email: 'kyubin@freshworks.io',
-      active: true,
-    },
-    {
-      username: 'idir\\ashayega',
-      given_name: 'Amir',
-      family_name: 'Shayega',
-      email: 'amir@freshworks.io',
-      active: true,
-    },
-    {
       username: 'bceid\\nackyu711',
       given_name: 'han',
       family_name: 'Han Nackyu',
@@ -157,6 +143,20 @@ exports.seed = async (knex) => {
       given_name: 'Katie',
       family_name: 'Menke',
       email: 'katie.menke@gov.bc.ca',
+      active: true,
+    },
+    {
+      username: 'idir\\khan',
+      given_name: 'Kyubin',
+      family_name: 'Han',
+      email: 'kyubin@freshworks.io',
+      active: true,
+    },
+    {
+      username: 'idir\\ashayega',
+      given_name: 'Amir',
+      family_name: 'Shayega',
+      email: 'amir@freshworks.io',
       active: true,
     },
   ];
