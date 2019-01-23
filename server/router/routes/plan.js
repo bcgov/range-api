@@ -939,7 +939,7 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
 router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, actionId } = params;
-  const { detail, other } = body;
+  const { detail, other, actionTypeId } = body;
 
   checkRequiredFields(
     ['planId', 'issueId', 'actionId'], 'params', req,
@@ -958,7 +958,7 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
       { id: actionId },
       {
         detail,
-        actionId,
+        actionTypeId,
         other,
       },
     );
