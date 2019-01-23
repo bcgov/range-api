@@ -57,9 +57,13 @@ const {
 } = dm;
 
 const canUserAccessThisAgreement = async (user, agreementId) => {
+  if (!agreementId) {
+    throw errorWithCode('Unable to find a plan');
+  }
+
   const [agreement] = await Agreement.find(db, { forest_file_id: agreementId });
   if (!agreement) {
-    throw errorWithCode('Unable to find the related agreement', 500);
+    throw errorWithCode('Unable to find the related agreement');
   }
 
   const can = await user.canAccessAgreement(db, agreement);
@@ -373,13 +377,13 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(async (req, res) => 
     delete body.planId;
     delete body.plan_id;
 
-    const pasture = await Pasture.update(
+    const updatedPasture = await Pasture.update(
       db,
       { id: pastureId },
       { ...body, plan_id: planId },
     );
 
-    return res.status(200).json(pasture).end();
+    return res.status(200).json(updatedPasture).end();
   } catch (err) {
     throw err;
   }
@@ -986,7 +990,7 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
   }
 }));
 
-// create a invasive plant checklist
+// create an invasive plant checklist
 router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId } = params;
@@ -999,12 +1003,38 @@ router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(async (req, re
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
 
-    if (await InvasivePlantChecklist.findOne(db, { plan_id: planId })) {
-      throw errorWithCode(`Invasive plant checklist already exist with the plan id: ${planId}`);
+    const ipcl = await InvasivePlantChecklist.findOne(db, { plan_id: planId });
+    if (ipcl) {
+      throw errorWithCode(`Invasive plant checklist already exist with the plan id ${planId}`);
     }
 
     const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
     return res.status(200).json(checklist).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
+// update an invasive plant checklist
+router.put('/:planId?/invasive-plant-checklist/:checklistId?', asyncMiddleware(async (req, res) => {
+  const { body, params, user } = req;
+  const { planId } = params;
+
+  checkRequiredFields(
+    ['planId', 'checklistId'], 'params', req,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const updatedChecklist = await InvasivePlantChecklist.update(
+      db,
+      { plan_id: planId },
+      body,
+    );
+
+    return res.status(200).json(updatedChecklist).end();
   } catch (error) {
     throw error;
   }
