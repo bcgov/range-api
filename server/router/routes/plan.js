@@ -1074,10 +1074,34 @@ router.post('/:planId?/management-consideration', asyncMiddleware(async (req, re
     await canUserAccessThisAgreement(user, agreementId);
 
     const consideration = await ManagementConsideration.create(db, { ...body, plan_id: planId });
+
     return res.status(200).json(consideration).end();
   } catch (error) {
     throw error;
   }
 }));
 
+router.put('/:planId?/management-consideration/:considerationId?', asyncMiddleware(async (req, res) => {
+  const { body, params, user } = req;
+  const { planId, considerationId } = params;
+
+  checkRequiredFields(
+    ['planId', 'considerationId'], 'params', req,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const updated = await ManagementConsideration.update(
+      db,
+      { id: considerationId },
+      { ...body, plan_id: planId },
+    );
+
+    return res.status(200).json(updated).end();
+  } catch (error) {
+    throw error;
+  }
+}));
 module.exports = router;
