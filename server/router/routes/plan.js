@@ -982,7 +982,10 @@ router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(asyn
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
 
-    await MinisterIssueAction.removeById(db, actionId);
+    const result = await MinisterIssueAction.removeById(db, actionId);
+    if (result === 0) {
+      throw errorWithCode('No such minister issue action exists', 400);
+    }
 
     return res.status(204).json().end();
   } catch (error) {
@@ -1081,6 +1084,7 @@ router.post('/:planId?/management-consideration', asyncMiddleware(async (req, re
   }
 }));
 
+// update a management consideration
 router.put('/:planId?/management-consideration/:considerationId?', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, considerationId } = params;
@@ -1104,4 +1108,29 @@ router.put('/:planId?/management-consideration/:considerationId?', asyncMiddlewa
     throw error;
   }
 }));
+
+// delete a management consideration
+router.delete('/:planId?/management-consideration/:considerationId?', asyncMiddleware(async (req, res) => {
+  const { params, user } = req;
+  const { planId, considerationId } = params;
+
+  checkRequiredFields(
+    ['planId', 'considerationId'], 'params', req,
+  );
+
+  try {
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await canUserAccessThisAgreement(user, agreementId);
+
+    const result = await ManagementConsideration.removeById(db, considerationId);
+    if (result === 0) {
+      throw errorWithCode('No such management consideration exists', 400);
+    }
+
+    return res.status(204).end();
+  } catch (error) {
+    throw error;
+  }
+}));
+
 module.exports = router;
