@@ -313,14 +313,18 @@ router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
     ['planId'], 'params', req,
   );
   checkRequiredFields(
-    ['userId', 'fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req,
+    ['fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req,
   );
 
   try {
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
 
-    const { id: historyId } = await PlanStatusHistory.create(db, { ...body, planId });
+    const { id: historyId } = await PlanStatusHistory.create(db, {
+      ...body,
+      planId,
+      userId: user.id,
+    });
     const [planStatusHistory] = await PlanStatusHistory.findWithUser(
       db, { 'plan_status_history.id': historyId },
     );

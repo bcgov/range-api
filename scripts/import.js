@@ -458,7 +458,7 @@ const prepareTestSetup = async () => {
     const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });
     await User.update(db, { id: leslie.id }, { client_id: '00017862' });
     const ron = await User.findOne(db, { username: 'bceid\\ron.swanson' });
-    await User.update(db, { id: ron.id }, { client_id: '00008732' });
+    await User.update(db, { id: ron.id }, { client_id: '00079307' });
     const tom = await User.findOne(db, { username: 'bceid\\tom.haverford'});
     await User.update(db, { id: tom.id }, { client_id: '00116762' });
     const andy = await User.findOne(db, { username: 'bceid\\andy.dwyer'});
