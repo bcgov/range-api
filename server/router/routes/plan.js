@@ -207,7 +207,7 @@ const updatePlanStatus = async (planId, status = {}, user) => {
         if (user.id !== plan.creatorId) {
           throw errorWithCode('Only the user who created the amendment can submit.', 403);
         }
-        // it can be the case where an amendment is resubmitted
+        // refresh all the old confirmations and start fresh
         await AmendmentConfirmation.refreshConfirmations(db, planId, user);
         break;
       default:
@@ -289,12 +289,13 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
     // update the amendment status when the last agreement holder confirms
     if (allConfirmed) {
       const planStatuses = await PlanStatus.find(db, { active: true });
-      const status = planStatuses.find(s => (
-        s.code === (isMinorAmendment === 'true'
-          ? PLAN_STATUS.STANDS
-          : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION)
-      ));
+      const statusCode = isMinorAmendment === 'true'
+        ? PLAN_STATUS.STANDS
+        : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
+      const status = planStatuses.find(s => s.code === statusCode);
       const plan = await updatePlanStatus(planId, status, user);
+      plan.status = status;
+
       return res.status(200).json({ allConfirmed, plan, confirmation }).end();
     }
 
