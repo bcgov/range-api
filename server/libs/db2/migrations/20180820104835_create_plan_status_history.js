@@ -6,7 +6,7 @@ exports.up = async knex =>
 
     t.integer('plan_id').notNull();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
-    t.integer('from_plan_status_id').notNull().references('ref_plan_status.id');
+    t.integer('from_plan_status_id').references('ref_plan_status.id');
     t.integer('to_plan_status_id').notNull().references('ref_plan_status.id');
     t.integer('user_id').notNull().references('user_account.id');
 
