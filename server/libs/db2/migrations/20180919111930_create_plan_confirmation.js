@@ -23,7 +23,7 @@
 
 /* eslint-disable no-unused-vars */
 
-const table = 'amendment_confirmation';
+const table = 'plan_confirmation';
 
 exports.up = async knex =>
   knex.schema.createTable(table, async (t) => {

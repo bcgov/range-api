@@ -45,7 +45,7 @@ const {
   MinisterIssuePasture,
   MinisterIssueAction,
   PlanStatusHistory,
-  AmendmentConfirmation,
+  PlanConfirmation,
   PlantCommunity,
   PlantCommunityAction,
   IndicatorPlant,
@@ -108,7 +108,7 @@ router.get('/:planId?', asyncMiddleware(async (req, res) => {
 // Create a new plan.
 router.post('/', asyncMiddleware(async (req, res) => {
   const { body, user } = req;
-  const { agreementId, amendmentTypeId } = body;
+  const { agreementId } = body;
 
   checkRequiredFields(
     ['statusId'], 'body', req,
@@ -140,10 +140,8 @@ router.post('/', asyncMiddleware(async (req, res) => {
 
     const plan = await Plan.create(db, { ...body, creator_id: user.id });
 
-    // create unsiged confirmations for AHs when creating an amendment
-    if (amendmentTypeId) {
-      await AmendmentConfirmation.createConfirmations(db, agreementId, plan.id);
-    }
+    // create unsiged confirmations for AHs
+    await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
 
     return res.status(200).json(plan).end();
   } catch (err) {
@@ -186,7 +184,7 @@ router.put('/:planId?', asyncMiddleware(async (req, res) => {
 
 const updatePlanStatus = async (planId, status = {}, user) => {
   try {
-    const plan = await Plan.findOne(db, { id: planId });
+    // const plan = await Plan.findOne(db, { id: planId });
     const body = { status_id: status.id };
     switch (status.code) {
       case PLAN_STATUS.APPROVED:
@@ -204,11 +202,8 @@ const updatePlanStatus = async (planId, status = {}, user) => {
         body.submitted_at = new Date();
         break;
       case PLAN_STATUS.AWAITING_CONFIRMATION:
-        if (user.id !== plan.creatorId) {
-          throw errorWithCode('Only the user who created the amendment can submit.', 403);
-        }
         // refresh all the old confirmations and start fresh
-        await AmendmentConfirmation.refreshConfirmations(db, planId, user);
+        await PlanConfirmation.refreshConfirmations(db, planId, user);
         break;
       default:
         break;
@@ -276,8 +271,8 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(req.user, agreementId);
 
-    const confirmation = await AmendmentConfirmation.update(db, { id: confirmationId }, body);
-    const allConfirmations = await AmendmentConfirmation.find(db, { plan_id: planId });
+    const confirmation = await PlanConfirmation.update(db, { id: confirmationId }, body);
+    const allConfirmations = await PlanConfirmation.find(db, { plan_id: planId });
     let allConfirmed = true;
     allConfirmations.map((c) => {
       if (!c.confirmed) {

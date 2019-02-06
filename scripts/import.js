@@ -453,6 +453,8 @@ const prepareTestSetup = async () => {
     await Zone.update(db, { code: 'DOS1' }, { user_id: lisa.id });
     const katie = await User.findOne(db, { username: 'idir\\kmenke' });
     await Zone.update(db, { code: 'DOS2' }, { user_id: katie.id });
+    const Amir = await User.findOne(db, { username: 'idir\\ashayega' });
+    await Zone.update(db, { code: 'DOS4' }, { user_id: Amir.id });
 
     // assign clients
     const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });

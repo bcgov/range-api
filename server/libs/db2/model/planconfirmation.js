@@ -21,11 +21,11 @@
 import Model from './model';
 import Agreement from './agreement';
 
-export default class AmendmentConfirmation extends Model {
+export default class PlanConfirmation extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (AmendmentConfirmation.fields.indexOf(`${AmendmentConfirmation.table}.${key}`) > -1) {
+      if (PlanConfirmation.fields.indexOf(`${PlanConfirmation.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
@@ -38,7 +38,7 @@ export default class AmendmentConfirmation extends Model {
   }
 
   static get table() {
-    return 'amendment_confirmation';
+    return 'plan_confirmation';
   }
 
   static async createConfirmations(db, agreementId, planId) {
@@ -46,7 +46,7 @@ export default class AmendmentConfirmation extends Model {
     await agreement.fetchClients();
 
     const promises = agreement.clients.map(client => (
-      AmendmentConfirmation.create(db, {
+      PlanConfirmation.create(db, {
         plan_id: planId,
         client_id: client.id,
         confirmed: false,
@@ -57,14 +57,14 @@ export default class AmendmentConfirmation extends Model {
   }
 
   static async refreshConfirmations(db, planId, user) {
-    const confirmations = await AmendmentConfirmation.find(
+    const confirmations = await PlanConfirmation.find(
       db, { plan_id: planId },
     );
 
     // refresh all confirmations within the plan except the one who's requesting
     const promises = confirmations.map((c) => {
       const confirmed = c.clientId === user.clientId;
-      return AmendmentConfirmation.update(db, { id: c.id }, { confirmed });
+      return PlanConfirmation.update(db, { id: c.id }, { confirmed });
     });
 
     const records = await Promise.all(promises);

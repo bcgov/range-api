@@ -28,7 +28,7 @@ import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
 import PlanStatusHistory from './planstatushistory';
-import AmendmentConfirmation from './amendmentconfirmation';
+import PlanConfirmation from './planconfirmation';
 import User from './user';
 import InvasivePlantChecklist from './invasiveplantchecklist';
 import AdditionalRequirement from './additionalrequirement';
@@ -134,14 +134,14 @@ export default class Plan extends Model {
     await this.fetchGrazingSchedules();
     await this.fetchMinisterIssues();
     await this.fetchPlanStatusHistory();
-    await this.fetchAmendmentConfirmations();
+    await this.fetchPlanConfirmations();
     await this.fetchInvasivePlantChecklist();
     await this.fetchAdditionalRequirements();
     await this.fetchManagementConsiderations();
   }
 
-  async fetchAmendmentConfirmations() {
-    const confirmations = await AmendmentConfirmation.find(
+  async fetchPlanConfirmations() {
+    const confirmations = await PlanConfirmation.find(
       this.db, { plan_id: this.id },
     );
     this.confirmations = confirmations || [];

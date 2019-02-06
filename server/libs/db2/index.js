@@ -39,7 +39,7 @@ import MinisterIssueType from './model/ministerissuetype';
 import MinisterIssuePasture from './model/ministerissuepasture';
 import AmendmentType from './model/amendmenttype';
 import PlanStatusHistory from './model/planstatushistory';
-import AmendmentConfirmation from './model/amendmentconfirmation';
+import PlanConfirmation from './model/planconfirmation';
 import PlantCommunity from './model/plantcommunity';
 import PlantCommunityType from './model/plantcommunitytype';
 import PlantCommunityAction from './model/plantcommunityaction';
@@ -108,7 +108,7 @@ export default class DataManager {
     this.Zone = Zone;
     this.AmendmentType = AmendmentType;
     this.PlanStatusHistory = PlanStatusHistory;
-    this.AmendmentConfirmation = AmendmentConfirmation;
+    this.PlanConfirmation = PlanConfirmation;
     this.IndicatorPlant = IndicatorPlant;
     this.PlantSpecies = PlantSpecies;
     this.PlantCommunity = PlantCommunity;
