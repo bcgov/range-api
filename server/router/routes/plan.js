@@ -219,7 +219,7 @@ const updatePlanStatus = async (planId, status = {}, user) => {
 // Update the status of an existing plan.
 router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
   const { params, body, user } = req;
-  const { statusId } = body;
+  const { statusId, note } = body;
   const { planId } = params;
 
   checkRequiredFields(
@@ -245,7 +245,20 @@ router.put('/:planId?/status', asyncMiddleware(async (req, res) => {
       throw errorWithCode('You must supply a valid status ID', 403);
     }
 
+    const plan = await Plan.findOne(db, { id: planId });
+    const { statusId: prevStatusId } = plan;
+
     await updatePlanStatus(planId, status, user);
+
+    if (note) {
+      await PlanStatusHistory.create(db, {
+        fromPlanStatusId: prevStatusId,
+        toPlanStatusId: statusId,
+        note,
+        planId,
+        userId: user.id,
+      });
+    }
 
     return res.status(200).json(status).end();
   } catch (err) {
@@ -301,7 +314,7 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(async (req
 }));
 
 // create a plan status history
-router.post('/:planId?/status-history', asyncMiddleware(async (req, res) => {
+router.post('/:planId?/status-record', asyncMiddleware(async (req, res) => {
   const { params, body, user } = req;
   const { planId } = params;
 
