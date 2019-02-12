@@ -57,6 +57,7 @@ import AdditionalRequirementCategory from './model/additionalrequirementcategory
 import ManagementConsideration from './model/managementconsideration';
 import ManagementConsiderationType from './model/managementconsiderationtype';
 import UserFeedback from './model/userfeedback';
+import Version from './model/version';
 
 export default class DataManager {
   constructor(config) {
@@ -126,5 +127,6 @@ export default class DataManager {
     this.ManagementConsideration = ManagementConsideration;
     this.ManagementConsiderationType = ManagementConsiderationType;
     this.UserFeedback = UserFeedback;
+    this.Version = Version;
   }
 }

@@ -34,6 +34,7 @@ import report from './routes/report';
 import user from './routes/user';
 import zone from './routes/zone';
 import feedback from './routes/feedback';
+import version from './routes/version';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -44,6 +45,7 @@ const corsOptions = {
 module.exports = (app) => {
   app.use(cors(corsOptions));
   app.use('/api/v1/ehlo', ehlo); // probes
+  app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.
   app.use(passport.authenticate('jwt', { session: false }));
   app.use('/api/v1/agreement', agreement);
