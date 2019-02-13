@@ -5,6 +5,7 @@ import fs from 'fs';
 import request from 'request-promise-native';
 import config from '../server/config';
 import DataManager from '../server/libs/db2';
+import * as mockData from './mockData';
 
 const USAGE = 'fta/FTA_RANGE_USAGE.csv';
 const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
@@ -448,33 +449,41 @@ const updateClient = async (data) => {
 
 const prepareTestSetup = async () => {
   try {
+    // create test data
+    await updateAgreement(mockData.mockAgreements);
+    await updateUsage(mockData.mockUsage);
+    await updateClient(mockData.mockClients);
+
     // assign zones
     const lisa = await User.findOne(db, { username: 'idir\\lmoore' });
-    await Zone.update(db, { code: 'DOS1' }, { user_id: lisa.id });
+    await Zone.update(db, { code: 'TEST1' }, { user_id: lisa.id });
+    await Zone.update(db, { code: 'TEST5' }, { user_id: lisa.id });
     const katie = await User.findOne(db, { username: 'idir\\kmenke' });
-    await Zone.update(db, { code: 'DOS2' }, { user_id: katie.id });
+    await Zone.update(db, { code: 'TEST2' }, { user_id: katie.id });
+    await Zone.update(db, { code: 'TEST4' }, { user_id: katie.id });
     const Amir = await User.findOne(db, { username: 'idir\\ashayega' });
-    await Zone.update(db, { code: 'DOS4' }, { user_id: Amir.id });
+    await Zone.update(db, { code: 'TEST3' }, { user_id: Amir.id });
+    await Zone.update(db, { code: 'TEST6' }, { user_id: Amir.id });
 
     // assign clients
     const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });
-    await User.update(db, { id: leslie.id }, { client_id: '00017862' });
+    await User.update(db, { id: leslie.id }, { client_id: mockData.leslie.client_number });
     const ron = await User.findOne(db, { username: 'bceid\\ron.swanson' });
-    await User.update(db, { id: ron.id }, { client_id: '00079307' });
+    await User.update(db, { id: ron.id }, { client_id: mockData.ron.client_number });
     const tom = await User.findOne(db, { username: 'bceid\\tom.haverford'});
-    await User.update(db, { id: tom.id }, { client_id: '00116762' });
+    await User.update(db, { id: tom.id }, { client_id: mockData.tom.client_number });
     const andy = await User.findOne(db, { username: 'bceid\\andy.dwyer'});
-    await User.update(db, { id: andy.id }, { client_id: '00026223' });
+    await User.update(db, { id: andy.id }, { client_id: mockData.andy.client_number });
     const april = await User.findOne(db, { username: 'bceid\\april.ludgate'});
-    await User.update(db, { id: april.id }, { client_id: '00117913' });
+    await User.update(db, { id: april.id }, { client_id: mockData.april.client_number });
     const ann = await User.findOne(db, { username: 'bceid\\ann.perkins'});
-    await User.update(db, { id: ann.id }, { client_id: '00024901' });
+    await User.update(db, { id: ann.id }, { client_id: mockData.ann.client_number });
     const ben = await User.findOne(db, { username: 'bceid\\ben.wyatt'});
-    await User.update(db, { id: ben.id }, { client_id: '00030650' });
+    await User.update(db, { id: ben.id }, { client_id: mockData.ben.client_number });
     const chris = await User.findOne(db, { username: 'bceid\\chris.traeger'});
-    await User.update(db, { id: chris.id }, { client_id: '00178082' });
+    await User.update(db, { id: chris.id }, { client_id: mockData.chris.client_number });
     const nackyu = await User.findOne(db, { username: 'bceid\\nackyu711' });
-    await User.update(db, { id: nackyu.id }, { client_id: '00178076' });
+    await User.update(db, { id: nackyu.id }, { client_id: mockData.nackyu.client_number });
 
     console.log('Done preparing for test accounts');
     

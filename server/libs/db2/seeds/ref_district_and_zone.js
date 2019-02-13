@@ -92,6 +92,9 @@ exports.seed = async (knex) => {
     }, {
       code: 'DNI',
       description: '',
+    }, {
+      code: 'TST',
+      description: 'Dummy district for testing',
     },
   ].map((district) => {
     did += 1;
@@ -319,6 +322,30 @@ exports.seed = async (knex) => {
       code: 'KAMA',
       district: 'DKA',
       description: 'Kamloops Zone',
+    }, {
+      code: 'TEST1',
+      district: 'TST',
+      description: 'First Test Zone',
+    }, {
+      code: 'TEST2',
+      district: 'TST',
+      description: 'Second Test Zone',
+    }, {
+      code: 'TEST3',
+      district: 'TST',
+      description: 'Third Test Zone',
+    }, {
+      code: 'TEST4',
+      district: 'TST',
+      description: 'Fourth Test Zone',
+    }, {
+      code: 'TEST5',
+      district: 'TST',
+      description: 'Fifth Test Zone',
+    }, {
+      code: 'TEST6',
+      district: 'TST',
+      description: 'Fifth Test Zone',
     },
   ].map((zone) => {
     zid += 1;
