@@ -5,7 +5,7 @@ import Model from './model';
 export default class Version extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['ios', 'api', 'idp_hint']
+    return ['lock', 'ios', 'api', 'idp_hint']
       .map(field => `${this.table}.${field}`);
   }
 
