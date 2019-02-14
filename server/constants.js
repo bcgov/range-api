@@ -28,6 +28,12 @@ export const ENVIRONMENTS = {
   PRODUCTION: 'production',
 };
 
+export const API_URL = {
+  PROD: 'https://web-range-myra-prod.pathfinder.gov.bc.ca/api',
+  DEV: 'https://web-range-myra-dev.pathfinder.gov.bc.ca/api',
+  TEST: 'https://web-range-myra-test.pathfinder.gov.bc.ca/api',
+};
+
 export const TEMPLATES = {
   RANGE_USE_PLAN: 'rup.html',
 };

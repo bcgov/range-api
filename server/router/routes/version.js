@@ -25,8 +25,10 @@
 
 import { asyncMiddleware } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
+import request from 'request';
 import config from '../../config';
 import DataManager from '../../libs/db2';
+import { ENVIRONMENTS, API_URL } from '../../constants';
 
 const router = new Router();
 const dm = new DataManager(config);
@@ -59,6 +61,18 @@ router.put('/', asyncMiddleware(async (req, res) => {
       api,
       ios,
     });
+
+    // update test and dev environments as well
+    if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
+      const opt = {
+        url: `${API_URL.DEV}/v1/version`,
+        method: 'PUT',
+        json: { idpHint, api, ios },
+      };
+      await request(opt);
+      opt.url = `${API_URL.TEST}/v1/version`;
+      await request(opt);
+    }
 
     res.status(200).json(updated).end();
   } catch (error) {
