@@ -61,6 +61,10 @@ router.get('/me', asyncMiddleware(async (req, res) => {
     delete user.created_at;
     delete user.updated_at;
 
+    if (!user.piaSeen) {
+      await User.update(db, { id: user.id }, { pia_seen: true });
+    }
+
     res.status(200).json(user).end();
   } catch (error) {
     throw error;

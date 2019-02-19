@@ -11,9 +11,10 @@ const USAGE = 'fta/FTA_RANGE_USAGE.csv';
 const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
 const CLIENT = 'fta/FTA_RANGE_CLIENT.csv';
 const USER = 'fta/ZONE_USER.csv';
-const LICENSEE_URL = 'https://t1api.nrs.gov.bc.ca/ords/v1/fta/FTA/GetAllRangeLicensees';
-const USAGE_URL = 'https://t1api.nrs.gov.bc.ca/ords/v1/fta/FTA/GetAllRangeUsages';
-const CLIENT_URL = 'https://t1api.nrs.gov.bc.ca/ords/v1/fta/FTA/GetAllRangeClients';
+const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
+const USAGE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeUsages`;
+const CLIENT_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeClients`;
+const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/oauth/token?grant_type=client_credentials`;
 
 const dm = new DataManager(config);
 
@@ -65,17 +66,34 @@ const loadFile = (name) => new Promise((resolve, reject) => {
   });
 });
 
-const loadDataFromUrl = async (url) => {
-    const options = {
-      headers: { 'content-type': 'application/json' },
-      method: 'GET',
-      uri: url,
-      json: true,
-    };
+const loadDataFromUrl = async (token, url) => {
+  const options = {
+    headers: { 'content-type': 'application/json', 'Authorization': token },
+    method: 'GET',
+    uri: url,
+    json: true,
+  };
 
-    const response = await request(options);
+  const response = await request(options);
 
-    return response.items;
+  return response.items;
+};
+
+const getFTAToken = async (url) => {  
+  const options = {
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+    url,
+    json: true,
+    auth: {
+      username: process.env.FTA_API_TOKEN_USERNAME,
+      password: process.env.FTA_API_TOKEN_PASSWORD,
+    }
+  };
+
+  const response = await request(options);
+
+  return response;
 };
 
 const skipping = (action, agreementId, index) => {
@@ -461,9 +479,10 @@ const prepareTestSetup = async () => {
     const katie = await User.findOne(db, { username: 'idir\\kmenke' });
     await Zone.update(db, { code: 'TEST2' }, { user_id: katie.id });
     await Zone.update(db, { code: 'TEST4' }, { user_id: katie.id });
-    const Amir = await User.findOne(db, { username: 'idir\\ashayega' });
-    await Zone.update(db, { code: 'TEST3' }, { user_id: Amir.id });
-    await Zone.update(db, { code: 'TEST6' }, { user_id: Amir.id });
+    const amir = await User.findOne(db, { username: 'idir\\ashayega' });
+    await Zone.update(db, { code: 'TEST3' }, { user_id: amir.id });
+    const rangeAppTester = await User.findOne(db, { username: 'bceid\\rangeapptester' });
+    await Zone.update(db, { code: 'TEST6' }, { user_id: rangeAppTester.id });
 
     // assign clients
     const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });
@@ -493,12 +512,20 @@ const prepareTestSetup = async () => {
   }
 };
 
-const loadData = async (fromUrl) => {
+const oldloadData = async (fromUrl) => {
   let licensee, usage, client, user;
   if (fromUrl) {
-    licensee = await loadDataFromUrl(LICENSEE_URL);
-    usage = await loadDataFromUrl(USAGE_URL);
-    client = await loadDataFromUrl(CLIENT_URL);
+    const res = await getFTAToken(TOKEN_URL);
+    const {
+      access_token,
+      token_type,
+      expires_in,
+    } = res;
+    const token = `${token_type} ${access_token}`;
+    
+    licensee = await loadDataFromUrl(token, LICENSEE_URL);
+    usage = await loadDataFromUrl(token, USAGE_URL);
+    client = await loadDataFromUrl(token, CLIENT_URL);
   } else {
     licensee = await loadFile(LICENSEE);
     usage = await loadFile(USAGE);
@@ -513,10 +540,32 @@ const loadData = async (fromUrl) => {
   await updateClient(client);
 };
 
+const loadData = async () => {
+  let licensee, usage, client, user;
+  const res = await getFTAToken(TOKEN_URL);
+  const {
+    access_token,
+    token_type,
+    // expires_in,
+  } = res;
+  const token = `${token_type} ${access_token}`;
+  
+  licensee = await loadDataFromUrl(token, LICENSEE_URL);
+  usage = await loadDataFromUrl(token, USAGE_URL);
+  client = await loadDataFromUrl(token, CLIENT_URL);
+  user = await loadFile(USER);
+
+  await updateDistrict(licensee);
+  await updateZone(licensee);
+  await updateUser(user);
+  await updateAgreement(licensee);
+  await updateUsage(usage);
+  await updateClient(client);
+};
+
 const main = async () => {
   try {
-    const isFromAPI = false;
-    await loadData(isFromAPI);
+    await loadData();
     await prepareTestSetup();
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);

@@ -31,7 +31,7 @@ export default class User extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'username', 'client_id', 'given_name', 'family_name', 'email',
-      'phone_number', 'active', 'last_login_at']
+      'phone_number', 'active', 'pia_seen', 'last_login_at']
       .map(field => `${this.table}.${field}`);
   }
 

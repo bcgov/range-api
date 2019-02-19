@@ -31,6 +31,7 @@ exports.up = async knex =>
     t.text('family_name');
     t.text('email').notNull();
     t.text('phone_number');
+    t.boolean('pia_seen').notNull().defaultTo(false);
     t.boolean('active').notNull().defaultTo(false);
     t.string('client_id', 8).references('client_number').inTable('ref_client');
     t.dateTime('last_login_at');

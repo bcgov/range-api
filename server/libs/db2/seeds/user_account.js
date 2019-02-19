@@ -132,6 +132,13 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      username: 'bceid\\rangeapptester',
+      given_name: 'Apple',
+      family_name: 'Tester',
+      email: 'app@myrangebc.bc.ca',
+      active: true,
+    },
+    {
       username: 'idir\\lmoore',
       given_name: 'Lisa',
       family_name: 'Moore',
