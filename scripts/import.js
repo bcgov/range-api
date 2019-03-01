@@ -42,60 +42,6 @@ const isValidRecord = (record) => {
 
 const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
 
-const loadFile = (name) => new Promise((resolve, reject) => {
-  const records = [];
-  fs.readFile(name, 'utf8', (err, contents) => {
-    const parser = csv.parse(contents, (err, data) => {
-      if (err) reject(err)
-
-      const fields = data.shift()
-      data.forEach((line) => {
-        const record = {}
-        fields.forEach((value, i) => {
-          const key = value.replace(/ /g, '_').toLowerCase();
-          if (i > 1) {
-            record[key] = line[i]
-            return
-          }
-          record[key] = line[i]
-        });
-        records.push(record);
-      })
-      resolve(records);
-    });
-  });
-});
-
-const loadDataFromUrl = async (token, url) => {
-  const options = {
-    headers: { 'content-type': 'application/json', 'Authorization': token },
-    method: 'GET',
-    uri: url,
-    json: true,
-  };
-
-  const response = await request(options);
-
-  return response.items;
-};
-
-const getFTAToken = async (url) => {  
-  const options = {
-    headers: { 'content-type': 'application/json' },
-    method: 'POST',
-    url,
-    json: true,
-    auth: {
-      username: process.env.FTA_API_TOKEN_USERNAME,
-      password: process.env.FTA_API_TOKEN_PASSWORD,
-    }
-  };
-
-  const response = await request(options);
-
-  return response;
-};
-
 const skipping = (action, agreementId, index) => {
   if (agreementId.indexOf('RB') >= 0 || agreementId.indexOf('DL') >= 0) return;
   console.log(`Skipping Record with aId: ${agreementId}, row: ${index + 2}, when: ${action}`);
@@ -512,26 +458,66 @@ const prepareTestSetup = async () => {
   }
 };
 
-const oldloadData = async (fromUrl) => {
-  let licensee, usage, client, user;
-  if (fromUrl) {
-    const res = await getFTAToken(TOKEN_URL);
-    const {
-      access_token,
-      token_type,
-      expires_in,
-    } = res;
-    const token = `${token_type} ${access_token}`;
-    
-    licensee = await loadDataFromUrl(token, LICENSEE_URL);
-    usage = await loadDataFromUrl(token, USAGE_URL);
-    client = await loadDataFromUrl(token, CLIENT_URL);
-  } else {
-    licensee = await loadFile(LICENSEE);
-    usage = await loadFile(USAGE);
-    client = await loadFile(CLIENT);
-    user = await loadFile(USER);
-  }
+const loadFile = (name) => new Promise((resolve, reject) => {
+  const records = [];
+  fs.readFile(name, 'utf8', (err, contents) => {
+    const parser = csv.parse(contents, (err, data) => {
+      if (err) reject(err)
+
+      const fields = data.shift()
+      data.forEach((line) => {
+        const record = {}
+        fields.forEach((value, i) => {
+          const key = value.replace(/ /g, '_').toLowerCase();
+          if (i > 1) {
+            record[key] = line[i]
+            return
+          }
+          record[key] = line[i]
+        });
+        records.push(record);
+      })
+      resolve(records);
+    });
+  });
+});
+
+const loadDataFromUrl = async (token, url) => {
+  const options = {
+    headers: { 'content-type': 'application/json', 'Authorization': token },
+    method: 'GET',
+    uri: url,
+    json: true,
+  };
+
+  const response = await request(options);
+
+  return response.items;
+};
+
+const getFTAToken = async (url) => {  
+  const options = {
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+    url,
+    json: true,
+    auth: {
+      username: process.env.FTA_API_TOKEN_USERNAME,
+      password: process.env.FTA_API_TOKEN_PASSWORD,
+    }
+  };
+
+  const response = await request(options);
+
+  return response;
+};
+
+const loadFTADataFromCSV = async () => {
+  const licensee = await loadFile(LICENSEE);
+  const usage = await loadFile(USAGE);
+  const client = await loadFile(CLIENT);
+  const user = await loadFile(USER);
+
   await updateDistrict(licensee);
   await updateZone(licensee);
   await updateUser(user);
@@ -540,8 +526,7 @@ const oldloadData = async (fromUrl) => {
   await updateClient(client);
 };
 
-const loadData = async () => {
-  let licensee, usage, client, user;
+const loadFTADataFromAPI = async () => {
   const res = await getFTAToken(TOKEN_URL);
   const {
     access_token,
@@ -550,14 +535,12 @@ const loadData = async () => {
   } = res;
   const token = `${token_type} ${access_token}`;
   
-  licensee = await loadDataFromUrl(token, LICENSEE_URL);
-  usage = await loadDataFromUrl(token, USAGE_URL);
-  client = await loadDataFromUrl(token, CLIENT_URL);
-  user = await loadFile(USER);
+  const licensee = await loadDataFromUrl(token, LICENSEE_URL);
+  const usage = await loadDataFromUrl(token, USAGE_URL);
+  const client = await loadDataFromUrl(token, CLIENT_URL);
 
   await updateDistrict(licensee);
   await updateZone(licensee);
-  await updateUser(user);
   await updateAgreement(licensee);
   await updateUsage(usage);
   await updateClient(client);
@@ -565,10 +548,12 @@ const loadData = async () => {
 
 const main = async () => {
   try {
-    await loadData();
+    // await loadFTADataFromCSV();
+    await loadFTADataFromAPI();
     await prepareTestSetup();
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
+    process.exit(0);
     throw err;
   }
   process.exit(0);
