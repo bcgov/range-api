@@ -61,7 +61,7 @@ objects:
                           name: nrs-api-store-credentials
                           key: password
                     - name: FTA_BASE_URL
-                        value: ${FTA_BASE_URL}
+                      value: ${FTA_BASE_URL}
                     - name: POSTGRESQL_DATABASE
                       valueFrom:
                         secretKeyRef:
