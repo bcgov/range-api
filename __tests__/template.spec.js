@@ -20,7 +20,7 @@
 
 'use strict';
 
-import { capitalizeFirstLetter, primaryContactFullName } from '../server/libs/template';
+import { capitalizeFirstLetter, primaryContactFullName } from '../src/libs/template';
 
 const contacts = [
   {
