@@ -46,7 +46,7 @@ objects:
                   command:
                     - 'npm'
                     - 'run'
-                    - 'prune'
+                    - 'import'
                   env:
                     - name: PATH
                       value: /opt/rh/rh-nodejs8/root/usr/bin:/opt/app-root/src/node_modules/.bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
