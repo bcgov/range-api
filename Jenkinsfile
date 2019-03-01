@@ -47,6 +47,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
   node("${POD_LABEL}") {
     stage('Checkout') {
       echo "Checking out source"
+      git remote prune origin
       checkout scm
 
       GIT_COMMIT_SHORT_HASH = sh (
