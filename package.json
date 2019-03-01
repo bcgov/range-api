@@ -62,13 +62,13 @@
   "scripts": {
     "start": "node build/src/server.js",
     "dev": "NODE_ENV=development nodemon src/server.js --exec babel-node --inspect=0.0.0.0:9229 --nolazy",
-    "debug": "node --inspect=0.0.0.0:9222 --nolazy build/server",
+    "debug": "node --inspect=0.0.0.0:9222 --nolazy build/src",
     "build": "cross-env NODE_ENV=production gulp",
-    "build:doc": "./node_modules/.bin/apidoc -i server/ -o doc/api",
+    "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
     "test": "cross-env NODE_ENV=test jest __tests__",
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
-    "test:lint": "eslint --env node --ext .js server",
+    "test:lint": "eslint --env node --ext .js src",
     "import": "npx babel-node scripts/import.js"
   },
   "repository": {
@@ -98,7 +98,7 @@
       "src/shared"
     ]
   },
-  "author": "Jason C. Leach <jaosn.leach@fullboar.ca>",
+  "author": "Jason C. Leach <jason.leach@fullboar.ca>",
   "license": "Apache-2.0",
   "homepage": "https://github.com:bcgov/range-api#readme"
 }
