@@ -31,18 +31,18 @@ gulp.task('clean', () => gulp.src('build', { read: false, allowEmpty: true })
     force: true,
   })));
 
-gulp.task('transpile', () => gulp.src('server/**/*.js')
+gulp.task('transpile', () => gulp.src('src/**/*.js')
   .pipe(babel())
-  .pipe(gulp.dest('build/server')));
+  .pipe(gulp.dest('build/src')));
 
-gulp.task('copy-config', () => gulp.src('server/config/*.json')
-  .pipe(gulp.dest('build/server/config')));
+gulp.task('copy-config', () => gulp.src('src/config/*.json')
+  .pipe(gulp.dest('build/src/config')));
 
 gulp.task('copy-node-config', () => gulp.src(['package.json', 'package-lock.json'])
   .pipe(gulp.dest('build')));
 
 gulp.task('copy-tools', () => gulp.src(['wkhtmltopdf-amd64-0.12.4/**/*'], { dot: false })
-  .pipe(gulp.dest('build/server/wkhtmltopdf-amd64-0.12.4')));
+  .pipe(gulp.dest('build/src/wkhtmltopdf-amd64-0.12.4')));
 
 gulp.task('copy-templates', () => gulp.src(['templates/*'], { dot: false })
   .pipe(gulp.dest('build/templates')));

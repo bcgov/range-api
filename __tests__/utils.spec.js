@@ -22,7 +22,7 @@
 
 'use strict';
 
-import { isNumeric, isValid } from '../server/libs/utils';
+import { isNumeric, isValid } from '../src/libs/utils';
 
 describe('utility helpers', () => {
   beforeEach(() => {

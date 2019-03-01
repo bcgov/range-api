@@ -22,46 +22,42 @@
 
 'use strict';
 
-import jest from 'jest';
-import sinon from 'sinon';
+// const PassThrough = require('stream').PassThrough;
 
-const PassThrough = require('stream').PassThrough;
+describe('archive functions', () => {
+  beforeEach(() => {
+    // nothig to do
+  });
 
-describe('archive functions', function() {
+  afterEach(() => {
+    // nothig to do
+  });
 
-    beforeEach(() => {
-      // nothig to do
-    });
-  
-    afterEach(() => {
-      // nothig to do
-    });
-  
-    test.skip('verifyToken() returns a verify result when a valid access token is passed', async () => {
+  test.skip('verifyToken() returns a verify result when a valid access token is passed', async () => {
 
-    });
+  });
 
-    test.skip('verifyToken() returns an error an invalid access token is passed', async () => {
+  test.skip('verifyToken() returns an error an invalid access token is passed', async () => {
 
-    });
+  });
 
-    test.skip('verifyToken() returns an error if modulus is not returned in certs', async () => {
+  test.skip('verifyToken() returns an error if modulus is not returned in certs', async () => {
 
-    });
+  });
 
-    test.skip('verifyToken() returns an error if exponent is not returned in certs', async () => {
+  test.skip('verifyToken() returns an error if exponent is not returned in certs', async () => {
 
-    });
+  });
 
-    test.skip('verifyToken() returns an error if algorithm is not returned in certs', async () => {
+  test.skip('verifyToken() returns an error if algorithm is not returned in certs', async () => {
 
-    });
+  });
 
-    test.skip('isAuthenticated() completes without errors', async () => {
+  test.skip('isAuthenticated() completes without errors', async () => {
 
-    });
+  });
 
-    test.skip('isAuthenticated() returns error if req does not contain a Authorization header with bearer and token', async() => {
+  test.skip('isAuthenticated() returns error if req does not contain a Authorization header with bearer and token', async () => {
 
-    }); 
+  });
 });
