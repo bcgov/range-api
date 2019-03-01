@@ -1,0 +1,147 @@
+---
+kind: 'Template'
+apiVersion: 'v1'
+metadata:
+  name: 'cronjob-${JOB_NAME}'
+  annotations:
+    description: 'Cronjob prune files older than n days from minio.'
+    iconClass: 'icon-shadowman'
+    tags: 'management,cronjob,prune'
+objects:
+  - kind: 'Secret'
+    apiVersion: 'v1'
+    type: 'Opaque'
+    metadata:
+      name: 'nrs-api-store-credentials'
+      labels:
+        app: ${JOB_NAME}
+    stringData:
+      username: ${FTA_API_STORE_USERNAME}
+      password: ${FTA_API_STORE_PASSWORD}
+  - kind: 'CronJob'
+    apiVersion: 'batch/v1beta1'
+    metadata:
+      name: '${JOB_NAME}'
+      namespace: ${NAMESPACE}
+      labels:
+        template: 'devhub-cronjob'
+        cronjob: '${JOB_NAME}'
+    spec:
+      schedule: '${SCHEDULE}'
+      concurrencyPolicy: 'Forbid'
+      successfulJobsHistoryLimit: ${{SUCCESS_JOBS_HISTORY_LIMIT}}
+      failedJobsHistoryLimit: ${{FAILED_JOBS_HISTORY_LIMIT}}
+      jobTemplate:
+        metadata:
+          labels:
+            template: 'devhub-cronjob'
+            cronjob: '${JOB_NAME}'
+        spec:
+          backoffLimit: ${{JOB_BACKOFF_LIMIT}}
+          template:
+            spec:
+              containers:
+                - name: '${JOB_NAME}'
+                  image: 'docker-registry.default.svc:5000/${IMAGE_NAMESPACE}/${IMAGE_NAME}'
+                  command:
+                    - 'npm'
+                    - 'run'
+                    - 'import'
+                  env:
+                    - name: PATH
+                      value: /opt/rh/rh-nodejs8/root/usr/bin:/opt/app-root/src/node_modules/.bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                    - name: FTA_API_STORE_USERNAME
+                      valueFrom:
+                        secretKeyRef:
+                          name: nrs-api-store-credentials
+                          key: username
+                    - name: FTA_API_STORE_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: nrs-api-store-credentials
+                          key: password
+                    - name: FTA_BASE_URL
+                      value: ${FTA_BASE_URL}
+                    - name: POSTGRESQL_DATABASE
+                      valueFrom:
+                        secretKeyRef:
+                          name: postgresql
+                          key: database-name
+                    - name: POSTGRESQL_USER
+                      valueFrom:
+                        secretKeyRef:
+                          name: postgresql
+                          key: database-password
+                    - name: POSTGRESQL_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: postgresql
+                          key: database-user
+              restartPolicy: 'Never'
+              terminationGracePeriodSeconds: 30
+              activeDeadlineSeconds: 90
+              dnsPolicy: 'ClusterFirst'
+              # serviceAccountName: '${JOB_SERVICE_ACCOUNT}'
+              # serviceAccount: '${JOB_SERVICE_ACCOUNT}'
+parameters:
+  - name: 'NAMESPACE'
+    displayName: 'Namespace'
+    description: 'Name of the Namespace where to deploy the Scheduled Job'
+    required: true
+  - name: 'JOB_NAME'
+    displayName: 'Job Name'
+    description: 'Name of the Scheduled Job to Create.'
+    value: 'fta-data-importer'
+    required: true
+  - name: 'IMAGE_NAMESPACE'
+    displayName: 'Image Namespace'
+    description: 'The locate of the image to use for this cron job.'
+    value: 'range-myra-tools'
+    required: true
+  - name: 'IMAGE_NAME'
+    displayName: 'Image Name'
+    description: 'The image name to use for this cron job.'
+    value: 'range-myra-api:latest'
+    required: true
+  - name: 'SCHEDULE'
+    displayName: 'Cron Schedule'
+    description: 'Cron Schedule to Execute the Job (in UTC)'
+    # Currently targeting 4:00 AM weekley
+    value: '0 12 * * 0'
+    required: true
+  # - name: 'JOB_SERVICE_ACCOUNT'
+  #   displayName: 'Service Account Name'
+  #   description: 'Name of the Service Account To Exeucte the Job As.'
+  #   value: 'default'
+  #   required: true
+  - name: 'SUCCESS_JOBS_HISTORY_LIMIT'
+    displayName: 'Successful Job History Limit'
+    description: 'The number of successful jobs that will be retained'
+    value: '3'
+    required: true
+  - name: 'FAILED_JOBS_HISTORY_LIMIT'
+    displayName: 'Failed Job History Limit'
+    description: 'The number of failed jobs that will be retained'
+    value: '3'
+    required: true
+  - name: 'JOB_BACKOFF_LIMIT'
+    displayName: 'Job Backoff Limit'
+    description: 'The number of attempts to try for a successful job outcome (default: 6)'
+    value: '0'
+    required: false
+  - name: 'FTA_API_STORE_USERNAME'
+    displayName: 'API Store Username'
+    description: 'The username of the NRS API store account'
+    required: true
+  - name: 'FTA_API_STORE_PASSWORD'
+    displayName: 'API Store Password'
+    description: 'The password for the NRS API store account'
+    required: true
+  - name: 'FTA_BASE_URL'
+    displayName: 'FTA API Base URL'
+    description: 'The FTA ORDS API Base URL for the environment you want to connect to'
+    required: true
+  - name: 'POSTGRESQL_HOST'
+    displayName: 'PostgreSQL Service Name'
+    description: 'The name of the postgres service (fetch it from oc)'
+    required: true
