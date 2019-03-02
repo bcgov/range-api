@@ -4,7 +4,7 @@ apiVersion: 'v1'
 metadata:
   name: 'cronjob-${JOB_NAME}'
   annotations:
-    description: 'Cronjob prune files older than n days from minio.'
+    description: 'Cronjob to import data from FTA.'
     iconClass: 'icon-shadowman'
     tags: 'management,cronjob,prune'
 objects:
@@ -108,7 +108,7 @@ parameters:
   - name: 'SCHEDULE'
     displayName: 'Cron Schedule'
     description: 'Cron Schedule to Execute the Job (in UTC)'
-    # Currently targeting 4:00 AM weekley
+    # Currently targeting 2:00 AM daily
     value: '0 12 * * *'
     required: true
   # - name: 'JOB_SERVICE_ACCOUNT'
