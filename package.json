@@ -22,6 +22,8 @@
     "handlebars": "^4.0.11",
     "ip": "^1.1.4",
     "jsonwebtoken": "^8.2.1",
+    "jspdf": "^1.5.3",
+    "jspdf-autotable": "^3.0.10",
     "knex": "^0.15.1",
     "lodash": "^4.17.11",
     "moment": "^2.22.0",
@@ -69,7 +71,7 @@
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js src",
-    "import": "npx babel-node scripts/import.js"
+    "import": "node build/scripts/import.js"
   },
   "repository": {
     "type": "git",

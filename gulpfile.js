@@ -35,6 +35,10 @@ gulp.task('transpile', () => gulp.src('src/**/*.js')
   .pipe(babel())
   .pipe(gulp.dest('build/src')));
 
+gulp.task('transpile-scripts', () => gulp.src('scripts/**/*.js')
+  .pipe(babel())
+  .pipe(gulp.dest('build/scripts')));
+
 gulp.task('copy-config', () => gulp.src('src/config/*.json')
   .pipe(gulp.dest('build/src/config')));
 
@@ -47,4 +51,4 @@ gulp.task('copy-tools', () => gulp.src(['wkhtmltopdf-amd64-0.12.4/**/*'], { dot:
 gulp.task('copy-templates', () => gulp.src(['templates/*'], { dot: false })
   .pipe(gulp.dest('build/templates')));
 
-gulp.task('default', gulp.series('clean', gulp.parallel('transpile', 'copy-config', 'copy-node-config', 'copy-tools', 'copy-templates')));
+gulp.task('default', gulp.series('clean', gulp.parallel('transpile', 'transpile-scripts', 'copy-config', 'copy-node-config', 'copy-tools', 'copy-templates')));
