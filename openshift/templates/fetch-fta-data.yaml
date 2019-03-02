@@ -81,7 +81,7 @@ objects:
                           key: database-password
               restartPolicy: 'Never'
               terminationGracePeriodSeconds: 30
-              activeDeadlineSeconds: 90
+              activeDeadlineSeconds: 600
               dnsPolicy: 'ClusterFirst'
               # serviceAccountName: '${JOB_SERVICE_ACCOUNT}'
               # serviceAccount: '${JOB_SERVICE_ACCOUNT}'
