@@ -73,12 +73,12 @@ objects:
                       valueFrom:
                         secretKeyRef:
                           name: postgresql
-                          key: database-password
+                          key: database-user
                     - name: POSTGRESQL_PASSWORD
                       valueFrom:
                         secretKeyRef:
                           name: postgresql
-                          key: database-user
+                          key: database-password
               restartPolicy: 'Never'
               terminationGracePeriodSeconds: 30
               activeDeadlineSeconds: 90
