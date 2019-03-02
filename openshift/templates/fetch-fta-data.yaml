@@ -109,7 +109,7 @@ parameters:
     displayName: 'Cron Schedule'
     description: 'Cron Schedule to Execute the Job (in UTC)'
     # Currently targeting 4:00 AM weekley
-    value: '0 12 * * 0'
+    value: '0 12 * * *'
     required: true
   # - name: 'JOB_SERVICE_ACCOUNT'
   #   displayName: 'Service Account Name'
