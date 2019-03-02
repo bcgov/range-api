@@ -62,6 +62,8 @@ objects:
                           key: password
                     - name: FTA_BASE_URL
                       value: ${FTA_BASE_URL}
+                    - name: POSTGRESQL_HOST
+                      value: ${POSTGRESQL_HOST}
                     - name: POSTGRESQL_DATABASE
                       valueFrom:
                         secretKeyRef:
