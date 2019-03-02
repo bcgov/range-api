@@ -3,8 +3,8 @@
 import csv from 'csv';
 import fs from 'fs';
 import request from 'request-promise-native';
-import config from '../server/config';
-import DataManager from '../server/libs/db2';
+import config from '../src/config';
+import DataManager from '../src/libs/db2';
 import * as mockData from './mockData';
 
 const USAGE = 'fta/FTA_RANGE_USAGE.csv';
