@@ -502,8 +502,8 @@ const getFTAToken = async (url) => {
     url,
     json: true,
     auth: {
-      username: process.env.FTA_API_TOKEN_USERNAME,
-      password: process.env.FTA_API_TOKEN_PASSWORD,
+      username: process.env.FTA_API_STORE_USERNAME,
+      password: process.env.FTA_API_STORE_PASSWORD,
     }
   };
 
