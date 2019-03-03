@@ -24,7 +24,7 @@ module.exports = {
     migrations: {
       // stub: './config/knex-migration-stub.js',
       tableName: 'migration',
-      directory: 'server/libs/db2/migrations',
+      directory: 'src/libs/db2/migrations',
     },
   },
   development: {
@@ -42,12 +42,12 @@ module.exports = {
     migrations: {
       // stub: './config/knex-migration-stub.js',
       tableName: 'migration',
-      directory: 'server/libs/db2/migrations',
+      directory: 'src/libs/db2/migrations',
     },
     seeds: {
       // stub: './config/knex-migration-stub.js',
       tableName: 'seed',
-      directory: 'server/libs/db2/seeds',
+      directory: 'src/libs/db2/seeds',
     },
   },
 
@@ -65,12 +65,12 @@ module.exports = {
     },
     migrations: {
       tableName: 'migration',
-      directory: 'server/libs/db2/migrations',
+      directory: 'src/libs/db2/migrations',
     },
     seeds: {
       // stub: './config/knex-migration-stub.js',
       tableName: 'seed',
-      directory: 'server/libs/db2/seeds',
+      directory: 'src/libs/db2/seeds',
     },
   },
 };
