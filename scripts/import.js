@@ -394,14 +394,14 @@ const updateClient = async (data) => {
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
         });
         created += 1;
-      }
 
-      const agreement = await Agreement.findById(db, agreementId);
-      if (agreement) {
-        const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
-        VALUES ('${agreement.id}', '${client.id}', '${clientType.id}')`;
+        const agreement = await Agreement.findById(db, agreementId);
+        if (agreement) {
+          const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
+          VALUES ('${agreement.id}', '${client.id}', '${clientType.id}')`;
 
-        await db.schema.raw(query);
+          await db.schema.raw(query);
+        }
       }
     } catch (error) {
       console.log(`Error with message = ${error.message}, client number ${clientNumber} row: ${index + 2}`)
@@ -548,9 +548,9 @@ const loadFTADataFromAPI = async () => {
 
 const main = async () => {
   try {
-    // await loadFTADataFromCSV();
     await loadFTADataFromAPI();
-    await prepareTestSetup();
+    // await loadFTADataFromCSV(); // this is for the local environment
+    // await prepareTestSetup(); // run once when initializing environments
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
     process.exit(0);
