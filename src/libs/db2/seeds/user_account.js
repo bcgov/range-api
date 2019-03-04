@@ -166,6 +166,13 @@ exports.seed = async (knex) => {
       email: 'amir@freshworks.io',
       active: true,
     },
+    {
+      username: 'idir\\saschwar',
+      given_name: 'Schwarz',
+      family_name: 'Sarah',
+      email: 'sarah.schwarz@gov.bc.ca',
+      active: true,
+    },
   ];
 
   await knex(table).delete();
