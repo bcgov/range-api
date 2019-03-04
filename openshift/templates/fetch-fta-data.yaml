@@ -119,22 +119,22 @@ parameters:
   - name: 'SUCCESS_JOBS_HISTORY_LIMIT'
     displayName: 'Successful Job History Limit'
     description: 'The number of successful jobs that will be retained'
-    value: 3
+    value: '3'
     required: true
   - name: 'FAILED_JOBS_HISTORY_LIMIT'
     displayName: 'Failed Job History Limit'
     description: 'The number of failed jobs that will be retained'
-    value: 3
+    value: '3'
     required: true
   - name: 'JOB_BACKOFF_LIMIT'
     displayName: 'Job Backoff Limit'
     description: 'The number of attempts to try for a successful job outcome (default: 6)'
-    value: 0
+    value: '0'
     required: false
   - name: 'ACTIVE_DEADLINE'
     displayName: 'Active Deadline in Seconds'
     description: 'How long is a job allowed to run for before it is killed'
-    value: 600
+    value: '600'
     required: true
   - name: 'FTA_API_STORE_USERNAME'
     displayName: 'API Store Username'
