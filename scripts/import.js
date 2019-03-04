@@ -73,7 +73,8 @@ const updateDistrict = async (data) => {
       throw error;
     }
   }
-  console.log(`${created} districts were created.`);
+
+  return `${created} districts were created.`;
 };
 
 const updateZone = async (data) => {
@@ -90,6 +91,7 @@ const updateZone = async (data) => {
       district_admin_zone: zoneCode,
       org_unit_code: districtCode,
       zone_description: zoneDescription,
+      contact_email_address: staffEmail,
     } = record;
     if (!isValidRecord(record) || !zoneCode) {
       skipping('Updating Zone', agreementId, index);
@@ -103,22 +105,33 @@ const updateZone = async (data) => {
     }
 
     try {
+      const staff = staffEmail ? await User.findOne(db, { email: staffEmail }) : null;
       const zone = await Zone.findOne(db, { code: zoneCode, district_id: district.id });
-      if (!zone) {
-        console.log(`Adding Zone with Code ${zoneCode}`)
+
+      if (!zone) {        
+        console.log(`Adding Zone with Code ${zoneCode} District Code: ${districtCode}`)
         await Zone.create(db, {
           code: zoneCode,
           description: zoneDescription || 'No description available',
-          districtId: district.id,
+          district_id: district.id,
+          user_id: staff && staff.id,
         });
         created += 1;
+      } else {
+        await Zone.update(db, {
+          code: zoneCode,
+        }, {
+          user_id: staff && staff.id,
+          description: zoneDescription || 'No description available',
+        });
       }
     } catch (error) {
       console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`)
       throw error;
     }
   }
-  console.log(`${created} zones were created.`);
+
+  return `${created} zones were created`;
 };
 
 const updateUser = async (data) => {
@@ -203,7 +216,8 @@ const updateUser = async (data) => {
       throw error;
     }
   }
-  console.log(`${created} users were created, ${updated} users were updated, ${zoneUpdated} zones were updated`);
+
+  return `${created} users were created, ${updated} users were updated, ${zoneUpdated} zones were updated`;
 };
 
 const updateAgreement = async (data) => {
@@ -280,7 +294,8 @@ const updateAgreement = async (data) => {
       throw error;
     }
   }
-  console.log(`${created} agreements were created. ${updated} agreements were updated`);
+  
+  return `${created} agreements were created. ${updated} agreements were updated`;
 };
 
 const updateUsage = async (data) => {
@@ -343,7 +358,8 @@ const updateUsage = async (data) => {
       throw error;
     }
   }
-  console.log(`${created} usage were created, ${updated} usage were updated`);
+
+  return `${created} usage were created, ${updated} usage were updated`;
 };
 
 const updateClient = async (data) => {
@@ -408,7 +424,8 @@ const updateClient = async (data) => {
       throw error;
     }
   }
-  console.log(`${created} clients were created, ${updated} clients were updated`);
+  
+  return `${created} clients were created, ${updated} clients were updated`;
 };
 
 const prepareTestSetup = async () => {
@@ -512,18 +529,29 @@ const getFTAToken = async (url) => {
   return response;
 };
 
+const updateFTAData = async (licensee, client, usage) => {
+  let msg = '';
+  msg = msg + await updateDistrict(licensee) + '\n';
+  msg = msg + await updateZone(licensee) + '\n';
+  msg = msg + await updateAgreement(licensee) + '\n';
+  msg = msg + await updateUsage(usage) + '\n';
+  msg = msg + await updateClient(client);
+
+  console.log(msg);
+}
+
 const loadFTADataFromCSV = async () => {
   const licensee = await loadFile(LICENSEE);
   const usage = await loadFile(USAGE);
   const client = await loadFile(CLIENT);
-  const user = await loadFile(USER);
 
-  await updateDistrict(licensee);
-  await updateZone(licensee);
-  await updateUser(user);
-  await updateAgreement(licensee);
-  await updateUsage(usage);
-  await updateClient(client);
+  await updateFTAData(licensee, client, usage);
+};
+
+const loadStaffDataFromCSV = async () => {
+  const user = await loadFile(USER);
+  const msg = await updateUser(user);
+  console.log(msg);
 };
 
 const loadFTADataFromAPI = async () => {
@@ -539,18 +567,23 @@ const loadFTADataFromAPI = async () => {
   const usage = await loadDataFromUrl(token, USAGE_URL);
   const client = await loadDataFromUrl(token, CLIENT_URL);
 
-  await updateDistrict(licensee);
-  await updateZone(licensee);
-  await updateAgreement(licensee);
-  await updateUsage(usage);
-  await updateClient(client);
+  await updateFTAData(licensee, client, usage);
 };
 
 const main = async () => {
   try {
-    await loadFTADataFromAPI();
-    // await loadFTADataFromCSV(); // this is for the local environment
-    // await prepareTestSetup(); // run once when initializing environments
+    var args = process.argv.slice(2);
+    var isInitializing = args[0] === 'true';
+
+    if (isInitializing) {
+      /* DROP DATABASE MYRA first, and have ZONE_USER.csv */
+      await loadFTADataFromAPI();
+      // await loadFTADataFromCSV();
+      await loadStaffDataFromCSV();
+      await prepareTestSetup();
+    } else {
+      await loadFTADataFromAPI();
+    }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
     process.exit(0);

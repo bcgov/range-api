@@ -32,7 +32,7 @@ exports.up = async knex =>
     t.text('email').notNull();
     t.text('phone_number');
     t.boolean('pia_seen').notNull().defaultTo(false);
-    t.boolean('active').notNull().defaultTo(false);
+    t.boolean('active').notNull().defaultTo(true);
     t.string('client_id', 8).references('client_number').inTable('ref_client');
     t.dateTime('last_login_at');
     t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));

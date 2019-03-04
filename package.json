@@ -69,7 +69,8 @@
     "test:watch": "cross-env NODE_ENV=test jest __tests__ --watch",
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js src",
-    "import": "node build/scripts/import.js"
+    "import": "node build/scripts/import.js",
+    "initialize": "npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
   },
   "repository": {
     "type": "git",
