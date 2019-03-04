@@ -29,15 +29,15 @@ objects:
     spec:
       schedule: '${SCHEDULE}'
       concurrencyPolicy: 'Forbid'
-      successfulJobsHistoryLimit: ${{SUCCESS_JOBS_HISTORY_LIMIT}}
-      failedJobsHistoryLimit: ${{FAILED_JOBS_HISTORY_LIMIT}}
+      successfulJobsHistoryLimit: ${SUCCESS_JOBS_HISTORY_LIMIT}
+      failedJobsHistoryLimit: ${FAILED_JOBS_HISTORY_LIMIT}
       jobTemplate:
         metadata:
           labels:
             template: 'devhub-cronjob'
             cronjob: '${JOB_NAME}'
         spec:
-          backoffLimit: ${{JOB_BACKOFF_LIMIT}}
+          backoffLimit: ${JOB_BACKOFF_LIMIT}
           template:
             spec:
               containers:
@@ -81,7 +81,7 @@ objects:
                           key: database-password
               restartPolicy: 'Never'
               terminationGracePeriodSeconds: 30
-              activeDeadlineSeconds: 600
+              activeDeadlineSeconds: ${ACTIVE_DEADLINE}
               dnsPolicy: 'ClusterFirst'
               # serviceAccountName: '${JOB_SERVICE_ACCOUNT}'
               # serviceAccount: '${JOB_SERVICE_ACCOUNT}'
@@ -131,6 +131,11 @@ parameters:
     description: 'The number of attempts to try for a successful job outcome (default: 6)'
     value: '0'
     required: false
+  - name: 'ACTIVE_DEADLINE'
+    displayName: 'Active Deadline in Seconds'
+    description: 'How long is a job allowed to run for before it is killed'
+    value: '600'
+    required: true
   - name: 'FTA_API_STORE_USERNAME'
     displayName: 'API Store Username'
     description: 'The username of the NRS API store account'
