@@ -70,12 +70,12 @@ objects:
                       valueFrom:
                         secretKeyRef:
                           name: postgresql
-                          key: database-user
+                          key: user
                     - name: POSTGRESQL_PASSWORD
                       valueFrom:
                         secretKeyRef:
                           name: postgresql
-                          key: database-password
+                          key: password
               restartPolicy: 'Never'
               terminationGracePeriodSeconds: 30
               activeDeadlineSeconds: ${ACTIVE_DEADLINE}
