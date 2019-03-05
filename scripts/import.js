@@ -117,14 +117,14 @@ const updateZone = async (data) => {
           code: zoneCode,
           description: zoneDescription || 'No description available',
           district_id: district.id,
-          userId: staff && staff.id,
+          user_id: staff && staff.id,
         });
         created += 1;
       } else {
         const data = {
           description: zoneDescription || 'No description available',
         };
-        if (staff) data.userId = staff.id;
+        if (staff) data.user_id = staff.id;
 
         await Zone.update(db, {
           code: zoneCode,
