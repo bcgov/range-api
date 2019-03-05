@@ -65,10 +65,7 @@ objects:
                     - name: POSTGRESQL_HOST
                       value: ${POSTGRESQL_HOST}
                     - name: POSTGRESQL_DATABASE
-                      valueFrom:
-                        secretKeyRef:
-                          name: postgresql
-                          key: database-name
+                      value: ${POSTGRESQL_DATABASE}
                     - name: POSTGRESQL_USER
                       valueFrom:
                         secretKeyRef:
@@ -151,4 +148,8 @@ parameters:
   - name: 'POSTGRESQL_HOST'
     displayName: 'PostgreSQL Service Name'
     description: 'The name of the postgres service (fetch it from oc)'
+    required: true
+  - name: 'POSTGRESQL_DATABASE'
+    displayName: 'PostgreSQL Database Name'
+    description: 'The name of the postgres database'
     required: true
