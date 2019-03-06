@@ -16,7 +16,7 @@ module.exports = {
       database: process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
-      port: process.env.POSTGRESQL_PORT
+      port: process.env.POSTGRESQL_PORT,
     },
     pool: {
       min: 2,
@@ -35,7 +35,7 @@ module.exports = {
       database: process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
-      port: process.env.POSTGRESQL_PORT
+      port: process.env.POSTGRESQL_PORT,
     },
     pool: {
       min: 2,
@@ -60,7 +60,7 @@ module.exports = {
       database: process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
-      port: process.env.POSTGRESQL_PORT
+      port: process.env.POSTGRESQL_PORT,
     },
     pool: {
       min: 2,

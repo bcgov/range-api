@@ -72,7 +72,7 @@
     "test:lint": "eslint --env node --ext .js src",
     "import": "node build/scripts/import.js",
     "initialize_docker": "./node_modules/.bin/knex migrate:latest && ./node_modules/.bin/knex seed:run && ./node_modules/.bin/babel-node scripts/import.js true",
-    "initialize":"npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
+    "initialize": "npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
   },
   "repository": {
     "type": "git",
