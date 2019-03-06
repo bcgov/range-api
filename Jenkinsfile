@@ -108,13 +108,10 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
               returnStdout: true
                 ).trim()
           echo "SONARQUBE_URL: ${SONARQUBE_URL}"
-          // dir('sonar-runner') {
+          dir('sonar-runner') {
           sh returnStdout: true,
-             script: "pushd sonar-runner && \
-             ./gradlew sonarqube -Dproject.settings=../sonar-project.properties -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info -Dsonar.branch=${GIT_BRANCH_NAME} && \
-             popd
-             "
-          // }
+             script: "./gradlew sonarqube -Dproject.settings=../sonar-project.properties -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info -Dsonar.branch=${GIT_BRANCH_NAME}"  
+          }
         } catch (error) {
           def attachment = [:]
           attachment.fallback = 'See build log for more details'
