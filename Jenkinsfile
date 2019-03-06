@@ -21,7 +21,7 @@ def notifySlack(text, channel, url, attachments, icon) {
         icon_url: jenkinsIcon,
         attachments: attachments
     ])
-    sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
+    // sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
 // See https://github.com/jenkinsci/kubernetes-plugin
