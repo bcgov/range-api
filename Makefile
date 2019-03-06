@@ -38,7 +38,7 @@ all 		: help
 # ------------------------------------------------------------------------------
 
 local:      |  print-status  build-local run-local         ## Task-Alias -- Run the steps for a local-build.
-local_debug: | print-status build-local run-debug
+local-debug: | print-status build-local run-debug
 
 
 # ------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ seed-local:
 	
 database: ## <Helper> :: Executes into database container.
 	@echo "Make: Shelling into local database container ..."
-	@docker-compose -f docker-compose.yml exec db psql -U $(DB_USER) -W $(DB_DATABASE)
+	@docker-compose -f docker-compose.yml exec db psql -U $(POSTGRESQL_USER) -W $(POSTGRESQL_DATABASE)
 
 workspace: ## <Workspcae> :: Excute into API container
 	@echo "Make: Shelling into local api container ..."
