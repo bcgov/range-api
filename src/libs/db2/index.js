@@ -67,7 +67,7 @@ export default class DataManager {
       connection: {
         user: config.get('db:user'),
         database: config.get('db:database'),
-        port: 5432,
+        port: config.get('db:port'),
         host: config.get('db:host'),
         password: config.get('db:password'),
       },

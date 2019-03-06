@@ -7,5 +7,6 @@ old
 server
 test
 tools
-scripts
 yarn.lock
+.DS_Store
+**/.DS_Store
