@@ -565,6 +565,7 @@ const loadFTADataFromCSV = async () => {
 };
 
 const loadStaffDataFromCSV = async () => {
+  console.log(`-- Current Dir: ${__dirname} --`);
   const user = await loadFile(USER);
   const msg = await updateUser(user);
   console.log(msg);
@@ -590,12 +591,14 @@ const main = async () => {
   try {
     var args = process.argv.slice(2);
     var isInitializing = args[0] === 'true';
-
     if (isInitializing) {
       /* DROP DATABASE MYRA first, and have ZONE_USER.csv */
+      console.log('Loading FTA data from API...');
       await loadFTADataFromAPI();
       // await loadFTADataFromCSV();
+      console.log('Loading Staff data from File...');
       await loadStaffDataFromCSV();
+      console.log('Preparing test setup');
       await prepareTestSetup();
     } else {
       await loadFTADataFromAPI();
