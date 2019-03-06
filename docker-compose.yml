@@ -11,13 +11,15 @@ services:
       - ${API_PORT}:${API_PORT}
     volumes:
       - ./src:/home/nodejs/app/src
+      - ./scripts:/home/nodejs/app/scripts
     environment:
       - PORT=${API_PORT}
       - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
       - POSTGRESQL_USER=${POSTGRESQL_USER}
       - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
-      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST_DOCKER}
       - NODE_ENV=${ENVIRONMENT}
+      - POSTGRESQL_PORT=${POSTGRESQL_PORT_DOCKER}
     networks:
       - local
   db:
@@ -26,8 +28,10 @@ services:
     build:
      context: ./services/db
      dockerfile: Dockerfile
+     args:
+      - PORT:${POSTGRESQL_PORT_DOCKER}
     ports:
-     - 5435:5432
+     - ${POSTGRESQL_PORT_DOCKER}:${POSTGRESQL_PORT_DOCKER}
     environment:
      - POSTGRES_USER=${POSTGRESQL_USER}
      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
