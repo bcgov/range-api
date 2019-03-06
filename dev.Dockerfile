@@ -29,8 +29,6 @@ COPY ./ .
 COPY .env /home/nodejs/app
 ENV NODE_PATH /home/nodejs/app/src
 
-RUN npm run build
-
 EXPOSE 8080
 
 CMD ["npm", "run", "dev_docker"]
