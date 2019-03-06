@@ -37,8 +37,8 @@ all 		: help
 # Task Aliases
 # ------------------------------------------------------------------------------
 
-local:      |  local-env print-status  build-local run-local         ## Task-Alias -- Run the steps for a local-build.
-local_debug: | local-env print-status build-local run-debug
+local:      |  print-status  build-local run-local         ## Task-Alias -- Run the steps for a local-build.
+local_debug: | print-status build-local run-debug
 
 
 # ------------------------------------------------------------------------------
@@ -64,7 +64,6 @@ print-status:
 
 local-env:
 	@echo "+\n++ Preparing project for local development ...\n+"
-	@cp env_config/env.local ./.env
 
 build-local: ## -- Target : Builds the local development containers.
 	@echo "+\n++ Make: Building local Docker image ...\n+"
