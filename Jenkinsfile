@@ -109,8 +109,9 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
                 ).trim()
           echo "SONARQUBE_URL: ${SONARQUBE_URL}"
           dir('sonar-runner') {
-          sh returnStdout: true,
-             script: "./gradlew sonarqube -Dproject.settings=../sonar-project.properties -Dsonar.host.url=${SONARQUBE_URL} --stacktrace --info"  
+            // Most settings are configured in `build.gradle`.
+            sh returnStdout: true,
+              script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.branch=${GIT_BRANCH_NAME} --stacktrace --info"  
           }
         } catch (error) {
           def attachment = [:]
