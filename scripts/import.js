@@ -49,6 +49,7 @@ const skipping = (action, agreementId, index) => {
 
 const updateDistrict = async (data) => {
   let created = 0;
+  console.log('Start updating District');
   for (let index = 0; index < data.length; index++) {
     const record = data[index];    
     const { forest_file_id: agreementId, org_unit_code: districtCode } = record;
@@ -84,6 +85,8 @@ const updateZone = async (data) => {
     districtCodesMap[d.code] = d;
   });
   let created = 0;
+  console.log('Start updating Zones');
+
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -118,12 +121,15 @@ const updateZone = async (data) => {
         });
         created += 1;
       } else {
+        const data = {
+          description: zoneDescription || 'No description available',
+        };
+        if (staff) data.user_id = staff.id;
+
         await Zone.update(db, {
           code: zoneCode,
-        }, {
-          user_id: staff && staff.id,
-          description: zoneDescription || 'No description available',
-        });
+          district_id: district.id,
+        }, data);
       }
     } catch (error) {
       console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`)
@@ -145,6 +151,7 @@ const updateUser = async (data) => {
   });
   const zones = await Zone.find(db, {});
   
+  console.log('Start updating Users');
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -221,6 +228,7 @@ const updateUser = async (data) => {
 };
 
 const updateAgreement = async (data) => {
+  console.log('Start updating Agreements');
   const districts = await District.find(db, {});
   const districtCodesMap = {};
   districts.map(d => {
@@ -301,6 +309,8 @@ const updateAgreement = async (data) => {
 const updateUsage = async (data) => {
   let created = 0;
   let updated = 0;
+  console.log('Start updating Usage');
+  
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -366,6 +376,7 @@ const updateClient = async (data) => {
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
+  console.log('Start updating Clients');
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -410,14 +421,19 @@ const updateClient = async (data) => {
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
         });
         created += 1;
+      }
 
-        const agreement = await Agreement.findById(db, agreementId);
-        if (agreement) {
-          const query = `INSERT INTO client_agreement (agreement_id, client_id, client_type_id)
-          VALUES ('${agreement.id}', '${client.id}', '${clientType.id}')`;
-
-          await db.schema.raw(query);
-        }
+      const agreement = await Agreement.findById(db, agreementId);
+      const clientAgreement = await ClientAgreement.findOne(db, {
+        agreement_id: agreementId,
+        client_id: client.id
+      });
+      if (agreement && !clientAgreement) {
+        await ClientAgreement.create(db, {
+          agreement_id: agreementId,
+          client_id: client.id,
+          client_type_id: clientType.id,
+        });
       }
     } catch (error) {
       console.log(`Error with message = ${error.message}, client number ${clientNumber} row: ${index + 2}`)

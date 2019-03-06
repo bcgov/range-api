@@ -17,6 +17,7 @@ import Agreement from './model/agreement';
 import AgreementExemptionStatus from './model/agreementexemptionstatus';
 import AgreementType from './model/agreementtype';
 import Client from './model/client';
+import ClientAgreement from './model/ClientAgreement';
 import ClientType from './model/clienttype';
 import District from './model/district';
 import GrazingSchedule from './model/grazingschedule';
@@ -88,6 +89,7 @@ export default class DataManager {
     this.AgreementType = AgreementType;
     this.Client = Client;
     this.ClientType = ClientType;
+    this.ClientAgreement = ClientAgreement;
     this.District = District;
     this.GrazingSchedule = GrazingSchedule;
     this.GrazingScheduleEntry = GrazingScheduleEntry;
