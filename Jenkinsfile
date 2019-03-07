@@ -21,7 +21,7 @@ def notifySlack(text, channel, url, attachments, icon) {
         icon_url: jenkinsIcon,
         attachments: attachments
     ])
-    // sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
+    sh "curl -s -S -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
 // See https://github.com/jenkinsci/kubernetes-plugin
@@ -109,8 +109,9 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
                 ).trim()
           echo "SONARQUBE_URL: ${SONARQUBE_URL}"
           dir('sonar-runner') {
-          sh returnStdout: true,
-             script: "./gradlew sonarqube -Dproject.settings=../sonar-project.properties -Dsonar.host.url=${SONARQUBE_URL} --stacktrace --info -Dsonar.branch=${GIT_BRANCH_NAME}"  
+            // Most settings are configured in `build.gradle`.
+            sh returnStdout: true,
+              script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.branch=${GIT_BRANCH_NAME} --stacktrace --info"  
           }
         } catch (error) {
           def attachment = [:]

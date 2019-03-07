@@ -79,6 +79,11 @@ export const PLAN_STATUS = {
   AWAITING_CONFIRMATION: 'AC',
 };
 
+export const MINISTER_ISSUE_ACTION_TYPE = {
+  OTHER: 'Other',
+  TIMING: 'Timing',
+};
+
 export const PURPOSE_OF_ACTION = [
   'establish', 'maintain', 'none',
 ];

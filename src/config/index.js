@@ -49,10 +49,6 @@ nconf.overrides({
     password: process.env.POSTGRESQL_PASSWORD,
     database: process.env.POSTGRESQL_DATABASE,
     host: process.env.POSTGRESQL_HOST,
-    port: process.env.POSTGRESQL_PORT,
-  },
-  sso: {
-    clientSecret: process.env.SSO_CLIENT_SECRET,
   },
   isUnitTest: (constants.ENVIRONMENTS.UNIT_TEST === process.env.NODE_ENV),
 });
