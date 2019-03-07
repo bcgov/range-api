@@ -28,7 +28,7 @@ import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { isNumeric, checkRequiredFields } from '../../libs/utils';
-import { PLAN_STATUS, PURPOSE_OF_ACTION, PLANT_COMMUNITY_CRITERIA } from '../../constants';
+import { PLAN_STATUS, PURPOSE_OF_ACTION, PLANT_COMMUNITY_CRITERIA, MINISTER_ISSUE_ACTION_TYPE } from '../../constants';
 
 const router = new Router();
 
@@ -44,6 +44,7 @@ const {
   MinisterIssue,
   MinisterIssuePasture,
   MinisterIssueAction,
+  MinisterIssueActionType,
   PlanStatusHistory,
   PlanConfirmation,
   PlantCommunity,
@@ -918,7 +919,15 @@ router.delete('/:planId?/issue/:issueId?', asyncMiddleware(async (req, res) => {
 router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, issueId } = params;
-  const { actionTypeId, detail, other } = body;
+  const {
+    actionTypeId,
+    detail,
+    other,
+    noGrazeEndDay,
+    noGrazeEndMonth,
+    noGrazeStartDay,
+    noGrazeStartMonth,
+  } = body;
 
   checkRequiredFields(
     ['planId', 'issueId'], 'params', req,
@@ -932,14 +941,33 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
 
+    const data = {
+      detail,
+      action_type_id: actionTypeId,
+      issue_id: issueId,
+      other: null,
+      no_graze_start_day: null,
+      no_graze_start_month: null,
+      no_graze_end_day: null,
+      no_graze_end_month: null,
+    };
+
+    const actionTypes = await MinisterIssueActionType.find(db, { active: true });
+    const actionType = actionTypes.find(at => at.id === actionTypeId);
+    if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.OTHER) {
+      data.other = other;
+    }
+
+    if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.TIMING) {
+      data.no_graze_start_day = noGrazeStartDay;
+      data.no_graze_start_month = noGrazeStartMonth;
+      data.no_graze_end_day = noGrazeEndDay;
+      data.no_graze_end_month = noGrazeEndMonth;
+    }
+
     const action = await MinisterIssueAction.create(
       db,
-      {
-        other,
-        detail,
-        issue_id: issueId,
-        action_type_id: actionTypeId,
-      },
+      data,
     );
 
     return res.status(200).json(action).end();
@@ -952,7 +980,15 @@ router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(async (req, res)
 router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (req, res) => {
   const { body, params, user } = req;
   const { planId, actionId } = params;
-  const { detail, other, actionTypeId } = body;
+  const {
+    actionTypeId,
+    detail,
+    other,
+    noGrazeEndDay,
+    noGrazeEndMonth,
+    noGrazeStartDay,
+    noGrazeStartMonth,
+  } = body;
 
   checkRequiredFields(
     ['planId', 'issueId', 'actionId'], 'params', req,
@@ -966,14 +1002,32 @@ router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(async (
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await canUserAccessThisAgreement(user, agreementId);
 
+    const data = {
+      detail,
+      actionTypeId,
+      other: null,
+      no_graze_start_day: null,
+      no_graze_start_month: null,
+      no_graze_end_day: null,
+      no_graze_end_month: null,
+    };
+
+    const actionTypes = await MinisterIssueActionType.find(db, { active: true });
+    const actionType = actionTypes.find(at => at.id === actionTypeId);
+    if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.OTHER) {
+      data.other = other;
+    }
+    if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.TIMING) {
+      data.no_graze_start_day = noGrazeStartDay;
+      data.no_graze_start_month = noGrazeStartMonth;
+      data.no_graze_end_day = noGrazeEndDay;
+      data.no_graze_end_month = noGrazeEndMonth;
+    }
+
     const updatedAction = await MinisterIssueAction.update(
       db,
       { id: actionId },
-      {
-        detail,
-        actionTypeId,
-        other,
-      },
+      data,
     );
 
     return res.status(200).json(updatedAction).end();

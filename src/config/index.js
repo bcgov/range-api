@@ -49,9 +49,6 @@ nconf.overrides({
     database: process.env.POSTGRESQL_DATABASE,
     host: process.env.POSTGRESQL_HOST,
   },
-  sso: {
-    clientSecret: process.env.SSO_CLIENT_SECRET,
-  },
 });
 
 // load other properties from file.
