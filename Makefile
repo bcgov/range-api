@@ -97,6 +97,10 @@ seed-local:
 	@echo "+\n++ Make: Seeding local database ...\n+"
 	@docker-compose -f docker-compose.yml run range_api npm run initialize_docker
 
+test-local:
+	@echo "+\n++ Make: Running unit test ...\n+"
+	@docker-compose -f docker-compose.yml run range_api npm run test
+
 
 
 # ------------------------------------------------------------------------------

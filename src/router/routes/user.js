@@ -28,6 +28,7 @@ import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { checkRequiredFields } from '../../libs/utils';
+import userController from '../controllers/UserController';
 
 const router = new Router();
 const dm = new DataManager(config);
@@ -38,89 +39,18 @@ const {
 } = dm;
 
 // Get all users
-router.get('/', asyncMiddleware(async (req, res) => {
-  try {
-    const { user } = req;
+router.get('/', asyncMiddleware(userController.allUser));
 
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('You do not have the permission as an agreement holder', 403);
-    }
-
-    const users = await User.find(db, {});
-
-    res.status(200).json(users).end();
-  } catch (error) {
-    throw error;
-  }
+router.get('/test', asyncMiddleware((req, res) => {
+  res.status(200).end();
 }));
 
 // Get user information
-router.get('/me', asyncMiddleware(async (req, res) => {
-  try {
-    const { user } = req;
-    delete user.created_at;
-    delete user.updated_at;
+router.get('/me', asyncMiddleware(userController.me));
 
-    if (!user.piaSeen) {
-      await User.update(db, { id: user.id }, { pia_seen: true });
-    }
-
-    res.status(200).json(user).end();
-  } catch (error) {
-    throw error;
-  }
-}));
-
-router.put('/me', asyncMiddleware(async (req, res) => {
-  try {
-    const { body, user } = req;
-    const { id: userId } = user;
-    const {
-      givenName,
-      familyName,
-      phoneNumber,
-    } = body;
-
-    const updated = await User.update(db, { id: userId }, {
-      givenName,
-      familyName,
-      phoneNumber,
-    });
-
-    res.status(200).json(updated).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+router.put('/me', asyncMiddleware(userController.updateMe));
 
 // Assign a client id to user
-router.put('/:userId?/client/:clientId?', asyncMiddleware(async (req, res) => {
-  try {
-    const { user, params } = req;
-    const { clientId, userId } = params;
-
-    checkRequiredFields(
-      ['clientId', 'userId'], 'params', req,
-    );
-
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('You do not have the permission as an agreement holder', 403);
-    }
-
-    const client = await Client.find(db, { client_number: clientId });
-    if (!client) {
-      throw errorWithCode('Client does not exist', 400);
-    }
-
-    const result = await User.update(db, { id: userId }, {
-      client_id: clientId,
-      active: true,
-    });
-
-    res.status(200).json(result).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+router.put('/:userId?/client/:clientId?', asyncMiddleware(userController.assignClientId));
 
 module.exports = router;

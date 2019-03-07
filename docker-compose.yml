@@ -12,6 +12,8 @@ services:
     volumes:
       - ./src:/home/nodejs/app/src
       - ./scripts:/home/nodejs/app/scripts
+      - ./__tests__:/home/nodejs/app/__tests__
+      - ./__testHelpers__:/home/nodejs/app/__testHelpers__
     environment:
       - PORT=${API_PORT}
       - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}

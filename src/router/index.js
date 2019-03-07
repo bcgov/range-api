@@ -35,6 +35,7 @@ import user from './routes/user';
 import zone from './routes/zone';
 import feedback from './routes/feedback';
 import version from './routes/version';
+import config from '../config';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -47,7 +48,13 @@ module.exports = (app) => {
   app.use('/api/v1/ehlo', ehlo); // probes
   app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.
-  app.use(passport.authenticate('jwt', { session: false }));
+  if (config.get('isUnitTest')) {
+    // Using Mock middleware
+    app.use(passport.authenticate('mock'));
+  } else {
+    // Using JWT Token middleware
+    app.use(passport.authenticate('jwt', { session: false }));
+  }
   app.use('/api/v1/agreement', agreement);
   app.use('/api/v1/client', client);
   app.use('/api/v1/district', district);

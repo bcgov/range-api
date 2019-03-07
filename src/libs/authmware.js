@@ -26,10 +26,12 @@ import { logger, errorWithCode } from '@bcgov/nodejs-common-utils';
 import express from 'express';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
+
 import request from 'request';
 import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
 import config from '../config';
 import DataManager from './db2';
+import mockAuth from './mock.authmware';
 
 const getJwtSecret = () => new Promise((resolve, reject) => {
   request.get(config.get('sso:certsUrl'), {}, (err, res, certsBody) => {
@@ -113,7 +115,6 @@ const authmware = async (app) => {
   // };
 
   // passport.use(oAuth2Strategy);
-
   const opts = {};
   opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
   opts.algorithms = ['RS256'];
@@ -125,7 +126,6 @@ const authmware = async (app) => {
   if (config.get('environment') === 'development') {
     opts.ignoreExpiration = true;
   }
-
   const jwtStrategy = new JwtStrategy(opts, async (req, jwtPayload, done) => {
     try {
       let user = await User.findOne(db, {
@@ -173,7 +173,11 @@ const authmware = async (app) => {
 
 module.exports = () => {
   const app = express();
-  authmware(app);
 
+  if (config.get('isUnitTest')) {
+    mockAuth(app, db, User);
+  } else {
+    authmware(app);
+  }
   return app;
 };

@@ -25,6 +25,7 @@
 import dotenv from 'dotenv';
 import nconf from 'nconf';
 import path from 'path';
+import * as constants from '../constants';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -53,6 +54,7 @@ nconf.overrides({
   sso: {
     clientSecret: process.env.SSO_CLIENT_SECRET,
   },
+  isUnitTest: (constants.ENVIRONMENTS.UNIT_TEST === process.env.NODE_ENV),
 });
 
 // load other properties from file.
