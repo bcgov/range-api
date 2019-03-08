@@ -38,7 +38,10 @@ all 		: help
 # ------------------------------------------------------------------------------
 
 local:      |  print-status  build-local run-local         ## Task-Alias -- Run the steps for a local-build.
+local-setup: | print-status build local run-db seed-local close-db
 local-debug: | print-status build-local run-debug
+local-test-setup: print-status build-local-test run-db-test seed-local-test close-db-test
+local-test: | print-status build-local-test test-local 
 
 
 # ------------------------------------------------------------------------------
@@ -72,7 +75,6 @@ build-local: ## -- Target : Builds the local development containers.
 setup-local: ## -- Target : Prepares the environment variables for local development.
 	@echo "+\n++ Make: Preparing project for local development ...\n+"
 	@cp .config/.env.dev .env
-	@mkdir -p ./_app_data
 
 run-local: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Running locally ...\n+"
@@ -81,6 +83,23 @@ run-local: ## -- Target : Runs the local development containers.
 run-debug: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Running locally for debugging...\n+"
 	@docker-compose -f docker-compose.yml up
+
+run-db: ## -- Target : Runs the local development containers.
+	@echo "+\n++ Make: Running db locally...\n+"
+	@docker-compose -f docker-compose.yml up -d db
+
+close-db: ## -- Target : Runs the local development containers.
+	@echo "+\n++ Make: Running db locally...\n+"
+	@docker-compose -f docker-compose.yml stop db
+
+close-db-test: ## -- Target : Runs the local development containers.
+	@echo "+\n++ Make: Running db locally...\n+"
+	@docker-compose -f test.docker-compose.yml stop db
+
+
+run-db-test: ## -- Target : Runs the local development containers.
+	@echo "+\n++ Make: Running db locally...\n+"
+	@docker-compose -f test.docker-compose.yml up -d db
 
 
 close-local: ## -- Target : Closes the local development containers.
@@ -95,11 +114,32 @@ clean-local: ## -- Target : Closes and clean local development containers.
 
 seed-local:
 	@echo "+\n++ Make: Seeding local database ...\n+"
-	@docker-compose -f docker-compose.yml run range_api npm run initialize_docker
+	@docker-compose -f docker-compose.yml run range_api npm run initialize_docker 
 
-test-local:
+seed-local-test:
+	@echo "+\n++ Make: Seeding local database ...\n+"
+	@docker-compose -f test.docker-compose.yml run range_api npm run initialize_docker 
+
+test-local-d: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
-	@docker-compose -f docker-compose.yml run range_api npm run test
+	@docker-compose -f test.docker-compose.yml up -d
+
+test-local: ## -- .
+	@echo "+\n++ Make: Running unit test ...\n+"
+	@docker-compose -f test.docker-compose.yml up
+
+build-local-test: ## -- Target : Builds the local development containers.
+	@echo "+\n++ Make: Building local Docker image ...\n+"
+	@docker-compose -f test.docker-compose.yml build
+
+close-local-test: ## -- Target : Closes the local development containers.
+	@echo "+\n++ Make: Closing local test container ...\n+"
+	@docker-compose -f test.docker-compose.yml down
+
+
+clean-local-test: ## -- Target : Closes and clean local development containers.
+	@echo "+\n++ Make: Closing and cleaning test local container ...\n+"
+	@docker-compose -f test.docker-compose.yml down -v
 
 
 

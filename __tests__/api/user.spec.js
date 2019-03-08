@@ -25,7 +25,7 @@ describe('Test user routes', () => {
     connection.destroy();
   });
 
-  test('The readiness probe should respond with 200 ', async (done) => {
+  test('All user route with 200 and resp length > 0', async (done) => {
     await request(app).get(testHelper.routes.users)
       .set('Authorization', `Bearer ${Config.token}`)
       .set('accept', '*/*')
