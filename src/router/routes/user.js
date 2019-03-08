@@ -27,7 +27,6 @@ import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import { checkRequiredFields } from '../../libs/utils';
 import userController from '../controllers/UserController';
 
 const router = new Router();
@@ -41,13 +40,10 @@ const {
 // Get all users
 router.get('/', asyncMiddleware(userController.allUser));
 
-router.get('/test', asyncMiddleware((req, res) => {
-  res.status(200).end();
-}));
-
 // Get user information
 router.get('/me', asyncMiddleware(userController.me));
 
+// Get User info
 router.put('/me', asyncMiddleware(userController.updateMe));
 
 // Assign a client id to user
