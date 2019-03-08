@@ -3,8 +3,17 @@ import { logger } from '@bcgov/nodejs-common-utils';
 import { MockStrategy } from 'passport-mock-strategy';
 import express from 'express';
 import passport from 'passport';
+import config from '../config';
+import DataManager from './db2';
 
-module.exports = (app, db, User) => {
+const dm = new DataManager(config);
+const {
+  db,
+  User,
+} = dm;
+
+module.exports = () => {
+  const app = express();
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -29,4 +38,6 @@ module.exports = (app, db, User) => {
     });
     done(null, user);
   }));
+
+  return app;
 };

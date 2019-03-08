@@ -31,7 +31,7 @@ import request from 'request';
 import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
 import config from '../config';
 import DataManager from './db2';
-import mockAuth from './mock.authmware';
+
 
 const getJwtSecret = () => new Promise((resolve, reject) => {
   request.get(config.get('sso:certsUrl'), {}, (err, res, certsBody) => {
@@ -173,11 +173,6 @@ const authmware = async (app) => {
 
 module.exports = () => {
   const app = express();
-
-  if (config.get('isUnitTest')) {
-    mockAuth(app, db, User);
-  } else {
-    authmware(app);
-  }
+  authmware(app);
   return app;
 };

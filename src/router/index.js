@@ -43,18 +43,14 @@ const corsOptions = {
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
-module.exports = (app) => {
+module.exports = (app, passportRouteConfig) => {
   app.use(cors(corsOptions));
   app.use('/api/v1/ehlo', ehlo); // probes
   app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.
-  if (config.get('isUnitTest')) {
-    // Using Mock middleware
-    app.use(passport.authenticate('mock'));
-  } else {
-    // Using JWT Token middleware
-    app.use(passport.authenticate('jwt', { session: false }));
-  }
+  app.use(passportRouteConfig(passport));
+
+  // Secure Routes
   app.use('/api/v1/agreement', agreement);
   app.use('/api/v1/client', client);
   app.use('/api/v1/district', district);

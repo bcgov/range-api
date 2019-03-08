@@ -12,9 +12,13 @@
 //
 import assert from 'assert';
 import { default as request } from 'supertest'; // eslint-disable-line
-import app from '../../src';
+import expressApp from '../../src';
 import testHelper, { Config } from '../../__testHelpers__/test.helper';
 import { connection } from '../../src/libs/db2';
+import mockAuth from '../../src/libs/mock.authmware';
+
+
+const app = expressApp(mockAuth, passport => passport.authenticate('mock'));
 
 describe('Test user routes', () => {
   afterAll(() => {
