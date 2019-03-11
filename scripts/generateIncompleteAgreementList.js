@@ -45,19 +45,15 @@ const isValidRecord = (record) => {
   }
 
   return true
-}
-
-const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
-const skipping = (action, agreementId, index) => {
-  if (agreementId.indexOf('RB') >= 0 || agreementId.indexOf('DL') >= 0) return;
 };
 
 const countAgreements = (data) => {
   let number = 0;
-  let districtMap = {};
 
-  for (let index = 0; index < data.length; index++) {
-    const record = data[index];
+  // a map whose property is 'district code' and value is 'array of agreement ids'
+  let map = {};
+
+  data.forEach(record => {
     const {
       forest_file_id: agreementId,
       district_admin_zone: zoneCode,
@@ -67,23 +63,24 @@ const countAgreements = (data) => {
     } = record;
 
     if (!isValidRecord(record)) {
-      skipping('Updating Zone', agreementId, index);
-      continue;
+      return;
     }
 
     try {
       if (!staffEmail && districtCode) {
         number += 1;
 
-        if (!districtMap[districtCode]) {
-          districtMap = {
-            ...districtMap,
+        if (!map[districtCode]) {
+          map = {
+            ...map,
+            // create an initial array for this particular district
             [districtCode]: [agreementId],
           }
         } else {
-          districtMap = {
-            ...districtMap,
-            [districtCode]: [...districtMap[districtCode], agreementId],
+          map = {
+            ...map,
+            // keep adding new element in the existing array
+            [districtCode]: [...map[districtCode], agreementId],
           }
         }
       }
@@ -91,11 +88,11 @@ const countAgreements = (data) => {
       console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`)
       throw error;
     }
-  }
+  });
 
-  // console.log(districtMap);
-  console.log(`The number of agreements that are missing contact emails: ${number}`);
-  fs.writeFile('./scripts/agreementsMissingContactEmail.json', JSON.stringify(districtMap), 'utf8', (err) => {
+  // console.log(map);
+  console.log(`The number of agreements without the contact email: ${number}`);
+  fs.writeFile('./scripts/agreementsMissingContactEmail.json', JSON.stringify(map), 'utf8', (err) => {
     if (err) {
       return console.log(err);
     }
@@ -114,7 +111,6 @@ const main = async () => {
     countAgreements(licensee);
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
-    process.exit(0);
     throw err;
   }
 };
