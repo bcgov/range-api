@@ -26,6 +26,6 @@ import Model from '../model';
 
 export default class Zone extends Model {
   static async findWithDistrictUser(db, where) {
-    return { bla: 1 };
+    return [{ bla: 1 }, { bla: 2 }];
   }
 }

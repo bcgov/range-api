@@ -22,10 +22,28 @@ jest.mock('../../src/libs/db2/model/zone');
 jest.mock('request-promise-native');
 
 describe('Test zone routes', () => {
-  test('Fetching all zones should return 200 ', async () => {
+  test('Fetching all zones for a specific district should succeed ', async () => {
     await request(app)
       .get('/api/v1/zone')
       .query({ districtId: 'FOO' })
-      .expect(200);
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect((res) => {
+        const results = res.body;
+        expect(typeof results).toBe('object');
+        expect(results.length).toBeGreaterThan(0);
+      });
+  });
+
+  test('Fetching all zones should succeed', async () => {
+    await request(app)
+      .get('/api/v1/zone')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect((res) => {
+        const results = res.body;
+        expect(typeof results).toBe('object');
+        expect(results.length).toBeGreaterThan(0);
+      });
   });
 });
