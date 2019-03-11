@@ -25,7 +25,7 @@
 
 import { asyncMiddleware } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
-import request from 'request';
+import request from 'request-promise-native';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { ENVIRONMENTS, API_URL } from '../../constants';
