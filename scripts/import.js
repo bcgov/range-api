@@ -94,7 +94,7 @@ const updateZone = async (data) => {
       district_admin_zone: zoneCode,
       org_unit_code: districtCode,
       zone_description: zoneDescription,
-      contact_email_address: staffEmail,
+      contact_email_address,
     } = record;
     if (!isValidRecord(record) || !zoneCode) {
       skipping('Updating Zone', agreementId, index);
@@ -108,6 +108,7 @@ const updateZone = async (data) => {
     }
 
     try {
+      const staffEmail = contact_email_address && contact_email_address.toLowerCase().trim();
       const staff = staffEmail ? await User.findOne(db, { email: staffEmail }) : null;
       const zone = await Zone.findOne(db, { code: zoneCode, district_id: district.id });
 
