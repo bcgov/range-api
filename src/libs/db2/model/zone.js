@@ -81,7 +81,8 @@ export default class Zone extends Model {
         .from(Zone.table)
         .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
         .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
-        .where(where);
+        .where(where)
+        .orderBy('user_id', 'desc');
 
       return results.map(row => new Zone(row, db));
     } catch (err) {
