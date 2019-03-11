@@ -85,7 +85,6 @@ const countAgreements = (data) => {
         }
       }
     } catch (error) {
-      console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`)
       throw error;
     }
   });
@@ -110,7 +109,7 @@ const main = async () => {
   
     countAgreements(licensee);
   } catch (err) {
-    console.log(`Error importing data, message = ${err.message}`);
+    console.log(`Error occur!, message = ${err.message}`);
     throw err;
   }
 };
