@@ -126,10 +126,6 @@ exports.seed = async (knex) => {
       district: 'DCC',
       description: 'Big and Beaver Livestock',
     }, {
-      code: 'BELL',
-      district: 'DCC',
-      description: 'Bella Coola Area',
-    }, {
       code: 'BIGC',
       district: 'DCC',
       description: 'Big Creek Livestock Assoc',
