@@ -22,42 +22,12 @@
 
 'use strict';
 
-import { logger, errorWithCode } from '@bcgov/nodejs-common-utils';
+import { logger, errorWithCode, getJwtCertificate } from '@bcgov/nodejs-common-utils';
 import express from 'express';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
-import request from 'request';
-import pemFromModAndExponent from 'rsa-pem-from-mod-exp';
 import config from '../config';
 import DataManager from './db2';
-
-const getJwtSecret = () => new Promise((resolve, reject) => {
-  request.get(config.get('sso:certsUrl'), {}, (err, res, certsBody) => {
-    if (err) {
-      reject(err);
-      return;
-    }
-    const certsJson = JSON.parse(certsBody).keys[0];
-    const modulus = certsJson.n;
-    const exponent = certsJson.e;
-    const algorithm = certsJson.alg;
-    if (!modulus) {
-      reject(new Error('No modulus'));
-      return;
-    }
-    if (!exponent) {
-      reject(new Error('No exponent'));
-      return;
-    }
-    if (!algorithm) {
-      reject(new Error('No algorithm'));
-      return;
-    }
-    // build a certificate
-    const pem = pemFromModAndExponent(modulus, exponent);
-    resolve(pem);
-  });
-});
 
 const dm = new DataManager(config);
 const {
@@ -114,12 +84,13 @@ const authmware = async (app) => {
 
   // passport.use(oAuth2Strategy);
 
+  const { certificate, algorithm } = await getJwtCertificate(config.get('sso:certsUrl'));
   const opts = {};
   opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-  opts.algorithms = ['RS256'];
-  opts.secretOrKey = await getJwtSecret();
-
+  opts.algorithms = [algorithm];
+  opts.secretOrKey = certificate;
   opts.passReqToCallback = true;
+
   // For development purposes only ignore the expiration
   // time of tokens.
   if (config.get('environment') === 'development') {
