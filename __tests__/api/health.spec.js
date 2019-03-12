@@ -17,7 +17,6 @@
 
 import { default as request } from 'supertest'; // eslint-disable-line
 import expressApp from '../../src';
-import mockAuth from '../../src/libs/mock.authmware';
 
 
 const app = expressApp;
