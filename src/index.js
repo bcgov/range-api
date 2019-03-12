@@ -30,49 +30,36 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import auth from './libs/authmware';
 
-const router = require('./router');
-
-module.exports = (authM, passportRouteConfig) => {
-  const authMiddleware = authM || auth;
-  const passportConfig = passportRouteConfig || (passport => passport.authenticate('jwt', { session: false }));
-  const app = express();
-  const options = {
-    inflate: true,
-    limit: '3000kb',
-    type: 'image/*',
-  };
-
-  app.use(compression());
-  app.use(cookieParser());
-  app.use(bodyParser.urlencoded({
-    extended: true,
-  }));
-  app.use(bodyParser.json());
-  app.use(bodyParser.raw(options));
-  app.use(flash());
-
-  // Authentication middleware
-  if (authMiddleware && typeof authMiddleware === 'function') {
-    // Auth Middleware is available
-    app.use(authMiddleware(app));
-  }
-
-  // Server API routes
-  if (passportConfig && typeof passportConfig === 'function') {
-    // Available passport config
-    router(app, passportConfig);
-  } else {
-    // Passport config n.a
-    router(app, () => {});
-  }
-
-  // Error handling middleware. This needs to be last in or it will
-  // not get called.
-  app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-    logger.error(err.message);
-    const code = err.code ? err.code : 500;
-    const message = err.message ? err.message : 'Internal Server Error';
-    res.status(code).json({ error: message, success: false });
-  });
-  return app;
+const app = express();
+const options = {
+  inflate: true,
+  limit: '3000kb',
+  type: 'image/*',
 };
+
+app.use(compression());
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({
+  extended: true,
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.raw(options));
+app.use(flash());
+
+// Authentication middleware
+app.use(auth(app));
+
+// Server API routes
+require('./router')(app);
+
+// Error handleing middleware. This needs to be last in or it will
+// not get called.
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  logger.error(err.message);
+  const code = err.code ? err.code : 500;
+  const message = err.message ? err.message : 'Internal Server Error';
+
+  res.status(code).json({ error: message, success: false });
+});
+
+module.exports = app;

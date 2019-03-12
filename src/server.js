@@ -21,12 +21,12 @@
 
 import { logger, started } from '@bcgov/nodejs-common-utils';
 import config from './config';
-import expressApp from './index';
+import app from './index';
 
 const env = config.get('environment');
 const port = config.get('port');
 const isDev = env !== 'production';
-const app = expressApp();
+
 app.listen(port, '0.0.0.0', (err) => {
   if (err) {
     return logger.error(`There was a problem starting the server, ${err.message}`);

@@ -35,7 +35,6 @@ import user from './routes/user';
 import zone from './routes/zone';
 import feedback from './routes/feedback';
 import version from './routes/version';
-import config from '../config';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -43,14 +42,12 @@ const corsOptions = {
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
-module.exports = (app, passportRouteConfig) => {
+module.exports = (app) => {
   app.use(cors(corsOptions));
   app.use('/api/v1/ehlo', ehlo); // probes
   app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.
-  app.use(passportRouteConfig(passport));
-
-  // Secure Routes
+  app.use(passport.authenticate('jwt', { session: false }));
   app.use('/api/v1/agreement', agreement);
   app.use('/api/v1/client', client);
   app.use('/api/v1/district', district);

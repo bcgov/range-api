@@ -12,32 +12,34 @@
 //
 import assert from 'assert';
 import { default as request } from 'supertest'; // eslint-disable-line
-import expressApp from '../../src';
-import testHelper, { Config } from '../../__testHelpers__/test.helper';
-import { connection } from '../../src/libs/db2';
-import mockAuth from '../../src/libs/mock.authmware';
+import passport from 'passport';
 
+import app from '../../src';
 
-const app = expressApp(mockAuth, passport => passport.authenticate('mock'));
+jest.mock('../../src/libs/db2/model/user');
+jest.mock('request-promise-native');
+
 
 describe('Test user routes', () => {
   afterAll(() => {
-    connection.destroy();
+    // connection.destroy();
   });
 
   test('All user route with 200 and resp length > 0', async (done) => {
-    await request(app).get(testHelper.routes.users)
-      .set('Authorization', `Bearer ${Config.token}`)
-      .set('accept', '*/*')
-      .set('Connection', 'keep-alive')
-      .set('host', 'localhost:8080')
-      .set('cache-control', 'no-cache')
-      .expect(200)
-      .then(resp => {
+    await request(app)
+      .get('/api/v1/user')
+      .expect(200).then(resp => {
         const { body } = resp;
-        // console.dir(body);
+        // expect(body).toBe('object');
         assert.equal(body.length > 0, true);
         done();
       });
+  });
+
+  test('AgreementHolder should return 403', async () => {
+    passport.aUser.isAgreementHolder = () => true;
+    await request(app)
+      .get('/api/v1/user')
+      .expect(403).then(() => { passport.aUser.isAgreementHolder = () => false; });
   });
 });

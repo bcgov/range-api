@@ -20,7 +20,7 @@ import expressApp from '../../src';
 import mockAuth from '../../src/libs/mock.authmware';
 
 
-const app = expressApp(mockAuth, passport => passport.authenticate('mock'));
+const app = expressApp;
 
 describe('Test monitoring routes', () => {
   test('The readiness probe should respond with 200 ', async () => {

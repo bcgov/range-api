@@ -16,9 +16,6 @@ class UserController {
   async allUser(req, res) {
     try {
       const { user } = req;
-      // console.dir(req.get('Authorization'))
-      // console.dir(user);
-      // console.dir(req.headers);
 
       if (user && user.isAgreementHolder()) {
         throw errorWithCode('You do not have the permission as an agreement holder', 403);
