@@ -11,9 +11,9 @@ const {
   Client,
 } = dm;
 
-class UserController {
+export class UserController {
   // Fetching all users
-  async allUser(req, res) {
+  static async allUser(req, res) {
     try {
       const { user } = req;
 
@@ -30,7 +30,7 @@ class UserController {
     }
   }
 
-  async me(req, res) {
+  static async me(req, res) {
     try {
       const { user } = req;
       delete user.created_at;
@@ -46,7 +46,7 @@ class UserController {
     }
   }
 
-  async updateMe(req, res) {
+  static async updateMe(req, res) {
     try {
       const { body, user } = req;
       const { id: userId } = user;
@@ -68,7 +68,7 @@ class UserController {
     }
   }
 
-  async assignClientId(req, res) {
+  static async assignClientId(req, res) {
     try {
       const { user, params } = req;
       const { clientId, userId } = params;

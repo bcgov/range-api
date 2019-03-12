@@ -32,7 +32,7 @@ module.exports = () => {
     name: 'mock',
     user: {},
   }, async (u, done) => {
-    console.log('**** Test *****');
+    // console.log('**** Test *****');
     const user = await User.findOne(db, {
       username: 'rangeadmin',
     });

@@ -23,30 +23,22 @@
 
 'use strict';
 
-import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
+import { asyncMiddleware } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
-import config from '../../config';
-import DataManager from '../../libs/db2';
-import userController from '../controllers/UserController';
+import { UserController } from '../controllers/UserController';
 
 const router = new Router();
-const dm = new DataManager(config);
-const {
-  db,
-  User,
-  Client,
-} = dm;
 
 // Get all users
-router.get('/', asyncMiddleware(userController.allUser));
+router.get('/', asyncMiddleware(UserController.allUser));
 
 // Get user information
-router.get('/me', asyncMiddleware(userController.me));
+router.get('/me', asyncMiddleware(UserController.me));
 
 // Get User info
-router.put('/me', asyncMiddleware(userController.updateMe));
+router.put('/me', asyncMiddleware(UserController.updateMe));
 
 // Assign a client id to user
-router.put('/:userId?/client/:clientId?', asyncMiddleware(userController.assignClientId));
+router.put('/:userId?/client/:clientId?', asyncMiddleware(UserController.assignClientId));
 
 module.exports = router;

@@ -22,6 +22,8 @@ const testHelper = {
   setHeader: (request) => {
     return request.set('Authorization', `Bearer ${Config.token}`);
   }
+
+  i
 }
 
 export default testHelper;

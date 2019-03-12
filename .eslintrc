@@ -13,11 +13,6 @@
     "strict": 0,
     "linebreak-style": 0,
     "implicit-arrow-linebreak": 0,
-    "object-curly-newline": 0,
-    "class-methods-use-this": "off",
-    "no-unused-vars": "off",
-    "no-console": "off",
-    "arrow-parens": "off",
-    "import/prefer-default-export": "off"
+    "object-curly-newline": 0
   }
 }
