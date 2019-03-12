@@ -79,6 +79,25 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
 
       script {
         //
+        // Run our unit tests et al.
+        //
+
+        try {
+          echo "Running Unit Tests"
+          sh "npm test"
+        } catch (error) {
+          def attachment = [:]
+          attachment.fallback = 'See build log for more details'
+          attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
+          attachment.color = '#CD0000' // Red
+          attachment.text = "There are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
+          // attachment.title_link = "${env.BUILD_URL}"
+
+          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
+          sh "exit 1001"
+        }
+
+        //
         // Check the code builds
         //
 
@@ -140,25 +159,6 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
           // attachment.title_link = "${env.BUILD_URL}"
 
           notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
-        }
-
-        //
-        // Run our unit tests et al.
-        //
-
-        try {
-          echo "Running Unit Tests"
-          sh "npm test"
-        } catch (error) {
-          def attachment = [:]
-          attachment.fallback = 'See build log for more details'
-          attachment.title = "API Build ${BUILD_ID} FAILED! :face_with_head_bandage: :hankey:"
-          attachment.color = '#CD0000' // Red
-          attachment.text = "There are issues with the unit tests.\ncommit ${GIT_COMMIT_SHORT_HASH} by ${GIT_COMMIT_AUTHOR}"
-          // attachment.title_link = "${env.BUILD_URL}"
-
-          notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
-          sh "exit 1001"
         }
       }
     }
