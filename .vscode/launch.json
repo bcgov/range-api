@@ -17,11 +17,11 @@
             "name": "Remote",
             "restart": false,
             "protocol": "inspector",
-            "port": 9222,
+            "port": 9229,
             "address": "localhost",
             "sourceMaps": true,
             "localRoot": "${workspaceRoot}",
-            "remoteRoot": "/opt/app-root/src/build",
+            "remoteRoot": "/home/nodejs/app/src/",
         },
     ]
 }

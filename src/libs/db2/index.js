@@ -59,29 +59,31 @@ import ManagementConsideration from './model/managementconsideration';
 import ManagementConsiderationType from './model/managementconsiderationtype';
 import UserFeedback from './model/userfeedback';
 import Version from './model/version';
+import config from '../../config';
+
+export const connection = knex({
+  client: 'pg',
+  connection: {
+    user: config.get('db:user'),
+    database: config.get('db:database'),
+    port: config.get('db:port'),
+    host: config.get('db:host'),
+    password: config.get('db:password'),
+  },
+  searchPath: ['public'],
+  debug: false,
+  pool: {
+    min: 1,
+    max: 64,
+  },
+  migrations: {
+    tableName: 'migration',
+  },
+});
 
 export default class DataManager {
-  constructor(config) {
-    const k = knex({
-      client: 'pg',
-      connection: {
-        user: config.get('db:user'),
-        database: config.get('db:database'),
-        port: config.get('db:port'),
-        host: config.get('db:host'),
-        password: config.get('db:password'),
-      },
-      searchPath: ['public'],
-      debug: false,
-      pool: {
-        min: 1,
-        max: 64,
-      },
-      migrations: {
-        tableName: 'migration',
-      },
-    });
-
+  constructor() {
+    const k = connection;
     this.db = k;
     this.config = config;
     this.Agreement = Agreement;

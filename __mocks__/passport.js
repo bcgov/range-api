@@ -20,12 +20,25 @@
 
 /* eslint-disable no-unused-vars */
 
-'use strict';
+import User from '../src/libs/db2/model/__mocks__/user';
+import { SSO_ROLE_MAP } from '../src/constants';
+
 
 const passport = jest.requireActual('passport');
 
+const user = {
+  id: 1,
+  roles: [],
+  isAgreementHolder: () => false,
+};
+
+passport.aUser = user;
+
 function authenticate(strategy, options) {
+  'use strict';
+
   return (req, res, next) => {
+    req.user = passport.aUser;
     req.isAuthenticated = () => true; // Skip calling jwtStrategy, auth the request straight
     next();
   };
