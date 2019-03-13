@@ -89,16 +89,16 @@ run-db: ## -- Target : Runs the local development containers.
 	@docker-compose -f docker-compose.yml up -d db
 
 close-db: ## -- Target : Runs the local development containers.
-	@echo "+\n++ Make: Running db locally...\n+"
+	@echo "+\n++ Make: Closing local db...\n+"
 	@docker-compose -f docker-compose.yml stop db
 
 close-db-test: ## -- Target : Runs the local development containers.
-	@echo "+\n++ Make: Running db locally...\n+"
+	@echo "+\n++ Make: Closing local db for test...\n+"
 	@docker-compose -f test.docker-compose.yml stop db
 
 
 run-db-test: ## -- Target : Runs the local development containers.
-	@echo "+\n++ Make: Running db locally...\n+"
+	@echo "+\n++ Make: Running db for test locally...\n+"
 	@docker-compose -f test.docker-compose.yml up -d db
 
 
