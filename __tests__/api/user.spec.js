@@ -1,3 +1,7 @@
+// Copyright © 2019 Province of British Columbia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
@@ -10,7 +14,7 @@
 //
 // Created by Pushan Mitra on 2019-03-07.
 //
-// import assert from 'assert';
+
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 

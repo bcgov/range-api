@@ -1,6 +1,4 @@
 //
-// SecureImage
-//
 // Copyright © 2018 Province of British Columbia
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
 // Created by Pushan Mitra on 2019-03-07.
 
 export const Config = {
