@@ -26,7 +26,6 @@
 export const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',
-  UNIT_TEST: 'unit_test',
 };
 
 export const API_URL = {

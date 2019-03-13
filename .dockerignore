@@ -10,3 +10,7 @@ tools
 yarn.lock
 .DS_Store
 **/.DS_Store
+
+# Build
+build/
+**/build/
