@@ -16,10 +16,7 @@
 //
 
 import { default as request } from 'supertest'; // eslint-disable-line
-import expressApp from '../../src';
-
-
-const app = expressApp;
+import app from '../../src';
 
 describe('Test monitoring routes', () => {
   test('The readiness probe should respond with 200 ', async () => {
