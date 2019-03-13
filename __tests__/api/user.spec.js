@@ -48,10 +48,11 @@ describe('Test user routes failure', () => {
   test('AgreementHolder should return 403', async (done) => {
     passport.aUser.isAgreementHolder = () => true;
     try {
-      await request(app).get('/api/v1/user');
-    } catch (e) {
-      expect(e.status).toBe(403);
+      await request(app).get('/api/v1/user').expect(403);
       done();
+    } catch (e) {
+      // expect(e.status).toBe(403);
+      // done();
     }
   });
 });
