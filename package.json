@@ -73,7 +73,7 @@
     "test": "cross-env NODE_ENV=unit_test jest --verbose __tests__",
     "test:watch": "cross-env NODE_ENV=unit_test jest --verbose __tests__ --watch",
     "test:security": "nsp check",
-    "test:lint": "eslint --env node --ext .js src",
+    "test:lint": "eslint --env node --ext .js src __tests__ __testHelpers__ __mocks__",
     "import": "node build/scripts/import.js",
     "initialize_docker": "./node_modules/.bin/knex migrate:latest && ./node_modules/.bin/knex seed:run && ./node_modules/.bin/babel-node scripts/import.js true",
     "initialize": "npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
