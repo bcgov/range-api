@@ -33,6 +33,11 @@ const user = {
 };
 
 passport.aUser = user;
+passport.global = {};
+passport.setGlobal = (key, value) => {
+  passport.global[key] = value;
+};
+passport.clearGlobal = (key) => { delete passport.global[key]; };
 
 function authenticate(strategy, options) {
   'use strict';
