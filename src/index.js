@@ -61,8 +61,11 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
     ({ code } = err);
   }
+
+  // Getting message from error.
   const message = err.message ? err.message : 'Internal Server Error';
 
+  // Sending error status.  
   res.status(code).json({ error: message, success: false });
 });
 
