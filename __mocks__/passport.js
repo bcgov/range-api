@@ -45,7 +45,6 @@ function authenticate(strategy, options) {
   return (req, res, next) => {
     req.user = passport.aUser;
     req.isAuthenticated = () => true; // Skip calling jwtStrategy, auth the request straight
-    // req.body = passport.global[req.originalUrl];
     next();
   };
 }
