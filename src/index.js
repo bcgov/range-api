@@ -56,7 +56,10 @@ require('./router')(app);
 // not get called.
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   logger.error(err.message);
-  const code = err.code ? err.code : 500;
+  let code = 500;
+  if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
+    ({ code } = err);
+  }
   const message = err.message ? err.message : 'Internal Server Error';
 
   res.status(code).json({ error: message, success: false });
