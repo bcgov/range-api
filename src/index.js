@@ -52,11 +52,12 @@ app.use(auth(app));
 // Server API routes
 require('./router')(app);
 
-// Error handleing middleware. This needs to be last in or it will
+// Error handling middleware. This needs to be last in or it will
 // not get called.
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   logger.error(err.message);
   let code = 500;
+  // Checking code is valid http status or not
   if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
     ({ code } = err);
   }
