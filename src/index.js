@@ -65,7 +65,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   // Getting message from error.
   const message = err.message ? err.message : 'Internal Server Error';
 
-  // Sending error status.  
+  // Sending error status.
   res.status(code).json({ error: message, success: false });
 });
 
