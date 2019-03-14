@@ -33,6 +33,11 @@ const user = {
 };
 
 passport.aUser = user;
+passport.global = {};
+passport.setGlobal = (key, value) => {
+  passport.global[key] = value;
+};
+passport.clearGlobal = (key) => { delete passport.global[key]; };
 
 function authenticate(strategy, options) {
   'use strict';
@@ -40,6 +45,7 @@ function authenticate(strategy, options) {
   return (req, res, next) => {
     req.user = passport.aUser;
     req.isAuthenticated = () => true; // Skip calling jwtStrategy, auth the request straight
+    // req.body = passport.global[req.originalUrl];
     next();
   };
 }

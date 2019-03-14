@@ -29,6 +29,7 @@ describe('Test user routes happy path', () => {
     // connection.destroy();
   });
 
+  // Test all user routes
   test('All user route with 200 and resp length > 0', async (done) => {
     await request(app)
       .get('/api/v1/user')
@@ -36,6 +37,50 @@ describe('Test user routes happy path', () => {
         const results = res.body;
         expect(typeof results).toBe('object');
         expect(results.length).toBeGreaterThan(0);
+        const usr = results[0];
+        expect(usr.id).toBeDefined();
+        expect(usr.username).toBeDefined();
+        expect(usr.givenName).toBeDefined();
+        expect(usr.familyName).toBeDefined();
+        expect(usr.email).toBeDefined();
+        expect(usr.active).toBeDefined();
+        expect(usr.active).toBeDefined();
+        expect(usr.piaSeen).toBeDefined();
+        expect(usr.piaSeen).toBeDefined();
+        done();
+      });
+  });
+
+  // Test /me route
+  test('should return user with id 1', async (done) => {
+    await request(app)
+      .get('/api/v1/user/me')
+      .expect(200).expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        expect(result.id).toEqual(1);
+        done();
+      });
+  });
+
+  // Test /me route
+  test('should update user', async (done) => {
+    const update = {
+      givenName: 'lao',
+      familyName: 'Ballabh',
+      phoneNumber: '+1 250-567-6576',
+    };
+    await request(app)
+      .put('/api/v1/user/me')
+      .send(update)
+      .set('Accept', 'application/json')
+      .expect(200)
+      .expect((res) => {
+        const usr = res.body;
+        expect(typeof usr).toBe('object');
+        expect(usr.givenName).toEqual(update.givenName);
+        expect(usr.familyName).toEqual(update.familyName);
+        expect(usr.phoneNumber).toEqual(update.phoneNumber);
         done();
       });
   });
@@ -58,5 +103,16 @@ describe('Test user routes failure', () => {
       // expect(e.status).toBe(403);
       // done();
     }
+  });
+
+  // Test /me route
+  test('should fail update user', async (done) => {
+    // const update = {};
+    await request(app)
+      .put('/api/v1/user/me')
+      .send('lao')
+      .set('Accept', 'application/json')
+      .expect(500);
+    done();
   });
 });
