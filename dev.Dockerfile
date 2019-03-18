@@ -25,6 +25,9 @@ RUN npm install
 # Bundle app source
 COPY ./ .
 
+# Change permission for covergare 
+RUN chmod +x ./covergare
+
 # Environment
 COPY .env /home/nodejs/app
 ENV NODE_PATH /home/nodejs/app/src

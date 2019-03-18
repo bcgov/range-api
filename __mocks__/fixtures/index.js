@@ -26,8 +26,10 @@
 // };
 
 import allusers from './users_all.fixture.20190313.json';
+import agreements from './agreement.list.20190315.json';
 
 module.exports = {
   allUsers: allusers,
   user: allusers[0],
+  agreements,
 };

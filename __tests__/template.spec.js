@@ -73,16 +73,4 @@ describe('template functions', () => {
   test('primaryContactFullNameHelper() foo bar', async () => {
     expect(primaryContactFullName(contacts) === 'Joseph Phillip').toBe(true);
   });
-
-  test.skip('loadTemplate() loads a template from the file system', async () => {
-    // TODO
-  });
-
-  test.skip('compile() returns a properly formated HTML document', async () => {
-    // TODO
-  });
-
-  test.skip('renderToPDF() returns a stream of a PDF document', async () => {
-    // TODO
-  });
 });

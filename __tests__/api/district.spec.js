@@ -1,7 +1,4 @@
-//
-// SecureImage
-//
-// Copyright © 2018 Province of British Columbia
+// Copyright © 2019 Province of British Columbia
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,25 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-02-01.
-//
+// Created by Pushan Mitra on 2019-03-14.
 
-/* eslint-env es6 */
+// import { default as request } from 'supertest';
+// import app from '../../src';
 
-'use strict';
-
-// const PassThrough = require('stream').PassThrough;
-
-describe('archive functions', () => {
-  beforeEach(() => {
-    // nothig to do
-  });
-
-  afterEach(() => {
-    // nothig to do
-  });
-
-  test.skip('check Auth returns a verify result when a valid access token is passed', async () => {
-
-  });
+describe('Test district route', () => {
+  test.skip('should fetch all districts', () => {});
 });
