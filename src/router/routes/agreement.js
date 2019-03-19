@@ -241,7 +241,7 @@ router.get('/:id', asyncMiddleware(async (req, res) => {
 
     const agreement = results.pop();
 
-    if (!req.user.canAccessAgreement(agreement)) {
+    if (!(await req.user.canAccessAgreement(agreement))) {
       throw errorWithCode('You do not access to this agreement', 403);
     }
     agreement.transformToV1();
@@ -276,7 +276,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
 
     const agreement = results.pop();
 
-    if (!user.canAccessAgreement(agreement)) {
+    if (!(await user.canAccessAgreement(agreement))) {
       throw errorWithCode('You do not access to this agreement', 403);
     }
 
@@ -325,7 +325,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
 
     const agreement = results.pop();
 
-    if (!user.canAccessAgreement(agreement)) {
+    if (!(await user.canAccessAgreement(agreement))) {
       throw errorWithCode('You do not access to this agreement', 403);
     }
 
