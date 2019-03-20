@@ -271,7 +271,7 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
     const results = await Agreement.find(db, { forest_file_id: id });
 
     if (results.length === 0) {
-      throw errorWithCode('You do not access to this agreement', 400);
+      throw errorWithCode(`Unable to find agreement ${id}`, 404);
     }
 
     const agreement = results.pop();
@@ -289,8 +289,8 @@ router.put('/:id', asyncMiddleware(async (req, res) => {
 
     res.status(200).json(await Promise.all(agreements)).end();
   } catch (error) {
-    logger.error(`error updating agreement ${id}, error = ${error.message}`);
-    throw errorWithCode('There was a problem updating the record', 500);
+    logger.error(`logging: error updating agreement ${id}, error = ${error.message}`);
+    throw error;
   }
 }));
 
@@ -320,7 +320,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
     const results = await Agreement.find(db, { forest_file_id: agreementId });
 
     if (results.length === 0) {
-      throw errorWithCode('You do not access to this agreement', 400);
+      throw errorWithCode('Unable to find agreement', 404);
     }
 
     const agreement = results.pop();
@@ -348,7 +348,7 @@ router.put('/:agreementId?/zone', asyncMiddleware(async (req, res) => {
     res.status(200).json(theAgreements.pop().zone).end();
   } catch (error) {
     logger.error(`error updating agreement ${agreementId}, error = ${error.message}`);
-    throw errorWithCode('There was a problem updating the record', 500);
+    throw error;
   }
 }));
 

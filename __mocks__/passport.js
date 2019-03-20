@@ -42,7 +42,9 @@ const canAccessAgreement = (async (agreement) => {
   }
   if (user.isRangeOfficer()) {
     const val = user.id === 1;
-    console.log(`id = ${user.id} => ${val}`);
+    if (user.id === 2) {
+      console.log(`id = ${user.id} => ${val}`);
+    }
     return val;
   }
   return false;

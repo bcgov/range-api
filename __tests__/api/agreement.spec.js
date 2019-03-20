@@ -155,7 +155,8 @@ describe('Test agreement route search', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
     await request(app)
       .get('/api/v1/agreement/search?term=965&page=1&limit=10')
       .expect(200).expect((res) => {
@@ -179,7 +180,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.clientId = '00162356';
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200).expect((res) => {
@@ -202,13 +203,14 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.clientId = '00162356';
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200).expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.perPage).toEqual(10);
+        // console.dir(result);
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
@@ -313,6 +315,130 @@ describe('Test agreement route to get single agreement', () => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('You do not access to this agreement');
+        expect(result.success).toEqual(false);
+        delete passport.aUser.isRangeOfficer;
+        delete passport.aUser.isAdministrator;
+        delete passport.aUser.clientId;
+        passport.aUser.isAgreementHolder = () => false;
+        passport.aUser.id = 1;
+        done();
+      });
+  });
+});
+
+describe('Test agreement route update agreement', () => {
+  test('should update agreement', async (done) => {
+    passport.aUser.isAgreementHolder = () => true;
+    passport.aUser.isRangeOfficer = () => false;
+    passport.aUser.isAdministrator = () => false;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
+    const update = {
+      x: 'x',
+      y: 'y',
+    };
+    await request(app)
+      .put('/api/v1/agreement/RAN076843')
+      .send(update)
+      .expect(200)
+      .expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        delete passport.aUser.isRangeOfficer;
+        delete passport.aUser.isAdministrator;
+        delete passport.aUser.clientId;
+        passport.aUser.isAgreementHolder = () => false;
+        passport.aUser.id = 1;
+        done();
+      });
+  });
+
+  test('should fail to update agreement', async (done) => {
+    passport.aUser.isAgreementHolder = () => true;
+    passport.aUser.isRangeOfficer = () => false;
+    passport.aUser.isAdministrator = () => false;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
+    const update = {
+    };
+    await request(app)
+      .put('/api/v1/agreement/RAN999999')
+      .send(update)
+      .expect(404)
+      .expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        expect(result.success).toEqual(false);
+        expect(result.error).toBeTruthy();
+        delete passport.aUser.isRangeOfficer;
+        delete passport.aUser.isAdministrator;
+        delete passport.aUser.clientId;
+        passport.aUser.isAgreementHolder = () => false;
+        passport.aUser.id = 1;
+        done();
+      });
+  });
+
+  test('should update agreement zone', async (done) => {
+    passport.aUser.isAgreementHolder = () => true;
+    passport.aUser.isRangeOfficer = () => false;
+    passport.aUser.isAdministrator = () => false;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
+    await request(app)
+      .put('/api/v1/agreement/RAN076843/zone')
+      .send({ zoneId: 7 })
+      .expect(200)
+      .expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        delete passport.aUser.isRangeOfficer;
+        delete passport.aUser.isAdministrator;
+        delete passport.aUser.clientId;
+        passport.aUser.isAgreementHolder = () => false;
+        passport.aUser.id = 1;
+        done();
+      });
+  });
+
+  test('should fail to update agreement zone for wrong agreement', async (done) => {
+    passport.aUser.isAgreementHolder = () => true;
+    passport.aUser.isRangeOfficer = () => false;
+    passport.aUser.isAdministrator = () => false;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
+    await request(app)
+      .put('/api/v1/agreement/RAN999999/zone')
+      .send({ zoneId: 7 })
+      .expect(404)
+      .expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        expect(result.error).toEqual('Unable to find agreement');
+        expect(result.success).toEqual(false);
+        delete passport.aUser.isRangeOfficer;
+        delete passport.aUser.isAdministrator;
+        delete passport.aUser.clientId;
+        passport.aUser.isAgreementHolder = () => false;
+        passport.aUser.id = 1;
+        done();
+      });
+  });
+
+  test('should fail to update agreement zone for wrong request zone', async (done) => {
+    passport.aUser.isAgreementHolder = () => true;
+    passport.aUser.isRangeOfficer = () => false;
+    passport.aUser.isAdministrator = () => false;
+    passport.aUser.clientId = '00162356';
+    passport.aUser.id = 1;
+    await request(app)
+      .put('/api/v1/agreement/RAN999999/zone')
+      .send({})
+      .expect(400)
+      .expect((res) => {
+        const result = res.body;
+        expect(typeof result).toBe('object');
+        expect(result.error).toEqual('zoneId must be provided in body and be numeric');
         expect(result.success).toEqual(false);
         delete passport.aUser.isRangeOfficer;
         delete passport.aUser.isAdministrator;
