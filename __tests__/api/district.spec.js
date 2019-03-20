@@ -14,7 +14,7 @@
 //
 // Created by Mike Wells on 2019-03-20.
 
-import passport from 'passport'
+import passport from 'passport';
 import request from 'supertest';
 import app from '../../src';
 
@@ -25,10 +25,20 @@ describe('Test district route', () => {
     await request(app)
       .get('/api/v1/district')
       .expect(200).expect((res) => {
-        console.log(res.body);
         const result = (res.body);
-        console.log(result);
         expect(typeof result).toBe('object');
+        done();
+      });
+  });
+
+  test('should fail to fetch all districts', async (done) => {
+    passport.aUser.failDistrict = true;
+    await request(app)
+      .get('/api/v1/district')
+      .expect(500).expect((res) => {
+        const result = (res.body);
+        expect(typeof result).toBe('object');
+        delete passport.aUser.failDistrict;
         done();
       });
   });

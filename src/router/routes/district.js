@@ -42,7 +42,6 @@ router.get('/', asyncMiddleware(async (req, res) => {
     res.status(200).json(results).end();
   } catch (err) {
     res.status(500).json({ error: err }).end();
-    console.log(res);
   }
 }));
 
