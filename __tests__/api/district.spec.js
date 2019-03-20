@@ -12,11 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Pushan Mitra on 2019-03-14.
+// Created by Mike Wells on 2019-03-20.
 
-// import { default as request } from 'supertest';
-// import app from '../../src';
+import passport from 'passport'
+import request from 'supertest';
+import app from '../../src';
 
+jest.mock('../../src/libs/db2/model/district');
+jest.mock('request-promise-native');
 describe('Test district route', () => {
-  test.skip('should fetch all districts', () => {});
+  test('should fetch all districts', async (done) => {
+    await request(app)
+      .get('/api/v1/district')
+      .expect(200).expect((res) => {
+        console.log(res.body);
+        const result = (res.body);
+        console.log(result);
+        expect(typeof result).toBe('object');
+        done();
+      });
+  });
 });
