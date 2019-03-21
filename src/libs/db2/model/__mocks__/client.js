@@ -12,4 +12,11 @@ export default class Client extends Model {
       clientId: where.client_number,
     };
   }
+
+  static async searchForTerm(db, term) {
+    assert(db);
+    assert(term);
+
+    return ['67896675', '67896676', '67896677'];
+  }
 }

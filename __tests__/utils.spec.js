@@ -52,8 +52,4 @@ describe('utility helpers', () => {
     expect(isNumeric(notAnumber)).toBe(false);
     expect(isNumeric(isAnumber)).toBe(true);
   });
-
-  test.skip('streamToBuffer converts a stream into a buffer', async () => {
-    // TODO
-  });
 });

@@ -20,11 +20,10 @@
 
 /* eslint-disable no-unused-vars */
 
-import User from '../src/libs/db2/model/__mocks__/user';
-import { SSO_ROLE_MAP } from '../src/constants';
-
+import assert from 'assert';
 
 const passport = jest.requireActual('passport');
+
 
 const user = {
   id: 1,
@@ -32,7 +31,24 @@ const user = {
   isAgreementHolder: () => false,
 };
 
+const canAccessAgreement = (async (agreement) => {
+  assert(agreement);
+  const clients = agreement.clients.filter(client => client.id === user.clientId);
+  if (user.isAdministrator()) {
+    return true;
+  }
+  if (user.isAgreementHolder()) {
+    return clients.length > 0;
+  }
+  if (user.isRangeOfficer()) {
+    const val = user.id === 1;
+    return val;
+  }
+  return false;
+});
+
 passport.aUser = user;
+passport.aUser.canAccessAgreement = canAccessAgreement.bind(user);
 passport.global = {};
 passport.setGlobal = (key, value) => {
   passport.global[key] = value;

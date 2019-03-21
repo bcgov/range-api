@@ -22,10 +22,25 @@
 
 'use strict';
 
+import assert from 'assert';
 import Model from '../model';
 
 export default class Zone extends Model {
   static async findWithDistrictUser(db, where) {
-    return [{ bla: 1 }, { bla: 2 }];
+    return [{ id: 1, data: 'Lao is here' }, { id: 2, data: 'Lao is good' }];
+  }
+
+  static async searchForTerm(db, term) {
+    assert(db);
+    assert(term);
+    return [1, 2, 3];
+  }
+
+  static async find(db, where) {
+    assert(db);
+    assert(where);
+    assert(Object.keys(where).length > 0);
+
+    return [{ id: 1, data: 'Lao is here' }, { id: 2, data: 'Lao is good' }];
   }
 }
