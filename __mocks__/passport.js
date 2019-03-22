@@ -31,7 +31,8 @@ const user = {
   isAgreementHolder: () => false,
 };
 
-const canAccessAgreement = (async (agreement) => {
+const canAccessAgreement = (async (db, agreement) => {
+  assert(db);
   assert(agreement);
   const clients = agreement.clients.filter(client => client.id === user.clientId);
   if (user.isAdministrator()) {
