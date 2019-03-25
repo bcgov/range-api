@@ -246,7 +246,7 @@ describe('Test agreement route search without term', () => {
 });
 
 describe('Test agreement route to get single agreement', () => {
-  test.skip('should fetch agreement for agreement holder', async (done) => {
+  test('should fetch agreement for agreement holder', async (done) => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -265,7 +265,7 @@ describe('Test agreement route to get single agreement', () => {
       });
   });
 
-  test.skip('should fetch all agreements for agreement Range officer', async (done) => {
+  test('should fetch all agreements for agreement Range officer', async (done) => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -284,7 +284,7 @@ describe('Test agreement route to get single agreement', () => {
       });
   });
 
-  test.skip('should fetch all agreements for agreement admin', async (done) => {
+  test('should fetch all agreements for agreement admin', async (done) => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
@@ -303,7 +303,7 @@ describe('Test agreement route to get single agreement', () => {
       });
   });
 
-  test.skip('should fail to fetch for agreement admin', async (done) => {
+  test('should fail to fetch for agreement admin', async (done) => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -327,7 +327,7 @@ describe('Test agreement route to get single agreement', () => {
 });
 
 describe('Test agreement route update agreement', () => {
-  test.skip('should update agreement', async (done) => {
+  test('should update agreement', async (done) => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -379,7 +379,7 @@ describe('Test agreement route update agreement', () => {
       });
   });
 
-  test.skip('should update agreement zone', async (done) => {
+  test('should update agreement zone', async (done) => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
