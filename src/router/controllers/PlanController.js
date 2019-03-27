@@ -11,9 +11,13 @@ const {
   Agreement,
   PlanConfirmation,
   PlanStatus,
+  AdditionalRequirement,
 } = dm;
 
 export default class PlanController {
+  // --
+  // Plan Resource / Doc / Table CRUD Operation
+  // --
   /**
    * Display plan
    * @param {*} req : express req object
@@ -132,6 +136,36 @@ export default class PlanController {
       return res.status(200).json(plan).end();
     } catch (err) {
       throw err;
+    }
+  }
+
+  // --
+  // Plan Operation based on plan
+  // --
+
+  // --
+  // Additional requirement
+  /**
+   * Create Additional requirement
+   * @param {*} req : express req
+   * @param {*} res : express res
+   */
+  static async storeAdditionalRequirement(req, res) {
+    const { body, params, user } = req;
+    const { planId } = params;
+
+    checkRequiredFields(
+      ['planId'], 'params', req,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const requirement = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+      return res.status(200).json(requirement).end();
+    } catch (error) {
+      throw error;
     }
   }
 }

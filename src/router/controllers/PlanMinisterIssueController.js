@@ -46,6 +46,7 @@ export default class PlanMinisterIssueController {
         throw errorWithCode('Some pastures do not belong to the current user ', 400);
       }
     } catch (error) {
+      logger.error(`PlanMinisterIssueController: validateMinisterIssueOperation: fail with error: ${error.message}`);
       throw errorWithCode('Unable to confirm Plan ownership', 500);
     }
   }
@@ -96,7 +97,8 @@ export default class PlanMinisterIssueController {
     );
 
     try {
-      const data = PlanMinisterIssueController.validate(user, planId, body);
+      // console.dir(body);
+      const data = await PlanMinisterIssueController.validate(user, planId, body);
       const issue = await MinisterIssue.create(db, { ...data, ...{ plan_id: planId } });
       const promises = pastures.map(id =>
         MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
@@ -129,7 +131,7 @@ export default class PlanMinisterIssueController {
 
     try {
       // Validating data
-      const data = PlanMinisterIssueController.validate(user, planId, body);
+      const data = await PlanMinisterIssueController.validate(user, planId, body);
 
       // update the existing issue.
       const issue = await MinisterIssue.update(db, { id: issueId }, data);
