@@ -38,7 +38,7 @@ all 		: help
 # ------------------------------------------------------------------------------
 
 local:      |  print-status  build-local run-local         ## Task-Alias -- Run the steps for a local-build.
-local-setup: | print-status build local run-db seed-local close-db
+local-setup: | print-status build-local run-db seed-local close-db
 local-debug: | print-status build-local run-debug
 local-test-setup: print-status build-local-test run-db-test seed-local-test close-db-test
 local-test: | print-status build-local-test test-local 
