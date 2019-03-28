@@ -66,6 +66,11 @@ export default class Agreement extends Model {
     return 1;
   }
 
+  static async findWithTypeZoneDistrictExemption(db, where) {
+    assert(db, 'agreement: require: db');
+    assert(where, 'agreement: require where');
+  }
+
   static async update(db, where, updateObj) {
     assert(db, 'agreement:update: No data base');
     assert(where, 'agreement:update: No where');

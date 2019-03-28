@@ -1,4 +1,4 @@
-import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
+import { logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import { MINISTER_ISSUE_ACTION_TYPE } from '../../constants';
 import DataManager from '../../libs/db2';
@@ -162,12 +162,11 @@ export default class PlanMinisterIssueActionController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const result = await MinisterIssueAction.removeById(db, actionId);
-      if (result === 0) {
-        throw errorWithCode('No such minister issue action exists', 400);
-      }
+      const results = await MinisterIssueAction.removeById(db, actionId);
 
-      return res.status(204).json().end();
+      return res.status(204).json({
+        success: (results.length > 0),
+      }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: destroy: fail with error: ${error.message}`);
       throw error;

@@ -1,5 +1,6 @@
 import assert from 'assert';
 import Model from '../model';
+import fixtures from '../../../../../__mocks__/fixtures';
 
 export default class Client extends Model {
   static async find(db, where) {
@@ -7,8 +8,6 @@ export default class Client extends Model {
     assert(where);
     assert(where.client_number);
 
-    return {
-      clientId: where.client_number,
-    };
+    return fixtures;
   }
 }

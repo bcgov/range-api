@@ -207,10 +207,6 @@ export default class Model {
   }
 
   static async remove(db, where) {
-    const exists = await this.find(db, where);
-    if (exists.length === 0) {
-      throw new Error(`Items not exist in [${this.table}] table with details: ${JSON.stringify(where)}`);
-    }
     const results = await db
       .table(this.table)
       .where(where)

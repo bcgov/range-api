@@ -170,8 +170,8 @@ export default class PlanMinisterIssueController {
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      await MinisterIssue.removeById(db, issueId);
-      return res.status(204).json().end();
+      const results = await MinisterIssue.removeById(db, issueId);
+      return res.status(204).json({ success: (results.length > 0) }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: destroy: fail with error: ${error.message}`);
       throw error;
