@@ -79,15 +79,15 @@ export default class User extends Model {
     }
   }
 
-  static async findWithFilter(db, where, order, filter) {
+  static async findWithExclusion(db, where, order, exclude) {
     try {
       const q = db
         .table(User.table)
         .select('id')
         .where(where);
 
-      if (filter) {
-        q.andWhereNot(...filter);
+      if (exclude) {
+        q.andWhereNot(...exclude);
       }
 
       const results = await q;

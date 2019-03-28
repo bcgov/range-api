@@ -16,7 +16,7 @@ export class UserController {
   static async allUser(req, res) {
     try {
       const { user, query } = req;
-      const { orderCId, filterBy: fBy, filter: f } = query;
+      const { orderCId, excludeBy: eBy, exclude: e } = query;
 
       if (user && user.isAgreementHolder()) {
         throw errorWithCode('You do not have the permission as an agreement holder', 403);
@@ -27,12 +27,12 @@ export class UserController {
         order = ['client_id', orderCId];
       }
 
-      let filter;
-      if (fBy && f) {
-        filter = [fBy, 'ilike', `%${f}%`];
+      let exclude;
+      if (eBy && e) {
+        exclude = [eBy, 'ilike', `%${e}%`];
       }
 
-      const users = await User.findWithFilter(db, {}, order, filter);
+      const users = await User.findWithExclusion(db, {}, order, exclude);
 
       res.status(200).json(users).end();
       return;
