@@ -99,15 +99,13 @@ export default class PlanStatusController {
 
       await PlanStatusController.updatePlanStatus(planId, status, user);
 
-      if (note) {
-        await PlanStatusHistory.create(db, {
-          fromPlanStatusId: prevStatusId,
-          toPlanStatusId: statusId,
-          note,
-          planId,
-          userId: user.id,
-        });
-      }
+      await PlanStatusHistory.create(db, {
+        fromPlanStatusId: prevStatusId,
+        toPlanStatusId: statusId,
+        note: note || ' ',
+        planId,
+        userId: user.id,
+      });
 
       return res.status(200).json(status).end();
     } catch (err) {
