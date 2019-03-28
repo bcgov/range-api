@@ -31,13 +31,13 @@ export default class PlanMinisterIssueController {
     assert(planId, 'validateMinisterIssueOperation: require plan:id');
     assert(body, 'validateMinisterIssueOperation: require body');
 
-    if (!pastures || pastures.length === 0) {
-      throw errorWithCode('At least one pasture is required', 400);
+    if (!pastures) {
+      return;
     }
 
     try {
-      // Make sure the all the pastures associated to the issue belong to the
-      // current plan.
+      // if there are pastures, make sure the all the pastures
+      // associated to the issue belong to the current plan.
       const plan = await Plan.findById(db, planId);
       await plan.fetchPastures();
       const okPastureIds = plan.pastures.map(pasture => pasture.id);
@@ -97,17 +97,17 @@ export default class PlanMinisterIssueController {
     );
 
     try {
-      // console.dir(body);
       const data = await PlanMinisterIssueController.validate(user, planId, body);
       const issue = await MinisterIssue.create(db, { ...data, ...{ plan_id: planId } });
-      const promises = pastures.map(id =>
+      const promises = pastures && pastures.map(id =>
         MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
+      if (promises) await Promise.all(promises);
 
-      await Promise.all(promises);
       const createdIssue = {
         ...issue,
         pastures,
       };
+
       return res.status(200).json(createdIssue).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: store: fail with error: ${error.message}`);

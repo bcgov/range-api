@@ -45,8 +45,6 @@ describe('Test user routes happy path', () => {
         expect(usr.familyName).toBeDefined();
         expect(usr.email).toBeDefined();
         expect(usr.active).toBeDefined();
-        expect(usr.active).toBeDefined();
-        expect(usr.piaSeen).toBeDefined();
         expect(usr.piaSeen).toBeDefined();
         done();
       });
