@@ -4,7 +4,7 @@ import fixtures from '../../../../../__mocks__/fixtures';
 
 // const passport = jest.requireActual('passport');
 export default class User extends Model {
-  static find() {
+  static findWithFilter() {
     return fixtures.allUsers;
   }
 

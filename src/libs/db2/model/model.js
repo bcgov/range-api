@@ -199,15 +199,15 @@ export default class Model {
     }
   }
 
-  static removeById(db, id) {
+  static async removeById(db, id) {
     const where = {};
     where[this.primaryKey] = id;
 
     return this.remove(db, where);
   }
 
-  static remove(db, where) {
-    const results = db
+  static async remove(db, where) {
+    const results = await db
       .table(this.table)
       .where(where)
       .delete();
