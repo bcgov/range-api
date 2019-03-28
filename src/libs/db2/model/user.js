@@ -78,6 +78,26 @@ export default class User extends Model {
       throw err;
     }
   }
+
+  static async findWithFilter(db, where, order, filter) {
+    try {
+      const q = db
+        .table(User.table)
+        .select('id')
+        .where(where);
+
+      if (filter) {
+        q.andWhereNot(...filter);
+      }
+
+      const results = await q;
+      const userIds = results.map(obj => obj.id);
+
+      return await User.find(db, { id: userIds }, order);
+    } catch (err) {
+      throw err;
+    }
+  }
 }
 
 //
