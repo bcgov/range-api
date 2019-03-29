@@ -87,18 +87,14 @@ export default class PlanStatusController {
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const planStatuses = await PlanStatus.find(db, { active: true });
-
       // make sure the status exists.
       const status = planStatuses.find(s => s.id === statusId);
       if (!status) {
         throw errorWithCode('You must supply a valid status ID', 403);
       }
-
       const plan = await Plan.findOne(db, { id: planId });
       const { statusId: prevStatusId } = plan;
-
       await PlanStatusController.updatePlanStatus(planId, status, user);
-
       await PlanStatusHistory.create(db, {
         fromPlanStatusId: prevStatusId,
         toPlanStatusId: statusId,
@@ -106,9 +102,9 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
-
       return res.status(200).json(status).end();
     } catch (err) {
+      logger.error(`PlanStatusController:update: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -159,6 +155,7 @@ export default class PlanStatusController {
 
       return res.status(200).json({ allConfirmed, confirmation }).end();
     } catch (err) {
+      logger.error(`PlanStatusController:updateAmendment: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -193,6 +190,7 @@ export default class PlanStatusController {
       );
       return res.status(200).json(planStatusHistory).end();
     } catch (err) {
+      logger.error(`PlanStatusController:storeStatusHistory: fail with error: ${err.message}`);
       throw err;
     }
   }
