@@ -23,9 +23,10 @@
 
 'use strict';
 
-import { asyncMiddleware } from '@bcgov/nodejs-common-utils';
+import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import request from 'request-promise-native';
+import passport from 'passport';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { ENVIRONMENTS, API_URL } from '../../constants';
@@ -48,13 +49,19 @@ router.get('/', asyncMiddleware(async (req, res) => {
   }
 }));
 
+router.use(passport.authenticate('jwt', { session: false }));
 router.put('/', asyncMiddleware(async (req, res) => {
   try {
+    const { user, body } = req;
     const {
       idpHint,
       api,
       ios,
-    } = req.body;
+    } = body;
+
+    if (user && !user.isAdministrator()) {
+      throw errorWithCode('Only Admin have the permission for this request', 403);
+    }
 
     const updated = await Version.update(db, { }, {
       idpHint,
