@@ -3,6 +3,19 @@ import Model from '../model';
 import fixtures from '../../../../../__mocks__/fixtures';
 
 export default class Agreement extends Model {
+  static async loadFixture() {
+    const results = fixtures.agreements.map((item) => {
+      const value = item;
+      const empty = () => {};
+      const asyncEmpty = async () => {};
+      value.transformToV1 = empty;
+      value.eagerloadAllOneToManyExceptPlan = asyncEmpty;
+      return value;
+    });
+
+    return results;
+  }
+
   static async agreementsForClientId(db, clientId) {
     assert(db, 'agreement:agreementsForClientId: No data base');
     assert(clientId, 'agreement:agreementsForClientId: No client id');
@@ -18,14 +31,7 @@ export default class Agreement extends Model {
     assert(db);
     assert(where);
 
-    const results = fixtures.agreements.map((item) => {
-      const value = item;
-      const empty = () => {};
-      value.transformToV1 = empty;
-      return value;
-    });
-
-    return results;
+    return Agreement.loadFixture();
   }
 
   static async agreementsForZoneId(db, zoneId) {
@@ -50,14 +56,7 @@ export default class Agreement extends Model {
       return [];
     }
 
-    const results = fixtures.agreements.map((item) => {
-      const value = item;
-      const empty = () => {};
-      value.transformToV1 = empty;
-      return value;
-    });
-
-    return results;
+    return Agreement.loadFixture();
   }
 
   static async count(db) {
@@ -69,6 +68,8 @@ export default class Agreement extends Model {
   static async findWithTypeZoneDistrictExemption(db, where) {
     assert(db, 'agreement: require: db');
     assert(where, 'agreement: require where');
+
+    return Agreement.loadFixture();
   }
 
   static async update(db, where, updateObj) {
