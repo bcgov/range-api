@@ -28,14 +28,14 @@ import { Router } from 'express';
 /**
  * Controller for individual routes related to plan.
  */
-import PlanController from '../controllers/PlanController';
-import PlanStatusController from '../controllers/PlanStatusController';
-import PlanPastureController from '../controllers/PlanPastureController';
-import PlanScheduleController from '../controllers/PlanScheduleController';
-import PlanMinisterIssueController from '../controllers/PlanMinisterIssueController';
-import PlanMinisterIssueActionController from '../controllers/PlanMinisterIssueActionController';
-import PlanInvasivePlantController from '../controllers/PlanInvasivePlantController';
-import PlanManagementConsiderationController from '../controllers/PlanManagementConsiderationController';
+import PlanController from '../controllers_v1/PlanController';
+import PlanStatusController from '../controllers_v1/PlanStatusController';
+import PlanPastureController from '../controllers_v1/PlanPastureController';
+import PlanScheduleController from '../controllers_v1/PlanScheduleController';
+import PlanMinisterIssueController from '../controllers_v1/PlanMinisterIssueController';
+import PlanMinisterIssueActionController from '../controllers_v1/PlanMinisterIssueActionController';
+import PlanInvasivePlantController from '../controllers_v1/PlanInvasivePlantController';
+import PlanManagementConsiderationController from '../controllers_v1/PlanManagementConsiderationController';
 
 const router = new Router();
 
