@@ -22,19 +22,23 @@
 
 'use strict';
 
+/* Important note on API Versioning:  change the path to the path to route code in the import 
+   and the version in the endpoint below */
+
+   
 import cors from 'cors';
 import passport from 'passport';
-import { agreement as agreement_v1 } from './routes_v1/agreement';
-import { client as client_v1 }  from './routes_v1/client';
-import { district as district_v1 } from './routes_v1/district';
-import { ehlo as ehlo_v1 } from './routes_v1/ehlo';
-import { plan as plan_v1 } from './routes_v1/plan';
-import { reference as reference_v1}  from './routes_v1/reference';
-import { report as report_v1 } from './routes_v1/report';
-import { user as user_v1 } from './routes_v1/user';
-import { zone as zone_v1 } from './routes_v1/zone';
-import { feedback as feedback_v1 } from './routes_v1/feedback';
-import { version as version_v1 } from './routes_v1/version';
+import agreement from './routes_v1/agreement';
+import client from './routes_v1/client';
+import district from './routes_v1/district';
+import ehlo from './routes_v1/ehlo';
+import plan from './routes_v1/plan';
+import reference from './routes_v1/reference';
+import report from './routes_v1/report';
+import user from './routes_v1/user';
+import zone from './routes_v1/zone';
+import feedback from './routes_v1/feedback';
+import version from './routes_v1/version';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -44,17 +48,17 @@ const corsOptions = {
 
 module.exports = (app) => {
   app.use(cors(corsOptions));
-  app.use('/api/v1/ehlo', ehlo_v1); // probes
-  app.use('/api/v1/version', version_v1); // app versions
+  app.use('/api/v1/ehlo', ehlo); // probes
+  app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.
   app.use(passport.authenticate('jwt', { session: false }));
-  app.use('/api/v1/agreement', agreement_v1);
-  app.use('/api/v1/client', client_v1);
-  app.use('/api/v1/district', district_v1);
-  app.use('/api/v1/plan', plan_v1);
-  app.use('/api/v1/reference', reference_v1);
-  app.use('/api/v1/zone', zone_v1);
-  app.use('/api/v1/report', report_v1);
-  app.use('/api/v1/user', user_v1);
-  app.use('/api/v1/feedback', feedback_v1);
+  app.use('/api/v1/agreement', agreement);
+  app.use('/api/v1/client', client);
+  app.use('/api/v1/district', district);
+  app.use('/api/v1/plan', plan);
+  app.use('/api/v1/reference', reference);
+  app.use('/api/v1/zone', zone);
+  app.use('/api/v1/report', report);
+  app.use('/api/v1/user', user);
+  app.use('/api/v1/feedback', feedback);
 };
