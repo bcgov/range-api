@@ -22,19 +22,23 @@
 
 'use strict';
 
+/* Important note on API Versioning:  change the path to the path to route code in the import 
+   and the version in the endpoint below */
+
+   
 import cors from 'cors';
 import passport from 'passport';
-import agreement from './routes/agreement';
-import client from './routes/client';
-import district from './routes/district';
-import ehlo from './routes/ehlo';
-import plan from './routes/plan';
-import reference from './routes/reference';
-import report from './routes/report';
-import user from './routes/user';
-import zone from './routes/zone';
-import feedback from './routes/feedback';
-import version from './routes/version';
+import agreement from './routes_v1/agreement';
+import client from './routes_v1/client';
+import district from './routes_v1/district';
+import ehlo from './routes_v1/ehlo';
+import plan from './routes_v1/plan';
+import reference from './routes_v1/reference';
+import report from './routes_v1/report';
+import user from './routes_v1/user';
+import zone from './routes_v1/zone';
+import feedback from './routes_v1/feedback';
+import version from './routes_v1/version';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
