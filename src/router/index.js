@@ -22,10 +22,9 @@
 
 'use strict';
 
-/* Important note on API Versioning:  change the path to the path to route code in the import 
-   and the version in the endpoint below */
-
-   
+/* Important note on API Versioning:  change the path to the path to route code in the import
+   and the version in the endpoint below
+   */
 import cors from 'cors';
 import passport from 'passport';
 import agreement from './routes_v1/agreement';
