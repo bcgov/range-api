@@ -25,25 +25,23 @@ def notifySlack(text, channel, url, attachments, icon) {
 }
 
 // See https://github.com/jenkinsci/kubernetes-plugin
-podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkins', cloud: 'openshift', containers: [
-  containerTemplate(
-    name: 'jnlp',
-    image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-nodejs:8',
-    resourceRequestCpu: '1500m',
-    resourceLimitCpu: '2000m',
-    resourceRequestMemory: '1Gi',
-    resourceLimitMemory: '2Gi',
-    workingDir: '/var/tmp',
-    command: '',
-    args: '${computer.jnlpmac} ${computer.name}',
-    alwaysPullImage: false
-    // envVars: [
-    //     secretEnvVar(key: 'BDD_DEVICE_FARM_USER', secretName: 'bdd-credentials', secretKey: 'username'),
-    //     secretEnvVar(key: 'BDD_DEVICE_FARM_PASSWD', secretName: 'bdd-credentials', secretKey: 'password'),
-    //     secretEnvVar(key: 'ANDROID_DECRYPT_KEY', secretName: 'android-decrypt-key', secretKey: 'decryptKey')
-    //   ]
-  )
-]) {
+podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkins', cloud: 'openshift',
+  containers: [
+    containerTemplate(
+      name: 'jnlp',
+      image: 'docker-registry.default.svc:5000/openshift/jenkins-slave-nodejs:8',
+      resourceRequestCpu: '1500m',
+      resourceLimitCpu: '2000m',
+      resourceRequestMemory: '1Gi',
+      resourceLimitMemory: '2Gi',
+      workingDir: '/var/tmp/workspace',
+      command: '',
+      args: '${computer.jnlpmac} ${computer.name}',
+      alwaysPullImage: false
+    )
+  ],
+  volumes: [persistentVolumeClaim(claimName: 'jenkins-workspace', mountPath: '/var/tmp/workspace')]
+) {
   node("${POD_LABEL}") {
     stage('Checkout') {
       echo "Checking out source"
