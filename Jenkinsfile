@@ -33,7 +33,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
     resourceLimitCpu: '2000m',
     resourceRequestMemory: '1Gi',
     resourceLimitMemory: '2Gi',
-    workingDir: '/tmp',
+    workingDir: '/var/tmp',
     command: '',
     args: '${computer.jnlpmac} ${computer.name}',
     alwaysPullImage: false
