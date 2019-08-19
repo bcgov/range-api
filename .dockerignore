@@ -1,0 +1,18 @@
+# .dockerignore
+dist
+doc
+logs
+node_modules
+old
+server
+test
+tools
+yarn.lock
+.DS_Store
+**/.DS_Store
+
+# Build
+build/
+**/build/
+coverage/
+**/coverage

@@ -1,0 +1,117 @@
+[
+  {
+      "id": 1,
+      "code": "DCC",
+      "description": ""
+  },
+  {
+      "id": 2,
+      "code": "DSS",
+      "description": ""
+  },
+  {
+      "id": 3,
+      "code": "DRM",
+      "description": ""
+  },
+  {
+      "id": 4,
+      "code": "DCS",
+      "description": ""
+  },
+  {
+      "id": 5,
+      "code": "DCK",
+      "description": ""
+  },
+  {
+      "id": 6,
+      "code": "DSQ",
+      "description": ""
+  },
+  {
+      "id": 7,
+      "code": "DSE",
+      "description": ""
+  },
+  {
+      "id": 8,
+      "code": "DPG",
+      "description": ""
+  },
+  {
+      "id": 9,
+      "code": "DCP",
+      "description": ""
+  },
+  {
+      "id": 10,
+      "code": "DFN",
+      "description": ""
+  },
+  {
+      "id": 11,
+      "code": "DMH",
+      "description": ""
+  },
+  {
+      "id": 12,
+      "code": "DND",
+      "description": ""
+  },
+  {
+      "id": 13,
+      "code": "DQU",
+      "description": ""
+  },
+  {
+      "id": 14,
+      "code": "DQC",
+      "description": ""
+  },
+  {
+      "id": 15,
+      "code": "DOS",
+      "description": ""
+  },
+  {
+      "id": 16,
+      "code": "DCR",
+      "description": ""
+  },
+  {
+      "id": 17,
+      "code": "DVA",
+      "description": ""
+  },
+  {
+      "id": 18,
+      "code": "DJA",
+      "description": ""
+  },
+  {
+      "id": 19,
+      "code": "DMK",
+      "description": ""
+  },
+  {
+      "id": 20,
+      "code": "DKA",
+      "description": ""
+  },
+  {
+      "id": 21,
+      "code": "DPC",
+      "description": ""
+  },
+  {
+      "id": 22,
+      "code": "DNI",
+      "description": ""
+  },
+  {
+      "id": 23,
+      "code": "TST",
+      "description": "Dummy district for testing"
+  }
+]

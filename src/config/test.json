@@ -1,0 +1,11 @@
+{
+	"temporaryUploadPath": "uploads",
+	"archiveFileBaseName": "IMG_",
+	"sso": {
+		"clientId": "myrangebc",
+		"callback": "/v1/auth/callback",
+		"authUrl": "https://sso-test.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect/auth",
+		"tokenUrl": "https://sso-test.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect/token",
+		"certsUrl": "https://sso-test.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect/certs"
+  }
+}

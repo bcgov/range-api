@@ -1,0 +1,53 @@
+version: "3.5"
+
+services:
+  range_api:
+    image: ${PROJECT}-${ENVIRONMENT}-api-test-img
+    container_name: ${PROJECT}-${ENVIRONMENT}-api-test
+    build:
+      context: ./
+      dockerfile: test.Dockerfile
+    ports:
+      - ${API_PORT}:${API_PORT}
+      - 9229:9229
+    volumes:
+      - ./src:/home/nodejs/app/src
+      - ./scripts:/home/nodejs/app/scripts
+      - ./__tests__:/home/nodejs/app/__tests__
+      - ./__testHelpers__:/home/nodejs/app/__testHelpers__
+    environment:
+      - PORT=${API_PORT}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE_TEST}
+      - POSTGRESQL_USER=${POSTGRESQL_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - NODE_ENV=${ENVIRONMENT}
+      - POSTGRESQL_PORT=${POSTGRESQL_PORT}
+    networks:
+      - local
+  db:
+    image: ${PROJECT}-${ENVIRONMENT}-postgress-test-img
+    container_name: ${PROJECT}-${ENVIRONMENT}-test-db
+    build:
+     context: ./services/db
+     dockerfile: Dockerfile
+     args:
+      - PORT:${POSTGRESQL_PORT}
+    ports:
+     - ${POSTGRESQL_PORT}:${POSTGRESQL_PORT}
+    environment:
+     - POSTGRES_USER=${POSTGRESQL_USER}
+     - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+     - POSTGRES_DB=${POSTGRESQL_DATABASE_TEST}
+    networks:
+      - local
+    volumes:
+      - postgres_test:/var/lib/postgresql/data
+
+networks:
+  local:
+    driver: bridge
+    name: ${PROJECT}-${ENVIRONMENT}-network-test
+volumes:
+  postgres_test:
+    name: ${PROJECT}-${ENVIRONMENT}-vol-test-postgres

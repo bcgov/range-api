@@ -1,0 +1,552 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "cicd-api-deployment",
+    "annotations": {
+      "description": "Deployment template for a nodejs server and postgres db.",
+      "tags": "node",
+      "iconClass": "icon-node"
+    }
+  },
+  "objects": [
+    {
+      "kind": "Secret",
+      "type": "Opaque",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${POSTGRESQL_SECRET_NAME}",
+        "labels": {
+          "app": "${POSTGRES_DEPLOYMENT_NAME}"
+        }
+      },
+      "stringData": {
+        "user": "${POSTGRESQL_USER}",
+        "password": "${POSTGRESQL_PASSWORD}"
+      }
+    },
+    {
+      "kind": "Secret",
+      "type": "Opaque",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${SESSION_SECRET_NAME}",
+        "labels": {
+          "app": "${API_NAME}"
+        }
+      },
+      "stringData": {
+        "secret": "${SESSION_SECRET_VALUE}"
+      }
+    },
+    {
+      "kind": "Secret",
+      "type": "Opaque",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${SSO_SECRET_NAME}",
+        "labels": {
+          "app": "${API_NAME}"
+        }
+      },
+      "stringData": {
+        "secret": "${SSO_SECRET_VALUE}"
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${API_NAME}",
+        "annotations": {
+          "description": "Exposes and load balances the application pods"
+        },
+        "labels": {
+          "app": "${API_NAME}"
+        }
+      },
+      "spec": {
+        "ports": [{
+          "name": "8080-tcp",
+          "port": 8080,
+          "targetPort": 8080
+        }],
+        "selector": {
+          "deploymentconfig": "${API_NAME}"
+        }
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${ROUTE_NAME}",
+        "labels": {
+          "app": "${API_NAME}"
+        }
+      },
+      "spec": {
+        "port": {
+          "targetPort": "8080-tcp"
+        },
+        "path": "/api",
+        "to": {
+          "kind": "Service",
+          "name": "${API_NAME}",
+          "weight": 100
+        },  
+        "tls": {
+          "termination": "edge"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${API_NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the application server"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [{
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${API_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "${API_IMAGE_NAMESPACE}",
+                "name": "${API_NAME}:${API_IMAGE_TAG}"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": "${API_REPLICA_COUNT}",
+        "selector": {
+          "name": "${API_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${API_NAME}",
+            "labels": {
+              "name": "${API_NAME}"
+            }
+          },
+          "spec": {
+            "containers": [{
+              "name": "${API_NAME}",
+              "image": " ",
+              "ports": [{
+                "containerPort": 8080,
+                "protocol": "TCP"
+              }],
+              "readinessProbe": {
+                "timeoutSeconds": 3,
+                "initialDelaySeconds": 3,
+                "httpGet": {
+                  "path": "/api/v1/ehlo",
+                  "port": 8080
+                }
+              },
+              "livenessProbe": {
+                "timeoutSeconds": 3,
+                "initialDelaySeconds": 300,
+                "httpGet": {
+                  "path": "/api/v1/ehlo",
+                  "port": 8080
+                }
+              },
+              "env": [
+                {
+                  "name": "POSTGRESQL_USER",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "user",
+                      "name": "${POSTGRESQL_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "POSTGRESQL_PASSWORD",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "password",
+                      "name": "${POSTGRESQL_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "POSTGRESQL_HOST",
+                  "value": "${POSTGRES_DEPLOYMENT_NAME}.${NAMESPACE}.svc"
+                },
+                {
+                  "name": "SSO_CLIENT_SECRET",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "secret",
+                      "name": "${SSO_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "SESSION_SECRET",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "secret",
+                      "name": "${SESSION_SECRET_NAME}"
+                    }
+                  }
+                },
+                {
+                  "name": "PORT",
+                  "value": "${PORT}"
+                },
+                {
+                  "name": "NODE_ENV",
+                  "value": "${NODE_ENV}"
+                },
+                {
+                  "name": "APP_URL",
+                  "value": "${APP_URL}"
+                }
+              ],
+              "resources": {
+                "limits": {
+                  "memory": "${API_MEMORY_LIMIT}",
+                  "cpu": "${API_CPU_LIMIT}"
+                }
+              }
+            }]
+          }
+        }
+      }
+    },
+    {
+      "kind": "PersistentVolumeClaim",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${POSTGRES_VOLUME_NAME}"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "${POSTGRES_VOLUME_CAPACITY}"
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${POSTGRES_DEPLOYMENT_NAME}",
+        "labels": {
+          "app": "${POSTGRES_DEPLOYMENT_NAME}"
+        },
+        "annotations": {
+          "description": "Exposes the database server"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "5432-tcp",
+            "port": 5432,
+            "protocol": "TCP",
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "deploymentconfig": "${POSTGRES_DEPLOYMENT_NAME}"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${POSTGRES_DEPLOYMENT_NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the database"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "${POSTGRES_DEPLOYMENT_NAME}"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "range-myra-tools",
+                "name": "postgres-postgis-rhel7:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "app": "${POSTGRES_DEPLOYMENT_NAME}",
+          "deploymentconfig": "${POSTGRES_DEPLOYMENT_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${POSTGRES_DEPLOYMENT_NAME}",
+            "labels": {
+              "app": "${POSTGRES_DEPLOYMENT_NAME}",
+              "deploymentconfig": "${POSTGRES_DEPLOYMENT_NAME}"
+            }
+          },
+          "spec": {
+            "volumes": [
+              {
+                "name": "${POSTGRES_VOLUME_NAME}",
+                "persistentVolumeClaim": {
+                  "claimName": "${POSTGRES_VOLUME_NAME}"
+                }
+              }
+            ],
+            "containers": [
+              {
+                "name": "${POSTGRES_DEPLOYMENT_NAME}",
+                "image": " ",
+                "ports": [{
+                    "containerPort": 5432,
+                    "protocol": "TCP"
+                }],
+                "env": [
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "user",
+                        "name": "${POSTGRESQL_SECRET_NAME}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "password",
+                        "name": "${POSTGRESQL_SECRET_NAME}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "value":"${POSTGRESQL_DATABASE}"
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "${POSTGRES_VOLUME_NAME}",
+                    "mountPath": "/var/lib/pgsql/data"
+                  }
+                ],
+                "readinessProbe": {
+                  "timeoutSeconds": 1,
+                  "initialDelaySeconds": 5,
+                  "exec": {
+                    "command": [ "/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'"]
+                  }
+                },
+                "livenessProbe": {
+                  "timeoutSeconds": 1,
+                  "initialDelaySeconds": 30,
+                  "tcpSocket": {
+                    "port": 5432
+
+                  }
+                },
+                "resources": {
+                  "limits": {
+                    "memory": "${POSTGRESQL_MEMORY_LIMIT}"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "API_NAME",
+      "displayName": "Name",
+      "description": "The name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "range-myra-api"
+    },
+    {
+      "name": "API_IMAGE_TAG",
+      "displayName": "Output Image Tag",
+      "description": "The tag given to the built image.",
+      "required": true,
+      "value": "latest"
+    },
+    {
+      "name": "API_IMAGE_NAMESPACE",
+      "displayName": "Image Namespace",
+      "required": true,
+      "description": "The namespace of the OpenShift project containing the imagestream for the application.",
+      "value": "range-myra-tools"
+    },
+    {
+      "name": "NAMESPACE",
+      "displayName": "Environment namespace",
+      "description": "The namespace of the OpenShift project containing the imagestream for the application.",
+      "required": true
+    },
+    {
+      "name": "API_MEMORY_LIMIT",
+      "displayName": "Memory Limit",
+      "required": true,
+      "description": "Maximum amount of memory the container can use.",
+      "value": "1Gi"
+    },
+    {
+      "name": "API_CPU_LIMIT",
+      "displayName": "CPU core Limit",
+      "required": true,
+      "description": "Maximum amount of CPU core the container can use.",
+      "value": "1"
+    },
+    {
+      "name": "API_REPLICA_COUNT",
+      "displayName": "Replica pod count",
+      "required": true,
+      "description": "Minimum number of pods that need to be running.",
+      "value": "1"
+    },
+    {
+      "name": "ROUTE_NAME",
+      "displayName": "Application Route",
+      "description": "The name of the default route use to access this service.",
+      "value": "api"
+    },
+    {
+      "name": "SSO_SECRET_NAME",
+      "displayName": "SSO secret name",
+      "description": "The secret name of sso-credentials.",
+      "value": "sso-credentials"
+    },
+    {
+      "name": "SSO_SECRET_VALUE",
+      "displayName": "SSO secret name",
+      "description": "The secret name of sso-credentials.",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    },
+    {
+      "name": "SESSION_SECRET_NAME",
+      "displayName": "API session name",
+      "description": "The secret name for the API.",
+      "value": "range-myra-api"
+    },
+    {
+      "name": "SESSION_SECRET_VALUE",
+      "displayName": "SSO secret",
+      "description": "The secret of for the API.",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    },
+    {
+      "name": "POSTGRES_DEPLOYMENT_NAME",
+      "displayName": "Database Service Name",
+      "description": "The name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "postgresql"
+    },
+    {
+      "name": "POSTGRESQL_SECRET_NAME",
+      "displayName": "PostgreSQL secret name",
+      "description": "The secret name of database.",
+      "value": "postgresql"
+    },
+    {
+      "name": "POSTGRESQL_MEMORY_LIMIT",
+      "displayName": "Memory Limit (PostgreSQL)",
+      "required": true,
+      "description": "Maximum amount of memory the PostgreSQL container can use.",
+      "value": "512Mi"
+    },
+    {
+      "name": "POSTGRESQL_USER",
+      "displayName": "The PostgreSQL db user name",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_PASSWORD",
+      "displayName": "The PostgreSQL user password",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_DATABASE",
+      "displayName": "The PostgreSQL database for the health check probe",
+      "required": true,
+      "value": "myra"
+    },
+    {
+      "name": "POSTGRES_VOLUME_NAME",
+      "displayName": "The Postgres storage name",
+      "description": "The Postgres storage name as postgres-data",
+      "value": "postgres-data",
+      "required": true
+    },
+    {
+      "name": "POSTGRES_VOLUME_CAPACITY",
+      "displayName": "Volume Capacity",
+      "description": "Volume space available for data, e.g. 512Mi, 2Gi",
+      "value": "1Gi",
+      "required": true
+    },
+    {
+      "name": "PORT",
+      "displayName": "Server Port",
+      "description": "The preferred port for the server to listen on.",
+      "value": "8080",
+      "required": true
+    },
+    {
+      "name": "NODE_ENV",
+      "displayName": "Node Environment",
+      "description": "The node environment. Typically: develop, test, stage, or production",
+      "required": true
+    },
+    {
+      "name": "APP_URL",
+      "displayName": "Public API URL",
+      "description": "The fully qualified external URL to access this service.",
+      "value": "http://example.com/",
+      "required": true
+    }
+  ]
+}
