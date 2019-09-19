@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "range_name": "XYZ's Range",
+    "plan_start_date": "2019-01-21T08:00:00.000Z",
+    "plan_end_date": "2022-12-30T08:00:00.000Z",
+    "notes": null,
+    "alt_business_name": null,
+    "agreement_id": "RAN123456",
+    "status_id": 1,
+    "uploaded": true,
+    "amendment_type_id": null,
+    "created_at": "2019-03-28T16:35:58.040Z",
+    "updated_at": "2019-03-28T16:35:58.040Z",
+    "effective_at": null,
+    "submitted_at": null,
+    "creator_id": 1
+  }
+]
