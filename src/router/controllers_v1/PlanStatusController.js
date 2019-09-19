@@ -148,7 +148,7 @@ export default class PlanStatusController {
           ? PLAN_STATUS.STANDS
           : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find(s => s.code === statusCode);
-        const plan = await this.updatePlanStatus(planId, status, user);
+        const plan = await PlanStatusController.updatePlanStatus(planId, status, user);
         plan.status = status;
         return res.status(200).json({ allConfirmed, plan, confirmation }).end();
       }
