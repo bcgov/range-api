@@ -7,10 +7,10 @@ import config from '../src/config';
 import DataManager from '../src/libs/db2';
 import * as mockData from './mockData';
 
-const USAGE = 'fta/FTA_RANGE_USAGE.csv';
-const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
-const CLIENT = 'fta/FTA_RANGE_CLIENT.csv';
-const USER = 'fta/ZONE_USER.csv';
+const USAGE = 'scripts/fta/FTA_RANGE_USAGE.csv';
+const LICENSEE = 'scripts/fta/FTA_RANGE_LICENSEE.csv';
+const CLIENT = 'scripts/fta/FTA_RANGE_CLIENT.csv';
+const USER = 'scripts/fta/ZONE_USER.csv';
 const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
 const USAGE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeUsages`;
 const CLIENT_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeClients`;
@@ -51,7 +51,7 @@ const updateDistrict = async (data) => {
   let created = 0;
   console.log('Start updating District');
   for (let index = 0; index < data.length; index++) {
-    const record = data[index];    
+    const record = data[index];
     const { forest_file_id: agreementId, org_unit_code: districtCode } = record;
 
     if (!isValidRecord(record) || !districtCode) {
@@ -595,8 +595,8 @@ const main = async () => {
     if (isInitializing) {
       /* DROP DATABASE MYRA first, and have ZONE_USER.csv */
       console.log('Loading FTA data from API...');
-      await loadFTADataFromAPI();
-      // await loadFTADataFromCSV();
+      //await loadFTADataFromAPI();
+      await loadFTADataFromCSV();
       console.log('Loading Staff data from File...');
       await loadStaffDataFromCSV();
       console.log('Preparing test setup');
