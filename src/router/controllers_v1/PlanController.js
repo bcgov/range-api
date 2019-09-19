@@ -51,7 +51,7 @@ export default class PlanController {
       return res.status(200).json(plan).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
-      throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, 500);
+      throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
     }
   }
 
