@@ -46,8 +46,13 @@ nconf.overrides({
   db: {
     user: process.env.POSTGRESQL_USER,
     password: process.env.POSTGRESQL_PASSWORD,
-    database: process.env.POSTGRESQL_DATABASE,
-    host: process.env.POSTGRESQL_HOST,
+    database: env === 'unit_test'
+      ? process.env.POSTGRESQL_DATABASE_TEST
+      : process.env.POSTGRESQL_DATABASE,
+    host: env === 'unit_test'
+      ? 'localhost'
+      : process.env.POSTGRESQL_HOST,
+    port: process.env.POSTGRESQL_PORT
   },
 });
 

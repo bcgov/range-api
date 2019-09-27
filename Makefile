@@ -96,16 +96,13 @@ close-db-test: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Closing local db for test...\n+"
 	@docker-compose -f test.docker-compose.yml stop db
 
-
 run-db-test: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Running db for test locally...\n+"
 	@docker-compose -f test.docker-compose.yml up -d db
 
-
 close-local: ## -- Target : Closes the local development containers.
 	@echo "+\n++ Make: Closing local container ...\n+"
 	@docker-compose -f docker-compose.yml down
-
 
 clean-local: ## -- Target : Closes and clean local development containers.
 	@echo "+\n++ Make: Closing and cleaning local container ...\n+"
@@ -136,11 +133,9 @@ close-local-test: ## -- Target : Closes the local development containers.
 	@echo "+\n++ Make: Closing local test container ...\n+"
 	@docker-compose -f test.docker-compose.yml down
 
-
 clean-local-test: ## -- Target : Closes and clean local development containers.
 	@echo "+\n++ Make: Closing and cleaning test local container ...\n+"
 	@docker-compose -f test.docker-compose.yml down -v
-
 
 
 # ------------------------------------------------------------------------------
@@ -151,11 +146,13 @@ database: ## <Helper> :: Executes into database container.
 	@echo "Make: Shelling into local database container ..."
 	@docker-compose -f docker-compose.yml exec db psql -U $(POSTGRESQL_USER) -W $(POSTGRESQL_DATABASE)
 
+database-test: ## <Helper> :: Executes into the test database container.
+	@echo "Make: Shelling into local database container ..."
+	@docker-compose -f docker-compose.yml exec db psql -U $(POSTGRESQL_USER) -W $(POSTGRESQL_DATABASE_TEST)
+
 workspace: ## <Workspcae> :: Excute into API container
 	@echo "Make: Shelling into local api container ..."
 	@docker-compose -f docker-compose.yml exec range_api bash
-
-
 
 help:  ## ** Display this help screen.
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

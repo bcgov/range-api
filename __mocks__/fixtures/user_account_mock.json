@@ -1,0 +1,26 @@
+[
+  {
+      "id": 1,
+      "username": "anybody",
+      "client_id": null,
+      "given_name": "Range",
+      "family_name": "Staff",
+      "email": "aa@xyz.io",
+      "phone_number": null,
+      "active": true,
+      "pia_seen": false,
+      "last_login_at": null
+  },
+  {
+      "id": 3,
+      "username": "kim",
+      "client_id": null,
+      "given_name": "Kyub",
+      "family_name": "Han",
+      "email": "kim@xyz.com",
+      "phone_number": null,
+      "active": true,
+      "pia_seen": false,
+      "last_login_at": null
+  }
+]
