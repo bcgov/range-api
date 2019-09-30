@@ -1,0 +1,3 @@
+forest_file_id,file_status_st,file_type_code,file_type_desc,org_unit_code,rollup_region_code,district_admin_zone,zone_description,contact,contact_phone_number,contact_email_address,legal_effective_dt,initial_expiry_dt,current_expiry_dt,licensee_start_date,licensee_end_date
+RAN000001,A,E01,Grazing Licence,DSE,RKB,ALL,,Dave Banana,2509999999,dave.banana.gov.bc.ca,1995-01-01T08:00:00Z,2024-12-31T08:00:00Z,,,
+RAN000002,A,E01,Grazing Licence,DSE,RKB,ALL,,Dave Banana,2509999999,dale.banana.gov.bc.ca,1995-01-01T08:00:00Z,2024-12-31T08:00:00Z,,,
