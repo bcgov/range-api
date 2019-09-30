@@ -89,7 +89,4 @@ jspm_packages
 # Yarn
 yarn.lock
 
-# csv files
-fta/*
-
 script
