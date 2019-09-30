@@ -13,6 +13,7 @@ const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
 
+
 const canAccessAgreement = passport.aUser.canAccessAgreement
 const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`
 const baseUrl = '/api/v1/plan'
@@ -29,11 +30,22 @@ const body = {
   statusId: 1
 }
 
+const truncateTables = async () => {
+  await dm.db.schema.raw(truncate('user_account'))
+  await dm.db.schema.raw(truncate('ref_zone'))
+  await dm.db.schema.raw(truncate('plan_confirmation'))
+  await dm.db.schema.raw(truncate('client_agreement'))
+  await dm.db.schema.raw(truncate('agreement'))
+  await dm.db.schema.raw(truncate('plan'))
+}
+
 describe('Test Plan routes', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     passport.aUser.isAgreementHolder = () => false
     passport.aUser.isRangeOfficer = () => false
     passport.aUser.isAdministrator = () => true
+
+    await truncateTables()
   });
 
   beforeEach(async () => {
@@ -56,12 +68,7 @@ describe('Test Plan routes', () => {
   afterEach(async () => {
     passport.aUser.canAccessAgreement = canAccessAgreement
 
-    await dm.db.schema.raw(truncate('user_account'))
-    await dm.db.schema.raw(truncate('ref_zone'))
-    await dm.db.schema.raw(truncate('plan_confirmation'))
-    await dm.db.schema.raw(truncate('client_agreement'))
-    await dm.db.schema.raw(truncate('agreement'))
-    await dm.db.schema.raw(truncate('plan'))
+    await truncateTables()
   });
 
   // GET /plan/:planId
