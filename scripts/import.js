@@ -597,8 +597,8 @@ const main = async () => {
       console.log('Loading FTA data from API...');
       //await loadFTADataFromAPI();
       await loadFTADataFromCSV();
-      console.log('Loading Staff data from File...');
-      await loadStaffDataFromCSV();
+      // console.log('Loading Staff data from File...');
+      // await loadStaffDataFromCSV();
       console.log('Preparing test setup');
       await prepareTestSetup();
     } else {
