@@ -52,7 +52,7 @@ nconf.overrides({
     host: env === 'unit_test'
       ? 'localhost'
       : process.env.POSTGRESQL_HOST,
-    port: process.env.POSTGRESQL_PORT
+    port: process.env.POSTGRESQL_PORT,
   },
 });
 
