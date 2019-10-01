@@ -34,7 +34,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan'));
 };
 
-describe('Test Plan routes', () => {
+describe('Test Management Consideration routes', () => {
   beforeAll(async () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
