@@ -1,0 +1,12 @@
+[
+  {
+    "plan_id": 1,
+    "name": "XYZ's Pasture",
+    "allowable_aum": 100,
+    "grace_days": 10,
+    "pld_percent": "0.62",
+    "notes": "These are my notes",
+    "created_at": "2019-03-28T16:35:58.040Z",
+    "updated_at": "2019-03-28T16:35:58.040Z"
+  }
+]
