@@ -31,8 +31,8 @@ import agreement from './routes_v1/agreement';
 import client from './routes_v1/client';
 import district from './routes_v1/district';
 import ehlo from './routes_v1/ehlo';
-import plan from './routes_v1/plan' as plan_v1;
-import plan from './routes_v1.1/plan' as plan_v1_1;
+import plan_v1 from './routes_v1/plan'; 
+import plan_v1_1 from './routes_v1.1/plan';
 import reference from './routes_v1/reference';
 import report from './routes_v1/report';
 import user from './routes_v1/user';
@@ -57,7 +57,7 @@ module.exports = (app) => {
   app.use('/api/v1/district', district);
 	//Plan endpoints
   app.use('/api/v1/plan', plan_v1);
-  app.use('/api/v1/plan', plan_v1_1);
+  app.use('/api/v1.1/plan', plan_v1_1);
   app.use('/api/v1/reference', reference);
   app.use('/api/v1/zone', zone);
   app.use('/api/v1/report', report);
