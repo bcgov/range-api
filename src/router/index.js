@@ -32,7 +32,7 @@ import client from './routes_v1/client';
 import district from './routes_v1/district';
 import ehlo from './routes_v1/ehlo';
 import plan_v1 from './routes_v1/plan'; 
-import plan_v1_1 from './routes_v1.1/plan';
+import plan_v1_1 from './routes_v1_1/plan';
 import reference from './routes_v1/reference';
 import report from './routes_v1/report';
 import user from './routes_v1/user';
