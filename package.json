@@ -71,7 +71,7 @@
     "debug": "babel-node --inspect-brk=0.0.0.0:9229 --nolazy build/src",
     "build": "cross-env NODE_ENV=production gulp",
     "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
-    "test": "cross-env NODE_ENV=unit_test jest --verbose --coverage __tests__",
+    "test": "cross-env NODE_ENV=unit_test jest --verbose --coverage --runInBand __tests__",
     "test:watch": "cross-env NODE_ENV=unit_test jest --verbose __tests__ --watch",
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js src __tests__ __testHelpers__ __mocks__",
@@ -106,6 +106,9 @@
       "node_modules",
       "src/frontend",
       "src/shared"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__testHelpers__/setup.js"
     ]
   },
   "author": "Jason C. Leach <jason.leach@fullboar.ca>",

@@ -43,6 +43,6 @@ exports.seed = async (knex) => {
     },
   ].map((item, index) => ({ ...item, id: index + 1 }));
 
-  await knex(table).delete();
+  await knex.schema.raw(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
   await knex(table).insert(ref);
 };

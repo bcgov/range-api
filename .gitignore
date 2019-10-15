@@ -27,7 +27,6 @@ doc/api
 *~
 *.seed
 *.log
-*.csv
 *.dat
 *.out
 *.pid
@@ -88,8 +87,5 @@ jspm_packages
 
 # Yarn
 yarn.lock
-
-# csv files
-fta/*
 
 script

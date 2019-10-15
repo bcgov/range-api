@@ -1,0 +1,17 @@
+[
+  {
+    "pasture_id": 1,
+    "community_type_id": 1,
+    "purpose_of_action": "none",
+    "elevation_id": 2,
+    "shrub_use": 0.8,
+    "name": "My Plant Community",
+    "aspect": "aspect",
+    "url": "http://example.com",
+    "notes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "range_readiness_day": 14,
+    "range_readiness_month": 4,
+    "range_readiness_note": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "approved": false
+  }
+]

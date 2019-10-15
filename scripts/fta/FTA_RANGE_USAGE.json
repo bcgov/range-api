@@ -1,0 +1,22 @@
+{
+    "items": [
+        {
+            "forest_file_id": "RAN000001",
+            "calendar_year": 1995,
+            "authorized_use": 6,
+            "non_use_nonbillable": 0,
+            "non_use_billable": 0,
+            "temp_increase": 0,
+            "total_annual_use": 6
+        },
+        {
+            "forest_file_id": "RAN000002",
+            "calendar_year": 1996,
+            "authorized_use": 6,
+            "non_use_nonbillable": 0,
+            "non_use_billable": 0,
+            "temp_increase": 0,
+            "total_annual_use": 6
+        }
+    ]
+}
