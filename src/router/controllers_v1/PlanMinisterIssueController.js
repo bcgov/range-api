@@ -148,7 +148,12 @@ export default class PlanMinisterIssueController {
       await Promise.all(pastures.map(id =>
         MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id })));
 
-      return res.status(200).json(issue).end();
+      const updatedIssue = {
+        ...issue,
+        pastures,
+      };
+
+      return res.status(200).json(updatedIssue).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: update: fail with error: ${error.message}`);
       throw error;
