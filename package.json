@@ -106,6 +106,9 @@
       "node_modules",
       "src/frontend",
       "src/shared"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__testHelpers__/setup.js"
     ]
   },
   "author": "Jason C. Leach <jason.leach@fullboar.ca>",
