@@ -145,7 +145,7 @@ describe('Test Plan routes', () => {
         const results = res.body;
         expect(results.id).toEqual(1);
         expect(results.statusId).toEqual(12);
-        expect(results.effective_at).toBeDefined();
+        expect(results.effectiveAt).toBeDefined();
       });
   });
 
