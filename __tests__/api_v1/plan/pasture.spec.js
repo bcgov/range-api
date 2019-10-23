@@ -78,6 +78,8 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
   await dm.db.schema.raw(truncate('plan'));
+  await dm.db.schema.raw(truncate('pasture'));
+  await dm.db.schema.raw(truncate('plant_community'));
 };
 
 describe('Test Pasture routes', () => {

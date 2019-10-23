@@ -32,6 +32,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
   await dm.db.schema.raw(truncate('plan'));
+  await dm.db.schema.raw(truncate('management_consideration'));
 };
 
 describe('Test Management Consideration routes', () => {
