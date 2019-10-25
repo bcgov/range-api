@@ -1,6 +1,6 @@
 [
   {
-    "id": 1,
+    "canonical_id": 1,
     "range_name": "XYZ's Range",
     "plan_start_date": "2019-01-21T08:00:00.000Z",
     "plan_end_date": "2022-12-30T08:00:00.000Z",
