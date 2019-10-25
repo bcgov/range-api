@@ -5,6 +5,7 @@ import userMocks from '../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../__mocks__/fixtures/plan_version_mock.json';
 import clientAgreementMocks from '../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../src/libs/db2';
@@ -37,6 +38,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
 };
 
@@ -64,6 +66,7 @@ describe('Test Plan routes', () => {
     await dm.db('client_agreement').insert([clientAgreement]);
     await dm.db('plan').insert([plan]);
     await dm.db('plan_confirmation').insert([planConfirmation]);
+    await dm.db('plan_version').insert(planVersionMocks);
   });
 
   afterEach(async () => {
