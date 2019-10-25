@@ -62,12 +62,25 @@ export default class Plan extends Model {
       'id', 'range_name', 'plan_start_date', 'plan_end_date',
       'notes', 'alt_business_name', 'agreement_id', 'status_id',
       'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
-      'effective_at', 'submitted_at', 'creator_id',
+      'effective_at', 'submitted_at', 'creator_id', 'canonical_id',
     ].map(f => `${Plan.table}.${f}`);
   }
 
   static get table() {
     return 'plan';
+  }
+
+  static async findCurrentVersion(db, canonicalId) {
+    try {
+      const { rows: [currentVersion] } = await db.raw(`
+        SELECT plan.*
+        FROM plan_version, plan
+        WHERE plan_version.canonical_id = ? AND version = -1;
+        `, [canonicalId]);
+      return currentVersion;
+    } catch (e) {
+      return null;
+    }
   }
 
   static async findWithStatusExtension(
