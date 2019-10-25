@@ -29,6 +29,7 @@ import { Router } from 'express';
  * Controller for individual routes related to plan.
  */
 import PlanController from '../controllers_v1/PlanController';
+import PlanVersionController from '../controllers_v1/PlanVersionController';
 import PlanStatusController from '../controllers_v1/PlanStatusController';
 import PlanPastureController from '../controllers_v1/PlanPastureController';
 import PlanScheduleController from '../controllers_v1/PlanScheduleController';
@@ -56,6 +57,12 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(PlanStatus
 
 // create a plan status history
 router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.storeStatusHistory));
+
+//
+// Versions
+//
+
+router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store))
 
 //
 // Pasture
