@@ -21,7 +21,7 @@ export default class ManagementConsideration extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'url', 'consideration_type_id', 'plan_id']
+    return ['id', 'detail', 'url', 'consideration_type_id', 'plan_id', 'canonical_id']
       .map(field => `${this.table}.${field}`);
   }
 

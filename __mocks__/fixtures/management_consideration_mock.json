@@ -1,5 +1,6 @@
 [
   {
+    "canonical_id": 1,
     "consideration_type_id": 2,
     "plan_id": 1,
     "detail": "Details for the consideration",

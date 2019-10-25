@@ -39,7 +39,7 @@ export default class Pasture extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'name', 'allowable_aum', 'grace_days', 'pld_percent',
-      'notes', 'plan_id']
+      'notes', 'plan_id', 'canonical_id']
       .map(field => `${this.table}.${field}`);
   }
 
