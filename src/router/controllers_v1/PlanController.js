@@ -12,6 +12,7 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
+  PlanVersion,
 } = dm;
 
 export default class PlanController {
@@ -25,13 +26,20 @@ export default class PlanController {
    */
   static async show(req, res) {
     const { user, params } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
@@ -91,7 +99,10 @@ export default class PlanController {
         status_id: staffDraftStatus.id,
       });
 
-      const plan = await Plan.create(db, { ...body, creator_id: user.id });
+      const { id } = await Plan.create(db, { ...body, creator_id: user.id, canonical_id: 0 });
+      const plan = await Plan.update(db, { id }, { canonical_id: id });
+
+      await PlanVersion.create(db, { version: -1, plan_id: id, canonical_id: id });
 
       // create unsiged confirmations for AHs
       await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
@@ -109,13 +120,20 @@ export default class PlanController {
    */
   static async update(req, res) {
     const { params, body, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
