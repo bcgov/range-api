@@ -171,7 +171,18 @@ export default class Model {
     return !Number.isNaN(count) ? count : 0;
   }
 
+  /**
+   * Sets `canonical_id` to the value of `canonical_id` || `id`
+   * @param {*} db - knex database object
+   * @param {number} id - ID of the row to update
+   */
+  static async setCanonicalId(db, id) {
+    const data = await this.findById(db, id);
+    return this.update(db, { id }, { canonical_id: data.canonical_id || data.id });
+  }
+
   static async create(db, values) {
+    const fields = this.fields.map(f => f.split('.')[1]);
     // Only the keys returned by the `fields` getter can
     // be used to create a new record (by default). Override for
     // different behaviour.
@@ -193,6 +204,9 @@ export default class Model {
         .returning(this.primaryKey)
         .insert(obj);
 
+      if (fields.includes('canonical_id') && !(values.canonicalId || values.canonical_id)) {
+        await this.setCanonicalId(db, results[0]);
+      }
       return await this.findById(db, results.pop());
     } catch (err) {
       throw err;
