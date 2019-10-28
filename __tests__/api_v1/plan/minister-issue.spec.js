@@ -81,7 +81,12 @@ describe('Test Minister Issue routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 1,
+          canonicalId: res.body.id,
+        });
       });
   });
 
@@ -98,7 +103,12 @@ describe('Test Minister Issue routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 1,
+          planId: 1,
+          canonicalId: 1,
+        });
       });
   });
 

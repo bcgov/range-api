@@ -91,6 +91,7 @@ describe('Test Schedule routes', () => {
           ...body,
           planId: 1,
           id: 2,
+          canonicalId: res.body.id,
         });
       });
   });
@@ -109,7 +110,13 @@ describe('Test Schedule routes', () => {
       .send({ ...body, narative })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, narative, id: 1, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          narative,
+          id: 1,
+          planId: 1,
+          canonicalId: 1,
+        });
       });
   });
 
@@ -140,7 +147,12 @@ describe('Test Schedule routes', () => {
       .send(entryBody)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...entryBody, id: 1, grazingScheduleId: 1 });
+        expect(res.body).toEqual({
+          ...entryBody,
+          id: 1,
+          grazingScheduleId: 1,
+          canonicalId: res.body.id,
+        });
       });
   });
 
@@ -157,7 +169,12 @@ describe('Test Schedule routes', () => {
       .send(entryBody)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...entryBody, id: 1, grazingScheduleId: 1 });
+        expect(res.body).toEqual({
+          ...entryBody,
+          id: 1,
+          grazingScheduleId: 1,
+          canonicalId: res.body.id,
+        });
       });
 
     await request(app)
@@ -177,6 +194,7 @@ describe('Test Schedule routes', () => {
         expect(res.body.grazingScheduleEntries[0]).toEqual({
           ...entryBody,
           id: 1,
+          canonicalId: res.body.id,
           grazingScheduleId: 1,
           livestockType: {
             active: true,

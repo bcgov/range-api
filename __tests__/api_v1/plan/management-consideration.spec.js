@@ -75,7 +75,12 @@ describe('Test Management Consideration routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 1,
+          canonicalId: res.body.id,
+        });
       });
   });
 
@@ -94,7 +99,12 @@ describe('Test Management Consideration routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 1,
+          canonicalId: 2,
+        });
       });
 
     await request(app)
@@ -102,7 +112,13 @@ describe('Test Management Consideration routes', () => {
       .send({ ...body, detail })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1, detail });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 1,
+          detail,
+          canonicalId: 2,
+        });
       });
   });
 
