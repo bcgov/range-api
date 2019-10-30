@@ -82,7 +82,8 @@ export default class Plan extends Model {
     try {
       const { rows: [currentVersion] } = await db.raw(`
         SELECT plan.*
-        FROM plan_version, plan
+        FROM plan_version
+        INNER JOIN plan ON plan_version.plan_id = plan.id
         WHERE plan_version.canonical_id = ? AND version = -1;
         `, [canonicalId]);
       return currentVersion;

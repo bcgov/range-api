@@ -22,17 +22,12 @@ export default class PlanVersionController {
 
 
     try {
-      const { rows: versionRows } = await db.raw(`
-      SELECT plan.*
-      FROM plan_version, plan
-      WHERE plan_version.canonical_id = ? AND version = -1;
-      `, [canonicalId]);
-
-      if (versionRows.length !== 1) {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
         throw errorWithCode('Could not find plan', 404);
       }
 
-      const { id: currentPlanId } = versionRows[0];
+      const { id: currentPlanId } = currentPlan;
 
       const agreementId = await Plan.agreementForPlanId(db, currentPlanId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
