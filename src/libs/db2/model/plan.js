@@ -33,6 +33,14 @@ import User from './user';
 import InvasivePlantChecklist from './invasiveplantchecklist';
 import AdditionalRequirement from './additionalrequirement';
 import ManagementConsideration from './managementconsideration';
+import PlantCommunity from './plantcommunity';
+import IndicatorPlant from './indicatorplant';
+import MonitoringArea from './monitoringarea';
+import MonitoringAreaPurpose from './monitoringareapurpose';
+import PlantCommunityAction from './plantcommunityaction';
+import GrazingScheduleEntry from './grazingscheduleentry';
+import MinisterIssueAction from './ministerissueaction';
+import MinisterIssuePasture from './ministerissuepasture';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -140,6 +148,229 @@ export default class Plan extends Model {
 
     const [result] = results;
     return result.agreement_id;
+  }
+
+  static async duplicateAll(db, planId) {
+    const planRow = await Plan.findById(db, planId);
+    const plan = new Plan(planRow, db);
+
+    await plan.eagerloadAllOneToMany();
+
+    const { id: oldPlanId, ...planData } = planRow;
+    const newPlan = await Plan.create(db, {
+      ...planData,
+    });
+
+    try {
+      db.raw('BEGIN');
+
+      const pasturePromises = plan.pastures.map(
+        async ({ id: pastureId, ...pasture }) => {
+          const newPasture = await Pasture.create(db, {
+            ...pasture,
+            plan_id: newPlan.id,
+          });
+
+          const plantCommunityPromises = pasture.plantCommunities.map(
+            async ({ id: plantCommunityId, ...plantCommunity }) => {
+              const newPlantCommunity = await PlantCommunity.create(db, {
+                ...plantCommunity,
+                pasture_id: newPasture.id,
+              });
+
+              const indicatorPlantPromises = plantCommunity.indicatorPlants.map(
+                async ({ id: indicatorPlantId, ...indicatorPlant }) => {
+                  const newIndicatorPlant = await IndicatorPlant.create(db, {
+                    ...indicatorPlant,
+                    plant_community_id: newPlantCommunity.id,
+                  });
+
+                  return newIndicatorPlant;
+                },
+              );
+
+              const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
+
+              const monitoringAreaPromises = plantCommunity.monitoringAreas.map(
+                async ({ id: monitoringAreaId, ...monitoringArea }) => {
+                  const newMonitoringArea = await MonitoringArea.create(db, {
+                    ...monitoringArea,
+                    plant_community_id: newPlantCommunity.id,
+                  });
+
+                  const purposePromises = monitoringArea.purposes.map(
+                    async ({ id: purposeId, ...purpose }) => {
+                      const newPurpose = await MonitoringAreaPurpose.create(db, {
+                        ...purpose,
+                        monitoring_area_id: newMonitoringArea.id,
+                      });
+
+                      return newPurpose;
+                    },
+                  );
+
+                  const newPurposes = await Promise.all(purposePromises);
+
+                  return {
+                    ...newMonitoringArea,
+                    monitoringAreaPurposes: newPurposes,
+                  };
+                },
+              );
+
+              const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
+
+              const actionPromises = plantCommunity.plantCommunityActions.map(
+                async ({ id: actionId, ...action }) => {
+                  const newAction = await PlantCommunityAction.create(db, {
+                    ...action,
+                    plant_community_id: newPlantCommunity.id,
+                  });
+
+                  return newAction;
+                },
+              );
+
+              const newActions = await Promise.all(actionPromises);
+
+              return {
+                ...newPlantCommunity,
+                indicatorPlants: newIndicatorPlants,
+                monitoringAreas: newMonitoringAreas,
+                plantCommunityActions: newActions,
+              };
+            },
+          );
+
+          const newPlantCommunities = await Promise.all(plantCommunityPromises);
+
+
+          return {
+            ...newPasture,
+            plantCommunities: newPlantCommunities,
+            original: { id: pastureId, ...pasture },
+          };
+        },
+      );
+
+      const newPastures = await Promise.all(pasturePromises);
+
+      const schedulePromises = plan.grazingSchedules.map(
+        async ({ id: scheduleId, ...schedule }) => {
+          const newSchedule = await GrazingSchedule.create(db, {
+            ...schedule,
+            plan_id: newPlan.id,
+          });
+
+          const entryPromises = schedule.grazingScheduleEntries.map(
+            async ({ id: entryId, ...entry }) => {
+              const pasture = newPastures.find(p => p.original.id === entry.pastureId);
+              const newEntry = await GrazingScheduleEntry.create(db, {
+                ...entry,
+                grazing_schedule_id: newSchedule.id,
+                pasture_id: pasture.id,
+              });
+
+              return newEntry;
+            },
+          );
+
+          const newEntries = await Promise.all(entryPromises);
+
+          return {
+            ...newSchedule,
+            grazingScheduleEntries: newEntries,
+          };
+        },
+      );
+
+      const newGrazingSchedules = await Promise.all(schedulePromises);
+
+      const additionalRequirementPromises = plan.additionalRequirements.map(
+        async ({ id: requirementId, ...requirement }) => {
+          const newRequirement = await AdditionalRequirement.create(db, {
+            ...requirement,
+            plan_id: newPlan.id,
+          });
+
+          return newRequirement;
+        },
+      );
+
+      const newAdditionalRequirements = await Promise.all(additionalRequirementPromises);
+
+      const ministerIssuePromises = plan.ministerIssues.map(
+        async ({ id: issueId, ...issue }) => {
+          const newIssue = await MinisterIssue.create(db, {
+            ...issue,
+            plan_id: newPlan.id,
+          });
+
+          const actionPromises = issue.ministerIssueActions.map(
+            async ({ id: actionId, ...action }) => {
+              const newAction = await MinisterIssueAction.create(db, {
+                ...action,
+                minister_issue_id: newIssue.id,
+              });
+
+
+              return newAction;
+            },
+          );
+
+          const newActions = await Promise.all(actionPromises);
+
+          const ministerPasturePromises = issue.pastures.map(
+            async (pastureId) => {
+              const pasture = newPastures.find(p => p.original.id === pastureId);
+              const newPasture = await MinisterIssuePasture.create(db, {
+                pasture_id: pasture.id,
+                minister_issue_id: newIssue.id,
+              });
+
+              return newPasture;
+            },
+          );
+
+          const newMinisterPastures = await Promise.all(ministerPasturePromises);
+
+          return {
+            ...newIssue,
+            ministerIssueActions: newActions,
+            ministerIssuePastures: newMinisterPastures,
+          };
+        },
+      );
+
+      const newMinisterIssues = await Promise.all(ministerIssuePromises);
+
+      const managementConsiderationPromises = plan.managementConsiderations.map(
+        async ({ id: considerationId, ...consideration }) => {
+          const newConsideration = await ManagementConsideration.create(db, {
+            ...consideration,
+            plan_id: newPlan.id,
+          });
+
+          return newConsideration;
+        },
+      );
+
+      const newConsiderations = await Promise.all(managementConsiderationPromises);
+
+      db.raw('COMMIT');
+
+      return {
+        ...newPlan,
+        pastures: newPastures,
+        additionalRequirements: newAdditionalRequirements,
+        ministerIssues: newMinisterIssues,
+        managementConsiderations: newConsiderations,
+        grazingSchedules: newGrazingSchedules,
+      };
+    } catch (e) {
+      db.raw('ROLLBACK');
+      throw e;
+    }
   }
 
   async eagerloadAllOneToMany() {
