@@ -21,10 +21,7 @@ export default class PlanVersionController {
     checkRequiredFields(['planId'], 'body', req);
 
 
-    // Wrap all queries in a transaction
     try {
-      await db.raw('BEGIN');
-
       const { rows: versionRows } = await db.raw(`
       SELECT plan.*
       FROM plan_version, plan
@@ -35,16 +32,12 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find plan', 404);
       }
 
-
-      const { id: currentPlanId, ...currentPlan } = versionRows[0];
+      const { id: currentPlanId } = versionRows[0];
 
       const agreementId = await Plan.agreementForPlanId(db, currentPlanId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      // TODO: Replace this with duplication logic for ALL tables
-      const newPlan = await Plan.create(db, {
-        ...currentPlan,
-      });
+      const newPlan = await Plan.duplicateAll(db, currentPlanId);
 
       // Create new plan version record to point to original plan. This will be
       // the point-in-time snapshot of the plan. The original plan should no
@@ -59,13 +52,10 @@ export default class PlanVersionController {
         planId: newPlan.id,
       });
 
-      await db.raw('COMMIT');
+      return res.status(200).json(newPlan).end();
     } catch (error) {
-      logger.log(error);
-      await db.raw('ROLLBACK');
+      logger.error(error);
       throw error;
     }
-
-    return res.status(200).json({ message: 'Created new version' }).end();
   }
 }
