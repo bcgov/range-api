@@ -56,13 +56,21 @@ export default class PlanPastureController {
    */
   static async update(req, res) {
     const { params, body, user } = req;
-    const { planId, pastureId } = params;
+    const { planId: canonicalId, pastureId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId'], 'params', req,
     );
 
     try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -73,7 +81,7 @@ export default class PlanPastureController {
 
       const updatedPasture = await Pasture.update(
         db,
-        { id: pastureId },
+        { canonical_id: pastureId, plan_id: planId },
         { ...body, plan_id: planId },
       );
 

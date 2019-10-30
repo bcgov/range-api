@@ -5,6 +5,7 @@ import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import plantCommunityMocks from '../../../__mocks__/fixtures/plant_community_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
@@ -77,6 +78,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
   await dm.db.schema.raw(truncate('pasture'));
   await dm.db.schema.raw(truncate('plant_community'));
@@ -98,6 +100,7 @@ describe('Test Pasture routes', () => {
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
     const plan = planMocks[0];
+    const planVersion = planVersionMocks[0];
     const pasture = pastureMocks[0];
     const plantCommunity = plantCommunityMocks[0];
     const clientAgreement = clientAgreementMocks[0];
@@ -107,6 +110,7 @@ describe('Test Pasture routes', () => {
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
     await dm.db('plan').insert([plan]);
+    await dm.db('plan_version').insert([planVersion]);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
     await dm.db('plant_community').insert([plantCommunity]);
@@ -152,6 +156,37 @@ describe('Test Pasture routes', () => {
         expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
         expect(results.canonicalId).toEqual(1);
+      });
+  });
+
+  test('Updating a pasture affects the current version of the plan', async () => {
+    const name = "Roop's Pasture 2.0";
+
+    const [planId] = await dm.db('plan')
+      .insert(planMocks[0])
+      .returning('id');
+
+
+    await dm.db('pasture')
+      .insert({ ...pastureMocks[0], plan_id: planId });
+
+    await dm.db('plan_version')
+      .where({ version: -1, canonical_id: 1 })
+      .update({ plan_id: planId, version: -1, canonical_id: 1 });
+    await dm.db('plan_version')
+      .where({ version: 1, canonical_id: 1 })
+      .insert({ plan_id: 1, version: 1, canonical_id: 1 });
+
+    await request(app)
+      .put(`${baseUrl}/1`)
+      .send({ ...pastureBody, name })
+      .expect(200)
+      .expect((res) => {
+        const results = res.body;
+        expect(results.id).toEqual(2);
+        expect(results.name).toEqual(name);
+        expect(results.canonicalId).toEqual(1);
+        expect(results.planId).toEqual(planId);
       });
   });
 
