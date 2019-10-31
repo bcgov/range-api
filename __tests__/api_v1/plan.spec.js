@@ -20,7 +20,6 @@ const { canAccessAgreement } = passport.aUser;
 const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan';
 const body = {
-  id: 2,
   rangeName: 'Create Admin Test',
   planStartDate: '2019-01-21T08:00:00.000Z',
   planEndDate: '2022-12-30T08:00:00.000Z',
@@ -57,14 +56,13 @@ describe('Test Plan routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const clientAgreement = clientAgreementMocks[0];
     const planConfirmation = planConfirmationMocks[0];
     await dm.db('user_account').insert([user]);
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('plan_version').insert(planVersionMocks);
   });
@@ -81,7 +79,10 @@ describe('Test Plan routes', () => {
       .get(`${baseUrl}/1`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .expect(res => expect(res.body.id).toEqual(1));
+      .expect((res) => {
+        expect(res.body.id).toEqual(2);
+        expect(res.body.canonicalId).toEqual(1);
+      });
   });
 
   // GET /plan/:planId where planId does not exist
@@ -122,11 +123,11 @@ describe('Test Plan routes', () => {
 
     await request(app)
       .put(`${baseUrl}/1`)
-      .send({ ...body, id: 1, rangeName })
+      .send({ ...body, rangeName })
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(1);
+        expect(results.id).toEqual(2);
         expect(results.rangeName).toEqual(rangeName);
       });
   });
@@ -146,7 +147,8 @@ describe('Test Plan routes', () => {
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(1);
+        expect(results.id).toEqual(2);
+        expect(results.canonicalId).toEqual(1);
         expect(results.statusId).toEqual(12);
         expect(results.effectiveAt).toBeDefined();
       });

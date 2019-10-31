@@ -149,8 +149,8 @@ describe('Test Pasture routes', () => {
         });
       });
 
-    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(1);
-    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(1);
+    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(0);
+    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(2);
   });
 
   test('Trying to create a pasture with an already-used id should throw a 500 error', async () => {
@@ -165,23 +165,17 @@ describe('Test Pasture routes', () => {
 
     const planId = 2;
 
-    await dm.db('pasture')
-      .insert({ ...pastureMocks[0], plan_id: planId });
-
     await request(app)
       .put(`${baseUrl}/1`)
       .send({ ...pastureBody, name })
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(2);
+        expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
         expect(results.canonicalId).toEqual(1);
         expect(results.planId).toEqual(planId);
       });
-
-    const [otherPasture] = await dm.db('pasture').where({ id: 1 });
-    expect(otherPasture.name).not.toEqual(name);
   });
 
   test('Creating a plant community', async () => {
@@ -229,16 +223,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a plant community', async () => {
-    const name = 'My plant community';
-    const id = 4;
-    const planId = 2;
-
-    const [pastureId] = await dm.db('pasture')
-      .insert({ ...pastureMocks[0], plan_id: planId })
-      .returning('id');
-
-    await dm.db('plant_community')
-      .insert({ ...plantCommunityMocks[0], pasture_id: pastureId, id });
+    const name = 'My updated plant community';
 
     await request(app)
       .put(`${baseUrl}/1/plant-community/1`)
@@ -246,14 +231,11 @@ describe('Test Pasture routes', () => {
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(id);
+        expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
         expect(results.canonicalId).toEqual(1);
-        expect(results.pastureId).toEqual(pastureId);
+        expect(results.pastureId).toEqual(1);
       });
-
-    const [otherPlantCommunity] = await dm.db('plant_community').where({ id: 1 });
-    expect(otherPlantCommunity.name).not.toEqual(name);
   });
 
   test('Updating a non-existant plant community throws a 404 error', async () => {

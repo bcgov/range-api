@@ -77,7 +77,6 @@ describe('Test Plan routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const pasture = pastureMocks[0];
     const plantCommunity = plantCommunityMocks[0];
     const plantCommunityAction = plantCommunityActionMocks[0];
@@ -97,7 +96,7 @@ describe('Test Plan routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
     await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
@@ -136,7 +135,7 @@ describe('Test Plan routes', () => {
     // canonical ID
     const planId = 1;
 
-    const [originalPlan] = await dm.db('plan');
+    const [originalPlan] = await dm.db('plan').where({ id: 2 });
 
     await request(app)
       .post(baseUrl)
@@ -152,7 +151,7 @@ describe('Test Plan routes', () => {
 
     const [newVersion] = await dm.db('plan_version')
       .where('canonical_id', planId)
-      .where('version', 3);
+      .where('version', 2);
 
     expect(newVersion.plan_id).toEqual(originalPlan.id);
     expect(newVersion.canonical_id).toEqual(planId);
@@ -160,7 +159,7 @@ describe('Test Plan routes', () => {
 
     expect(
       await dm.db('plan'),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
   });
 
   test('Throws a 404 error if the plan does not exist with that canonical ID', async () => {
@@ -195,7 +194,7 @@ describe('Test Plan routes', () => {
     const ministerIssuePastures = await dm.db('minister_issue_pasture');
     const managementConsiderations = await dm.db('management_consideration');
 
-    expect(plans).toHaveLength(2);
+    expect(plans).toHaveLength(3);
     expect(pastures).toHaveLength(2);
     expect(plantCommunities).toHaveLength(2);
     expect(indicatorPlants).toHaveLength(2);
