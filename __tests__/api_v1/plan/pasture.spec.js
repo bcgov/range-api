@@ -188,6 +188,9 @@ describe('Test Pasture routes', () => {
         expect(results.canonicalId).toEqual(1);
         expect(results.planId).toEqual(planId);
       });
+
+    const [otherPasture] = await dm.db('pasture').where({ id: 1 });
+    expect(otherPasture.name).not.toEqual(name);
   });
 
   test('Creating a plant community', async () => {
