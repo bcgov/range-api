@@ -89,12 +89,24 @@ export default class PlanMinisterIssueController {
    */
   static async store(req, res) {
     const { body, params, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
     const { pastures } = body;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 404);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const data = await PlanMinisterIssueController.validate(user, planId, body);
@@ -122,19 +134,35 @@ export default class PlanMinisterIssueController {
    */
   static async update(req, res) {
     const { body, params, user } = req;
-    const { planId, issueId } = params;
+    const { planId: canonicalId, issueId } = params;
     const { pastures } = body;
 
     checkRequiredFields(
       ['planId', 'issueId'], 'params', req,
     );
 
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       // Validating data
       const data = await PlanMinisterIssueController.validate(user, planId, body);
 
       // update the existing issue.
-      const issue = await MinisterIssue.update(db, { id: issueId }, data);
+      const issue = await MinisterIssue.update(
+        db,
+        { canonical_id: issueId, plan_id: planId },
+        data,
+      );
 
       // remove the existing link between the issue and it's related pastures.
       const issuePastures = await Promise.all(pastures.map(id =>
@@ -167,15 +195,28 @@ export default class PlanMinisterIssueController {
    */
   static async destroy(req, res) {
     const { params, user } = req;
-    const { planId, issueId } = params;
+    const { planId: canonicalId, issueId } = params;
 
     checkRequiredFields(
       ['planId', 'issueId'], 'params', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      const results = await MinisterIssue.removeById(db, issueId);
+      const results = await MinisterIssue.remove(db, { canonical_id: issueId, plan_id: planId });
       return res.status(204).json({ success: (results.length > 0) }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: destroy: fail with error: ${error.message}`);
