@@ -47,4 +47,11 @@ export default class Plan extends Model {
     assert(where, 'Plan: find: require: where');
     return Plan.loadFixtures();
   }
+
+  static async findCurrentVersion(db, canonicalId) {
+    assert(db, 'Plan: findCurrentVersion: require: db');
+    assert(canonicalId, 'Plan: findCurrentVersion: require: canonicalId');
+
+    return Plan.loadFixtures()[0];
+  }
 }
