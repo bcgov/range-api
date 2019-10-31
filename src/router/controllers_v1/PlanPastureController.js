@@ -130,6 +130,56 @@ export default class PlanPastureController {
   }
 
   /**
+   * Update a plant community
+   * @param {*} req : express req
+   * @param {*} res : express res
+   */
+
+  static async updatePlantCommunity(req, res) {
+    const { params, body, user } = req;
+    const { planId: canonicalId, pastureId, communityId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], 'params', req,
+    );
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+
+    if (!pasture) {
+      throw errorWithCode("Pasture doesn't exist", 404);
+    }
+
+    const plantCommunity = await PlantCommunity.findOne(db, {
+      canonical_id: communityId,
+      pasture_id: pasture.id,
+    });
+
+    if (!plantCommunity) {
+      throw errorWithCode("Plant community doesn't exist", 404);
+    }
+
+    const updatedPlantCommunity = await PlantCommunity.update(
+      db,
+      { id: plantCommunity.id },
+      { ...body, plan_id: planId, pasture_id: pasture.id, canonical_id: communityId },
+    );
+
+    return res.json(updatedPlantCommunity).end();
+  }
+
+
+  /**
    * Store Action for Plant community of plan.
    * @param {*} req : express req
    * @param {*} res : express res

@@ -77,6 +77,9 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureControlle
 // create a plant community
 router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(PlanPastureController.storePlatCommunity));
 
+// Update an existing plant community
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.updatePlantCommunity));
+
 // create a plant community action
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action', asyncMiddleware(PlanPastureController.storePlantCommunityAction));
 
