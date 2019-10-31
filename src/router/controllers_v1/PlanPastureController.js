@@ -25,11 +25,19 @@ export default class PlanPastureController {
    * @param {*} res : express res
    */
   static async store(req, res) {
-    const { params: { planId }, body, user } = req;
+    const { params: { planId: canonicalId }, body, user } = req;
 
-    if (!planId) {
+    if (!canonicalId) {
       throw errorWithCode('planId must be provided in path', 400);
     }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -40,7 +48,7 @@ export default class PlanPastureController {
       delete body.planId;
       delete body.plan_id;
 
-      const pasture = await Pasture.create(db, { ...body, ...{ plan_id: planId } });
+      const pasture = await Pasture.create(db, { ...body, plan_id: planId });
 
       return res.status(200).json(pasture).end();
     } catch (err) {

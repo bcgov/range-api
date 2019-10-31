@@ -99,8 +99,6 @@ describe('Test Pasture routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
-    const planVersion = planVersionMocks[0];
     const pasture = pastureMocks[0];
     const plantCommunity = plantCommunityMocks[0];
     const clientAgreement = clientAgreementMocks[0];
@@ -109,8 +107,8 @@ describe('Test Pasture routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
-    await dm.db('plan_version').insert([planVersion]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
     await dm.db('plant_community').insert([plantCommunity]);
@@ -131,10 +129,28 @@ describe('Test Pasture routes', () => {
         expect(res.body).toEqual({
           ...pastureBody,
           id: 2,
-          planId: 1,
+          planId: 2,
           canonicalId: res.body.id,
         });
       });
+  });
+
+  test('Creating a new pasture adds it to the current version plan', async () => {
+    await request(app)
+      .post(baseUrl)
+      .send(pastureBody)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toEqual({
+          ...pastureBody,
+          id: 2,
+          planId: 2,
+          canonicalId: res.body.id,
+        });
+      });
+
+    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(1);
+    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(1);
   });
 
   test('Trying to create a pasture with an already-used id should throw a 500 error', async () => {
@@ -144,38 +160,13 @@ describe('Test Pasture routes', () => {
       .expect(500);
   });
 
-  test('Updating a pasture', async () => {
-    const name = "Roop's Pasture 2.0";
-
-    await request(app)
-      .put(`${baseUrl}/1`)
-      .send({ ...pastureBody, id: 1, name })
-      .expect(200)
-      .expect((res) => {
-        const results = res.body;
-        expect(results.id).toEqual(1);
-        expect(results.name).toEqual(name);
-        expect(results.canonicalId).toEqual(1);
-      });
-  });
-
   test('Updating a pasture affects the current version of the plan', async () => {
     const name = "Roop's Pasture 2.0";
 
-    const [planId] = await dm.db('plan')
-      .insert(planMocks[0])
-      .returning('id');
-
+    const planId = 2;
 
     await dm.db('pasture')
       .insert({ ...pastureMocks[0], plan_id: planId });
-
-    await dm.db('plan_version')
-      .where({ version: -1, canonical_id: 1 })
-      .update({ plan_id: planId, version: -1, canonical_id: 1 });
-    await dm.db('plan_version')
-      .where({ version: 1, canonical_id: 1 })
-      .insert({ plan_id: 1, version: 1, canonical_id: 1 });
 
     await request(app)
       .put(`${baseUrl}/1`)
@@ -240,10 +231,7 @@ describe('Test Pasture routes', () => {
   test('Updating a plant community', async () => {
     const name = 'My plant community';
     const id = 4;
-
-    const [planId] = await dm.db('plan')
-      .insert(planMocks[0])
-      .returning('id');
+    const planId = 2;
 
     const [pastureId] = await dm.db('pasture')
       .insert({ ...pastureMocks[0], plan_id: planId })
@@ -251,13 +239,6 @@ describe('Test Pasture routes', () => {
 
     await dm.db('plant_community')
       .insert({ ...plantCommunityMocks[0], pasture_id: pastureId, id });
-
-    await dm.db('plan_version')
-      .where({ version: -1, canonical_id: 1 })
-      .update({ plan_id: planId, version: -1, canonical_id: 1 });
-    await dm.db('plan_version')
-      .where({ version: 1, canonical_id: 1 })
-      .insert({ plan_id: 1, version: 1, canonical_id: 1 });
 
     await request(app)
       .put(`${baseUrl}/1/plant-community/1`)

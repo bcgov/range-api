@@ -2,13 +2,10 @@
   {
     "version": -1,
     "canonical_id": 1,
-    "plan_id": 1
+    "plan_id": 2
   },
   {
-    "canonical_id": 1,
-    "plan_id": 1
-  },
-  {
+    "version": 1,
     "canonical_id": 1,
     "plan_id": 1
   }
