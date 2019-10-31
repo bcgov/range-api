@@ -358,6 +358,13 @@ export default class Plan extends Model {
 
       const newConsiderations = await Promise.all(managementConsiderationPromises);
 
+      const { id, ...invasivePlantChecklist } = plan.invasivePlantChecklist;
+
+      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(db, {
+        ...invasivePlantChecklist,
+        plan_id: newPlan.id,
+      });
+
       db.raw('COMMIT');
 
       return {
@@ -367,6 +374,7 @@ export default class Plan extends Model {
         ministerIssues: newMinisterIssues,
         managementConsiderations: newConsiderations,
         grazingSchedules: newGrazingSchedules,
+        invasivePlantChecklist: newInvasivePlantChecklist,
       };
     } catch (e) {
       db.raw('ROLLBACK');

@@ -13,6 +13,7 @@ const tables = [
   'minister_issue_action',
   'minister_issue_pasture',
   'management_consideration',
+  'invasive_plant_checklist',
 ];
 
 exports.up = async (knex) => {

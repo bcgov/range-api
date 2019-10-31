@@ -20,11 +20,23 @@ export default class PlanInvasivePlantController {
    */
   static async store(req, res) {
     const { body, params, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -50,11 +62,23 @@ export default class PlanInvasivePlantController {
    */
   static async update(req, res) {
     const { body, params, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId, checklistId } = params;
 
     checkRequiredFields(
       ['planId', 'checklistId'], 'params', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -62,7 +86,7 @@ export default class PlanInvasivePlantController {
 
       const updatedChecklist = await InvasivePlantChecklist.update(
         db,
-        { plan_id: planId },
+        { canonical_id: checklistId, plan_id: planId },
         body,
       );
 

@@ -19,6 +19,7 @@ import ministerIssueMocks from '../../../__mocks__/fixtures/minister_issue_mock.
 import ministerIssueActionMocks from '../../../__mocks__/fixtures/minister_issue_action_mock.json';
 import ministerIssuePastureMocks from '../../../__mocks__/fixtures/minister_issue_pasture_mock.json';
 import managementConsiderationMocks from '../../../__mocks__/fixtures/management_consideration_mock.json';
+import invasivePlantMocks from '../../../__mocks__/fixtures/invasive_plant_mock.json'
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -55,6 +56,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plant_community'));
   await dm.db.schema.raw(truncate('plant_community_action'));
   await dm.db.schema.raw(truncate('pasture'));
+  await dm.db.schema.raw(truncate('invasive_plant_checklist'));
   await dm.db.schema.raw(truncate('plan'));
   await dm.db.schema.raw(truncate('plan_version'));
 };
@@ -112,6 +114,7 @@ describe('Test Plan routes', () => {
     await dm.db('minister_issue_action').insert([ministerIssueAction]);
     await dm.db('minister_issue_pasture').insert([ministerIssuePasture]);
     await dm.db('management_consideration').insert([managementConsideration]);
+    await dm.db('invasive_plant_checklist').insert(invasivePlantMocks);
   });
 
   afterEach(async () => {
