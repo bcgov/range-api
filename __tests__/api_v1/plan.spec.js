@@ -148,7 +148,7 @@ describe('Test Plan routes', () => {
       });
   });
 
-  test.only("Fetching a plan doesn't include any canonical ids in the responses", async () => {
+  test("Fetching a plan doesn't include any canonical ids in the responses", async () => {
     await request(app)
       .get(`${baseUrl}/1`)
       .expect(200)
