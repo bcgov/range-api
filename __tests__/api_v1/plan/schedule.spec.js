@@ -92,7 +92,6 @@ describe('Test Schedule routes', () => {
           ...body,
           planId: 2,
           id: 2,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -116,7 +115,6 @@ describe('Test Schedule routes', () => {
           narative,
           id: 1,
           planId: 2,
-          canonicalId: 1,
         });
       });
   });
@@ -152,7 +150,6 @@ describe('Test Schedule routes', () => {
           ...entryBody,
           id: 1,
           grazingScheduleId: 1,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -174,7 +171,6 @@ describe('Test Schedule routes', () => {
           ...entryBody,
           id: 1,
           grazingScheduleId: 1,
-          canonicalId: res.body.id,
         });
       });
 
@@ -195,7 +191,6 @@ describe('Test Schedule routes', () => {
         expect(res.body.grazingScheduleEntries[0]).toEqual({
           ...entryBody,
           id: 1,
-          canonicalId: res.body.id,
           grazingScheduleId: 1,
           livestockType: {
             active: true,
