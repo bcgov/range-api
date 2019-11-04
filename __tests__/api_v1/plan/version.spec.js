@@ -127,7 +127,6 @@ describe('Test Plan routes', () => {
     const planId = 1;
     await request(app)
       .post(baseUrl)
-      .send({ ...body, planId })
       .expect(200);
 
     const versions = await dm.db('plan_version').where('canonical_id', planId);
@@ -142,7 +141,6 @@ describe('Test Plan routes', () => {
 
     await request(app)
       .post(baseUrl)
-      .send({ ...body, planId })
       .expect(200);
 
     const [currentVersion] = await dm.db('plan_version')
@@ -166,19 +164,14 @@ describe('Test Plan routes', () => {
   });
 
   test('Throws a 404 error if the plan does not exist with that canonical ID', async () => {
-    const planId = 5;
-
     await request(app)
-      .post(baseUrl)
-      .send({ planId })
+      .post('/api/v1/plan/10/version')
       .expect(404);
   });
 
   test('Duplicates all existing records for a plan, keeping the canonical IDs the same', async () => {
-    const planId = 1;
     await request(app)
       .post(baseUrl)
-      .send({ ...body, planId })
       .expect(200);
 
 
