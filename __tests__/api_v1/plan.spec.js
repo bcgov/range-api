@@ -80,8 +80,7 @@ describe('Test Plan routes', () => {
       .expect(200)
       .expect('Content-Type', /json/)
       .expect((res) => {
-        expect(res.body.id).toEqual(2);
-        expect(res.body.canonicalId).toEqual(1);
+        expect(res.body.id).toEqual(1);
       });
   });
 
@@ -127,7 +126,7 @@ describe('Test Plan routes', () => {
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(2);
+        expect(results.id).toEqual(1);
         expect(results.rangeName).toEqual(rangeName);
       });
   });
@@ -147,8 +146,7 @@ describe('Test Plan routes', () => {
       .expect(200)
       .expect((res) => {
         const results = res.body;
-        expect(results.id).toEqual(2);
-        expect(results.canonicalId).toEqual(1);
+        expect(results.id).toEqual(1);
         expect(results.statusId).toEqual(12);
         expect(results.effectiveAt).toBeDefined();
       });

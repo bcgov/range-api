@@ -56,7 +56,9 @@ export default class PlanController {
       await plan.eagerloadAllOneToMany();
       plan.agreement = agreement;
 
-      return res.status(200).json(plan).end();
+      const { canonicalId: planCanonicalId, ...planData } = plan;
+
+      return res.status(200).json({ ...planData, id: planCanonicalId }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
@@ -100,14 +102,14 @@ export default class PlanController {
       });
 
       const { id } = await Plan.create(db, { ...body, creator_id: user.id, canonical_id: 0 });
-      const plan = await Plan.update(db, { id }, { canonical_id: id });
+      const { canonicalId: newCanonicalId, ...plan } = await Plan.update(db, { id }, { canonical_id: id });
 
       await PlanVersion.create(db, { version: -1, plan_id: id, canonical_id: id });
 
       // create unsiged confirmations for AHs
       await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
 
-      return res.status(200).json(plan).end();
+      return res.status(200).json({ ...plan, id: newCanonicalId }).end();
     } catch (err) {
       throw err;
     }
@@ -151,7 +153,9 @@ export default class PlanController {
       agreement.transformToV1();
       plan.agreement = agreement;
 
-      return res.status(200).json(plan).end();
+      const { canonicalId: updatedCanonicalId, ...updatedPlan } = plan;
+
+      return res.status(200).json({ ...updatedPlan, id: updatedCanonicalId }).end();
     } catch (err) {
       throw err;
     }
@@ -180,8 +184,8 @@ export default class PlanController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const requirement = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
-      return res.status(200).json(requirement).end();
+      const { requirementCanonicalId, ...requirement } = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+      return res.status(200).json({ ...requirement, id: requirementCanonicalId }).end();
     } catch (error) {
       throw error;
     }
