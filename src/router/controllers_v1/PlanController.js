@@ -1,5 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { checkRequiredFields } from '../../libs/utils';
+import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -58,7 +58,9 @@ export default class PlanController {
 
       const { canonicalId: planCanonicalId, ...planData } = plan;
 
-      return res.status(200).json({ ...planData, id: planCanonicalId }).end();
+      const formattedPlanData = deepMapKeys(planData, key => (key === 'canonicalId' ? 'id' : key));
+
+      return res.status(200).json({ ...formattedPlanData, id: planCanonicalId }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
