@@ -130,7 +130,6 @@ describe('Test Pasture routes', () => {
           ...pastureBody,
           id: 2,
           planId: 2,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -145,7 +144,6 @@ describe('Test Pasture routes', () => {
           ...pastureBody,
           id: 2,
           planId: 2,
-          canonicalId: res.body.id,
         });
       });
 
@@ -173,7 +171,6 @@ describe('Test Pasture routes', () => {
         const results = res.body;
         expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
-        expect(results.canonicalId).toEqual(1);
         expect(results.planId).toEqual(planId);
       });
   });
@@ -188,7 +185,6 @@ describe('Test Pasture routes', () => {
           ...plantCommunityBody,
           id: 2,
           pastureId: 1,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -217,7 +213,6 @@ describe('Test Pasture routes', () => {
           ...plantCommunityActionBody,
           id: 1,
           plantCommunityId: 1,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -233,7 +228,6 @@ describe('Test Pasture routes', () => {
         const results = res.body;
         expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
-        expect(results.canonicalId).toEqual(1);
         expect(results.pastureId).toEqual(1);
       });
   });
@@ -276,7 +270,6 @@ describe('Test Pasture routes', () => {
           ...indicatorPlantBody,
           id: 1,
           plantCommunityId: 1,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -314,7 +307,6 @@ describe('Test Pasture routes', () => {
           ...monitoringAreaBody,
           id: 1,
           plantCommunityId: 1,
-          canonicalId: res.body.id,
           purposes: [
             {
               canonicalId: 1,
