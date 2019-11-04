@@ -40,7 +40,7 @@ export default class PlanMinisterIssueController {
       // associated to the issue belong to the current plan.
       const plan = await Plan.findById(db, planId);
       await plan.fetchPastures();
-      const okPastureIds = plan.pastures.map(pasture => pasture.id);
+      const okPastureIds = plan.pastures.map(pasture => pasture.canonicalId);
       const status = pastures.every(i => okPastureIds.includes(i));
       if (!status) {
         throw errorWithCode('Some pastures do not belong to the current user ', 400);
