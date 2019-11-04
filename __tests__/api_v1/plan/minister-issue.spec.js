@@ -87,7 +87,6 @@ describe('Test Minister Issue routes', () => {
           ...body,
           id: 2,
           planId: 2,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -109,7 +108,6 @@ describe('Test Minister Issue routes', () => {
           ...body,
           id: 1,
           planId: 2,
-          canonicalId: 1,
         });
       });
   });

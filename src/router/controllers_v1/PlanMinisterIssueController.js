@@ -115,12 +115,12 @@ export default class PlanMinisterIssueController {
         MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
       if (promises) await Promise.all(promises);
 
-      const createdIssue = {
+      const { canonicalId: issueCanonicalId, ...createdIssue } = {
         ...issue,
         pastures,
       };
 
-      return res.status(200).json(createdIssue).end();
+      return res.status(200).json({ ...createdIssue, id: issueCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: store: fail with error: ${error.message}`);
       throw error;
@@ -176,12 +176,12 @@ export default class PlanMinisterIssueController {
       await Promise.all(pastures.map(id =>
         MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id })));
 
-      const updatedIssue = {
+      const { canonicalId: issueCanonicalId, ...updatedIssue } = {
         ...issue,
         pastures,
       };
 
-      return res.status(200).json(updatedIssue).end();
+      return res.status(200).json({ ...updatedIssue, id: issueCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueController: update: fail with error: ${error.message}`);
       throw error;
