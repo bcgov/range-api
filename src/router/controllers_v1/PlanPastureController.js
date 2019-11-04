@@ -326,9 +326,14 @@ export default class PlanPastureController {
         db, { monitoring_area_id: monitoringArea.id },
       );
 
+      const purposes = monitoringArea.purposes.map(({ canonicalId: purposeCanonicalId, ...purpose }) => ({
+        ...purpose,
+        id: purposeCanonicalId,
+      }));
+
       const { canonicalId: areaCanonicalId, ...newMonitoringArea } = monitoringArea;
 
-      return res.status(200).json({ ...newMonitoringArea, id: areaCanonicalId }).end();
+      return res.status(200).json({ ...newMonitoringArea, id: areaCanonicalId, purposes }).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;

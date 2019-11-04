@@ -309,7 +309,6 @@ describe('Test Pasture routes', () => {
           plantCommunityId: 1,
           purposes: [
             {
-              canonicalId: 1,
               id: 1,
               monitoringAreaId: 1,
               purposeType: {
@@ -320,7 +319,6 @@ describe('Test Pasture routes', () => {
               purposeTypeId: 1,
             },
             {
-              canonicalId: 2,
               id: 2,
               monitoringAreaId: 1,
               purposeType: {
