@@ -74,7 +74,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 2, canonicalId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
   });
 
@@ -84,7 +84,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 2, canonicalId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
 
     await request(app)
@@ -106,7 +106,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 2, canonicalId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
 
     await request(app)
@@ -114,7 +114,7 @@ describe('Test Invasive Plant routes', () => {
       .send({ ...body, equipmentAndVehiclesParking: false })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, equipmentAndVehiclesParking: false, id: 1, planId: 2, canonicalId: 1 });
+        expect(res.body).toEqual({ ...body, equipmentAndVehiclesParking: false, id: 1, planId: 2 });
       });
   });
 

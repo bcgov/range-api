@@ -47,8 +47,8 @@ export default class PlanInvasivePlantController {
         throw errorWithCode(`Invasive plant checklist already exist with the plan id ${planId}`);
       }
 
-      const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
-      return res.status(200).json(checklist).end();
+      const { canonicalId: checklistCanonicalId, ...checklist } = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
+      return res.status(200).json({ ...checklist, id: checklistCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanInvasivePlantController: store: fail with error: ${error.message}`);
       throw error;
@@ -84,13 +84,13 @@ export default class PlanInvasivePlantController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const updatedChecklist = await InvasivePlantChecklist.update(
+      const { canonicalId: checklistCanonicalId, ...updatedChecklist } = await InvasivePlantChecklist.update(
         db,
         { canonical_id: checklistId, plan_id: planId },
         body,
       );
 
-      return res.status(200).json(updatedChecklist).end();
+      return res.status(200).json({ ...updatedChecklist, id: checklistCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanInvasivePlantController: update: fail with error: ${error.message}`);
       throw error;
