@@ -92,7 +92,6 @@ describe('Test Minister Issue Action routes', () => {
         expect(res.body).toEqual({
           ...body,
           id: 2,
-          canonicalId: res.body.id,
           issueId: 1,
           noGrazeStartMonth: null,
           noGrazeStartDay: null,
@@ -119,7 +118,6 @@ describe('Test Minister Issue Action routes', () => {
           other: null,
           actionTypeId,
           id: 2,
-          canonicalId: res.body.id,
           issueId: 1,
         });
       });
@@ -141,7 +139,6 @@ describe('Test Minister Issue Action routes', () => {
           noGrazeEndMonth: null,
           noGrazeEndDay: null,
           id: 2,
-          canonicalId: res.body.id,
           issueId: 1,
         });
       });
@@ -164,7 +161,6 @@ describe('Test Minister Issue Action routes', () => {
           ...body,
           id: 1,
           issueId: 1,
-          canonicalId: 1,
           noGrazeStartMonth: null,
           noGrazeStartDay: null,
           noGrazeEndMonth: null,

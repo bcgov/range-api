@@ -87,11 +87,11 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const action = await MinisterIssueAction.create(
+      const { canonicalId: actionCanonicalId, ...action } = await MinisterIssueAction.create(
         db,
         data,
       );
-      return res.status(200).json(action).end();
+      return res.status(200).json({ ...action, id: actionCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: store: fail with error: ${error.message}`);
       throw error;
@@ -164,13 +164,13 @@ export default class PlanMinisterIssueActionController {
 
       const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
 
-      const updatedAction = await MinisterIssueAction.update(
+      const { canonicalId: actionCanonicalId, ...updatedAction } = await MinisterIssueAction.update(
         db,
         { canonical_id: actionId, issue_id: issue.id },
         data,
       );
 
-      return res.status(200).json(updatedAction).end();
+      return res.status(200).json({ ...updatedAction, id: actionCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: update: fail with error: ${error.message}`);
       throw error;
