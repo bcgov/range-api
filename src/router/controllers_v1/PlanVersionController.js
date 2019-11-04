@@ -14,11 +14,11 @@ const {
 
 export default class PlanVersionController {
   static async store(req, res) {
-    const { body, user } = req;
+    const { user, params } = req;
     // The "plan id" sent in a request is actually the canonical ID of a resource
-    const { planId: canonicalId } = body;
+    const { planId: canonicalId } = params;
 
-    checkRequiredFields(['planId'], 'body', req);
+    checkRequiredFields(['planId'], 'params', req);
 
 
     try {
