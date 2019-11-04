@@ -81,7 +81,6 @@ describe('Test Management Consideration routes', () => {
           ...body,
           id: 2,
           planId: 2,
-          canonicalId: res.body.id,
         });
       });
   });
@@ -105,7 +104,6 @@ describe('Test Management Consideration routes', () => {
           ...body,
           id: 2,
           planId: 2,
-          canonicalId: 2,
         });
       });
 
@@ -119,7 +117,6 @@ describe('Test Management Consideration routes', () => {
           id: 2,
           planId: 2,
           detail,
-          canonicalId: 2,
         });
       });
   });

@@ -42,9 +42,9 @@ export default class PlanManagementConsiderationController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const consideration = await ManagementConsideration.create(db, { ...body, plan_id: planId });
+      const { canonicalId: considerationCanonicalId, ...consideration } = await ManagementConsideration.create(db, { ...body, plan_id: planId });
 
-      return res.status(200).json(consideration).end();
+      return res.status(200).json({ ...consideration, id: considerationCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanManagementConsiderationController: store: fail with error: ${error.message}`);
       throw error;
@@ -80,13 +80,13 @@ export default class PlanManagementConsiderationController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const updated = await ManagementConsideration.update(
+      const { canonicalId: considerationCanonicalId, ...updated } = await ManagementConsideration.update(
         db,
         { canonical_id: considerationId, plan_id: planId },
         { ...body, plan_id: planId },
       );
 
-      return res.status(200).json(updated).end();
+      return res.status(200).json({ ...updated, id: considerationCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanManagementConsiderationController: update: fail with error: ${error.message}`);
       throw error;
