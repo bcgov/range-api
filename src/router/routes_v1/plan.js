@@ -80,6 +80,9 @@ router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(Pla
 // Update an existing plant community
 router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.updatePlantCommunity));
 
+// Delete an existing plant community
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.destroyPlantCommunity));
+
 // create a plant community action
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action', asyncMiddleware(PlanPastureController.storePlantCommunityAction));
 

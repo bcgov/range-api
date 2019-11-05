@@ -246,6 +246,22 @@ describe('Test Pasture routes', () => {
       .expect(404);
   });
 
+  test('Deleting a plant community', async () => {
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/1`)
+      .expect(204);
+
+    expect(await dm.db('plant_community')).toHaveLength(0);
+  });
+
+  test('Deleting a nonexistant plant community throws a 400 error', async () => {
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/2`)
+      .expect(400);
+
+    expect(await dm.db('plant_community')).toHaveLength(1);
+  });
+
   test('Creating a plant community action on a nonexistant pasture should throw a 500 error', async () => {
     await request(app)
       .post(`${baseUrl}/12/plant-community/1/action`)

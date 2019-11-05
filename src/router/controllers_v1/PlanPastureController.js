@@ -186,6 +186,43 @@ export default class PlanPastureController {
     return res.json({ ...updatedPlantCommunity, id: communityCanonicalId }).end();
   }
 
+  static async destroyPlantCommunity(req, res) {
+    const { params, user } = req;
+    const { planId: canonicalId, pastureId, communityId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId'], 'params', req,
+    );
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+
+    if (!pasture) {
+      throw errorWithCode("Pasture doesn't exist", 404);
+    }
+
+    const result = await PlantCommunity.remove(db, {
+      canonical_id: communityId,
+      pasture_id: pasture.id,
+    });
+
+    if (result === 0) {
+      throw errorWithCode("Plant community doesn't exist", 400);
+    }
+
+    return res.status(204).send();
+  }
+
 
   /**
    * Store Action for Plant community of plan.
