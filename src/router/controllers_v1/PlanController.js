@@ -176,17 +176,24 @@ export default class PlanController {
    */
   static async storeAdditionalRequirement(req, res) {
     const { body, params, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
-      const { requirementCanonicalId, ...requirement } = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+      const { canonicalId: requirementCanonicalId, ...requirement } = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
       return res.status(200).json({ ...requirement, id: requirementCanonicalId }).end();
     } catch (error) {
       throw error;
