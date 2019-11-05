@@ -89,6 +89,9 @@ router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action',
 // Update a plant community action
 router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.updatePlantCommunityAction));
 
+// Delete a plant community action
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.destroyPlantCommunityAction));
+
 // create a indicator plant
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(PlanPastureController.storeIndicatorPlant));
