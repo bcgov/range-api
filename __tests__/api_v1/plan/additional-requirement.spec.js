@@ -100,6 +100,12 @@ describe('Test Additional Requirement routes', () => {
     expect(requirements[0].detail).toEqual(detail);
   });
 
+  test('Updating a nonexistant additional requirement throws a 404 error', async () => {
+    await request(app)
+      .put(`${baseUrl}/2`)
+      .expect(404);
+  });
+
   test('Deleting an additional requirement', async () => {
     await request(app)
       .delete(`${baseUrl}/1`)

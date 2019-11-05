@@ -228,16 +228,24 @@ export default class PlanController {
     delete body.canonicalId;
     delete body.canonical_id;
 
-    const { canonicalId: requirementCanonicalId, ...requirement } = await AdditionalRequirement.update(
+    const requirement = await AdditionalRequirement.findOne(db, {
+      plan_id: planId,
+      canonical_id: requirementId,
+    });
+
+    if (!requirement) {
+      throw errorWithCode("Additional requirement doesn't exist", 404);
+    }
+
+    const { canonicalId: requirementCanonicalId, ...updatedRequirement } = await AdditionalRequirement.update(
       db,
       {
-        plan_id: planId,
-        canonical_id: requirementId,
+        id: requirement.id,
       },
       body,
     );
 
-    res.send(requirement);
+    res.send({ ...updatedRequirement, id: requirementCanonicalId });
   }
 
   static async destroyAdditionalRequirement(req, res) {
