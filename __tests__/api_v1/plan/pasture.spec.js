@@ -8,6 +8,7 @@ import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
 import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import plantCommunityMocks from '../../../__mocks__/fixtures/plant_community_mock.json';
+import plantCommunityActionMocks from '../../../__mocks__/fixtures/plant_community_action_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -82,6 +83,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan'));
   await dm.db.schema.raw(truncate('pasture'));
   await dm.db.schema.raw(truncate('plant_community'));
+  await dm.db.schema.raw(truncate('plant_community_action'));
 };
 
 describe('Test Pasture routes', () => {
@@ -112,6 +114,7 @@ describe('Test Pasture routes', () => {
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
     await dm.db('plant_community').insert([plantCommunity]);
+    await dm.db('plant_community_action').insert(plantCommunityActionMocks);
   });
 
   afterEach(async () => {
@@ -211,7 +214,7 @@ describe('Test Pasture routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...plantCommunityActionBody,
-          id: 1,
+          id: 2,
           plantCommunityId: 1,
         });
       });
@@ -274,6 +277,34 @@ describe('Test Pasture routes', () => {
       .post(`${baseUrl}/1/plant-community/10/action`)
       .send(plantCommunityActionBody)
       .expect(500);
+  });
+
+  test('Updating a plant community action', async () => {
+    const name = 'new name for plant community action';
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/action/1`)
+      .send({ name })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toEqual(name);
+      });
+
+    expect(await dm.db('plant_community_action')).toHaveLength(1);
+  });
+
+  test('Updating a nonexistant plant community action throws a 404 error', async () => {
+    const name = 'new name for plant community action';
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/action/10`)
+      .send({ name })
+      .expect(404);
+
+    const actions = await dm.db('plant_community_action');
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].name).not.toEqual(name);
   });
 
   test('Creating an indicator plant', async () => {

@@ -267,6 +267,48 @@ export default class PlanPastureController {
     }
   }
 
+  static async updatePlantCommunityAction(req, res) {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId, actionId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId', 'actionId'], 'params', req,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+
+      const action = await PlantCommunityAction.findOne(
+        db,
+        { plant_community_id: communityId, canonical_id: actionId },
+      );
+
+      if (!action) {
+        throw errorWithCode('Could not find plant community action', 404);
+      }
+
+      const { canonicalId: actionCanonicalId, ...updatedAction } = await PlantCommunityAction.update(
+        db,
+        { id: action.id },
+        body,
+      );
+      return res.status(200).json({ ...updatedAction, id: actionCanonicalId }).end();
+    } catch (error) {
+      logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
+      throw error;
+    }
+  }
+
   /**
    * Create Indicator plant
    * @param {*} req : express req
