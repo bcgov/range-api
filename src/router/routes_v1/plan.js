@@ -62,7 +62,7 @@ router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.stor
 // Versions
 //
 
-router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store))
+router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store));
 
 //
 // Pasture
@@ -95,6 +95,10 @@ router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/action
 // create a indicator plant
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(PlanPastureController.storeIndicatorPlant));
+
+// Update an indicator plant
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.updateIndicatorPlant));
 
 // create a monitoring area
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',

@@ -290,7 +290,7 @@ export default class PlanPastureController {
 
       const action = await PlantCommunityAction.findOne(
         db,
-        { plant_community_id: communityId, canonical_id: actionId },
+        { plant_community_id: plantCommunity.id, canonical_id: actionId },
       );
 
       if (!action) {
@@ -389,6 +389,53 @@ export default class PlanPastureController {
         },
       );
       return res.status(200).json({ ...indicatorPlant, id: plantCanonicalId }).end();
+    } catch (error) {
+      logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  static async updateIndicatorPlant(req, res) {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId, plantId } = params;
+    const { criteria } = body;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId', 'plantId'], 'params', req,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      if (criteria && !PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
+        throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
+      }
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+
+      const indicatorPlant = await IndicatorPlant.findOne(
+        db,
+        { plant_community_id: plantCommunity.id, canonical_id: plantId },
+      );
+
+      if (!indicatorPlant) {
+        throw errorWithCode('Could not find indicator plant', 404);
+      }
+
+      const { canonicalId: plantCanonicalId, ...updatedIndicatorPlant } = await IndicatorPlant.update(
+        db,
+        { id: indicatorPlant.id },
+        body,
+      );
+      return res.status(200).json({ ...updatedIndicatorPlant, id: plantCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;

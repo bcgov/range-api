@@ -9,6 +9,7 @@ import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import plantCommunityMocks from '../../../__mocks__/fixtures/plant_community_mock.json';
 import plantCommunityActionMocks from '../../../__mocks__/fixtures/plant_community_action_mock.json';
+import indicatorPlantMocks from '../../../__mocks__/fixtures/indicator_plant_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -84,6 +85,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('pasture'));
   await dm.db.schema.raw(truncate('plant_community'));
   await dm.db.schema.raw(truncate('plant_community_action'));
+  await dm.db.schema.raw(truncate('indicator_plant'));
 };
 
 describe('Test Pasture routes', () => {
@@ -115,6 +117,7 @@ describe('Test Pasture routes', () => {
     await dm.db('pasture').insert([pasture]);
     await dm.db('plant_community').insert([plantCommunity]);
     await dm.db('plant_community_action').insert(plantCommunityActionMocks);
+    await dm.db('indicator_plant').insert(indicatorPlantMocks);
   });
 
   afterEach(async () => {
@@ -331,7 +334,7 @@ describe('Test Pasture routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...indicatorPlantBody,
-          id: 1,
+          id: 2,
           plantCommunityId: 1,
         });
       });
@@ -356,6 +359,48 @@ describe('Test Pasture routes', () => {
       .post(`${baseUrl}/1/plant-community/1/indicator-plant`)
       .send({ ...indicatorPlantBody, criteria: 'not a real criteria' })
       .expect(500);
+  });
+
+  test('Updating an indicator plant', async () => {
+    const value = 100.4;
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/indicator-plant/1`)
+      .send({ value })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.value).toEqual(value);
+      });
+
+    const plants = await dm.db('indicator_plant');
+    expect(plants).toHaveLength(1);
+    expect(plants[0].value).toEqual(value);
+  });
+
+  test('Updating a nonexistant indicator plant throws a 404 error', async () => {
+    const value = 100.4;
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/indicator-plant/10`)
+      .send({ value })
+      .expect(404);
+
+    const plants = await dm.db('indicator_plant');
+    expect(plants).toHaveLength(1);
+    expect(plants[0].value).not.toEqual(value);
+  });
+
+  test('Updating an indicator plant on a non-existant plant community throws a 500 error', async () => {
+    const value = 100.4;
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/10/indicator-plant/1`)
+      .send({ value })
+      .expect(500);
+
+    const plants = await dm.db('indicator_plant');
+    expect(plants).toHaveLength(1);
+    expect(plants[0].value).not.toEqual(value);
   });
 
   // Monitoring area
