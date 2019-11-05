@@ -284,7 +284,7 @@ export default class PlanController {
       },
     );
 
-    if (!result === 0) {
+    if (result === 0) {
       throw errorWithCode('Could not find additional requirement', 400);
     }
 

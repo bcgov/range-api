@@ -115,4 +115,14 @@ describe('Test Additional Requirement routes', () => {
 
     expect(requirements).toHaveLength(0);
   });
+
+  test('Deleting a nonexistant additional requirement throws a 400 error', async () => {
+    await request(app)
+      .delete(`${baseUrl}/5`)
+      .expect(400);
+
+    const requirements = await dm.db('additional_requirement');
+
+    expect(requirements).toHaveLength(1);
+  });
 });
