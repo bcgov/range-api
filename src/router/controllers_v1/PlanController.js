@@ -199,4 +199,87 @@ export default class PlanController {
       throw error;
     }
   }
+
+  static async updateAdditionalRequirement(req, res) {
+    const { body, params, user } = req;
+    const { planId: canonicalId, requirementId } = params;
+
+    checkRequiredFields(['planId', 'requirementId'], 'params', req);
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode("Plan doesn't exist", 404);
+    }
+
+    const planId = currentPlan.id;
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      user,
+      agreementId,
+    );
+
+    delete body.id;
+    delete body.planId;
+    delete body.plan_id;
+    delete body.canonicalId;
+    delete body.canonical_id;
+
+    const { canonicalId: requirementCanonicalId, ...requirement } = await AdditionalRequirement.update(
+      db,
+      {
+        plan_id: planId,
+        canonical_id: requirementId,
+      },
+      body,
+    );
+
+    res.send(requirement);
+  }
+
+  static async destroyAdditionalRequirement(req, res) {
+    const { body, params, user } = req;
+    const { planId: canonicalId, requirementId } = params;
+
+    checkRequiredFields(['planId', 'requirementId'], 'params', req);
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode("Plan doesn't exist", 404);
+    }
+
+    const planId = currentPlan.id;
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      user,
+      agreementId,
+    );
+
+    delete body.id;
+    delete body.planId;
+    delete body.plan_id;
+    delete body.canonicalId;
+    delete body.canonical_id;
+
+    const result = await AdditionalRequirement.remove(
+      db,
+      {
+        plan_id: planId,
+        canonical_id: requirementId,
+      },
+    );
+
+    if (!result === 0) {
+      throw errorWithCode('Could not find additional requirement', 400);
+    }
+
+    res.status(204).end();
+  }
 }
