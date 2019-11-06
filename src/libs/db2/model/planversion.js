@@ -18,7 +18,7 @@ export default class PlanVersion extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'canonical_id', 'version', 'plan_id',
+      'canonical_id', 'version', 'plan_id', 'created_at', 'updated_at',
     ].map(f => `${PlanVersion.table}.${f}`);
   }
 
