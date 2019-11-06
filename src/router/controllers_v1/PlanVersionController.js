@@ -1,5 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { checkRequiredFields } from '../../libs/utils';
+import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -78,6 +78,46 @@ export default class PlanVersionController {
       );
 
       return res.status(200).json({ versions }).end();
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+  }
+
+  static async show(req, res) {
+    const { user, params } = req;
+    // The "plan id" sent in a request is actually the canonical ID of a resource
+    const { planId: canonicalId, version } = params;
+
+    checkRequiredFields(['planId', 'version'], 'params', req);
+
+    try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Could not find plan', 404);
+      }
+
+      const { id: currentPlanId } = currentPlan;
+
+      const agreementId = await Plan.agreementForPlanId(db, currentPlanId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const versionData = await PlanVersion.findOne(
+        db,
+        { canonical_id: canonicalId, version },
+      );
+
+      if (!versionData) {
+        throw errorWithCode('Could not find version for plan', 404);
+      }
+
+      const { planId, version: planVersion } = versionData;
+
+      const plan = await Plan.findById(db, planId);
+
+      const formattedPlanData = deepMapKeys(plan, key => (key === 'canonicalId' ? 'id' : key));
+
+      return res.status(200).json({ ...formattedPlanData, version: planVersion }).end();
     } catch (error) {
       logger.error(error);
       throw error;

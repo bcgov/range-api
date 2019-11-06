@@ -254,4 +254,23 @@ describe('Test Plan routes', () => {
       .get('/api/v1/plan/2/version')
       .expect(404);
   });
+
+  test('Getting a specific version of a plan', async () => {
+    const [version] = await dm.db('plan_version').where('canonical_id', 1).where('version', 1);
+    const [plan] = await dm.db('plan').where('id', version.plan_id);
+
+    await request(app)
+      .get(`${baseUrl}/1`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.version).toEqual(version.version);
+        expect(res.body.id).toEqual(plan.id);
+      });
+  });
+
+  test('Getting a nonexistant version of a plan throws a 404 error', async () => {
+    await request(app)
+      .get(`${baseUrl}/10`)
+      .expect(404);
+  });
 });
