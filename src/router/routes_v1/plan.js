@@ -87,16 +87,41 @@ router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(Pla
 // Update an existing plant community
 router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.updatePlantCommunity));
 
+// Delete an existing plant community
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.destroyPlantCommunity));
+
 // create a plant community action
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action', asyncMiddleware(PlanPastureController.storePlantCommunityAction));
+
+// Update a plant community action
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.updatePlantCommunityAction));
+
+// Delete a plant community action
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.destroyPlantCommunityAction));
 
 // create a indicator plant
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(PlanPastureController.storeIndicatorPlant));
 
+// Update an indicator plant
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.updateIndicatorPlant));
+
+// Delete an indicator plant
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.destroyIndicatorPlant));
+
 // create a monitoring area
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',
   asyncMiddleware(PlanPastureController.storeMonitoringArea));
+
+// Update a monitoring area
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId?',
+  asyncMiddleware(PlanPastureController.updateMonitoringArea));
+
+// Delete a monitoring area
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId?',
+  asyncMiddleware(PlanPastureController.destroyMonitoringArea));
 
 //
 // Schedule
