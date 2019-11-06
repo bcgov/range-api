@@ -1,5 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { checkRequiredFields } from '../../libs/utils';
+import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -12,6 +12,7 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
+  PlanVersion,
 } = dm;
 
 export default class PlanController {
@@ -25,13 +26,20 @@ export default class PlanController {
    */
   static async show(req, res) {
     const { user, params } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
@@ -48,7 +56,11 @@ export default class PlanController {
       await plan.eagerloadAllOneToMany();
       plan.agreement = agreement;
 
-      return res.status(200).json(plan).end();
+      const { canonicalId: planCanonicalId, ...planData } = plan;
+
+      const formattedPlanData = deepMapKeys(planData, key => (key === 'canonicalId' ? 'id' : key));
+
+      return res.status(200).json({ ...formattedPlanData, id: planCanonicalId }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
@@ -91,12 +103,15 @@ export default class PlanController {
         status_id: staffDraftStatus.id,
       });
 
-      const plan = await Plan.create(db, { ...body, creator_id: user.id });
+      const { id } = await Plan.create(db, { ...body, creator_id: user.id, canonical_id: 0 });
+      const { canonicalId: newCanonicalId, ...plan } = await Plan.update(db, { id }, { canonical_id: id });
+
+      await PlanVersion.create(db, { version: -1, plan_id: id, canonical_id: id });
 
       // create unsiged confirmations for AHs
       await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
 
-      return res.status(200).json(plan).end();
+      return res.status(200).json({ ...plan, id: newCanonicalId }).end();
     } catch (err) {
       throw err;
     }
@@ -109,13 +124,20 @@ export default class PlanController {
    */
   static async update(req, res) {
     const { params, body, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -133,7 +155,9 @@ export default class PlanController {
       agreement.transformToV1();
       plan.agreement = agreement;
 
-      return res.status(200).json(plan).end();
+      const { canonicalId: updatedCanonicalId, ...updatedPlan } = plan;
+
+      return res.status(200).json({ ...updatedPlan, id: updatedCanonicalId }).end();
     } catch (err) {
       throw err;
     }
@@ -162,8 +186,8 @@ export default class PlanController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const requirement = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
-      return res.status(200).json(requirement).end();
+      const { requirementCanonicalId, ...requirement } = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+      return res.status(200).json({ ...requirement, id: requirementCanonicalId }).end();
     } catch (error) {
       throw error;
     }

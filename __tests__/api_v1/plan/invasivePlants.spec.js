@@ -5,6 +5,7 @@ import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -31,6 +32,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
 };
 
@@ -49,14 +51,14 @@ describe('Test Invasive Plant routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const clientAgreement = clientAgreementMocks[0];
     const planConfirmation = planConfirmationMocks[0];
     await dm.db('user_account').insert([user]);
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
   });
 
@@ -72,7 +74,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
   });
 
@@ -82,7 +84,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
 
     await request(app)
@@ -93,7 +95,7 @@ describe('Test Invasive Plant routes', () => {
 
   test('Creating an invasive plant checklist for a nonexistant plan throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/10/invasive-plant-checklist')
+      .post('/api/v1/plan/2/invasive-plant-checklist')
       .send(body)
       .expect(500);
   });
@@ -104,7 +106,7 @@ describe('Test Invasive Plant routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 1, planId: 1 });
+        expect(res.body).toEqual({ ...body, id: 1, planId: 2 });
       });
 
     await request(app)
@@ -112,7 +114,7 @@ describe('Test Invasive Plant routes', () => {
       .send({ ...body, equipmentAndVehiclesParking: false })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, equipmentAndVehiclesParking: false, id: 1, planId: 1 });
+        expect(res.body).toEqual({ ...body, equipmentAndVehiclesParking: false, id: 1, planId: 2 });
       });
   });
 

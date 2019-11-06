@@ -25,6 +25,7 @@ export default class PlantCommunityAction extends Model {
       'id', 'plant_community_id', 'action_type_id',
       'name', 'details', 'no_graze_start_day',
       'no_graze_start_month', 'no_graze_end_day', 'no_graze_end_month',
+      'canonical_id',
     ].map(field => `${this.table}.${field}`);
   }
 

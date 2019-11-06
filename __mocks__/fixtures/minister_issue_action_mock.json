@@ -1,5 +1,6 @@
 [
   {
+    "canonical_id": 1,
     "detail":"This is an action!",
     "issue_id": 1,
     "action_type_id": 4,

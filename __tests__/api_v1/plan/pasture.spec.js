@@ -5,6 +5,7 @@ import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import plantCommunityMocks from '../../../__mocks__/fixtures/plant_community_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
@@ -77,7 +78,10 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
+  await dm.db.schema.raw(truncate('pasture'));
+  await dm.db.schema.raw(truncate('plant_community'));
 };
 
 describe('Test Pasture routes', () => {
@@ -95,7 +99,6 @@ describe('Test Pasture routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const pasture = pastureMocks[0];
     const plantCommunity = plantCommunityMocks[0];
     const clientAgreement = clientAgreementMocks[0];
@@ -104,7 +107,8 @@ describe('Test Pasture routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
     await dm.db('plant_community').insert([plantCommunity]);
@@ -125,9 +129,26 @@ describe('Test Pasture routes', () => {
         expect(res.body).toEqual({
           ...pastureBody,
           id: 2,
-          planId: 1,
+          planId: 2,
         });
       });
+  });
+
+  test('Creating a new pasture adds it to the current version plan', async () => {
+    await request(app)
+      .post(baseUrl)
+      .send(pastureBody)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toEqual({
+          ...pastureBody,
+          id: 2,
+          planId: 2,
+        });
+      });
+
+    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(0);
+    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(2);
   });
 
   test('Trying to create a pasture with an already-used id should throw a 500 error', async () => {
@@ -137,17 +158,20 @@ describe('Test Pasture routes', () => {
       .expect(500);
   });
 
-  test('Updating a pasture', async () => {
+  test('Updating a pasture affects the current version of the plan', async () => {
     const name = "Roop's Pasture 2.0";
+
+    const planId = 2;
 
     await request(app)
       .put(`${baseUrl}/1`)
-      .send({ ...pastureBody, id: 1, name })
+      .send({ ...pastureBody, name })
       .expect(200)
       .expect((res) => {
         const results = res.body;
         expect(results.id).toEqual(1);
         expect(results.name).toEqual(name);
+        expect(results.planId).toEqual(planId);
       });
   });
 
@@ -191,6 +215,35 @@ describe('Test Pasture routes', () => {
           plantCommunityId: 1,
         });
       });
+  });
+
+  test('Updating a plant community', async () => {
+    const name = 'My updated plant community';
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1`)
+      .send({ ...plantCommunityBody, name })
+      .expect(200)
+      .expect((res) => {
+        const results = res.body;
+        expect(results.id).toEqual(1);
+        expect(results.name).toEqual(name);
+        expect(results.pastureId).toEqual(1);
+      });
+  });
+
+  test('Updating a non-existant plant community throws a 404 error', async () => {
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/10`)
+      .send({ ...plantCommunityBody })
+      .expect(404);
+  });
+
+  test('Updating a plant community on an non-existant pasture throws a 404 error', async () => {
+    await request(app)
+      .put(`${baseUrl}/10/plant-community/1`)
+      .send({ ...plantCommunityBody })
+      .expect(404);
   });
 
   test('Creating a plant community action on a nonexistant pasture should throw a 500 error', async () => {

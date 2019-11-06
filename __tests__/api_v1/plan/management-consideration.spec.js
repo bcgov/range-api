@@ -5,6 +5,7 @@ import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import managementConsiderationMocks from '../../../__mocks__/fixtures/management_consideration_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
@@ -31,7 +32,9 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
+  await dm.db.schema.raw(truncate('management_consideration'));
 };
 
 describe('Test Management Consideration routes', () => {
@@ -49,7 +52,6 @@ describe('Test Management Consideration routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const managementConsideration = managementConsiderationMocks[0];
     const clientAgreement = clientAgreementMocks[0];
     const planConfirmation = planConfirmationMocks[0];
@@ -57,7 +59,8 @@ describe('Test Management Consideration routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('management_consideration').insert([managementConsideration]);
   });
@@ -74,13 +77,17 @@ describe('Test Management Consideration routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 2,
+        });
       });
   });
 
   test('Creating a management consideration on a nonexistant plan throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/10/management-consideration')
+      .post('/api/v1/plan/2/management-consideration')
       .send(body)
       .expect(500);
   });
@@ -93,7 +100,11 @@ describe('Test Management Consideration routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 2,
+        });
       });
 
     await request(app)
@@ -101,7 +112,12 @@ describe('Test Management Consideration routes', () => {
       .send({ ...body, detail })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 1, detail });
+        expect(res.body).toEqual({
+          ...body,
+          id: 2,
+          planId: 2,
+          detail,
+        });
       });
   });
 

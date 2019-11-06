@@ -21,7 +21,7 @@ export default class PlanScheduleController {
    */
   static async store(req, res) {
     const { params, body, user } = req;
-    const { planId } = params;
+    const { planId: canonicalId } = params;
     const { grazingScheduleEntries } = body;
 
     checkRequiredFields(
@@ -30,6 +30,18 @@ export default class PlanScheduleController {
     checkRequiredFields(
       ['grazingScheduleEntries'], 'body', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
 
     grazingScheduleEntries.forEach((entry) => {
       if (!entry.livestockTypeId) {
@@ -60,7 +72,10 @@ export default class PlanScheduleController {
       await Promise.all(promises);
       await schedule.fetchGrazingSchedulesEntries();
 
-      return res.status(200).json(schedule).end();
+      const { canonicalId: scheduleCanonicalId, ...newSchedule } = schedule;
+      const entries = schedule.grazingScheduleEntries.map(({ canonicalId: entryCanonicalId, ...entry }) => ({ ...entry, id: entryCanonicalId }));
+
+      return res.status(200).json({ ...newSchedule, id: scheduleCanonicalId, grazingScheduleEntries: entries }).end();
     } catch (error) {
       logger.error(`PlanScheduleController: store: fail with error: ${error.message}`);
       throw error;
@@ -75,7 +90,7 @@ export default class PlanScheduleController {
   static async update(req, res) {
     const { body, user, params } = req;
     const { grazingScheduleEntries } = body;
-    const { planId, scheduleId } = params;
+    const { planId: canonicalId, scheduleId } = params;
 
     checkRequiredFields(
       ['planId', 'scheduleId'], 'params', req,
@@ -83,6 +98,18 @@ export default class PlanScheduleController {
     checkRequiredFields(
       ['grazingScheduleEntries'], 'body', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 404);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
 
     grazingScheduleEntries.forEach((entry) => {
       if (!entry.livestockTypeId) {
@@ -103,7 +130,7 @@ export default class PlanScheduleController {
       // or nothing create.
       const schedule = await GrazingSchedule.update(
         db,
-        { id: scheduleId },
+        { canonical_id: scheduleId, plan_id: planId },
         { ...body, plan_id: planId },
       );
       // eslint-disable-next-line arrow-body-style
@@ -127,7 +154,10 @@ export default class PlanScheduleController {
       await Promise.all(promises);
       await schedule.fetchGrazingSchedulesEntries();
 
-      return res.status(200).json(schedule).end();
+      const { canonicalId: scheduleCanonicalId, ...updatedSchedule } = schedule;
+      const entries = schedule.grazingScheduleEntries.map(({ canonicalId: entryCanonicalId, ...entry }) => ({ ...entry, id: entryCanonicalId }));
+
+      return res.status(200).json({ ...updatedSchedule, id: scheduleCanonicalId, grazingScheduleEntries: entries }).end();
     } catch (error) {
       logger.error(`PlanScheduleController: update: fail with error: ${error.message}`);
       throw error;
@@ -196,12 +226,12 @@ export default class PlanScheduleController {
         throw errorWithCode('No such schedule exists', 400);
       }
 
-      const entry = await GrazingScheduleEntry.create(db, {
+      const { canonicalId: entryCanonicalId, ...entry } = await GrazingScheduleEntry.create(db, {
         ...body,
         ...{ grazing_schedule_id: scheduleId },
       });
 
-      return res.status(200).json(entry).end();
+      return res.status(200).json({ ...entry, id: entryCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanScheduleController: storeScheduleEntry: fail with error: ${error.message}`);
       throw error;

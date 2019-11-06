@@ -29,6 +29,7 @@ import { Router } from 'express';
  * Controller for individual routes related to plan.
  */
 import PlanController from '../controllers_v1/PlanController';
+import PlanVersionController from '../controllers_v1/PlanVersionController';
 import PlanStatusController from '../controllers_v1/PlanStatusController';
 import PlanPastureController from '../controllers_v1/PlanPastureController';
 import PlanScheduleController from '../controllers_v1/PlanScheduleController';
@@ -58,6 +59,12 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(PlanStatus
 router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.storeStatusHistory));
 
 //
+// Versions
+//
+
+router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store))
+
+//
 // Pasture
 //
 
@@ -69,6 +76,9 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureControlle
 
 // create a plant community
 router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(PlanPastureController.storePlatCommunity));
+
+// Update an existing plant community
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.updatePlantCommunity));
 
 // create a plant community action
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action', asyncMiddleware(PlanPastureController.storePlantCommunityAction));
