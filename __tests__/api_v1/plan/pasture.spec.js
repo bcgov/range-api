@@ -403,6 +403,24 @@ describe('Test Pasture routes', () => {
     expect(plants[0].value).not.toEqual(value);
   });
 
+  test('Deleting an indicator plant', async () => {
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/1/indicator-plant/1`)
+      .expect(204);
+
+    const plants = await dm.db('indicator_plant');
+    expect(plants).toHaveLength(0);
+  });
+
+  test('Deleting a nonexistant indicator plant throws a 400 error', async () => {
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/1/indicator-plant/2`)
+      .expect(400);
+
+    const plants = await dm.db('indicator_plant');
+    expect(plants).toHaveLength(1);
+  });
+
   // Monitoring area
 
   test('Creating a monitoring area', async () => {

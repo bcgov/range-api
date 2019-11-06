@@ -100,6 +100,10 @@ router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicato
 router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
   asyncMiddleware(PlanPastureController.updateIndicatorPlant));
 
+// Delete an indicator plant
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.destroyIndicatorPlant));
+
 // create a monitoring area
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',
   asyncMiddleware(PlanPastureController.storeMonitoringArea));
