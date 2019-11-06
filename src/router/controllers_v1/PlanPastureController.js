@@ -617,4 +617,55 @@ export default class PlanPastureController {
       throw error;
     }
   }
+
+  static async destroyMonitoringArea(req, res) {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId, areaId } = params;
+    const { purposeTypeIds = [], ...bodyData } = body;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId', 'areaId'], 'params', req,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+
+      const monitoringArea = await MonitoringArea.findOne(
+        db,
+        { canonical_id: areaId, plant_community_id: communityId },
+      );
+
+      if (!monitoringArea) {
+        throw errorWithCode('Monitoring area not found', 400);
+      }
+
+      await monitoringArea.fetchMonitoringAreaPurposes(
+        db, { monitoring_area_id: monitoringArea.id },
+      );
+
+      // Remove monitoring area purposes
+      await Promise.all(monitoringArea.purposes.map(purpose => MonitoringAreaPurpose.remove(db, { monitoring_area_id: monitoringArea.id, id: purpose.id })));
+
+      await MonitoringArea.remove(
+        db,
+        { id: monitoringArea.id },
+        bodyData,
+      );
+
+      return res.status(204).end();
+    } catch (error) {
+      logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
+      throw error;
+    }
+  }
 }

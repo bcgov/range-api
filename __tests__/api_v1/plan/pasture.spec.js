@@ -545,4 +545,28 @@ describe('Test Pasture routes', () => {
     expect(areas).toHaveLength(1);
     expect(areas[0].name).not.toEqual(name);
   });
+
+  test('Deleting a monitoring area', async () => {
+    expect(await dm.db('monitoring_area')).toHaveLength(1);
+    expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
+
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/1/monitoring-area/1`)
+      .expect(204);
+
+    expect(await dm.db('monitoring_area')).toHaveLength(0);
+    expect(await dm.db('monitoring_area_purpose')).toHaveLength(0);
+  });
+
+  test('Deleting a nonexistant monitoring area throws a 400 error', async () => {
+    expect(await dm.db('monitoring_area')).toHaveLength(1);
+    expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
+
+    await request(app)
+      .delete(`${baseUrl}/1/plant-community/1/monitoring-area/2`)
+      .expect(400);
+
+    expect(await dm.db('monitoring_area')).toHaveLength(1);
+    expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
+  });
 });
