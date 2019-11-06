@@ -10,6 +10,8 @@ import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import plantCommunityMocks from '../../../__mocks__/fixtures/plant_community_mock.json';
 import plantCommunityActionMocks from '../../../__mocks__/fixtures/plant_community_action_mock.json';
 import indicatorPlantMocks from '../../../__mocks__/fixtures/indicator_plant_mock.json';
+import monitoringAreaMocks from '../../../__mocks__/fixtures/monitoring_area_mock.json';
+import monitoringAreaPurposeMocks from '../../../__mocks__/fixtures/monitoring_area_purpose_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -86,6 +88,8 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plant_community'));
   await dm.db.schema.raw(truncate('plant_community_action'));
   await dm.db.schema.raw(truncate('indicator_plant'));
+  await dm.db.schema.raw(truncate('monitoring_area'));
+  await dm.db.schema.raw(truncate('monitoring_area_purpose'));
 };
 
 describe('Test Pasture routes', () => {
@@ -118,6 +122,8 @@ describe('Test Pasture routes', () => {
     await dm.db('plant_community').insert([plantCommunity]);
     await dm.db('plant_community_action').insert(plantCommunityActionMocks);
     await dm.db('indicator_plant').insert(indicatorPlantMocks);
+    await dm.db('monitoring_area').insert(monitoringAreaMocks);
+    await dm.db('monitoring_area_purpose').insert(monitoringAreaPurposeMocks);
   });
 
   afterEach(async () => {
@@ -431,12 +437,12 @@ describe('Test Pasture routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...monitoringAreaBody,
-          id: 1,
+          id: 2,
           plantCommunityId: 1,
           purposes: [
             {
-              id: 1,
-              monitoringAreaId: 1,
+              id: 2,
+              monitoringAreaId: 2,
               purposeType: {
                 active: true,
                 id: 1,
@@ -445,8 +451,8 @@ describe('Test Pasture routes', () => {
               purposeTypeId: 1,
             },
             {
-              id: 2,
-              monitoringAreaId: 1,
+              id: 3,
+              monitoringAreaId: 2,
               purposeType: {
                 active: true,
                 id: 2,
@@ -478,5 +484,65 @@ describe('Test Pasture routes', () => {
       .post(`${baseUrl}/1/plant-community/1/monitoring-area`)
       .send({ ...monitoringAreaBody, purposeTypeIds: [10, 100, '2', 1] })
       .expect(500);
+  });
+
+  test('Updating a monitoring area', async () => {
+    const name = 'new area name';
+    const purposes = await dm.db('monitoring_area_purpose');
+    expect(purposes).toHaveLength(1);
+    const existingPurposeTypeId = purposes[0].id;
+
+    const newPurposeTypeId = 2;
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/monitoring-area/1`)
+      .send({ purposeTypeIds: [existingPurposeTypeId, newPurposeTypeId], name })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toEqual(name);
+        expect(res.body.purposes).toHaveLength(2);
+        expect(res.body.purposes[0].id).toEqual(purposes[0].id);
+        expect(res.body.purposes[0].purposeTypeId).toEqual(existingPurposeTypeId);
+        expect(res.body.purposes[1].id).not.toEqual(purposes[0].id);
+        expect(res.body.purposes[1].purposeTypeId).toEqual(newPurposeTypeId);
+      });
+
+    const areas = await dm.db('monitoring_area');
+    expect(areas).toHaveLength(1);
+    expect(areas[0].name).toEqual(name);
+
+    const updatedPurposes = await dm.db('monitoring_area_purpose');
+    expect(updatedPurposes).toHaveLength(2);
+    expect(updatedPurposes[0].monitoring_area_id).toEqual(1);
+    expect(updatedPurposes[1].monitoring_area_id).toEqual(1);
+  });
+
+  test('Deleting a monitoring area purpose via update', async () => {
+    const purposes = await dm.db('monitoring_area_purpose');
+    expect(purposes).toHaveLength(1);
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/monitoring-area/1`)
+      .send({ purposeTypeIds: [] })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.purposes).toHaveLength(0);
+      });
+
+    const updatedPurposes = await dm.db('monitoring_area_purpose');
+    expect(updatedPurposes).toHaveLength(0);
+  });
+
+  test('Updating a nonexistant monitoring area throws a 404 error', async () => {
+    const name = 'new area name';
+
+    await request(app)
+      .put(`${baseUrl}/1/plant-community/1/monitoring-area/2`)
+      .send({ name })
+      .expect(404);
+
+    const areas = await dm.db('monitoring_area');
+    expect(areas).toHaveLength(1);
+    expect(areas[0].name).not.toEqual(name);
   });
 });

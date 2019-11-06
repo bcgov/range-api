@@ -108,6 +108,10 @@ router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/indica
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',
   asyncMiddleware(PlanPastureController.storeMonitoringArea));
 
+// Update a monitoring area
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId?',
+  asyncMiddleware(PlanPastureController.updateMonitoringArea));
+
 //
 // Schedule
 //

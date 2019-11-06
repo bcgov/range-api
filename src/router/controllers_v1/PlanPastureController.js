@@ -539,4 +539,82 @@ export default class PlanPastureController {
       throw error;
     }
   }
+
+  static async updateMonitoringArea(req, res) {
+    const { params, body, user } = req;
+    const { planId, pastureId, communityId, areaId } = params;
+    const { purposeTypeIds = [], ...bodyData } = body;
+
+    checkRequiredFields(
+      ['planId', 'pastureId', 'communityId', 'areaId'], 'params', req,
+    );
+
+    try {
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const pasture = await Pasture.findOne(db, { id: pastureId });
+      if (!pasture) {
+        throw errorWithCode(`No pasture found with id: ${pastureId}`);
+      }
+      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      if (!plantCommunity) {
+        throw errorWithCode(`No plant community found with id: ${communityId}`);
+      }
+
+      const monitoringArea = await MonitoringArea.findOne(
+        db,
+        { canonical_id: areaId, plant_community_id: communityId },
+      );
+
+      if (!monitoringArea) {
+        throw errorWithCode('Monitoring area not found', 404);
+      }
+
+      await monitoringArea.fetchMonitoringAreaPurposes(
+        db, { monitoring_area_id: monitoringArea.id },
+      );
+
+      // Delete purposes not included in updated purposeTypeIds array
+      await Promise.all(monitoringArea.purposes.map((purpose) => {
+        if (!purposeTypeIds.includes(purpose.purposeTypeId)) {
+          return MonitoringAreaPurpose.remove(db, { monitoring_area_id: monitoringArea.id, id: purpose.id });
+        }
+      }));
+
+      // Create any purposes that don't exist yet
+      const promises = purposeTypeIds.map((pId) => {
+        const existingPurpose = monitoringArea.purposes.find(p => p.purposeTypeId === pId);
+
+        if (!existingPurpose) {
+          return MonitoringAreaPurpose.create(db, {
+            monitoringAreaId: monitoringArea.id,
+            purposeTypeId: pId,
+          });
+        }
+        return existingPurpose;
+      });
+
+      // Format the purposes for the client
+      const purposes = (await Promise.all(promises))
+        .map(({ canonicalId: purposeCanonicalId, ...purpose }) => ({
+          ...purpose,
+          id: purposeCanonicalId,
+        }));
+
+      // Skip update if the body is empty
+      const updatedMonitoringArea = Object.entries(bodyData).length !== 0 ? await MonitoringArea.update(
+        db,
+        { id: monitoringArea.id },
+        bodyData,
+      ) : monitoringArea;
+
+      const { canonicalId: areaCanonicalId, ...updatedAreaData } = updatedMonitoringArea;
+
+      return res.status(200).json({ ...updatedAreaData, id: areaCanonicalId, purposes }).end();
+    } catch (error) {
+      logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
+      throw error;
+    }
+  }
 }
