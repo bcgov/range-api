@@ -156,6 +156,12 @@ router.put('/:planId?/invasive-plant-checklist/:checklistId?', asyncMiddleware(P
 // Create an additional requirement
 router.post('/:planId?/additional-requirement', asyncMiddleware(PlanController.storeAdditionalRequirement));
 
+// Update an additional requirement
+router.put('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.updateAdditionalRequirement));
+
+// Delete an additional requirement
+router.delete('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.destroyAdditionalRequirement));
+
 // Create a management consideration
 router.post('/:planId?/management-consideration', asyncMiddleware(PlanManagementConsiderationController.store));
 
