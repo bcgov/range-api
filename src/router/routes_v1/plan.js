@@ -62,7 +62,14 @@ router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.stor
 // Versions
 //
 
-router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store))
+// Create a new version
+router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store));
+
+// Get all versions for a plan
+router.get('/:planId?/version', asyncMiddleware(PlanVersionController.showAll));
+
+// Get a specific version for a plan
+router.get('/:planId?/version/:version?', asyncMiddleware(PlanVersionController.show));
 
 //
 // Pasture
