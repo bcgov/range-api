@@ -256,15 +256,15 @@ describe('Test Plan routes', () => {
   });
 
   test('Getting a specific version of a plan', async () => {
-    const [version] = await dm.db('plan_version').where('canonical_id', 1).where('version', 1);
+    const [version] = await dm.db('plan_version').where('canonical_id', 1).where('version', -1);
     const [plan] = await dm.db('plan').where('id', version.plan_id);
 
     await request(app)
-      .get(`${baseUrl}/1`)
+      .get(`${baseUrl}/-1`)
       .expect(200)
       .expect((res) => {
         expect(res.body.version).toEqual(version.version);
-        expect(res.body.id).toEqual(plan.id);
+        expect(res.body.id).toEqual(plan.canonical_id);
       });
   });
 

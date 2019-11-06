@@ -114,6 +114,7 @@ export default class PlanVersionController {
       const { planId, version: planVersion } = versionData;
 
       const plan = await Plan.findById(db, planId);
+      await plan.eagerloadAllOneToMany();
 
       const formattedPlanData = deepMapKeys(plan, key => (key === 'canonicalId' ? 'id' : key));
 
