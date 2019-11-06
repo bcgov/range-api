@@ -62,7 +62,14 @@ router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.stor
 // Versions
 //
 
+// Create a new version
 router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store));
+
+// Get all versions for a plan
+router.get('/:planId?/version', asyncMiddleware(PlanVersionController.showAll));
+
+// Get a specific version for a plan
+router.get('/:planId?/version/:version?', asyncMiddleware(PlanVersionController.show));
 
 //
 // Pasture
@@ -173,6 +180,12 @@ router.put('/:planId?/invasive-plant-checklist/:checklistId?', asyncMiddleware(P
 
 // Create an additional requirement
 router.post('/:planId?/additional-requirement', asyncMiddleware(PlanController.storeAdditionalRequirement));
+
+// Update an additional requirement
+router.put('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.updateAdditionalRequirement));
+
+// Delete an additional requirement
+router.delete('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.destroyAdditionalRequirement));
 
 // Create a management consideration
 router.post('/:planId?/management-consideration', asyncMiddleware(PlanManagementConsiderationController.store));
