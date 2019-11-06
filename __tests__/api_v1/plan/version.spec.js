@@ -19,7 +19,7 @@ import ministerIssueMocks from '../../../__mocks__/fixtures/minister_issue_mock.
 import ministerIssueActionMocks from '../../../__mocks__/fixtures/minister_issue_action_mock.json';
 import ministerIssuePastureMocks from '../../../__mocks__/fixtures/minister_issue_pasture_mock.json';
 import managementConsiderationMocks from '../../../__mocks__/fixtures/management_consideration_mock.json';
-import invasivePlantMocks from '../../../__mocks__/fixtures/invasive_plant_mock.json'
+import invasivePlantMocks from '../../../__mocks__/fixtures/invasive_plant_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
@@ -219,5 +219,39 @@ describe('Test Plan routes', () => {
     expect(hasSameCanonicalID(ministerIssueActions)).toBeTruthy();
     expect(hasSameCanonicalID(ministerIssuePastures)).toBeTruthy();
     expect(hasSameCanonicalID(managementConsiderations)).toBeTruthy();
+  });
+
+  test('Getting each version of a plan', async () => {
+    const versions = (await dm.db('plan_version').where('canonical_id', 1));
+
+    await request(app)
+      .get(`${baseUrl}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.versions).toHaveLength(versions.length);
+        expect(res.body.versions).toEqual(
+          versions.map(
+            ({
+              canonical_id: canonicalId,
+              plan_id: planId,
+              updated_at: updatedAt,
+              created_at: createdAt,
+              ...version
+            }) => ({
+              ...version,
+              canonicalId,
+              planId,
+              updatedAt: updatedAt.toISOString(),
+              createdAt: createdAt.toISOString(),
+            }),
+          ),
+        );
+      });
+  });
+
+  test('Getting the versions of a nonexistant plan throws a 404 error', async () => {
+    await request(app)
+      .get('/api/v1/plan/2/version')
+      .expect(404);
   });
 });

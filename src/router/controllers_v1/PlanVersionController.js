@@ -53,4 +53,34 @@ export default class PlanVersionController {
       throw error;
     }
   }
+
+  static async showAll(req, res) {
+    const { user, params } = req;
+    // The "plan id" sent in a request is actually the canonical ID of a resource
+    const { planId: canonicalId } = params;
+
+    checkRequiredFields(['planId'], 'params', req);
+
+    try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+      if (!currentPlan) {
+        throw errorWithCode('Could not find plan', 404);
+      }
+
+      const { id: currentPlanId } = currentPlan;
+
+      const agreementId = await Plan.agreementForPlanId(db, currentPlanId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const versions = await PlanVersion.find(
+        db,
+        { canonical_id: canonicalId },
+      );
+
+      return res.status(200).json({ versions }).end();
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+  }
 }
