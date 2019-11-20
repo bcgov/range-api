@@ -72,7 +72,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
       sh "npm ci"
     }
 
-    stage('Test') {
+    /*stage('Test') {
       echo "Testing: ${BUILD_ID}"
 
       script {
@@ -159,7 +159,7 @@ podTemplate(label: "${POD_LABEL}", name: "${POD_LABEL}", serviceAccount: 'jenkin
           notifySlack("${APP_NAME}, Build #${BUILD_ID}", "#rangedevteam", "https://hooks.slack.com/services/${SLACK_TOKEN}", [attachment], JENKINS_ICO)
         }
       }
-    }
+    }*/
 
     stage('Image Build') {
       echo "Build: ${BUILD_ID}"
