@@ -186,6 +186,10 @@
                   }
                 },
                 {
+                  "name": "POSTGRESQL_PORT",
+                  "value": "5432"
+                },
+                {
                   "name": "POSTGRESQL_HOST",
                   "value": "${POSTGRES_DEPLOYMENT_NAME}.${NAMESPACE}.svc"
                 },
