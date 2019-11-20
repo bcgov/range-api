@@ -92,16 +92,6 @@ export default class PlanVersionController {
     checkRequiredFields(['planId', 'version'], 'params', req);
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Could not find plan', 404);
-      }
-
-      const { id: currentPlanId } = currentPlan;
-
-      const agreementId = await Plan.agreementForPlanId(db, currentPlanId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
       const versionData = await PlanVersion.findOne(
         db,
         { canonical_id: canonicalId, version },
@@ -113,12 +103,25 @@ export default class PlanVersionController {
 
       const { planId, version: planVersion } = versionData;
 
-      const plan = await Plan.findById(db, planId);
+      const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
+      if (!plan) {
+        throw errorWithCode('Could not find plan', 404);
+      }
+
+      const agreementId = await Plan.agreementForPlanId(db, plan.id);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+        db, { forest_file_id: agreementId },
+      );
+      await agreement.eagerloadAllOneToManyExceptPlan();
+      agreement.transformToV1();
+
       await plan.eagerloadAllOneToMany();
 
       const formattedPlanData = deepMapKeys(plan, key => (key === 'canonicalId' ? 'id' : key));
 
-      return res.status(200).json({ ...formattedPlanData, version: planVersion }).end();
+      return res.status(200).json({ ...formattedPlanData, version: planVersion, agreement }).end();
     } catch (error) {
       logger.error(error);
       throw error;
