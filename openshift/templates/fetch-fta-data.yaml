@@ -64,6 +64,8 @@ objects:
                       value: ${FTA_BASE_URL}
                     - name: POSTGRESQL_HOST
                       value: ${POSTGRESQL_HOST}
+                    - name: POSTGRESQL_PORT
+                      value: ${POSTGRESQL_DATABASE}
                     - name: POSTGRESQL_DATABASE
                       value: ${POSTGRESQL_DATABASE}
                     - name: POSTGRESQL_USER
@@ -148,6 +150,11 @@ parameters:
   - name: 'POSTGRESQL_HOST'
     displayName: 'PostgreSQL Service Name'
     description: 'The name of the postgres service (fetch it from oc)'
+    required: true
+  - name: 'POSTGRESQL_PORT'
+    displayName: 'PostgreSQL Port Number'
+    description: 'The port of the postgres service (fetch it from oc)'
+    value: 5432
     required: true
   - name: 'POSTGRESQL_DATABASE'
     displayName: 'PostgreSQL Database Name'
