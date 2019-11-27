@@ -154,7 +154,7 @@ parameters:
   - name: 'POSTGRESQL_PORT'
     displayName: 'PostgreSQL Port Number'
     description: 'The port of the postgres service (fetch it from oc)'
-    value: 5432
+    value: "5432"
     required: true
   - name: 'POSTGRESQL_DATABASE'
     displayName: 'PostgreSQL Database Name'
