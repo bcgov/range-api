@@ -64,6 +64,8 @@ objects:
                       value: ${FTA_BASE_URL}
                     - name: POSTGRESQL_HOST
                       value: ${POSTGRESQL_HOST}
+                    - name: POSTGRESQL_PORT
+                      value: ${POSTGRESQL_PORT}
                     - name: POSTGRESQL_DATABASE
                       value: ${POSTGRESQL_DATABASE}
                     - name: POSTGRESQL_USER
