@@ -447,11 +447,11 @@ export default class PlanPastureController {
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
-      const pasture = await Pasture.findOne(db, { id: pastureId });
+      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { id: communityId });
+      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
