@@ -1,9 +1,10 @@
-import { logger } from '@bcgov/nodejs-common-utils';
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import { MINISTER_ISSUE_ACTION_TYPE } from '../../constants';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import MinisterIssue from '../../libs/db2/model/ministerissue';
 
 const dm = new DataManager(config);
 const {
@@ -22,7 +23,7 @@ export default class PlanMinisterIssueActionController {
    */
   static async store(req, res) {
     const { body, params, user } = req;
-    const { planId, issueId } = params;
+    const { planId: canonicalId, issueId } = params;
     const {
       actionTypeId,
       detail,
@@ -41,14 +42,31 @@ export default class PlanMinisterIssueActionController {
       ['actionTypeId'], 'body', req,
     );
 
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
+      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
+      if (!issue) {
+        throw errorWithCode("Minister issue doesn't exist", 500);
+      }
+
       const data = {
         detail,
         action_type_id: actionTypeId,
-        issue_id: issueId,
+        issue_id: issue.id,
         other: null,
         no_graze_start_day: null,
         no_graze_start_month: null,
@@ -69,11 +87,11 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const action = await MinisterIssueAction.create(
+      const { canonicalId: actionCanonicalId, ...action } = await MinisterIssueAction.create(
         db,
         data,
       );
-      return res.status(200).json(action).end();
+      return res.status(200).json({ ...action, id: actionCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: store: fail with error: ${error.message}`);
       throw error;
@@ -87,7 +105,7 @@ export default class PlanMinisterIssueActionController {
    */
   static async update(req, res) {
     const { body, params, user } = req;
-    const { planId, actionId } = params;
+    const { planId: canonicalId, issueId, actionId } = params;
     const {
       actionTypeId,
       detail,
@@ -105,6 +123,18 @@ export default class PlanMinisterIssueActionController {
     checkRequiredFields(
       ['actionTypeId'], 'body', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -132,13 +162,15 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const updatedAction = await MinisterIssueAction.update(
+      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
+
+      const { canonicalId: actionCanonicalId, ...updatedAction } = await MinisterIssueAction.update(
         db,
-        { id: actionId },
+        { canonical_id: actionId, issue_id: issue.id },
         data,
       );
 
-      return res.status(200).json(updatedAction).end();
+      return res.status(200).json({ ...updatedAction, id: actionCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: update: fail with error: ${error.message}`);
       throw error;
@@ -152,17 +184,34 @@ export default class PlanMinisterIssueActionController {
    */
   static async destroy(req, res) {
     const { params, user } = req;
-    const { planId, actionId } = params;
+    const { planId: canonicalId, issueId, actionId } = params;
 
     checkRequiredFields(
       ['planId', 'issueId', 'actionId'], 'params', req,
     );
 
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 400);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const results = await MinisterIssueAction.removeById(db, actionId);
+      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
+
+      const results = await MinisterIssueAction.remove(
+        db,
+        { canonical_id: actionId, issue_id: issue.id },
+      );
 
       return res.status(204).json({
         success: (results.length > 0),

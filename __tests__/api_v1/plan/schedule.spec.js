@@ -5,6 +5,7 @@ import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import scheduleMocks from '../../../__mocks__/fixtures/schedule_mock.json';
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
@@ -22,7 +23,6 @@ const baseUrl = '/api/v1/plan/1/schedule';
 const body = {
   year: 2021,
   narative: 'This is a narative',
-  planId: 1,
   grazingScheduleEntries: [],
 };
 const entryBody = {
@@ -41,6 +41,9 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('client_agreement'));
   await dm.db.schema.raw(truncate('agreement'));
   await dm.db.schema.raw(truncate('plan'));
+  await dm.db.schema.raw(truncate('plan_version'));
+  await dm.db.schema.raw(truncate('pasture'));
+  await dm.db.schema.raw(truncate('grazing_schedule'));
 };
 
 describe('Test Schedule routes', () => {
@@ -58,7 +61,6 @@ describe('Test Schedule routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const schedule = scheduleMocks[0];
     const pasture = pastureMocks[0];
     const clientAgreement = clientAgreementMocks[0];
@@ -67,7 +69,8 @@ describe('Test Schedule routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('grazing_schedule').insert([schedule]);
     await dm.db('pasture').insert([pasture]);
@@ -87,7 +90,7 @@ describe('Test Schedule routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...body,
-          planId: 1,
+          planId: 2,
           id: 2,
         });
       });
@@ -95,7 +98,7 @@ describe('Test Schedule routes', () => {
 
   test('Creating a schedule with for a nonexistant plan throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/10/schedule')
+      .post('/api/v1/plan/2/schedule')
       .send(body)
       .expect(500);
   });
@@ -107,7 +110,12 @@ describe('Test Schedule routes', () => {
       .send({ ...body, narative })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, narative, id: 1, planId: 1 });
+        expect(res.body).toEqual({
+          ...body,
+          narative,
+          id: 1,
+          planId: 2,
+        });
       });
   });
 
@@ -138,7 +146,11 @@ describe('Test Schedule routes', () => {
       .send(entryBody)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...entryBody, id: 1, grazingScheduleId: 1 });
+        expect(res.body).toEqual({
+          ...entryBody,
+          id: 1,
+          grazingScheduleId: 1,
+        });
       });
   });
 
@@ -155,7 +167,11 @@ describe('Test Schedule routes', () => {
       .send(entryBody)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...entryBody, id: 1, grazingScheduleId: 1 });
+        expect(res.body).toEqual({
+          ...entryBody,
+          id: 1,
+          grazingScheduleId: 1,
+        });
       });
 
     await request(app)

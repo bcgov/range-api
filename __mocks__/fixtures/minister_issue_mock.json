@@ -1,9 +1,10 @@
 [
   {
+    "canonical_id": 1,
     "detail": "This is a pretty big issue",
     "objective": "Our objective is to address the issue....",
     "identified": true,
     "issue_type_id": 2,
-    "plan_id": 1
+    "plan_id": 2
   }
 ]

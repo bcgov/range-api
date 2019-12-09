@@ -7,6 +7,7 @@ import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import issueMocks from '../../../__mocks__/fixtures/minister_issue_mock.json';
 import issueActionMocks from '../../../__mocks__/fixtures/minister_issue_action_mock.json';
 import planMocks from '../../../__mocks__/fixtures/plan_mock.json';
+import planVersionMocks from '../../../__mocks__/fixtures/plan_version_mock.json';
 import pastureMocks from '../../../__mocks__/fixtures/pasture_mock.json';
 import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_mock.json';
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
@@ -36,6 +37,7 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('ref_zone'));
   await dm.db.schema.raw(truncate('agreement'));
   await dm.db.schema.raw(truncate('client_agreement'));
+  await dm.db.schema.raw(truncate('plan_version'));
   await dm.db.schema.raw(truncate('plan'));
   await dm.db.schema.raw(truncate('plan_confirmation'));
   await dm.db.schema.raw(truncate('pasture'));
@@ -58,7 +60,6 @@ describe('Test Minister Issue Action routes', () => {
     const user = userMocks[0];
     const zone = zoneMocks[0];
     const agreement = agreementMocks[0];
-    const plan = planMocks[0];
     const pasture = pastureMocks[0];
     const issue = issueMocks[0];
     const issueAction = issueActionMocks[0];
@@ -68,7 +69,8 @@ describe('Test Minister Issue Action routes', () => {
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
-    await dm.db('plan').insert([plan]);
+    await dm.db('plan').insert(planMocks);
+    await dm.db('plan_version').insert(planVersionMocks);
     await dm.db('plan_confirmation').insert([planConfirmation]);
     await dm.db('pasture').insert([pasture]);
     await dm.db('minister_issue').insert([issue]);
@@ -144,7 +146,7 @@ describe('Test Minister Issue Action routes', () => {
 
   test('Creating a minister issue action on a nonexistant minister issue throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/1/issue/10/action')
+      .post('/api/v1/plan/1/issue/2/action')
       .send(body)
       .expect(500);
   });

@@ -40,7 +40,7 @@ export default class GrazingScheduleEntry extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'grace_days', 'livestock_count', 'date_in', 'date_out',
-      'pasture_id', 'livestock_type_id', 'grazing_schedule_id']
+      'pasture_id', 'livestock_type_id', 'grazing_schedule_id', 'canonical_id']
       .map(field => `${this.table}.${field}`);
   }
 

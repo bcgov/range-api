@@ -29,6 +29,7 @@ import { Router } from 'express';
  * Controller for individual routes related to plan.
  */
 import PlanController from '../controllers_v1/PlanController';
+import PlanVersionController from '../controllers_v1/PlanVersionController';
 import PlanStatusController from '../controllers_v1/PlanStatusController';
 import PlanPastureController from '../controllers_v1/PlanPastureController';
 import PlanScheduleController from '../controllers_v1/PlanScheduleController';
@@ -58,6 +59,19 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(PlanStatus
 router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.storeStatusHistory));
 
 //
+// Versions
+//
+
+// Create a new version
+router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store));
+
+// Get all versions for a plan
+router.get('/:planId?/version', asyncMiddleware(PlanVersionController.showAll));
+
+// Get a specific version for a plan
+router.get('/:planId?/version/:version?', asyncMiddleware(PlanVersionController.show));
+
+//
 // Pasture
 //
 
@@ -70,16 +84,44 @@ router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureControlle
 // create a plant community
 router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(PlanPastureController.storePlatCommunity));
 
+// Update an existing plant community
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.updatePlantCommunity));
+
+// Delete an existing plant community
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId', asyncMiddleware(PlanPastureController.destroyPlantCommunity));
+
 // create a plant community action
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/action', asyncMiddleware(PlanPastureController.storePlantCommunityAction));
+
+// Update a plant community action
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.updatePlantCommunityAction));
+
+// Delete a plant community action
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/action/:actionId', asyncMiddleware(PlanPastureController.destroyPlantCommunityAction));
 
 // create a indicator plant
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant',
   asyncMiddleware(PlanPastureController.storeIndicatorPlant));
 
+// Update an indicator plant
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.updateIndicatorPlant));
+
+// Delete an indicator plant
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/indicator-plant/:plantId?',
+  asyncMiddleware(PlanPastureController.destroyIndicatorPlant));
+
 // create a monitoring area
 router.post('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area',
   asyncMiddleware(PlanPastureController.storeMonitoringArea));
+
+// Update a monitoring area
+router.put('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId?',
+  asyncMiddleware(PlanPastureController.updateMonitoringArea));
+
+// Delete a monitoring area
+router.delete('/:planId?/pasture/:pastureId?/plant-community/:communityId/monitoring-area/:areaId?',
+  asyncMiddleware(PlanPastureController.destroyMonitoringArea));
 
 //
 // Schedule
@@ -138,6 +180,12 @@ router.put('/:planId?/invasive-plant-checklist/:checklistId?', asyncMiddleware(P
 
 // Create an additional requirement
 router.post('/:planId?/additional-requirement', asyncMiddleware(PlanController.storeAdditionalRequirement));
+
+// Update an additional requirement
+router.put('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.updateAdditionalRequirement));
+
+// Delete an additional requirement
+router.delete('/:planId?/additional-requirement/:requirementId?', asyncMiddleware(PlanController.destroyAdditionalRequirement));
 
 // Create a management consideration
 router.post('/:planId?/management-consideration', asyncMiddleware(PlanManagementConsiderationController.store));

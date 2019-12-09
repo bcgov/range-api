@@ -21,7 +21,7 @@ export default class AdditionalRequirement extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'url', 'category_id', 'plan_id']
+    return ['id', 'detail', 'url', 'category_id', 'plan_id', 'canonical_id']
       .map(field => `${this.table}.${field}`);
   }
 

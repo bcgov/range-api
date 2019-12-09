@@ -22,7 +22,7 @@ export default class MonitoringAreaPurpose extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'purpose_type_id', 'monitoring_area_id',
+      'id', 'purpose_type_id', 'monitoring_area_id', 'canonical_id',
     ].map(field => `${this.table}.${field}`);
   }
 

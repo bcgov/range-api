@@ -28,6 +28,7 @@ import LivestockIdentifierType from './model/livestockidentifiertype';
 import LivestockType from './model/livestocktype';
 import Pasture from './model/pasture';
 import Plan from './model/plan';
+import PlanVersion from './model/planversion';
 import PlanExtension from './model/planextension';
 import PlanStatus from './model/planstatus';
 import Usage from './model/usage';
@@ -105,6 +106,7 @@ export default class DataManager {
     this.MinisterIssueType = MinisterIssueType;
     this.MinisterIssuePasture = MinisterIssuePasture;
     this.Plan = Plan;
+    this.PlanVersion = PlanVersion;
     this.PlanStatus = PlanStatus;
     this.PlanExtension = PlanExtension;
     this.Pasture = Pasture;
