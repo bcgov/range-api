@@ -1,4 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
+import { mapDeep } from 'deepdash/standalone';
 import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
@@ -60,7 +61,10 @@ export default class PlanController {
 
       const formattedPlanData = deepMapKeys(planData, key => (key === 'canonicalId' ? 'id' : key));
 
-      return res.status(200).json({ ...formattedPlanData, id: planCanonicalId }).end();
+      const mappedPlanData = mapDeep(formattedPlanData, (val, key) =>
+        (key === 'planId' ? planCanonicalId : val));
+
+      return res.status(200).json({ ...mappedPlanData, id: planCanonicalId }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
