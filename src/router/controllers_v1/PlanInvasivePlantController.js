@@ -84,6 +84,9 @@ export default class PlanInvasivePlantController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
+      delete body.planId;
+      delete body.plan_id;
+
       const { canonicalId: checklistCanonicalId, ...updatedChecklist } = await InvasivePlantChecklist.update(
         db,
         { canonical_id: checklistId, plan_id: planId },
