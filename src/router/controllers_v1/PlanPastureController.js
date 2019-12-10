@@ -101,6 +101,47 @@ export default class PlanPastureController {
   }
 
   /**
+   * Delete a pasture
+   * @param {*} req - express req
+   * @param {*} res - express res
+   */
+  static async destroy(req, res) {
+    const { params, user } = req;
+    const { planId: canonicalId, pastureId } = params;
+
+    checkRequiredFields(
+      ['planId', 'pastureId'], 'params', req,
+    );
+
+    try {
+      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+      if (!currentPlan) {
+        throw errorWithCode('Plan doesn\'t exist', 404);
+      }
+
+      const planId = currentPlan.id;
+
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const result = await Pasture.remove(
+        db,
+        { canonical_id: pastureId, plan_id: planId },
+      );
+
+      if (result === 0) {
+        throw errorWithCode("Pasture doesn't exist", 400);
+      }
+
+      return res.status(204).send();
+    } catch (err) {
+      logger.error(`PlanPastureController: update: fail with error: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
    * Create plant community
    * @param {*} req : express req
    * @param {*} res : express res

@@ -81,6 +81,8 @@ router.post('/:planId?/pasture', asyncMiddleware(PlanPastureController.store));
 // Update the existing Pasture of an existing Plan
 router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureController.update));
 
+router.delete('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureController.destroy));
+
 // create a plant community
 router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(PlanPastureController.storePlatCommunity));
 
