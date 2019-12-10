@@ -148,7 +148,7 @@ export default class PlanPastureController {
    */
   static async storePlatCommunity(req, res) {
     const { params, body, user } = req;
-    const { planId, pastureId } = params;
+    const { planId: canonicalId, pastureId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId'], 'params', req,
@@ -158,11 +158,19 @@ export default class PlanPastureController {
       ['communityTypeId', 'purposeOfAction'], 'body', req,
     );
 
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { id: pastureId });
+      const pasture = await Pasture.findOne(db, { canonical_id: pastureId, plan_id: planId });
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
