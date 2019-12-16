@@ -178,7 +178,14 @@ export default class PlanPastureController {
       if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
         throw errorWithCode(`Unacceptable purpose of action with "${purposeOfAction}"`);
       }
-      const { canonicalId: communityCanonicalId, ...plantCommunity } = await PlantCommunity.create(db, { ...body, pastureId });
+      const {
+        canonicalId: communityCanonicalId,
+        ...plantCommunity
+      } = await PlantCommunity.create(db, {
+        ...body,
+        pastureId: pasture.id,
+      });
+
       return res.status(200).json({ ...plantCommunity, id: communityCanonicalId }).end();
     } catch (error) {
       logger.error(`PlanPastureController: storePlatCommunity: fail with error: ${error.message}`);
