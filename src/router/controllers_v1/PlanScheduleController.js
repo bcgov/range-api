@@ -171,11 +171,23 @@ export default class PlanScheduleController {
    */
   static async destroy(req, res) {
     const { user, params } = req;
-    const { planId, scheduleId } = params;
+    const { planId: canonicalId, scheduleId } = params;
 
     checkRequiredFields(
       ['planId', 'scheduleId'], 'params', req,
     );
+
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 404);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -183,7 +195,10 @@ export default class PlanScheduleController {
 
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
-      const result = await GrazingSchedule.removeById(db, scheduleId);
+      const result = await GrazingSchedule.remove(db, {
+        canonical_id: scheduleId,
+        plan_id: planId,
+      });
       if (result === 0) {
         throw errorWithCode('No such schedule exists', 400);
       }
