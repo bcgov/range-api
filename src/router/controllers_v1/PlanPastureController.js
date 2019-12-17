@@ -676,7 +676,7 @@ export default class PlanPastureController {
 
       const monitoringArea = await MonitoringArea.findOne(
         db,
-        { canonical_id: areaId, plant_community_id: communityId },
+        { canonical_id: areaId, plant_community_id: plantCommunity.id },
       );
 
       if (!monitoringArea) {
