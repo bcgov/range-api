@@ -14,6 +14,7 @@ const {
   PlanStatus,
   AdditionalRequirement,
   PlanVersion,
+  Pasture,
 } = dm;
 
 export default class PlanController {
@@ -64,7 +65,27 @@ export default class PlanController {
       const mappedPlanData = mapDeep(formattedPlanData, (val, key) =>
         (key === 'planId' ? planCanonicalId : val));
 
-      return res.status(200).json({ ...mappedPlanData, id: planCanonicalId }).end();
+      const mappedGrazingSchedules = await Promise.all(
+        mappedPlanData.grazingSchedules.map(async schedule => ({
+          ...schedule,
+          grazingScheduleEntries: await Promise.all(
+            schedule.grazingScheduleEntries.map(async (entry) => {
+              const pasture = await Pasture.findById(db, entry.pastureId);
+
+              return {
+                ...entry,
+                pastureId: pasture.canonicalId,
+              };
+            }),
+          ),
+        })),
+      );
+
+      return res.status(200).json({
+        ...mappedPlanData,
+        grazingSchedules: mappedGrazingSchedules,
+        id: planCanonicalId,
+      }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);

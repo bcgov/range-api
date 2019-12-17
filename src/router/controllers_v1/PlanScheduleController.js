@@ -11,6 +11,7 @@ const {
   Plan,
   GrazingSchedule,
   GrazingScheduleEntry,
+  Pasture,
 } = dm;
 
 export default class PlanScheduleController {
@@ -62,10 +63,16 @@ export default class PlanScheduleController {
       // or nothing created.
       const schedule = await GrazingSchedule.create(db, { ...body, ...{ plan_id: planId } });
       // eslint-disable-next-line arrow-body-style
-      const promises = grazingScheduleEntries.map((entry) => {
+      const promises = grazingScheduleEntries.map(async (entry) => {
+        const pasture = await Pasture.findOne(db, {
+          canonical_id: entry.pastureId,
+          plan_id: planId,
+        });
+
         return GrazingScheduleEntry.create(db, {
           ...entry,
-          ...{ grazing_schedule_id: schedule.id },
+          grazing_schedule_id: schedule.id,
+          pasture_id: pasture.id,
         });
       });
 
@@ -134,20 +141,30 @@ export default class PlanScheduleController {
         { ...body, plan_id: planId },
       );
       // eslint-disable-next-line arrow-body-style
-      const promises = grazingScheduleEntries.map((entry) => {
+      const promises = grazingScheduleEntries.map(async (entry) => {
         delete entry.scheduleId; // eslint-disable-line no-param-reassign
         delete entry.schedule_id; // eslint-disable-line no-param-reassign
+
+        const pasture = await Pasture.findOne(db, {
+          canonical_id: entry.pastureId,
+          plan_id: planId,
+        });
+
         if (entry.id) {
+          const { id, ...entryData } = entry;
           return GrazingScheduleEntry.update(
             db,
-            { id: entry.id },
-            { ...entry, grazing_schedule_id: scheduleId },
+            { canonical_id: entry.id, grazing_schedule_id: schedule.id },
+            { ...entryData,
+              grazing_schedule_id: schedule.id,
+              pasture_id: pasture.id,
+            },
           );
         }
 
         return GrazingScheduleEntry.create(
           db,
-          { ...entry, grazing_schedule_id: scheduleId },
+          { ...entry, grazing_schedule_id: schedule.id, pasture_id: pasture.id },
         );
       });
 
@@ -218,7 +235,7 @@ export default class PlanScheduleController {
    */
   static async storeScheduleEntry(req, res) {
     const { body, params, user } = req;
-    const { planId, scheduleId } = params;
+    const { planId: canonicalId, scheduleId } = params;
 
     checkRequiredFields(
       ['planId', 'scheduleId'], 'params', req,
@@ -228,6 +245,18 @@ export default class PlanScheduleController {
       ['livestockTypeId'], 'body', req,
     );
 
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 404);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
@@ -236,14 +265,21 @@ export default class PlanScheduleController {
       delete body.planId;
       delete body.plan_id;
 
+      const schedule = await GrazingSchedule.findOne(db, {
+        plan_id: planId, canonical_id: scheduleId,
+      });
+
       // Unit test defect fix: Check schedule exists
-      if (!(await GrazingSchedule.findById(db, scheduleId))) {
+      if (!schedule) {
         throw errorWithCode('No such schedule exists', 400);
       }
 
+      const pasture = await Pasture.findOne(db, { canonical_id: body.pastureId, plan_id: planId });
+
       const { canonicalId: entryCanonicalId, ...entry } = await GrazingScheduleEntry.create(db, {
         ...body,
-        ...{ grazing_schedule_id: scheduleId },
+        grazing_schedule_id: schedule.id,
+        pasture_id: pasture.id,
       });
 
       return res.status(200).json({ ...entry, id: entryCanonicalId }).end();
@@ -260,18 +296,36 @@ export default class PlanScheduleController {
    */
   static async destroyScheduleEntry(req, res) {
     const { params, user } = req;
-    const { planId, grazingScheduleEntryId } = params;
+    const { planId: canonicalId, scheduleId, grazingScheduleEntryId } = params;
 
     checkRequiredFields(
       ['planId', 'scheduleId', 'grazingScheduleEntryId'], 'params', req,
     );
 
+    if (!canonicalId) {
+      throw errorWithCode('planId must be provided in path', 404);
+    }
+
+    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
+
+    if (!currentPlan) {
+      throw errorWithCode('Plan doesn\'t exist', 500);
+    }
+
+    const planId = currentPlan.id;
+
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const schedule = await GrazingSchedule.findOne(db, {
+        plan_id: planId, canonical_id: scheduleId,
+      });
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
-      const result = await GrazingScheduleEntry.removeById(db, grazingScheduleEntryId);
+      const result = await GrazingScheduleEntry.remove(db, {
+        grazing_schedule_id: schedule.id,
+        canonical_id: grazingScheduleEntryId,
+      });
       if (result === 0) {
         throw errorWithCode('No such grazing schedule entry exists', 400);
       }

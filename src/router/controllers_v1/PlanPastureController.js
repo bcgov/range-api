@@ -409,7 +409,7 @@ export default class PlanPastureController {
 
       const result = await PlantCommunityAction.remove(
         db,
-        { plant_community_id: communityId, canonical_id: actionId },
+        { plant_community_id: plantCommunity.id, canonical_id: actionId },
       );
 
       if (result === 0) {
@@ -617,7 +617,7 @@ export default class PlanPastureController {
 
       const monitoringArea = await MonitoringArea.create(
         db,
-        { ...body, plantCommunityId: communityId },
+        { ...body, plantCommunityId: plantCommunity.id },
       );
 
       const promises = purposeTypeIds.map(pId => (
@@ -676,7 +676,7 @@ export default class PlanPastureController {
 
       const monitoringArea = await MonitoringArea.findOne(
         db,
-        { canonical_id: areaId, plant_community_id: communityId },
+        { canonical_id: areaId, plant_community_id: plantCommunity.id },
       );
 
       if (!monitoringArea) {
@@ -760,7 +760,7 @@ export default class PlanPastureController {
 
       const monitoringArea = await MonitoringArea.findOne(
         db,
-        { canonical_id: areaId, plant_community_id: communityId },
+        { canonical_id: areaId, plant_community_id: plantCommunity.id },
       );
 
       if (!monitoringArea) {
