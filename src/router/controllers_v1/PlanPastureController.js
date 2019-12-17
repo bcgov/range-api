@@ -409,7 +409,7 @@ export default class PlanPastureController {
 
       const result = await PlantCommunityAction.remove(
         db,
-        { plant_community_id: communityId, canonical_id: actionId },
+        { plant_community_id: plantCommunity.id, canonical_id: actionId },
       );
 
       if (result === 0) {
