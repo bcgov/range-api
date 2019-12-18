@@ -81,9 +81,20 @@ export default class PlanController {
         })),
       );
 
+      const mappedMinisterIssues = await Promise.all(
+        mappedPlanData.ministerIssues.map(async issue => ({
+          ...issue,
+          pastures: await Promise.all(issue.pastures.map(async (pastureId) => {
+            const pasture = await Pasture.findOne(db, { id: pastureId });
+            return pasture.canonicalId;
+          })),
+        })),
+      );
+
       return res.status(200).json({
         ...mappedPlanData,
         grazingSchedules: mappedGrazingSchedules,
+        ministerIssues: mappedMinisterIssues,
         id: planCanonicalId,
       }).end();
     } catch (error) {
