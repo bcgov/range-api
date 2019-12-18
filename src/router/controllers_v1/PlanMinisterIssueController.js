@@ -5,6 +5,7 @@ import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import Pasture from '../../libs/db2/model/pasture';
 
 const dm = new DataManager(config);
 const {
@@ -111,8 +112,13 @@ export default class PlanMinisterIssueController {
     try {
       const data = await PlanMinisterIssueController.validate(user, planId, body);
       const issue = await MinisterIssue.create(db, { ...data, ...{ plan_id: planId } });
-      const promises = pastures && pastures.map(id =>
-        MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id }));
+      const promises = pastures && pastures.map(async (id) => {
+        const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: id });
+        await MinisterIssuePasture.create(db, {
+          pasture_id: pasture.id,
+          minister_issue_id: issue.id,
+        });
+      });
       if (promises) await Promise.all(promises);
 
       const { canonicalId: issueCanonicalId, ...createdIssue } = {
@@ -164,17 +170,35 @@ export default class PlanMinisterIssueController {
         data,
       );
 
-      // remove the existing link between the issue and it's related pastures.
-      const issuePastures = await Promise.all(pastures.map(id =>
-        MinisterIssuePasture.find(db, { pasture_id: id, minister_issue_id: issue.id })));
+      // Get existing pastures for minister issue
+      const issuePastures = await Promise.all((await MinisterIssuePasture.find(db, {
+        minister_issue_id: issue.id,
+      })).map(async issuePasture => ({
+        ...issuePasture,
+        pasture: await Pasture.findOne(db, { id: issuePasture.pastureId }),
+      })));
       const flatIssuePastures = flatten(issuePastures);
 
-      await Promise.all(flatIssuePastures.map(item =>
+      const removedPastures = flatIssuePastures.filter(
+        p => !pastures.includes(p.pasture.canonicalId),
+      );
+      const newPastures = pastures.filter(
+        pId => !flatIssuePastures.find(p => p.pasture.canonicalId === pId),
+      );
+
+
+      // Remove pastures not present in updated pastures array
+      await Promise.all(removedPastures.map(item =>
         MinisterIssuePasture.removeById(db, item.id)));
 
-      // build the new relation between the issue and it's pastures.
-      await Promise.all(pastures.map(id =>
-        MinisterIssuePasture.create(db, { pasture_id: id, minister_issue_id: issue.id })));
+      // Add new pastures provided in request body
+      await Promise.all(newPastures.map(async (id) => {
+        const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: id });
+        return MinisterIssuePasture.create(db, {
+          pasture_id: pasture.id,
+          minister_issue_id: issue.id,
+        });
+      }));
 
       const { canonicalId: issueCanonicalId, ...updatedIssue } = {
         ...issue,
