@@ -1,4 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
+import { mapDeep } from 'deepdash/standalone';
 import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
@@ -10,6 +11,7 @@ const {
   Plan,
   Agreement,
   PlanVersion,
+  Pasture,
 } = dm;
 
 export default class PlanVersionController {
@@ -121,7 +123,42 @@ export default class PlanVersionController {
 
       const formattedPlanData = deepMapKeys(plan, key => (key === 'canonicalId' ? 'id' : key));
 
-      return res.status(200).json({ ...formattedPlanData, version: planVersion, agreement }).end();
+      const mappedPlanData = mapDeep(formattedPlanData, (val, key) =>
+        (key === 'planId' ? plan.canonicalId : val));
+
+      const mappedGrazingSchedules = await Promise.all(
+        mappedPlanData.grazingSchedules.map(async schedule => ({
+          ...schedule,
+          grazingScheduleEntries: await Promise.all(
+            schedule.grazingScheduleEntries.map(async (entry) => {
+              const pasture = await Pasture.findById(db, entry.pastureId);
+
+              return {
+                ...entry,
+                pastureId: pasture.canonicalId,
+              };
+            }),
+          ),
+        })),
+      );
+
+      const mappedMinisterIssues = await Promise.all(
+        mappedPlanData.ministerIssues.map(async issue => ({
+          ...issue,
+          pastures: await Promise.all(issue.pastures.map(async (pastureId) => {
+            const pasture = await Pasture.findOne(db, { id: pastureId });
+            return pasture.canonicalId;
+          })),
+        })),
+      );
+
+      return res.status(200).json({
+        ...mappedPlanData,
+        grazingSchedules: mappedGrazingSchedules,
+        ministerIssues: mappedMinisterIssues,
+        version: planVersion,
+        agreement,
+      }).end();
     } catch (error) {
       logger.error(error);
       throw error;
