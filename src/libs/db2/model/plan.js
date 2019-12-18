@@ -323,7 +323,7 @@ export default class Plan extends Model {
 
           const ministerPasturePromises = issue.pastures.map(
             async (pastureId) => {
-              const pasture = newPastures.find(p => p.original.canonicalId === pastureId);
+              const pasture = newPastures.find(p => p.original.id === pastureId);
               const newPasture = await MinisterIssuePasture.create(db, {
                 pasture_id: pasture.id,
                 minister_issue_id: newIssue.id,
