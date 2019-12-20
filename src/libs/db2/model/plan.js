@@ -358,6 +358,19 @@ export default class Plan extends Model {
 
       const newConsiderations = await Promise.all(managementConsiderationPromises);
 
+      const confirmationPromises = plan.confirmations.map(
+        async ({ id: confirmationId, ...confirmation }) => {
+          const newConfirmation = await PlanConfirmation.create(db, {
+            ...confirmation,
+            plan_id: newPlan.id,
+          });
+
+          return newConfirmation;
+        },
+      );
+
+      const newConfirmations = await Promise.all(confirmationPromises);
+
       const { id, ...invasivePlantChecklist } = plan.invasivePlantChecklist;
 
       const newInvasivePlantChecklist = await InvasivePlantChecklist.create(db, {
@@ -375,6 +388,7 @@ export default class Plan extends Model {
         managementConsiderations: newConsiderations,
         grazingSchedules: newGrazingSchedules,
         invasivePlantChecklist: newInvasivePlantChecklist,
+        confirmations: newConfirmations,
       };
     } catch (e) {
       db.raw('ROLLBACK');
