@@ -40,39 +40,50 @@ export const mockUsage = flatten(
 export const leslie = {
   client_number: '09999901',
   client_name: 'Leslie Knope',
+  username: 'bceid\\leslie.knope'
 };
 export const tom = {
   client_number: '09999903',
   client_name: 'Tom Haverford',
+  username: 'bceid\\tom.haverford'
 };
 export const andy = {
   client_number: '09999909',
   client_name: 'Andy Dwyer',
+  username: 'bceid\\andy.dwyer'
 };
 export const april = {
   client_number: '09999905',
   client_name: 'April Ludgate',
+  username: 'bceid\\april.ludgate'
 };
 export const ann = {
   client_number: '09999906',
   client_name: 'Ann Perkins',
+  username: 'bceid\\ann.perkins'
 };
 export const nackyu = {
   client_number: '09999910',
   client_name: 'Nackyu Han',
+  username: 'bceid\\nackyu711'
 };
 export const ben = {
   client_number: '09999907',
   client_name: 'Ben Wyatt',
+  username: 'bceid\\ben.wyatt'
 };
 export const ron = {
   client_number: '09999902',
   client_name: 'Ron Swanson',
+  username: 'bceid\\ron.swanson'
 };
 export const chris = {
   client_number: '09999908',
   client_name: 'Chris Traeger',
+  username: 'bceid\\chris.traeger'
 };
+
+export const users = [leslie, tom, andy, april, ann, nackyu, ben, ron, chris];
 
 export const mockClients = flatten(
   [leslie, ann, tom, april, andy, nackyu].map((client, x) => (
