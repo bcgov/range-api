@@ -16,6 +16,20 @@ jobs:
       matrix:
         node-version: [10.x]
 
+    env:
+      POSTGRESQL_DATABASE: myra
+      POSTGRESQL_DATABASE_TEST: myra_test
+      POSTGRESQL_HOST: db
+      POSTGRESQL_PORT: 5432
+
+      PROJECT: myra_range
+      ENVIRONMENT: development
+      API_PORT: 8080
+      BUILD_TARGET: base
+
+      POSTGRESQL_PASSWORD: banana
+      POSTGRESQL_USER: app_dv_myra
+
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
