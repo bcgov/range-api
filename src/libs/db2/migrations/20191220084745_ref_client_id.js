@@ -30,3 +30,11 @@ exports.up = async (knex) => {
       ADD FOREIGN KEY (client_id) REFERENCES ref_client(id);
   `);
 };
+
+exports.down = async (knex) => {
+  await knex.raw(`
+    ALTER TABLE ref_client
+      DROP COLUMN id,
+      ADD PRIMARY KEY (client_number);
+  `);
+};
