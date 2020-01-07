@@ -83,6 +83,10 @@ describe('Test Minister Issue Action routes', () => {
     await truncateTables();
   });
 
+  afterAll(async () => {
+    await dm.db.destroy();
+  });
+
   test('Creating a minister issue action', async () => {
     await request(app)
       .post(baseUrl)
