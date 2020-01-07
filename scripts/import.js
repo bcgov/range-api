@@ -319,7 +319,7 @@ const updateUsage = async (data) => {
       calendar_year, 
       authorized_use,
       temp_increase,
-	  non_use_nonbillable,
+	    non_use_nonbillable,
       non_use_billable,
       total_annual_use,
     } = record;
@@ -348,7 +348,7 @@ const updateUsage = async (data) => {
             year: Number(calendar_year),
             authorizedAum: Number(authorized_use) || 0,
             temporaryIncrease: Number(temp_increase) || 0,
-            totalNonUse: Number(non_use_nonbillable) + Number(non_use_nonbillable) || 0,
+            totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
             totalAnnualUse: Number(total_annual_use) || 0,
             agreementId: agreement.forestFileId,
           }
@@ -359,7 +359,7 @@ const updateUsage = async (data) => {
           year: Number(calendar_year),
           authorizedAum: Number(authorized_use) || 0,
           temporaryIncrease: Number(temp_increase) || 0,
-          totalNonUse: Number(total_non_use) || 0,
+          totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
           agreementId: agreement.forestFileId,
         });
