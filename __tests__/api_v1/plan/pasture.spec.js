@@ -132,10 +132,6 @@ describe('Test Pasture routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   test('Creating a new pasture', async () => {
     await request(app)
       .post(baseUrl)

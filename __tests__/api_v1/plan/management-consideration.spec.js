@@ -71,10 +71,6 @@ describe('Test Management Consideration routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   test('Creating a management consideration', async () => {
     await request(app)
       .post(baseUrl)

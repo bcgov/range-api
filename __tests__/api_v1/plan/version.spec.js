@@ -123,10 +123,6 @@ describe('Test Plan routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   test('Creating a new version', async () => {
     const planId = 1;
     await request(app)
