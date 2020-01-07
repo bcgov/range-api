@@ -137,6 +137,10 @@ describe('Test Plan routes', () => {
     await truncateTables();
   });
 
+  afterAll(async () => {
+    await dm.db.destroy();
+  });
+
   // GET /plan/:planId
   test('Fetching plan for a specific id', async () => {
     await request(app)

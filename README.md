@@ -25,6 +25,23 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 
 ## Usage
 
+### Running tests
+
+In order to run the test suite, you must first prepare a local test environment.
+```bash
+make local-test-setup
+docker-compose up -d
+```
+
+Then you should be able to run tests.
+```bash
+npm test
+```
+
+> If you are coming across any strange errors while running tests, try 
+completely removing the test environment using `docker-compose down -v`, and
+retry these steps.
+
 ## Requirements
 
 ## Installation

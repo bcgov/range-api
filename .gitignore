@@ -41,6 +41,7 @@ task-definition.json
 # These files contain credentials, do not add them to
 # the repo.
 .env
+.envrc
 sequelize.json
 
 # Logs
