@@ -68,10 +68,6 @@ describe('Test Invasive Plant routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   test('Creating an invasive plant checklist', async () => {
     await request(app)
       .post(baseUrl)

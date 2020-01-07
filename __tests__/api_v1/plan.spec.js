@@ -137,10 +137,6 @@ describe('Test Plan routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   // GET /plan/:planId
   test('Fetching plan for a specific id', async () => {
     await request(app)
@@ -255,7 +251,7 @@ describe('Test Plan routes', () => {
   test('Updating an existing amendment confirmation', async () => {
     const confirmation = {
       planId: 1,
-      clientId: '09999901',
+      clientId: 1,
     };
 
     await request(app)

@@ -319,7 +319,7 @@ const updateUsage = async (data) => {
       calendar_year, 
       authorized_use,
       temp_increase,
-	  non_use_nonbillable,
+	    non_use_nonbillable,
       non_use_billable,
       total_annual_use,
     } = record;
@@ -348,7 +348,7 @@ const updateUsage = async (data) => {
             year: Number(calendar_year),
             authorizedAum: Number(authorized_use) || 0,
             temporaryIncrease: Number(temp_increase) || 0,
-            totalNonUse: Number(non_use_nonbillable) + Number(non_use_nonbillable) || 0,
+            totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
             totalAnnualUse: Number(total_annual_use) || 0,
             agreementId: agreement.forestFileId,
           }
@@ -359,7 +359,7 @@ const updateUsage = async (data) => {
           year: Number(calendar_year),
           authorizedAum: Number(authorized_use) || 0,
           temporaryIncrease: Number(temp_increase) || 0,
-          totalNonUse: Number(total_non_use) || 0,
+          totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
           agreementId: agreement.forestFileId,
         });
@@ -404,10 +404,11 @@ const updateClient = async (data) => {
     try {
       let client = await Client.findOne(db, {
         client_number: clientNumber,
+        location_code: clientLocationCode
       });
 
       if (client) {
-        await Client.update(db, { client_number: clientNumber }, 
+        await Client.update(db, { id: client.id }, 
           {
             name: clientName || 'Unknown Name',
             locationCode: clientLocationCode,
@@ -423,8 +424,7 @@ const updateClient = async (data) => {
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
         });
         created += 1;
-      }
-
+      }      
       const agreement = await Agreement.findById(db, agreementId);
       const clientAgreement = await ClientAgreement.findOne(db, {
         agreement_id: agreementId,
@@ -466,24 +466,14 @@ const prepareTestSetup = async () => {
     await Zone.update(db, { code: 'TEST6' }, { user_id: rangeAppTester.id });
 
     // assign clients
-    const leslie = await User.findOne(db, { username: 'bceid\\leslie.knope' });
-    await User.update(db, { id: leslie.id }, { client_id: mockData.leslie.client_number });
-    const ron = await User.findOne(db, { username: 'bceid\\ron.swanson' });
-    await User.update(db, { id: ron.id }, { client_id: mockData.ron.client_number });
-    const tom = await User.findOne(db, { username: 'bceid\\tom.haverford'});
-    await User.update(db, { id: tom.id }, { client_id: mockData.tom.client_number });
-    const andy = await User.findOne(db, { username: 'bceid\\andy.dwyer'});
-    await User.update(db, { id: andy.id }, { client_id: mockData.andy.client_number });
-    const april = await User.findOne(db, { username: 'bceid\\april.ludgate'});
-    await User.update(db, { id: april.id }, { client_id: mockData.april.client_number });
-    const ann = await User.findOne(db, { username: 'bceid\\ann.perkins'});
-    await User.update(db, { id: ann.id }, { client_id: mockData.ann.client_number });
-    const ben = await User.findOne(db, { username: 'bceid\\ben.wyatt'});
-    await User.update(db, { id: ben.id }, { client_id: mockData.ben.client_number });
-    const chris = await User.findOne(db, { username: 'bceid\\chris.traeger'});
-    await User.update(db, { id: chris.id }, { client_id: mockData.chris.client_number });
-    const nackyu = await User.findOne(db, { username: 'bceid\\nackyu711' });
-    await User.update(db, { id: nackyu.id }, { client_id: mockData.nackyu.client_number });
+    const clientsP = Object.values(mockData.users).map(async (user) => {
+      const client = await Client.findOne(db, { client_number: user.client_number });
+      
+      const {id} = await User.findOne(db, { username: user.username });
+      await User.update(db, { id }, { client_id: client.id });
+    });
+
+    await Promise.all(clientsP);
 
     console.log('Done preparing for test accounts');
     

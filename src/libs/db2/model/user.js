@@ -28,6 +28,23 @@ export default class User extends Model {
     super(data, db);
   }
 
+  static mapRow(row) {
+    return {
+      id: row.id,
+      username: row.username,
+      givenName: row.given_name,
+      familyName: row.family_name,
+      email: row.email,
+      piaSeen: row.pia_seen,
+      active: row.active,
+      lastLoginAt: row.last_login_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      clientId: row.client_id,
+      clientNumber: row.client_number,
+    };
+  }
+
   static get fields() {
     // primary key *must* be first!
     return ['id', 'username', 'client_id', 'given_name', 'family_name', 'email',
@@ -52,7 +69,24 @@ export default class User extends Model {
         .update(obj);
 
       if (count > 0) {
-        return await User.findOne(db, where);
+      //   const res = await db.raw(`
+      //   SELECT user_account.*, ref_client.client_number FROM user_account
+      //   LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+      //   WHERE user_account.id = ANY (?) ORDER BY ?;
+      // ` );
+
+        // return res.rows.map(this.mapRow);
+        const [{ id }] = await db
+          .table(User.table)
+          .where(where)
+          .returning('id');
+
+        const res = await db.raw(`
+          SELECT user_account.*, ref_client.client_number FROM user_account
+          LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+          WHERE user_account.id = ?;
+        `, [id]);
+        return res.rows.map(User.mapRow)[0];
       }
 
       return [];
@@ -93,7 +127,13 @@ export default class User extends Model {
       const results = await q;
       const userIds = results.map(obj => obj.id);
 
-      return await User.find(db, { id: userIds }, order);
+      const res = await db.raw(`
+        SELECT user_account.*, ref_client.client_number FROM user_account
+        LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+        WHERE user_account.id = ANY (?) ORDER BY ?;
+      `, [userIds, order]);
+
+      return res.rows.map(User.mapRow);
     } catch (err) {
       throw err;
     }

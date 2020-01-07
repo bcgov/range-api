@@ -314,7 +314,8 @@ export default class Agreement extends Model {
 
     const clients = this.clients.map((client) => {
       const aClient = {
-        id: client.clientNumber,
+        id: client.id,
+        clientNumber: client.clientNumber,
         locationCode: client.locationCode,
         name: client.name,
         clientTypeCode: client.clientType.code,

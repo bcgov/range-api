@@ -82,10 +82,6 @@ describe('Test Schedule routes', () => {
     await truncateTables();
   });
 
-  afterAll(async () => {
-    await dm.db.destroy();
-  });
-
   test('Creating a schedule', async () => {
     await request(app)
       .post(baseUrl)

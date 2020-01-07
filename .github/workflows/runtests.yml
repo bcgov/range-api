@@ -53,6 +53,6 @@ jobs:
         npm ci
         make local-test-setup
         docker-compose up -d
-        npm test
+        npm test -- --forceExit
       env:
         CI: true
