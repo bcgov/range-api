@@ -469,7 +469,7 @@ export default class PlanPastureController {
         db,
         {
           ...body,
-          plantCommunityId: communityId,
+          plantCommunityId: plantCommunity.id,
         },
       );
       return res.status(200).json({ ...indicatorPlant, id: plantCanonicalId }).end();
@@ -523,7 +523,7 @@ export default class PlanPastureController {
 
       const { canonicalId: plantCanonicalId, ...updatedIndicatorPlant } = await IndicatorPlant.update(
         db,
-        { id: indicatorPlant.id },
+        { id: indicatorPlant.id, plant_community_id: plantCommunity.id },
         body,
       );
       return res.status(200).json({ ...updatedIndicatorPlant, id: plantCanonicalId }).end();
