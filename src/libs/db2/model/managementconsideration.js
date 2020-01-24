@@ -41,7 +41,7 @@ export default class ManagementConsideration extends Model {
         .from(ManagementConsideration.table)
         .leftJoin('ref_management_consideration_type', { 'management_consideration.consideration_type_id': 'ref_management_consideration_type.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('management_consideration.created_at', 'asc');
 
       return results.map(row => new ManagementConsideration(row, db));
     } catch (error) {

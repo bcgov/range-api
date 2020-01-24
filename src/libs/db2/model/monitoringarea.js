@@ -44,7 +44,7 @@ export default class MonitoringArea extends Model {
         .from(MonitoringArea.table)
         .leftJoin('ref_monitoring_area_health', { 'monitoring_area.rangeland_health_id': 'ref_monitoring_area_health.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('monitoring_area.created_at', 'asc');
 
       return results.map(row => new MonitoringArea(row, db));
     } catch (error) {

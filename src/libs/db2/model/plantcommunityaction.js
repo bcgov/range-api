@@ -45,7 +45,7 @@ export default class PlantCommunityAction extends Model {
         .from(PlantCommunityAction.table)
         .leftJoin('ref_plant_community_action_type', { 'plant_community_action.action_type_id': 'ref_plant_community_action_type.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('plant_community_action.created_at', 'asc');
 
       return results.map(row => new PlantCommunityAction(row, db));
     } catch (error) {

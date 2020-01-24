@@ -43,7 +43,7 @@ export default class IndicatorPlant extends Model {
         .from(IndicatorPlant.table)
         .leftJoin('ref_plant_species', { 'indicator_plant.plant_species_id': 'ref_plant_species.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('indicator_plant.created_at', 'asc');
 
       return results.map(row => new IndicatorPlant(row, db));
     } catch (error) {

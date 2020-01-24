@@ -60,6 +60,7 @@ export default class GrazingScheduleEntry extends Model {
         .select(myFields)
         .from(GrazingScheduleEntry.table)
         .join('ref_livestock', { 'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id' })
+        .orderBy('grazing_schedule_entry.created_at', 'asc')
         .where(where);
 
       if (page && limit) {

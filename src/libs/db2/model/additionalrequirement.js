@@ -41,7 +41,7 @@ export default class AdditionalRequirement extends Model {
         .from(AdditionalRequirement.table)
         .leftJoin('ref_additional_requirement_category', { 'additional_requirement.category_id': 'ref_additional_requirement_category.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('additional_requirement.created_at', 'asc');
 
       return results.map(row => new AdditionalRequirement(row, db));
     } catch (error) {
