@@ -55,7 +55,7 @@ export default class PlantCommunity extends Model {
         .join('ref_plant_community_type', { 'plant_community.community_type_id': 'ref_plant_community_type.id' })
         .leftJoin('ref_plant_community_elevation', { 'plant_community.elevation_id': 'ref_plant_community_elevation.id' })
         .where(where)
-        .orderBy('id', 'asc');
+        .orderBy('plant_community.created_at', 'asc');
 
       return results.map(row => new PlantCommunity(row, db));
     } catch (error) {
