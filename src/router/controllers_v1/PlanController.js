@@ -1,6 +1,6 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { mapDeep } from 'deepdash/standalone';
-import { checkRequiredFields, deepMapKeys } from '../../libs/utils';
+import { checkRequiredFields, deepMapKeys, objPathToCamelCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -68,6 +68,7 @@ export default class PlanController {
       const mappedGrazingSchedules = await Promise.all(
         mappedPlanData.grazingSchedules.map(async schedule => ({
           ...schedule,
+          sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
           grazingScheduleEntries: await Promise.all(
             schedule.grazingScheduleEntries.map(async (entry) => {
               const pasture = await Pasture.findById(db, entry.pastureId);

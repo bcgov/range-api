@@ -21,6 +21,7 @@
 'use strict';
 
 import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import _ from 'lodash';
 
 /**
  * Check if a string consits of [Aa-Az], [0-9], -, _, and %.
@@ -93,3 +94,21 @@ export const deepMapKeys = (originalObject, callback) => {
     };
   }, {});
 };
+
+export const objPathToCamelCase = path =>
+  _.join(
+    _.map(
+      _.split(path, '.'),
+      w => _.camelCase(w),
+    ),
+    '.',
+  );
+
+export const objPathToSnakeCase = path =>
+  _.join(
+    _.map(
+      _.split(path, '.'),
+      w => _.snakeCase(w),
+    ),
+    '.',
+  );

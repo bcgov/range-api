@@ -24,11 +24,14 @@ const body = {
   year: 2021,
   narative: 'This is a narative',
   grazingScheduleEntries: [],
+  sortBy: 'livestockCount',
+  sortOrder: 'asc',
 };
 const entryBody = {
   livestockCount: 10,
   dateIn: '2019-03-15T16:52:37.658Z',
   dateOut: '2019-08-17T16:52:37.658Z',
+  createdAt: (new Date()).toISOString(),
   pastureId: 1,
   livestockTypeId: 2,
   graceDays: 4,
@@ -90,6 +93,7 @@ describe('Test Schedule routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...body,
+          sortBy: 'livestock_count',
           planId: 2,
           id: 2,
         });
@@ -112,6 +116,7 @@ describe('Test Schedule routes', () => {
       .expect((res) => {
         expect(res.body).toEqual({
           ...body,
+          sortBy: 'livestock_count',
           narative,
           id: 1,
           planId: 2,
