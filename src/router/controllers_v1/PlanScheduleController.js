@@ -61,7 +61,11 @@ export default class PlanScheduleController {
 
       // TODO:(jl) Wrap this in a transaction so that its an all
       // or nothing created.
-      const schedule = await GrazingSchedule.create(db, { ...body, ...{ plan_id: planId } });
+      const schedule = await GrazingSchedule.create(db, {
+        ...body,
+        plan_id: planId,
+        sort_by: body.sortBy && objPathToSnakeCase(body.sortBy),
+      });
       // eslint-disable-next-line arrow-body-style
       const promises = grazingScheduleEntries.map(async (entry) => {
         const pasture = await Pasture.findOne(db, {
