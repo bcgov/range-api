@@ -40,7 +40,7 @@ export default class GrazingScheduleEntry extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'grace_days', 'livestock_count', 'date_in', 'date_out',
-      'pasture_id', 'livestock_type_id', 'grazing_schedule_id', 'canonical_id']
+      'pasture_id', 'livestock_type_id', 'grazing_schedule_id', 'canonical_id', 'created_at']
       .map(field => `${this.table}.${field}`);
   }
 
@@ -48,7 +48,7 @@ export default class GrazingScheduleEntry extends Model {
     return 'grazing_schedule_entry';
   }
 
-  static async findWithLivestockType(db, where, page = undefined, limit = undefined) {
+  static async findWithLivestockType(db, where, order, page = undefined, limit = undefined) {
     const myFields = [
       ...GrazingScheduleEntry.fields,
       ...LivestockType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -60,8 +60,12 @@ export default class GrazingScheduleEntry extends Model {
         .select(myFields)
         .from(GrazingScheduleEntry.table)
         .join('ref_livestock', { 'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id' })
-        .orderBy('grazing_schedule_entry.created_at', 'asc')
+        .join('pasture', { 'grazing_schedule_entry.pasture_id': 'pasture.id' })
         .where(where);
+
+      if (order) q.orderBy(...order);
+
+      q.orderBy('grazing_schedule_entry.created_at', 'asc');
 
       if (page && limit) {
         const offset = limit * (page - 1);

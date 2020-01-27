@@ -1,5 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { checkRequiredFields } from '../../libs/utils';
+import { checkRequiredFields, objPathToSnakeCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -133,12 +133,18 @@ export default class PlanScheduleController {
       delete body.planId;
       delete body.plan_id;
 
+      const { sortBy } = body;
+
       // TODO:(jl) Wrap this in a transaction so that its an all
       // or nothing create.
       const schedule = await GrazingSchedule.update(
         db,
         { canonical_id: scheduleId, plan_id: planId },
-        { ...body, plan_id: planId },
+        {
+          ...body,
+          plan_id: planId,
+          sort_by: sortBy && objPathToSnakeCase(sortBy),
+        },
       );
       // eslint-disable-next-line arrow-body-style
       const promises = grazingScheduleEntries.map(async (entry) => {

@@ -26,7 +26,7 @@ import Model from './model';
 export default class GrazingSchedule extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'year', 'narative', 'plan_id', 'canonical_id']
+    return ['id', 'year', 'narative', 'plan_id', 'canonical_id', 'sort_by', 'sort_order']
       .map(field => `${this.table}.${field}`);
   }
 
@@ -36,7 +36,9 @@ export default class GrazingSchedule extends Model {
 
   // eslint-disable-next-line class-methods-use-this
   async fetchGrazingSchedulesEntries() {
-    const order = ['id', 'desc'];
+    const order = (this.sortBy && this.sortOrder)
+      ? [this.sortBy.replace('livestock_type', 'ref_livestock').replace('.', '_'), this.sortOrder]
+      : undefined;
     const where = { grazing_schedule_id: this.id };
     const entries = await GrazingScheduleEntry.findWithLivestockType(this.db, where, order);
     this.grazingScheduleEntries = entries;
