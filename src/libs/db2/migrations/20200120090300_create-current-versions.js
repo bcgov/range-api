@@ -8,7 +8,8 @@ exports.up = async (knex) => {
     const { rows } = await knex.raw(`
       INSERT INTO plan_version (version, canonical_id, plan_id)
       VALUES (-1, ?, ?)
-      RETURNING *;
+      RETURNING *
+      ON CONFLICT DO NOTHING;
     `, [plan.canonical_id, plan.id]);
 
     return rows;
