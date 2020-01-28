@@ -378,6 +378,19 @@ export default class Plan extends Model {
         plan_id: newPlan.id,
       });
 
+      const newStatusHistoryPromises = plan.planStatusHistory.map(
+        async ({ id: historyId, ...history }) => {
+          const newHistory = await PlanStatusHistory.create(db, {
+            ...history,
+            plan_id: newPlan.id,
+          });
+
+          return newHistory;
+        },
+      );
+
+      await Promise.all(newStatusHistoryPromises);
+
       db.raw('COMMIT');
 
       return {
