@@ -30,6 +30,7 @@ const pastureBody = {
   graceDays: 7,
   pldPercent: 0.3,
   notes: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+  createdAt: (new Date()).toISOString(),
 };
 
 const plantCommunityBody = {
@@ -46,6 +47,7 @@ const plantCommunityBody = {
   rangeReadinessNote:
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   approved: false,
+  createdAt: (new Date()).toISOString(),
 };
 
 const plantCommunityActionBody = {
@@ -56,6 +58,7 @@ const plantCommunityActionBody = {
   noGrazeStartMonth: 1,
   noGrazeEndDay: 2,
   noGrazeEndMonth: 5,
+  createdAt: (new Date()).toISOString(),
 };
 
 const indicatorPlantBody = {
@@ -63,6 +66,7 @@ const indicatorPlantBody = {
   criteria: 'shrubuse',
   value: 2,
   name: 'Shrub use',
+  createdAt: (new Date()).toISOString(),
 };
 
 const monitoringAreaBody = {
@@ -74,6 +78,7 @@ const monitoringAreaBody = {
   latitude: -114.965,
   transectAzimuth: 10,
   location: 'Here',
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {

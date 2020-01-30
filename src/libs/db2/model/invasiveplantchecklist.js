@@ -7,7 +7,7 @@ export default class InvasivePlantChecklist extends Model {
     // primary key *must* be first!
     return [
       'id', 'plan_id', 'equipment_and_vehicles_parking', 'begin_in_uninfested_area',
-      'undercarriges_inspected', 'revegetate', 'other', 'canonical_id',
+      'undercarriges_inspected', 'revegetate', 'other', 'canonical_id', 'created_at',
     ].map(field => `${this.table}.${field}`);
   }
 

@@ -32,6 +32,7 @@ export default class PlanMinisterIssueActionController {
       noGrazeEndMonth,
       noGrazeStartDay,
       noGrazeStartMonth,
+      createdAt,
     } = body;
 
     checkRequiredFields(
@@ -65,6 +66,7 @@ export default class PlanMinisterIssueActionController {
 
       const data = {
         detail,
+        createdAt,
         action_type_id: actionTypeId,
         issue_id: issue.id,
         other: null,
@@ -114,6 +116,7 @@ export default class PlanMinisterIssueActionController {
       noGrazeEndMonth,
       noGrazeStartDay,
       noGrazeStartMonth,
+      createdAt,
     } = body;
 
     checkRequiredFields(
@@ -143,6 +146,7 @@ export default class PlanMinisterIssueActionController {
       const data = {
         detail,
         actionTypeId,
+        createdAt,
         other: null,
         no_graze_start_day: null,
         no_graze_start_month: null,

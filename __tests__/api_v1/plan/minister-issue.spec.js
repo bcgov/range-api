@@ -27,6 +27,7 @@ const body = {
   identified: true,
   issueTypeId: 2,
   pastures: [1],
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {

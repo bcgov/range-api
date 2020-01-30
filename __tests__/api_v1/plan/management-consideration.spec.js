@@ -24,6 +24,7 @@ const body = {
   detail: 'This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration.',
   url: 'www.google.com',
   considerationTypeId: 1,
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {
