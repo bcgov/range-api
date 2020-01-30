@@ -311,7 +311,7 @@ export default class Plan extends Model {
             async ({ id: actionId, ...action }) => {
               const newAction = await MinisterIssueAction.create(db, {
                 ...action,
-                minister_issue_id: newIssue.id,
+                issue_id: newIssue.id,
               });
 
 
