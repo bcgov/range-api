@@ -24,6 +24,7 @@ const body = {
   undercarrigesInspected: true,
   revegetate: false,
   other: 'Another action to be done',
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {

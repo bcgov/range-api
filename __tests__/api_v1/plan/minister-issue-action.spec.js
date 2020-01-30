@@ -30,6 +30,7 @@ const body = {
   noGrazeStartDay: 12,
   noGrazeEndMonth: 4,
   noGrazeEndDay: 23,
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {

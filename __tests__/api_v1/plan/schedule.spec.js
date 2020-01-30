@@ -26,6 +26,7 @@ const body = {
   grazingScheduleEntries: [],
   sortBy: 'livestockCount',
   sortOrder: 'asc',
+  createdAt: (new Date()).toISOString(),
 };
 const entryBody = {
   livestockCount: 10,

@@ -23,6 +23,7 @@ const body = {
   url: 'https://example.com',
   detail: 'Details for my additional requirement',
   categoryId: 4,
+  createdAt: (new Date()).toISOString(),
 };
 
 const truncateTables = async () => {
