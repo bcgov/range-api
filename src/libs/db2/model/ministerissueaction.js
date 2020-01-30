@@ -47,7 +47,7 @@ export default class MinisterIssueAction extends Model {
     return [
       'id', 'detail', 'action_type_id', 'issue_id', 'other',
       'no_graze_start_day', 'no_graze_start_month', 'no_graze_end_day', 'no_graze_end_month',
-      'canonical_id',
+      'canonical_id', 'created_at',
     ].map(field => `${this.table}.${field}`);
   }
 

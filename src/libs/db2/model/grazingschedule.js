@@ -26,7 +26,7 @@ import Model from './model';
 export default class GrazingSchedule extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'year', 'narative', 'plan_id', 'canonical_id', 'sort_by', 'sort_order']
+    return ['id', 'year', 'narative', 'plan_id', 'canonical_id', 'sort_by', 'sort_order', 'created_at']
       .map(field => `${this.table}.${field}`);
   }
 
