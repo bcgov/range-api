@@ -22,6 +22,7 @@
 
 import LivestockType from './livestocktype';
 import Model from './model';
+import Pasture from './pasture';
 
 export default class GrazingScheduleEntry extends Model {
   constructor(data, db = undefined) {
@@ -52,6 +53,7 @@ export default class GrazingScheduleEntry extends Model {
     const myFields = [
       ...GrazingScheduleEntry.fields,
       ...LivestockType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...Pasture.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
