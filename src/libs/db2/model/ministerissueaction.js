@@ -67,7 +67,7 @@ export default class MinisterIssueAction extends Model {
         .from(MinisterIssueAction.table)
         .join('ref_minister_issue_action_type', { 'minister_issue_action.action_type_id': 'ref_minister_issue_action_type.id' })
         .where(where)
-        .orderBy('minister_issue_action.created_at', 'desc');
+        .orderBy('minister_issue_action.created_at', 'asc');
 
       return results.map(row => new MinisterIssueAction(row, db));
     } catch (err) {
