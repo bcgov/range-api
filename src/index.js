@@ -67,7 +67,10 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 
   // Sending error status.
   res.status(code).json({ error: message, success: false });
-  throw err;
+
+  if (!['test', 'unit_test'].includes(process.env.NODE_ENV)) {
+    throw err;
+  }
 });
 
 module.exports = app;
