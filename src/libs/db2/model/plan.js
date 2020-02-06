@@ -151,6 +151,17 @@ export default class Plan extends Model {
     return result.agreement_id;
   }
 
+  static async createSnapshot(db, planId) {
+    const planRow = await Plan.findById(db, planId);
+    const plan = new Plan(planRow, db);
+
+    await plan.eagerloadAllOneToMany();
+
+    const snapshot = JSON.stringify(plan);
+
+    // TODO: create plan_snapshot record
+  }
+
   static async duplicateAll(db, planId) {
     const planRow = await Plan.findById(db, planId);
     const plan = new Plan(planRow, db);
