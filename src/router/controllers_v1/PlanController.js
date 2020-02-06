@@ -1,6 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { mapDeep } from 'deepdash/standalone';
-import { checkRequiredFields, deepMapKeys, objPathToCamelCase } from '../../libs/utils';
+import { checkRequiredFields, objPathToCamelCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
@@ -13,8 +12,6 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
-  PlanVersion,
-  Pasture,
 } = dm;
 
 export default class PlanController {
@@ -28,20 +25,13 @@ export default class PlanController {
    */
   static async show(req, res) {
     const { user, params } = req;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
@@ -58,45 +48,16 @@ export default class PlanController {
       await plan.eagerloadAllOneToMany();
       plan.agreement = agreement;
 
-      const { canonicalId: planCanonicalId, ...planData } = plan;
-
-      const formattedPlanData = deepMapKeys(planData, key => (key === 'canonicalId' ? 'id' : key));
-
-      const mappedPlanData = mapDeep(formattedPlanData, (val, key) =>
-        (key === 'planId' ? planCanonicalId : val));
-
       const mappedGrazingSchedules = await Promise.all(
-        mappedPlanData.grazingSchedules.map(async schedule => ({
+        plan.grazingSchedules.map(async schedule => ({
           ...schedule,
           sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
-          grazingScheduleEntries: await Promise.all(
-            schedule.grazingScheduleEntries.map(async (entry) => {
-              const pasture = await Pasture.findById(db, entry.pastureId);
-
-              return {
-                ...entry,
-                pastureId: pasture.canonicalId,
-              };
-            }),
-          ),
-        })),
-      );
-
-      const mappedMinisterIssues = await Promise.all(
-        mappedPlanData.ministerIssues.map(async issue => ({
-          ...issue,
-          pastures: await Promise.all(issue.pastures.map(async (pastureId) => {
-            const pasture = await Pasture.findOne(db, { id: pastureId });
-            return pasture.canonicalId;
-          })),
         })),
       );
 
       return res.status(200).json({
-        ...mappedPlanData,
+        ...plan,
         grazingSchedules: mappedGrazingSchedules,
-        ministerIssues: mappedMinisterIssues,
-        id: planCanonicalId,
       }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
@@ -140,15 +101,12 @@ export default class PlanController {
         status_id: staffDraftStatus.id,
       });
 
-      const { id } = await Plan.create(db, { ...body, creator_id: user.id, canonical_id: 0 });
-      const { canonicalId: newCanonicalId, ...plan } = await Plan.update(db, { id }, { canonical_id: id });
-
-      await PlanVersion.create(db, { version: -1, plan_id: id, canonical_id: id });
+      const plan = await Plan.create(db, { ...body, creator_id: user.id });
 
       // create unsiged confirmations for AHs
       await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
 
-      return res.status(200).json({ ...plan, id: newCanonicalId }).end();
+      return res.status(200).json(plan).end();
     } catch (err) {
       throw err;
     }
@@ -161,20 +119,13 @@ export default class PlanController {
    */
   static async update(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -192,9 +143,7 @@ export default class PlanController {
       agreement.transformToV1();
       plan.agreement = agreement;
 
-      const { canonicalId: updatedCanonicalId, ...updatedPlan } = plan;
-
-      return res.status(200).json({ ...updatedPlan, id: updatedCanonicalId }).end();
+      return res.status(200).json(plan).end();
     } catch (err) {
       throw err;
     }
@@ -213,25 +162,17 @@ export default class PlanController {
    */
   static async storeAdditionalRequirement(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
 
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      const { canonicalId: requirementCanonicalId, ...requirement } = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
-      return res.status(200).json({ ...requirement, id: requirementCanonicalId }).end();
+      const requirement = await AdditionalRequirement.create(db, { ...body, plan_id: planId });
+      return res.status(200).json(requirement).end();
     } catch (error) {
       throw error;
     }
@@ -239,17 +180,9 @@ export default class PlanController {
 
   static async updateAdditionalRequirement(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId, requirementId } = params;
+    const { planId, requirementId } = params;
 
     checkRequiredFields(['planId', 'requirementId'], 'params', req);
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode("Plan doesn't exist", 404);
-    }
-
-    const planId = currentPlan.id;
 
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(
@@ -262,19 +195,16 @@ export default class PlanController {
     delete body.id;
     delete body.planId;
     delete body.plan_id;
-    delete body.canonicalId;
-    delete body.canonical_id;
 
     const requirement = await AdditionalRequirement.findOne(db, {
-      plan_id: planId,
-      canonical_id: requirementId,
+      requirement_id: requirementId,
     });
 
     if (!requirement) {
       throw errorWithCode("Additional requirement doesn't exist", 404);
     }
 
-    const { canonicalId: requirementCanonicalId, ...updatedRequirement } = await AdditionalRequirement.update(
+    const updatedRequirement = await AdditionalRequirement.update(
       db,
       {
         id: requirement.id,
@@ -282,22 +212,14 @@ export default class PlanController {
       body,
     );
 
-    res.send({ ...updatedRequirement, id: requirementCanonicalId });
+    res.send(updatedRequirement);
   }
 
   static async destroyAdditionalRequirement(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId, requirementId } = params;
+    const { planId, requirementId } = params;
 
     checkRequiredFields(['planId', 'requirementId'], 'params', req);
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode("Plan doesn't exist", 404);
-    }
-
-    const planId = currentPlan.id;
 
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(
@@ -310,14 +232,11 @@ export default class PlanController {
     delete body.id;
     delete body.planId;
     delete body.plan_id;
-    delete body.canonicalId;
-    delete body.canonical_id;
 
     const result = await AdditionalRequirement.remove(
       db,
       {
-        plan_id: planId,
-        canonical_id: requirementId,
+        id: requirementId,
       },
     );
 

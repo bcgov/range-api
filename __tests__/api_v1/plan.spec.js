@@ -148,21 +148,10 @@ describe('Test Plan routes', () => {
       });
   });
 
-  test("Fetching a plan doesn't include any canonical ids in the responses", async () => {
-    await request(app)
-      .get(`${baseUrl}/1`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .expect((res) => {
-        expect(res.body.id).toEqual(1);
-        expect(hasNested(res.body, 'canonicalId')).not.toEqual(true);
-      });
-  });
-
   // GET /plan/:planId where planId does not exist
   test('Fetching a non-existent plan should throw a 404 error', async () => {
     await request(app)
-      .get(`${baseUrl}/2`)
+      .get(`${baseUrl}/3`)
       .expect(404);
   });
 
@@ -260,7 +249,7 @@ describe('Test Plan routes', () => {
       .expect(200)
       .expect(res => expect(res.body.updatedAt).toBeDefined);
 
-    const results = await dm.db('plan').where('id', 2);
+    const results = await dm.db('plan').where('id', 1);
     expect(results).toHaveLength(1);
     expect(results[0].status_id).toEqual(14);
   });
@@ -281,6 +270,6 @@ describe('Test Plan routes', () => {
 
     const results = await dm.db('plan_status_history').where('id', 1);
     expect(results).toHaveLength(1);
-    expect(results[0].plan_id).toEqual(2);
+    expect(results[0].plan_id).toEqual(1);
   });
 });
