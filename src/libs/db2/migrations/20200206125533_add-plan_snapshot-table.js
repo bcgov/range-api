@@ -7,12 +7,6 @@ exports.up = async (knex) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
-
-  await knex.raw(`
-    CREATE TRIGGER update_plan_snapshot_changetimestamp BEFORE UPDATE
-    ON plan_snapshot FOR EACH ROW EXECUTE PROCEDURE 
-    update_changetimestamp_column();
-  `);
 };
 
 exports.down = async (knex) => {
