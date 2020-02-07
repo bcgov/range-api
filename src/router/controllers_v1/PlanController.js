@@ -197,7 +197,7 @@ export default class PlanController {
     delete body.plan_id;
 
     const requirement = await AdditionalRequirement.findOne(db, {
-      requirement_id: requirementId,
+      id: requirementId,
     });
 
     if (!requirement) {
@@ -207,7 +207,7 @@ export default class PlanController {
     const updatedRequirement = await AdditionalRequirement.update(
       db,
       {
-        id: requirement.id,
+        id: requirementId,
       },
       body,
     );
