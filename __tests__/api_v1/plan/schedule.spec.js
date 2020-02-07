@@ -95,15 +95,16 @@ describe('Test Schedule routes', () => {
         expect(res.body).toEqual({
           ...body,
           sortBy: 'livestock_count',
-          planId: 2,
+          planId: 1,
           id: 2,
+          canonicalId: 2,
         });
       });
   });
 
   test('Creating a schedule with for a nonexistant plan throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/2/schedule')
+      .post('/api/v1/plan/3/schedule')
       .send(body)
       .expect(500);
   });
@@ -120,7 +121,8 @@ describe('Test Schedule routes', () => {
           sortBy: 'livestock_count',
           narative,
           id: 1,
-          planId: 2,
+          canonicalId: 1,
+          planId: 1,
         });
       });
   });
@@ -155,6 +157,7 @@ describe('Test Schedule routes', () => {
         expect(res.body).toEqual({
           ...entryBody,
           id: 1,
+          canonicalId: 1,
           grazingScheduleId: 1,
         });
       });
@@ -176,6 +179,7 @@ describe('Test Schedule routes', () => {
         expect(res.body).toEqual({
           ...entryBody,
           id: 1,
+          canonicalId: 1,
           grazingScheduleId: 1,
         });
       });
@@ -197,6 +201,7 @@ describe('Test Schedule routes', () => {
         expect(res.body.grazingScheduleEntries[0]).toEqual({
           ...entryBody,
           id: 1,
+          canonicalId: 1,
           grazingScheduleId: 1,
           livestockType: {
             active: true,
