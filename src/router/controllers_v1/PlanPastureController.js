@@ -553,7 +553,7 @@ export default class PlanPastureController {
 
       const monitoringArea = await MonitoringArea.findById(
         db,
-        areaId
+        areaId,
       );
 
       if (!monitoringArea) {
