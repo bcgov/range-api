@@ -21,6 +21,7 @@
 'use strict';
 
 import { flatten } from 'lodash';
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';
@@ -41,6 +42,8 @@ import PlantCommunityAction from './plantcommunityaction';
 import GrazingScheduleEntry from './grazingscheduleentry';
 import MinisterIssueAction from './ministerissueaction';
 import MinisterIssuePasture from './ministerissuepasture';
+import PlanSnapshot from './plansnapshot';
+import Agreement from './agreement';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -152,14 +155,32 @@ export default class Plan extends Model {
   }
 
   static async createSnapshot(db, planId) {
-    const planRow = await Plan.findById(db, planId);
-    const plan = new Plan(planRow, db);
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
+    if (!plan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+    const { agreementId } = plan;
+
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+
+    await plan.eagerloadAllOneToMany();
+    plan.agreement = agreement;
 
     await plan.eagerloadAllOneToMany();
 
     const snapshot = JSON.stringify(plan);
 
-    // TODO: create plan_snapshot record
+    const snapshotRecord = await PlanSnapshot.create(db, {
+      snapshot,
+      plan_id: planId,
+      created_at: new Date(),
+    });
+
+    return snapshotRecord;
   }
 
   static async duplicateAll(db, planId) {
