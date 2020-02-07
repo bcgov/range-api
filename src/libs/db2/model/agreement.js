@@ -275,13 +275,6 @@ export default class Agreement extends Model {
         const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
         plans = await Plan.findWithStatusExtension(this.db, where, order, undefined, undefined, whereNot);
       }
-
-      plans = await Promise.all(Object.keys(plans.reduce((acc, p) => ({ ...acc, [p.canonicalId]: p }), {})).map(canonicalId => Plan.findCurrentVersion(this.db, canonicalId)));
-
-      plans = await Promise.all(plans.map(p => Plan.findWithStatusExtension(this.db, { 'plan.id': p.id }, order)));
-      plans = plans.map(p => p[0]);
-            
-      plans = plans.map(({ canonicalId, ...plan }) => ({ ...plan, id: canonicalId }));
     }
 
     this.plans = plans;
