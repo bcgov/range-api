@@ -18,10 +18,10 @@
 // Created by Jason Leach on 2018-05-08.
 //
 
-'use strict';
+"use strict";
 
-import { SSO_ROLE_MAP } from '../../../constants';
-import Model from './model';
+import { SSO_ROLE_MAP } from "../../../constants";
+import Model from "./model";
 
 export default class User extends Model {
   constructor(data, db = undefined) {
@@ -42,23 +42,33 @@ export default class User extends Model {
       updatedAt: row.updated_at,
       clientId: row.client_id,
       clientNumber: row.client_number,
+      phoneNumber: row.phone_number
     };
   }
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'username', 'client_id', 'given_name', 'family_name', 'email',
-      'phone_number', 'active', 'pia_seen', 'last_login_at']
-      .map(field => `${this.table}.${field}`);
+    return [
+      "id",
+      "username",
+      "client_id",
+      "given_name",
+      "family_name",
+      "email",
+      "phone_number",
+      "active",
+      "pia_seen",
+      "last_login_at"
+    ].map(field => `${this.table}.${field}`);
   }
 
   static get table() {
-    return 'user_account';
+    return "user_account";
   }
 
   static async update(db, where, values) {
-    const obj = { };
-    Object.keys(values).forEach((key) => {
+    const obj = {};
+    Object.keys(values).forEach(key => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
@@ -69,23 +79,26 @@ export default class User extends Model {
         .update(obj);
 
       if (count > 0) {
-      //   const res = await db.raw(`
-      //   SELECT user_account.*, ref_client.client_number FROM user_account
-      //   LEFT JOIN ref_client ON user_account.client_id = ref_client.id
-      //   WHERE user_account.id = ANY (?) ORDER BY ?;
-      // ` );
+        //   const res = await db.raw(`
+        //   SELECT user_account.*, ref_client.client_number FROM user_account
+        //   LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+        //   WHERE user_account.id = ANY (?) ORDER BY ?;
+        // ` );
 
         // return res.rows.map(this.mapRow);
         const [{ id }] = await db
           .table(User.table)
           .where(where)
-          .returning('id');
+          .returning("id");
 
-        const res = await db.raw(`
+        const res = await db.raw(
+          `
           SELECT user_account.*, ref_client.client_number FROM user_account
           LEFT JOIN ref_client ON user_account.client_id = ref_client.id
           WHERE user_account.id = ?;
-        `, [id]);
+        `,
+          [id]
+        );
         return res.rows.map(User.mapRow)[0];
       }
 
@@ -96,15 +109,15 @@ export default class User extends Model {
   }
 
   static async create(db, values) {
-    const obj = { };
-    Object.keys(values).forEach((key) => {
+    const obj = {};
+    Object.keys(values).forEach(key => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
     try {
       const results = await db
         .table(User.table)
-        .returning('id')
+        .returning("id")
         .insert(obj);
 
       return await User.findOne(db, { id: results.pop() });
@@ -117,7 +130,7 @@ export default class User extends Model {
     try {
       const q = db
         .table(User.table)
-        .select('id')
+        .select("id")
         .where(where);
 
       if (exclude) {
@@ -127,11 +140,14 @@ export default class User extends Model {
       const results = await q;
       const userIds = results.map(obj => obj.id);
 
-      const res = await db.raw(`
+      const res = await db.raw(
+        `
         SELECT user_account.*, ref_client.client_number FROM user_account
         LEFT JOIN ref_client ON user_account.client_id = ref_client.id
         WHERE user_account.id = ANY (?) ORDER BY ?;
-      `, [userIds, order]);
+      `,
+        [userIds, order]
+      );
 
       return res.rows.map(User.mapRow);
     } catch (err) {
@@ -146,15 +162,18 @@ export default class User extends Model {
 
 /* eslint-disable func-names, arrow-body-style */
 
-User.prototype.isActive = function () {
-  if (this.active && Object.values(SSO_ROLE_MAP).some(item => this.roles.includes(item))) {
+User.prototype.isActive = function() {
+  if (
+    this.active &&
+    Object.values(SSO_ROLE_MAP).some(item => this.roles.includes(item))
+  ) {
     return true;
   }
 
   return false;
 };
 
-User.prototype.canAccessAgreement = async function (db, agreement) {
+User.prototype.canAccessAgreement = async function(db, agreement) {
   if (!db || !agreement) {
     return false;
   }
@@ -165,34 +184,37 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
 
   if (this.isAgreementHolder()) {
     const [result] = await db
-      .table('client_agreement')
+      .table("client_agreement")
       .where({ agreement_id: agreement.forestFileId, client_id: this.clientId })
       .count();
     const { count } = result || {};
-    return count !== '0';
+    return count !== "0";
   }
 
   if (this.isRangeOfficer()) {
     const [result] = await db
-      .table('agreement')
-      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
-      .where({ 'ref_zone.user_id': this.id, 'agreement.forest_file_id': agreement.forestFileId })
+      .table("agreement")
+      .join("ref_zone", { "agreement.zone_id": "ref_zone.id" })
+      .where({
+        "ref_zone.user_id": this.id,
+        "agreement.forest_file_id": agreement.forestFileId
+      })
       .count();
     const { count } = result || {};
-    return count !== '0';
+    return count !== "0";
   }
 
   return false;
 };
 
-User.prototype.isAdministrator = function () {
+User.prototype.isAdministrator = function() {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
 };
 
-User.prototype.isAgreementHolder = function () {
+User.prototype.isAgreementHolder = function() {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
 };
 
-User.prototype.isRangeOfficer = function () {
+User.prototype.isRangeOfficer = function() {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
 };
