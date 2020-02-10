@@ -179,10 +179,11 @@ describe('Test Plan routes', () => {
         expect(res.body.versions).toHaveLength(versions.length);
         expect(res.body.versions).toEqual(
           // eslint-disable-next-line camelcase
-          versions.map(({ created_at, plan_id, ...v }) => ({
+          versions.map(({ created_at, plan_id, status_id, ...v }) => ({
             ...v,
             createdAt: created_at.toISOString(),
             planId: plan_id,
+            statusId: status_id,
           })),
         );
       });
