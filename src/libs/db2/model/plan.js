@@ -174,10 +174,16 @@ export default class Plan extends Model {
 
     const snapshot = JSON.stringify(plan);
 
+    const { rows: [{ max: lastVersion }] } = await db.raw(`
+      SELECT MAX(version) FROM plan_snapshot
+      WHERE plan_id = ?
+    `, [plan.id]);
+
     const snapshotRecord = await PlanSnapshot.create(db, {
       snapshot,
       plan_id: planId,
       created_at: new Date(),
+      version: lastVersion + 1,
     });
 
     return snapshotRecord;
