@@ -57,6 +57,7 @@ exports.up = async (knex) => {
         created_at: versionRecord.created_at,
         version: versionRecord.version,
         plan_id: currentPlanId,
+        status_id: plan.statusId,
       });
 
       return snapshot;

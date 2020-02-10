@@ -184,6 +184,7 @@ export default class Plan extends Model {
       plan_id: planId,
       created_at: new Date(),
       version: lastVersion + 1,
+      status_id: plan.statusId,
     });
 
     return snapshotRecord;
