@@ -102,6 +102,9 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
+      if (statusId === 12) {
+        await Plan.createSnapshot(db, planId);
+      }
       return res.status(200).json(status).end();
     } catch (err) {
       logger.error(`PlanStatusController:update: fail with error: ${err.message}`);
