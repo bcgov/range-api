@@ -4,7 +4,7 @@ exports.up = async (knex) => {
       id SERIAL PRIMARY KEY NOT NULL,
       snapshot JSON NOT NULL,
       plan_id INTEGER REFERENCES plan(id) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
   `);
 };
