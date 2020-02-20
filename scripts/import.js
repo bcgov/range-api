@@ -374,6 +374,7 @@ const updateClient = async data => {
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
+  let deleted = 0;
   console.log("Start updating Clients");
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -392,9 +393,9 @@ const updateClient = async data => {
     }
 
     const clientType = clientTypes.find(ct => ct.code === clientTypeCode);
+       
     if (!clientType) {
       console.log(`No client type with ID ${agreementId}`);
-      continue;
     }
 
     try {
@@ -428,7 +429,15 @@ const updateClient = async data => {
         agreement_id: agreementId,
         client_id: client.id
       });
-      if (agreement && !clientAgreement) {
+    if(clientAgreement && (typeof clientType === 'undefined')) // clean up the stale ones here
+    {
+        await ClientAgreement.remove(db, {
+          agreement_id: agreementId,
+          client_id: client.id,
+        });
+        deleted += 1;
+    }
+      if (agreement && !clientAgreement && clientType) { //only create if they are A or B
         await ClientAgreement.create(db, {
           agreement_id: agreementId,
           client_id: client.id,
@@ -445,7 +454,7 @@ const updateClient = async data => {
     }
   }
 
-  return `${created} clients were created, ${updated} clients were updated`;
+  return `${created} clients were created, ${updated} clients were updated,  ${deleted} deleted client agreements `;
 };
 
 const prepareTestSetup = async () => {
