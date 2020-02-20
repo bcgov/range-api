@@ -25,6 +25,7 @@
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const clean = require('gulp-clean');
+const sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('clean', () => gulp.src('build', { read: false, allowEmpty: true })
   .pipe(clean({
@@ -32,11 +33,16 @@ gulp.task('clean', () => gulp.src('build', { read: false, allowEmpty: true })
   })));
 
 gulp.task('transpile', () => gulp.src('src/**/*.js')
+  .pipe(sourcemaps.init())
   .pipe(babel())
+  .pipe(sourcemaps.write())
   .pipe(gulp.dest('build/src')));
 
-gulp.task('transpile-scripts', () => gulp.src('scripts/**/*.js')
+gulp.task('transpile-scripts', () => gulp.src('scripts/**/*.js', { base: 'scripts' })
+  .pipe(sourcemaps.init())
   .pipe(babel())
+  .pipe(sourcemaps.mapSources(sourcePath => `scripts/${sourcePath}`))
+  .pipe(sourcemaps.write())
   .pipe(gulp.dest('build/scripts')));
 
 gulp.task('copy-config', () => gulp.src('src/config/*.json')
