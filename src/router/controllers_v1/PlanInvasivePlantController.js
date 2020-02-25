@@ -20,23 +20,11 @@ export default class PlanInvasivePlantController {
    */
   static async store(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 500);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -47,8 +35,8 @@ export default class PlanInvasivePlantController {
         throw errorWithCode(`Invasive plant checklist already exist with the plan id ${planId}`);
       }
 
-      const { canonicalId: checklistCanonicalId, ...checklist } = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
-      return res.status(200).json({ ...checklist, id: checklistCanonicalId }).end();
+      const checklist = await InvasivePlantChecklist.create(db, { ...body, plan_id: planId });
+      return res.status(200).json(checklist).end();
     } catch (error) {
       logger.error(`PlanInvasivePlantController: store: fail with error: ${error.message}`);
       throw error;
@@ -62,23 +50,11 @@ export default class PlanInvasivePlantController {
    */
   static async update(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId, checklistId } = params;
+    const { planId, checklistId } = params;
 
     checkRequiredFields(
       ['planId', 'checklistId'], 'params', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -87,13 +63,13 @@ export default class PlanInvasivePlantController {
       delete body.planId;
       delete body.plan_id;
 
-      const { canonicalId: checklistCanonicalId, ...updatedChecklist } = await InvasivePlantChecklist.update(
+      const updatedChecklist = await InvasivePlantChecklist.update(
         db,
-        { canonical_id: checklistId, plan_id: planId },
+        { id: checklistId },
         body,
       );
 
-      return res.status(200).json({ ...updatedChecklist, id: checklistCanonicalId }).end();
+      return res.status(200).json(updatedChecklist).end();
     } catch (error) {
       logger.error(`PlanInvasivePlantController: update: fail with error: ${error.message}`);
       throw error;

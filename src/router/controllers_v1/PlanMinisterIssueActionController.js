@@ -23,7 +23,7 @@ export default class PlanMinisterIssueActionController {
    */
   static async store(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId, issueId } = params;
+    const { planId, issueId } = params;
     const {
       actionTypeId,
       detail,
@@ -43,23 +43,11 @@ export default class PlanMinisterIssueActionController {
       ['actionTypeId'], 'body', req,
     );
 
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
+      const issue = await MinisterIssue.findById(db, issueId);
       if (!issue) {
         throw errorWithCode("Minister issue doesn't exist", 500);
       }
@@ -89,11 +77,11 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const { canonicalId: actionCanonicalId, ...action } = await MinisterIssueAction.create(
+      const action = await MinisterIssueAction.create(
         db,
         data,
       );
-      return res.status(200).json({ ...action, id: actionCanonicalId }).end();
+      return res.status(200).json(action).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: store: fail with error: ${error.message}`);
       throw error;
@@ -107,7 +95,7 @@ export default class PlanMinisterIssueActionController {
    */
   static async update(req, res) {
     const { body, params, user } = req;
-    const { planId: canonicalId, issueId, actionId } = params;
+    const { planId, actionId } = params;
     const {
       actionTypeId,
       detail,
@@ -126,18 +114,6 @@ export default class PlanMinisterIssueActionController {
     checkRequiredFields(
       ['actionTypeId'], 'body', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -166,15 +142,13 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
-
-      const { canonicalId: actionCanonicalId, ...updatedAction } = await MinisterIssueAction.update(
+      const action = await MinisterIssueAction.update(
         db,
-        { canonical_id: actionId, issue_id: issue.id },
+        { id: actionId },
         data,
       );
 
-      return res.status(200).json({ ...updatedAction, id: actionCanonicalId }).end();
+      return res.status(200).json(action).end();
     } catch (error) {
       logger.error(`PlanMinisterIssueActionController: update: fail with error: ${error.message}`);
       throw error;
@@ -188,33 +162,19 @@ export default class PlanMinisterIssueActionController {
    */
   static async destroy(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, issueId, actionId } = params;
+    const { planId, actionId } = params;
 
     checkRequiredFields(
       ['planId', 'issueId', 'actionId'], 'params', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const issue = await MinisterIssue.findOne(db, { canonical_id: issueId, plan_id: planId });
 
-      const results = await MinisterIssueAction.remove(
+      const results = await MinisterIssueAction.removeById(
         db,
-        { canonical_id: actionId, issue_id: issue.id },
+        actionId,
       );
 
       return res.status(204).json({

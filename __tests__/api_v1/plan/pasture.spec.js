@@ -146,7 +146,8 @@ describe('Test Pasture routes', () => {
         expect(res.body).toEqual({
           ...pastureBody,
           id: 2,
-          planId: 2,
+          planId: 1,
+          canonicalId: 2,
         });
       });
   });
@@ -160,12 +161,13 @@ describe('Test Pasture routes', () => {
         expect(res.body).toEqual({
           ...pastureBody,
           id: 2,
-          planId: 2,
+          planId: 1,
+          canonicalId: 2,
         });
       });
 
-    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(0);
-    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(2);
+    expect(await dm.db('pasture').where({ plan_id: 1 })).toHaveLength(2);
+    expect(await dm.db('pasture').where({ plan_id: 2 })).toHaveLength(0);
   });
 
   test('Trying to create a pasture with an already-used id should throw a 500 error', async () => {
@@ -178,7 +180,7 @@ describe('Test Pasture routes', () => {
   test('Updating a pasture affects the current version of the plan', async () => {
     const name = "Roop's Pasture 2.0";
 
-    const planId = 2;
+    const planId = 1;
 
     await request(app)
       .put(`${baseUrl}/1`)
@@ -202,6 +204,7 @@ describe('Test Pasture routes', () => {
           ...plantCommunityBody,
           id: 2,
           pastureId: 1,
+          canonicalId: 2,
         });
       });
   });
@@ -230,6 +233,7 @@ describe('Test Pasture routes', () => {
           ...plantCommunityActionBody,
           id: 2,
           plantCommunityId: 1,
+          canonicalId: 2,
         });
       });
   });
@@ -347,6 +351,7 @@ describe('Test Pasture routes', () => {
           ...indicatorPlantBody,
           id: 2,
           plantCommunityId: 1,
+          canonicalId: 2,
         });
       });
   });
@@ -444,9 +449,11 @@ describe('Test Pasture routes', () => {
           ...monitoringAreaBody,
           id: 2,
           plantCommunityId: 1,
+          canonicalId: 2,
           purposes: [
             {
               id: 2,
+              canonicalId: 2,
               monitoringAreaId: 2,
               purposeType: {
                 active: true,
@@ -457,6 +464,7 @@ describe('Test Pasture routes', () => {
             },
             {
               id: 3,
+              canonicalId: 3,
               monitoringAreaId: 2,
               purposeType: {
                 active: true,

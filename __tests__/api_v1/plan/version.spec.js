@@ -24,6 +24,8 @@ import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_m
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
 import config from '../../../src/config';
+import Plan from '../../../src/libs/db2/model/plan';
+import Agreement from '../../../src/libs/db2/model/agreement';
 
 const dm = new DataManager(config);
 
@@ -33,9 +35,6 @@ jest.mock('request-promise-native');
 const { canAccessAgreement } = passport.aUser;
 const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/version';
-const body = {
-  planId: 1,
-};
 
 const truncateTables = async () => {
   await dm.db.schema.raw(truncate('user_account'));
@@ -60,9 +59,6 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('plan'));
   await dm.db.schema.raw(truncate('plan_version'));
 };
-
-const hasSameCanonicalID = rows =>
-  rows.some(r => r.canonical_id === rows[0].canonical_id);
 
 describe('Test Plan routes', () => {
   beforeAll(async () => {
@@ -129,100 +125,52 @@ describe('Test Plan routes', () => {
       .post(baseUrl)
       .expect(200);
 
-    const versions = await dm.db('plan_version').where('canonical_id', planId);
-    expect(versions).toHaveLength(planVersionMocks.length + 1);
+    const snapshots = await dm.db('plan_snapshot').where('id', planId);
+    expect(snapshots).toHaveLength(1);
   });
 
-  test('Creating a new version modifies the current version record to point to a newly created plan', async () => {
-    // canonical ID
-    const planId = 1;
-
-    const [originalPlan] = await dm.db('plan').where({ id: 2 });
-
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
-
-    const [currentVersion] = await dm.db('plan_version')
-      .where('canonical_id', planId)
-      .where('version', -1);
-
-    expect(currentVersion.plan_id).not.toEqual(originalPlan.id);
-    expect(currentVersion.canonical_id).toEqual(planId);
-
-    const [newVersion] = await dm.db('plan_version')
-      .where('canonical_id', planId)
-      .where('version', 2);
-
-    expect(newVersion.plan_id).toEqual(originalPlan.id);
-    expect(newVersion.canonical_id).toEqual(planId);
-
-
-    expect(
-      await dm.db('plan'),
-    ).toHaveLength(3);
-  });
-
-  test('Throws a 404 error if the plan does not exist with that canonical ID', async () => {
+  test('Throws a 404 error if the plan does not exist with that ID', async () => {
     await request(app)
       .post('/api/v1/plan/10/version')
       .expect(404);
   });
 
-  test('Duplicates all existing records for a plan, keeping the canonical IDs the same', async () => {
+  test('Creates an identical snapshot of the plan and stores it as JSON', async () => {
     await request(app)
       .post(baseUrl)
       .expect(200);
 
+    const planId = 1;
 
-    const plans = await dm.db('plan');
-    const pastures = await dm.db('pasture');
-    const plantCommunities = await dm.db('plant_community');
-    const indicatorPlants = await dm.db('indicator_plant');
-    const monitoringAreas = await dm.db('monitoring_area');
-    const monitoringAreaPurposes = await dm.db('monitoring_area_purpose');
-    const plantCommunityActions = await dm.db('plant_community_action');
-    const grazingSchedules = await dm.db('grazing_schedule');
-    const grazingScheduleEntries = await dm.db('grazing_schedule_entry');
-    const additionalRequirements = await dm.db('additional_requirement');
-    const ministerIssues = await dm.db('minister_issue');
-    const ministerIssueActions = await dm.db('minister_issue_action');
-    const ministerIssuePastures = await dm.db('minister_issue_pasture');
-    const managementConsiderations = await dm.db('management_consideration');
+    const [{ snapshot }] = await dm.db('plan_snapshot').where('id', planId);
 
-    expect(plans).toHaveLength(3);
-    expect(pastures).toHaveLength(2);
-    expect(plantCommunities).toHaveLength(2);
-    expect(indicatorPlants).toHaveLength(2);
-    expect(monitoringAreas).toHaveLength(2);
-    expect(monitoringAreaPurposes).toHaveLength(2);
-    expect(plantCommunityActions).toHaveLength(2);
-    expect(grazingSchedules).toHaveLength(2);
-    expect(grazingScheduleEntries).toHaveLength(2);
-    expect(additionalRequirements).toHaveLength(2);
-    expect(ministerIssues).toHaveLength(2);
-    expect(ministerIssueActions).toHaveLength(2);
-    expect(ministerIssuePastures).toHaveLength(2);
-    expect(managementConsiderations).toHaveLength(2);
+    const [plan] = await Plan.findWithStatusExtension(dm.db, { 'plan.id': planId }, ['id', 'desc']);
+    const { agreementId } = plan;
 
-    expect(hasSameCanonicalID(plans)).toBeTruthy();
-    expect(hasSameCanonicalID(pastures)).toBeTruthy();
-    expect(hasSameCanonicalID(plantCommunities)).toBeTruthy();
-    expect(hasSameCanonicalID(indicatorPlants)).toBeTruthy();
-    expect(hasSameCanonicalID(monitoringAreas)).toBeTruthy();
-    expect(hasSameCanonicalID(monitoringAreaPurposes)).toBeTruthy();
-    expect(hasSameCanonicalID(plantCommunityActions)).toBeTruthy();
-    expect(hasSameCanonicalID(grazingSchedules)).toBeTruthy();
-    expect(hasSameCanonicalID(grazingScheduleEntries)).toBeTruthy();
-    expect(hasSameCanonicalID(additionalRequirements)).toBeTruthy();
-    expect(hasSameCanonicalID(ministerIssues)).toBeTruthy();
-    expect(hasSameCanonicalID(ministerIssueActions)).toBeTruthy();
-    expect(hasSameCanonicalID(ministerIssuePastures)).toBeTruthy();
-    expect(hasSameCanonicalID(managementConsiderations)).toBeTruthy();
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      dm.db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+
+    await plan.eagerloadAllOneToMany();
+    plan.agreement = agreement;
+
+    await plan.eagerloadAllOneToMany();
+
+    expect(snapshot).toEqual(JSON.parse(JSON.stringify(plan)));
   });
 
   test('Getting each version of a plan', async () => {
-    const versions = (await dm.db('plan_version').where('canonical_id', 1));
+    await request(app)
+      .post(baseUrl)
+      .expect(200);
+
+    await request(app)
+      .post(baseUrl)
+      .expect(200);
+
+    const versions = (await dm.db('plan_snapshot').where('plan_id', 1));
 
     await request(app)
       .get(`${baseUrl}`)
@@ -230,41 +178,37 @@ describe('Test Plan routes', () => {
       .expect((res) => {
         expect(res.body.versions).toHaveLength(versions.length);
         expect(res.body.versions).toEqual(
-          versions.map(
-            ({
-              canonical_id: canonicalId,
-              plan_id: planId,
-              updated_at: updatedAt,
-              created_at: createdAt,
-              ...version
-            }) => ({
-              ...version,
-              canonicalId,
-              planId,
-              updatedAt: updatedAt.toISOString(),
-              createdAt: createdAt.toISOString(),
-            }),
-          ),
+          // eslint-disable-next-line camelcase
+          versions.map(({ created_at, plan_id, status_id, ...v }) => ({
+            ...v,
+            createdAt: created_at.toISOString(),
+            planId: plan_id,
+            statusId: status_id,
+          })),
         );
       });
   });
 
   test('Getting the versions of a nonexistant plan throws a 404 error', async () => {
     await request(app)
-      .get('/api/v1/plan/2/version')
+      .get('/api/v1/plan/3/version')
       .expect(404);
   });
 
   test('Getting a specific version of a plan', async () => {
-    const [version] = await dm.db('plan_version').where('canonical_id', 1).where('version', -1);
+    await request(app)
+      .post(baseUrl)
+      .expect(200);
+
+    const [version] = await dm.db('plan_snapshot').where('plan_id', 1).where('version', 1);
     const [plan] = await dm.db('plan').where('id', version.plan_id);
 
     await request(app)
-      .get(`${baseUrl}/-1`)
+      .get(`${baseUrl}/1`)
       .expect(200)
       .expect((res) => {
         expect(res.body.version).toEqual(version.version);
-        expect(res.body.id).toEqual(plan.canonical_id);
+        expect(res.body.id).toEqual(plan.id);
       });
   });
 

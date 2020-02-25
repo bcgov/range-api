@@ -25,19 +25,7 @@ export default class PlanPastureController {
    * @param {*} res : express res
    */
   static async store(req, res) {
-    const { params: { planId: canonicalId }, body, user } = req;
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
+    const { params: { planId }, body, user } = req;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -48,9 +36,9 @@ export default class PlanPastureController {
       delete body.planId;
       delete body.plan_id;
 
-      const { canonicalId: pastureCanonicalId, ...pasture } = await Pasture.create(db, { ...body, plan_id: planId });
+      const pasture = await Pasture.create(db, { ...body, plan_id: planId });
 
-      return res.status(200).json({ ...pasture, id: pastureCanonicalId }).end();
+      return res.status(200).json(pasture).end();
     } catch (err) {
       logger.error(`PlanPastureController:store: fail with error: ${err.message}`);
       throw err;
@@ -64,21 +52,13 @@ export default class PlanPastureController {
    */
   static async update(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId } = params;
+    const { planId, pastureId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -87,13 +67,13 @@ export default class PlanPastureController {
       delete body.planId;
       delete body.plan_id;
 
-      const { canonicalId: pastureCanonicalId, ...updatedPasture } = await Pasture.update(
+      const pasture = await Pasture.update(
         db,
-        { canonical_id: pastureId, plan_id: planId },
+        { id: pastureId },
         { ...body, plan_id: planId },
       );
 
-      return res.status(200).json({ ...updatedPasture, id: pastureCanonicalId }).end();
+      return res.status(200).json(pasture).end();
     } catch (err) {
       logger.error(`PlanPastureController: update: fail with error: ${err.message}`);
       throw err;
@@ -107,27 +87,19 @@ export default class PlanPastureController {
    */
   static async destroy(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, pastureId } = params;
+    const { planId, pastureId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const result = await Pasture.remove(
         db,
-        { canonical_id: pastureId, plan_id: planId },
+        { id: pastureId },
       );
 
       if (result === 0) {
@@ -148,7 +120,7 @@ export default class PlanPastureController {
    */
   static async storePlatCommunity(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId } = params;
+    const { planId, pastureId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId'], 'params', req,
@@ -158,35 +130,26 @@ export default class PlanPastureController {
       ['communityTypeId', 'purposeOfAction'], 'body', req,
     );
 
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { canonical_id: pastureId, plan_id: planId });
+      const pasture = await Pasture.findOne(db, { id: pastureId });
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
+
       const { purposeOfAction } = body;
       if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
         throw errorWithCode(`Unacceptable purpose of action with "${purposeOfAction}"`);
       }
-      const {
-        canonicalId: communityCanonicalId,
-        ...plantCommunity
-      } = await PlantCommunity.create(db, {
+
+      const plantCommunity = await PlantCommunity.create(db, {
         ...body,
-        pastureId: pasture.id,
+        pastureId,
       });
 
-      return res.status(200).json({ ...plantCommunity, id: communityCanonicalId }).end();
+      return res.status(200).json(plantCommunity).end();
     } catch (error) {
       logger.error(`PlanPastureController: storePlatCommunity: fail with error: ${error.message}`);
       throw error;
@@ -201,75 +164,55 @@ export default class PlanPastureController {
 
   static async updatePlantCommunity(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-    const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+    const pasture = await Pasture.findOne(db, { id: pastureId });
 
     if (!pasture) {
       throw errorWithCode("Pasture doesn't exist", 404);
     }
 
-    const plantCommunity = await PlantCommunity.findOne(db, {
-      canonical_id: communityId,
-      pasture_id: pasture.id,
-    });
+    const plantCommunity = await PlantCommunity.findById(db, communityId);
 
     if (!plantCommunity) {
       throw errorWithCode("Plant community doesn't exist", 404);
     }
 
-    const { canonicalId: communityCanonicalId, ...updatedPlantCommunity } = await PlantCommunity.update(
+    const updatedPlantCommunity = await PlantCommunity.update(
       db,
-      { id: plantCommunity.id },
-      { ...body, plan_id: planId, pasture_id: pasture.id, canonical_id: communityId },
+      { id: communityId },
+      { ...body, plan_id: planId, pasture_id: pasture.id, id: communityId },
     );
 
-    return res.json({ ...updatedPlantCommunity, id: communityCanonicalId }).end();
+    return res.json(updatedPlantCommunity).end();
   }
 
   static async destroyPlantCommunity(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, pastureId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
-
     const agreementId = await Plan.agreementForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-    const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+    const pasture = await Pasture.findById(db, pastureId);
 
     if (!pasture) {
       throw errorWithCode("Pasture doesn't exist", 404);
     }
 
     const result = await PlantCommunity.remove(db, {
-      canonical_id: communityId,
-      pasture_id: pasture.id,
+      id: communityId,
     });
 
     if (result === 0) {
@@ -287,7 +230,7 @@ export default class PlanPastureController {
    */
   static async storePlantCommunityAction(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId'], 'params', req,
@@ -298,32 +241,25 @@ export default class PlanPastureController {
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
-      const { canonicalId: actionCanonicalId, ...plantCommunityAction } = await PlantCommunityAction.create(
+      const plantCommunityAction = await PlantCommunityAction.create(
         db,
         {
           ...body,
-          plantCommunityId: plantCommunity.id,
+          plantCommunityId: communityId,
         },
       );
-      return res.status(200).json({ ...plantCommunityAction, id: actionCanonicalId }).end();
+      return res.status(200).json(plantCommunityAction).end();
     } catch (error) {
       logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
       throw error;
@@ -332,47 +268,40 @@ export default class PlanPastureController {
 
   static async updatePlantCommunityAction(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId, actionId } = params;
+    const { planId, pastureId, communityId, actionId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId', 'actionId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const action = await PlantCommunityAction.findOne(
+      const action = await PlantCommunityAction.findById(
         db,
-        { plant_community_id: plantCommunity.id, canonical_id: actionId },
+        actionId,
       );
 
       if (!action) {
         throw errorWithCode('Could not find plant community action', 404);
       }
 
-      const { canonicalId: actionCanonicalId, ...updatedAction } = await PlantCommunityAction.update(
+      const updatedAction = await PlantCommunityAction.update(
         db,
-        { id: action.id },
+        { id: actionId },
         body,
       );
-      return res.status(200).json({ ...updatedAction, id: actionCanonicalId }).end();
+      return res.status(200).json(updatedAction).end();
     } catch (error) {
       logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
       throw error;
@@ -381,35 +310,28 @@ export default class PlanPastureController {
 
   static async destroyPlantCommunityAction(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, pastureId, communityId, actionId } = params;
+    const { planId, pastureId, communityId, actionId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId', 'actionId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const result = await PlantCommunityAction.remove(
+      const result = await PlantCommunityAction.removeById(
         db,
-        { plant_community_id: plantCommunity.id, canonical_id: actionId },
+        actionId,
       );
 
       if (result === 0) {
@@ -430,7 +352,7 @@ export default class PlanPastureController {
    */
   static async storeIndicatorPlant(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
     const { criteria } = body;
 
     checkRequiredFields(
@@ -442,13 +364,6 @@ export default class PlanPastureController {
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -456,23 +371,23 @@ export default class PlanPastureController {
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const { canonicalId: plantCanonicalId, ...indicatorPlant } = await IndicatorPlant.create(
+      const indicatorPlant = await IndicatorPlant.create(
         db,
         {
           ...body,
           plantCommunityId: plantCommunity.id,
         },
       );
-      return res.status(200).json({ ...indicatorPlant, id: plantCanonicalId }).end();
+      return res.status(200).json(indicatorPlant).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;
@@ -481,7 +396,7 @@ export default class PlanPastureController {
 
   static async updateIndicatorPlant(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId, plantId } = params;
+    const { planId, pastureId, communityId, plantId } = params;
     const { criteria } = body;
 
     checkRequiredFields(
@@ -489,13 +404,6 @@ export default class PlanPastureController {
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -503,30 +411,27 @@ export default class PlanPastureController {
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const indicatorPlant = await IndicatorPlant.findOne(
-        db,
-        { plant_community_id: plantCommunity.id, canonical_id: plantId },
-      );
+      const indicatorPlant = await IndicatorPlant.findById(db, plantId);
 
       if (!indicatorPlant) {
         throw errorWithCode('Could not find indicator plant', 404);
       }
 
-      const { canonicalId: plantCanonicalId, ...updatedIndicatorPlant } = await IndicatorPlant.update(
+      const updatedIndicatorPlant = await IndicatorPlant.update(
         db,
-        { id: indicatorPlant.id, plant_community_id: plantCommunity.id },
+        { id: plantId },
         body,
       );
-      return res.status(200).json({ ...updatedIndicatorPlant, id: plantCanonicalId }).end();
+      return res.status(200).json(updatedIndicatorPlant).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;
@@ -535,35 +440,28 @@ export default class PlanPastureController {
 
   static async destroyIndicatorPlant(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, pastureId, communityId, plantId } = params;
+    const { planId, pastureId, communityId, plantId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId', 'plantId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const result = await IndicatorPlant.remove(
+      const result = await IndicatorPlant.removeById(
         db,
-        { plant_community_id: plantCommunity.id, canonical_id: plantId },
+        plantId,
       );
 
       if (result === 0) {
@@ -584,7 +482,7 @@ export default class PlanPastureController {
    */
   static async storeMonitoringArea(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId } = params;
+    const { planId, pastureId, communityId } = params;
     const { purposeTypeIds } = body;
 
     checkRequiredFields(
@@ -596,28 +494,21 @@ export default class PlanPastureController {
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
       const monitoringArea = await MonitoringArea.create(
         db,
-        { ...body, plantCommunityId: plantCommunity.id },
+        { ...body, plantCommunityId: communityId },
       );
 
       const promises = purposeTypeIds.map(pId => (
@@ -631,14 +522,7 @@ export default class PlanPastureController {
         db, { monitoring_area_id: monitoringArea.id },
       );
 
-      const purposes = monitoringArea.purposes.map(({ canonicalId: purposeCanonicalId, ...purpose }) => ({
-        ...purpose,
-        id: purposeCanonicalId,
-      }));
-
-      const { canonicalId: areaCanonicalId, ...newMonitoringArea } = monitoringArea;
-
-      return res.status(200).json({ ...newMonitoringArea, id: areaCanonicalId, purposes }).end();
+      return res.status(200).json(monitoringArea).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;
@@ -647,7 +531,7 @@ export default class PlanPastureController {
 
   static async updateMonitoringArea(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId, pastureId, communityId, areaId } = params;
+    const { planId, pastureId, communityId, areaId } = params;
     const { purposeTypeIds = [], ...bodyData } = body;
 
     checkRequiredFields(
@@ -655,28 +539,21 @@ export default class PlanPastureController {
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const monitoringArea = await MonitoringArea.findOne(
+      const monitoringArea = await MonitoringArea.findById(
         db,
-        { canonical_id: areaId, plant_community_id: plantCommunity.id },
+        areaId,
       );
 
       if (!monitoringArea) {
@@ -692,6 +569,8 @@ export default class PlanPastureController {
         if (!purposeTypeIds.includes(purpose.purposeTypeId)) {
           return MonitoringAreaPurpose.remove(db, { monitoring_area_id: monitoringArea.id, id: purpose.id });
         }
+
+        return Promise.resolve()
       }));
 
       // Create any purposes that don't exist yet
@@ -708,22 +587,18 @@ export default class PlanPastureController {
       });
 
       // Format the purposes for the client
-      const purposes = (await Promise.all(promises))
-        .map(({ canonicalId: purposeCanonicalId, ...purpose }) => ({
-          ...purpose,
-          id: purposeCanonicalId,
-        }));
+      const purposes = (await Promise.all(promises));
 
       // Skip update if the body is empty
-      const updatedMonitoringArea = Object.entries(bodyData).length !== 0 ? await MonitoringArea.update(
-        db,
-        { id: monitoringArea.id },
-        bodyData,
-      ) : monitoringArea;
+      const updatedMonitoringArea = Object.entries(bodyData).length !== 0
+        ? await MonitoringArea.update(
+          db,
+          { id: monitoringArea.id },
+          bodyData,
+        )
+        : monitoringArea;
 
-      const { canonicalId: areaCanonicalId, ...updatedAreaData } = updatedMonitoringArea;
-
-      return res.status(200).json({ ...updatedAreaData, id: areaCanonicalId, purposes }).end();
+      return res.status(200).json({ ...updatedMonitoringArea, purposes }).end();
     } catch (error) {
       logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;
@@ -732,35 +607,28 @@ export default class PlanPastureController {
 
   static async destroyMonitoringArea(req, res) {
     const { params, user } = req;
-    const { planId: canonicalId, pastureId, communityId, areaId } = params;
+    const { planId, pastureId, communityId, areaId } = params;
 
     checkRequiredFields(
       ['planId', 'pastureId', 'communityId', 'areaId'], 'params', req,
     );
 
     try {
-      const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-      if (!currentPlan) {
-        throw errorWithCode('Plan doesn\'t exist', 404);
-      }
-
-      const planId = currentPlan.id;
-
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { plan_id: planId, canonical_id: pastureId });
+      const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
         throw errorWithCode(`No pasture found with id: ${pastureId}`);
       }
-      const plantCommunity = await PlantCommunity.findOne(db, { pasture_id: pasture.id, canonical_id: communityId });
+      const plantCommunity = await PlantCommunity.findById(db, communityId);
       if (!plantCommunity) {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const monitoringArea = await MonitoringArea.findOne(
+      const monitoringArea = await MonitoringArea.findById(
         db,
-        { canonical_id: areaId, plant_community_id: plantCommunity.id },
+        areaId,
       );
 
       if (!monitoringArea) {
@@ -768,11 +636,15 @@ export default class PlanPastureController {
       }
 
       await monitoringArea.fetchMonitoringAreaPurposes(
-        db, { monitoring_area_id: monitoringArea.id },
+        db, { monitoring_area_id: areaId },
       );
 
       // Remove monitoring area purposes
-      await Promise.all(monitoringArea.purposes.map(purpose => MonitoringAreaPurpose.remove(db, { monitoring_area_id: monitoringArea.id, id: purpose.id })));
+      await Promise.all(monitoringArea.purposes.map(purpose =>
+        MonitoringAreaPurpose.remove(db, {
+          monitoring_area_id: monitoringArea.id,
+          id: purpose.id,
+        })));
 
       await MonitoringArea.remove(
         db,

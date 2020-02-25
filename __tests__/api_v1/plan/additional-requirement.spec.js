@@ -75,7 +75,7 @@ describe('Test Additional Requirement routes', () => {
       .send(body)
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, id: 2, planId: 2 });
+        expect(res.body).toEqual({ ...body, id: 2, planId: 1, canonicalId: 2 });
       });
 
     const requirements = await dm.db('additional_requirement');
@@ -92,7 +92,7 @@ describe('Test Additional Requirement routes', () => {
       .send({ ...body, detail })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, detail, id: 1, planId: 2 });
+        expect(res.body).toEqual({ ...body, detail, id: 1, planId: 1, canonicalId: null });
       });
 
     const requirements = await dm.db('additional_requirement');

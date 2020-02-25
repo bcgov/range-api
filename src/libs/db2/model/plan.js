@@ -21,6 +21,7 @@
 'use strict';
 
 import { flatten } from 'lodash';
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';
@@ -41,6 +42,8 @@ import PlantCommunityAction from './plantcommunityaction';
 import GrazingScheduleEntry from './grazingscheduleentry';
 import MinisterIssueAction from './ministerissueaction';
 import MinisterIssuePasture from './ministerissuepasture';
+import PlanSnapshot from './plansnapshot';
+import Agreement from './agreement';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -149,6 +152,42 @@ export default class Plan extends Model {
 
     const [result] = results;
     return result.agreement_id;
+  }
+
+  static async createSnapshot(db, planId) {
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
+    if (!plan) {
+      throw errorWithCode('Plan doesn\'t exist', 404);
+    }
+    const { agreementId } = plan;
+
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+      db, { forest_file_id: agreementId },
+    );
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+
+    await plan.eagerloadAllOneToMany();
+    plan.agreement = agreement;
+
+    await plan.eagerloadAllOneToMany();
+
+    const snapshot = JSON.stringify(plan);
+
+    const { rows: [{ max: lastVersion }] } = await db.raw(`
+      SELECT MAX(version) FROM plan_snapshot
+      WHERE plan_id = ?
+    `, [plan.id]);
+
+    const snapshotRecord = await PlanSnapshot.create(db, {
+      snapshot,
+      plan_id: planId,
+      created_at: new Date(),
+      version: lastVersion + 1,
+      status_id: plan.statusId,
+    });
+
+    return snapshotRecord;
   }
 
   static async duplicateAll(db, planId) {

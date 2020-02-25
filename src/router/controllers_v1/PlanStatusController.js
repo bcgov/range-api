@@ -69,7 +69,7 @@ export default class PlanStatusController {
   static async update(req, res) {
     const { params, body, user } = req;
     const { statusId, note } = body;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
@@ -81,18 +81,6 @@ export default class PlanStatusController {
     if (!isNumeric(statusId)) {
       throw errorWithCode('statusId must be numeric', 400);
     }
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -114,6 +102,9 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
+      if (statusId === 12) {
+        await Plan.createSnapshot(db, planId);
+      }
       return res.status(200).json(status).end();
     } catch (err) {
       logger.error(`PlanStatusController:update: fail with error: ${err.message}`);
@@ -133,23 +124,11 @@ export default class PlanStatusController {
       body,
       user,
     } = req;
-    const { planId: canonicalId, confirmationId } = params;
+    const { planId, confirmationId } = params;
 
     checkRequiredFields(
       ['planId', 'confirmationId'], 'params', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);
@@ -191,7 +170,7 @@ export default class PlanStatusController {
    */
   static async storeStatusHistory(req, res) {
     const { params, body, user } = req;
-    const { planId: canonicalId } = params;
+    const { planId } = params;
 
     checkRequiredFields(
       ['planId'], 'params', req,
@@ -199,18 +178,6 @@ export default class PlanStatusController {
     checkRequiredFields(
       ['fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req,
     );
-
-    if (!canonicalId) {
-      throw errorWithCode('planId must be provided in path', 400);
-    }
-
-    const currentPlan = await Plan.findCurrentVersion(db, canonicalId);
-
-    if (!currentPlan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
-    }
-
-    const planId = currentPlan.id;
 
     try {
       const agreementId = await Plan.agreementForPlanId(db, planId);

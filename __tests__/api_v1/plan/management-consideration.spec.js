@@ -81,14 +81,15 @@ describe('Test Management Consideration routes', () => {
         expect(res.body).toEqual({
           ...body,
           id: 2,
-          planId: 2,
+          canonicalId: 2,
+          planId: 1,
         });
       });
   });
 
   test('Creating a management consideration on a nonexistant plan throws a 500 error', async () => {
     await request(app)
-      .post('/api/v1/plan/2/management-consideration')
+      .post('/api/v1/plan/3/management-consideration')
       .send(body)
       .expect(500);
   });
@@ -104,7 +105,8 @@ describe('Test Management Consideration routes', () => {
         expect(res.body).toEqual({
           ...body,
           id: 2,
-          planId: 2,
+          canonicalId: 2,
+          planId: 1,
         });
       });
 
@@ -116,7 +118,8 @@ describe('Test Management Consideration routes', () => {
         expect(res.body).toEqual({
           ...body,
           id: 2,
-          planId: 2,
+          canonicalId: 2,
+          planId: 1,
           detail,
         });
       });
