@@ -1,8 +1,3 @@
-const { execSync } = require('child_process');
-
-// Run build to be able to import the models
-execSync('npm run build');
-
 const Plan = require('../../../../build/src/libs/db2/model/plan').default;
 const PlanSnapshot = require('../../../../build/src/libs/db2/model/plansnapshot').default;
 const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
