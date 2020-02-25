@@ -29,7 +29,7 @@ exports.up = async (knex) => {
   `);
 
   const promises = rows.map(async ({
-    past_plan_ids: pastPlanIds,
+    past_plan_ids: pastPlanIds = [],
     current_plan_id: currentPlanId,
   }) => {
     const snapshotsP = pastPlanIds.map(async (planId) => {
