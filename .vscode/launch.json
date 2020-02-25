@@ -10,6 +10,7 @@
             "protocol": "inspector",
             "port": 9229,
             "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/build"]
         },
         {
             "type": "node",
