@@ -1,5 +1,6 @@
 import Model from './model';
 import User from './user';
+import PlanStatus from './planstatus';
 
 export default class PlanSnapshot extends Model {
   constructor(data, db = undefined) {
@@ -24,5 +25,13 @@ export default class PlanSnapshot extends Model {
 
   static get table() {
     return 'plan_snapshot';
+  }
+
+  async fetchStatus(db) {
+    const status = await PlanStatus.findOne(db, { id: this.statusId });
+
+    if (status) {
+      this.status = status;
+    }
   }
 }

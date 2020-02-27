@@ -71,6 +71,9 @@ router.get('/:planId?/version', asyncMiddleware(PlanVersionController.showAll));
 // Get a specific version for a plan
 router.get('/:planId?/version/:version?', asyncMiddleware(PlanVersionController.show));
 
+// Restore a previous version of a plan
+router.post('/:planId?/version/:version?/restore', asyncMiddleware(PlanVersionController.restoreVersion));
+
 //
 // Pasture
 //

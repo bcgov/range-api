@@ -58,6 +58,8 @@ export default class PlanVersionController {
         { plan_id: planId },
       );
 
+      await Promise.all(versions.map(v => v.fetchStatus(db)));
+
       return res.status(200).json({ versions }).end();
     } catch (error) {
       logger.error(error);
@@ -104,6 +106,28 @@ export default class PlanVersionController {
       }).end();
     } catch (error) {
       logger.error(error);
+      throw error;
+    }
+  }
+
+
+  static async restoreVersion(req, res) {
+    const { user, params } = req;
+    const { planId, version } = params;
+
+    try {
+      const plan = await Plan.findById(db, planId);
+      if (!plan) {
+        throw errorWithCode('Could not find plan', 404);
+      }
+
+      const agreementId = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      await Plan.restoreVersion(db, planId, version);
+
+      res.status(200).end();
+    } catch (error) {
       throw error;
     }
   }
