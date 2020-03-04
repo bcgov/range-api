@@ -57,36 +57,36 @@ exports.up = async (knex) => {
         ['id', 'desc']);
 
         if (!plan) {
-          console.log(`Could not find plan ${id}`);
+          console.log(`Could not find plan ${id}. 'uploaded' is probably false`);
+        } else {
+          const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+            knex, { forest_file_id: agreementId },
+          );
+          await agreement.eagerloadAllOneToManyExceptPlan();
+          agreement.transformToV1();
+
+          await plan.eagerloadAllOneToMany();
+
+          const { rows: [{ version: lastVersion }] } = await knex.raw(
+            'SELECT version FROM plan_snapshot WHERE plan_id=? ORDER BY version DESC LIMIT 1;',
+            [currentPlan.plan_id],
+          );
+
+          const snapshot = await PlanSnapshot.create(knex, {
+            snapshot: JSON.stringify(plan),
+            created_at: plan.created_at,
+            version: lastVersion + (1 * i) + 1,
+            plan_id: currentPlan.plan_id,
+            status_id: plan.statusId,
+          });
+
+          console.log(`Deleting plan ${id}`);
+
+          await knex.raw('DELETE FROM plan_version WHERE plan_id=?', [id]);
+          await knex.raw('DELETE FROM plan WHERE id=?', [id]);
+
+          return snapshot;
         }
-
-        const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-          knex, { forest_file_id: agreementId },
-        );
-        await agreement.eagerloadAllOneToManyExceptPlan();
-        agreement.transformToV1();
-
-        await plan.eagerloadAllOneToMany();
-
-        const { rows: [{ version: lastVersion }] } = await knex.raw(
-          'SELECT version FROM plan_snapshot WHERE plan_id=? ORDER BY version DESC LIMIT 1;',
-          [currentPlan.plan_id],
-        );
-
-        const snapshot = await PlanSnapshot.create(knex, {
-          snapshot: JSON.stringify(plan),
-          created_at: plan.created_at,
-          version: lastVersion + (1 * i) + 1,
-          plan_id: currentPlan.plan_id,
-          status_id: plan.statusId,
-        });
-
-        console.log(`Deleting plan ${id}`);
-
-        await knex.raw('DELETE FROM plan_version WHERE plan_id=?', [id]);
-        await knex.raw('DELETE FROM plan WHERE id=?', [id]);
-
-        return snapshot;
       }
     }),
   );
