@@ -381,7 +381,6 @@ const updateClient = async data => {
 
   console.log("Start updating Clients");
   for (let index = 0; index < data.length; index++) {
-    console.log('i was here');
     const record = data[index];
     const {
       forest_file_id: agreementId,
