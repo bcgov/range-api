@@ -88,9 +88,11 @@ export default class Agreement extends Model {
       latestPlan = false,
       sendFullPlan = false,
       staffDraft = false,
+      orderBy = 'agreement.forest_file_id',
+      order = 'asc',
     ] = args;
     let promises = [];
-    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit);
+    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit, orderBy, order);
 
     // fetch all data that is directly related to the agreement
     // `await` used here to allow the queries to start imediatly and
@@ -123,7 +125,7 @@ export default class Agreement extends Model {
     return flatten(myAgreements);
   }
 
-  static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined) {
+  static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc') {
     if (!db || !where) {
       return [];
     }
@@ -145,8 +147,11 @@ export default class Agreement extends Model {
         .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
         .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
+        .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
+        .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
-        .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' });
+        .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
+        .orderBy(orderBy, order);
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
         const k = Object.keys(where)[0];
