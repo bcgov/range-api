@@ -253,9 +253,21 @@ const updateAgreement = async data => {
       console.log(`No zone with code ${zoneCode}`);
       continue;
     }
+      //todo: deal with each non active type appropriately
     const agreementType = agreementTypesMap[agreementTypeCode];
     if (!agreementType) {
       console.log(`No AgreementType with code ${agreementTypeCode}`);
+        switch(file_type_code)
+        {
+            case 'P':
+            case 'AR':
+            case 'CA':
+            case 'EE':
+            case 'PA':
+            case 'PE':
+        }
+
+        
       continue;
     }
     try {
