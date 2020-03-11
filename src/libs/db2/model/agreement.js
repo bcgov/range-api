@@ -143,6 +143,7 @@ export default class Agreement extends Model {
       let results = [];
       const q = db
         .select(myFields)
+        .distinct('agreement.forest_file_id')
         .from(Agreement.table)
         .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
@@ -159,7 +160,6 @@ export default class Agreement extends Model {
         .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .whereNotNull('agreement_holder.given_name')
         .orderBy(orderBy, order);
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
