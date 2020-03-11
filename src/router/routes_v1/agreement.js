@@ -142,13 +142,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
 // Search agreements by RAN, contact name, and client name. This is only used by Web
 router.get('/search', asyncMiddleware(async (req, res) => {
   const { user, query } = req;
-  const { term = '', limit: l = 10, page: p = 1, orderBy = 'agreement.forest_file_id', order = 'asc' } = query;
+  const { term = '', orderBy = 'agreement.forest_file_id', order = 'asc' } = query;
 
-  const page = Number(p);
-  const limit = Number(l);
-  const offset = limit * (page - 1);
+  const page = Number(query.page || 1);
+  const limit = Number(query.limit || 10);
   let agreements = [];
-  let totalPages = 0;
   let totalItems = 0;
 
   try {
@@ -164,31 +162,18 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       ]);
 
       // remove duplicate ids
-      const hash = {};
-      const nonDuplicateIDs = [];
-      allIDs.map((id) => {
-        if (hash[id]) return undefined;
-        hash[id] = true;
-        nonDuplicateIDs.push(id);
-        return id;
-      });
+      const nonDuplicateIDs = allIDs.filter((v, i) => allIDs.indexOf(v) === i);
 
       const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
-      totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
       const latestPlan = true;
       const sendFullPlan = false;
       const staffDraft = !user.isAgreementHolder();
-      const promises = okIDs
-        .slice(offset, offset + limit)
-        .map(agreementId =>
-          Agreement.findWithAllRelations(
-            db, { forest_file_id: agreementId }, undefined, undefined,
-            latestPlan, sendFullPlan, staffDraft, orderBy, order,
-          ));
-
-      agreements = flatten(await Promise.all(promises));
+      agreements = await Agreement.findWithAllRelations(
+        db, { forest_file_id: okIDs }, page, limit,
+        latestPlan, sendFullPlan, staffDraft, orderBy, order,
+      );
     } else {
       const count = await agreementCountForUser(req.user);
 
@@ -206,9 +191,8 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       } else if (user.isAdministrator()) {
         agreements = await getAgreementsForAdmin({ page, limit, orderBy, order });
       } else {
-        throw errorWithCode('Unable to determine user roll', 500);
+        throw errorWithCode('Unable to determine user role', 500);
       }
-      totalPages = Math.ceil(count / limit) || 1;
       totalItems = count;
     }
 
@@ -216,6 +200,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
     // Make sure the user param supplied is not more than the actual total
     // pages.
+    const totalPages = Math.ceil(totalItems / limit) || 1;
     const currentPage = page > totalPages ? totalPages : page;
     const result = {
       perPage: limit,
