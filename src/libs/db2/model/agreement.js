@@ -149,8 +149,17 @@ export default class Agreement extends Model {
         .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
         .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
         .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
+        .leftJoin('client_agreement', { 'plan.agreement_id': 'client_agreement.agreement_id' })
+        .leftJoin('user_account as agreement_holder', (builder) => {
+          // eslint-disable-next-line no-shadow
+          builder.onIn('agreement_holder.client_id', (builder) => {
+            builder.select('client_id').from('client_agreement').where('agreement_id', db.ref('plan.agreement_id')).andWhere('client_type_id', 1);
+          });
+        })
+        .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
+        .whereNotNull('agreement_holder.given_name')
         .orderBy(orderBy, order);
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
