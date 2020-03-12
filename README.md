@@ -15,10 +15,10 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 
 ### Related MyRA Documentation
 
-- [MyRA iOS application Github Repository](https://github.com/bcgov/range-ios)
+- [MyRA iOS application Github Repository](https://github.com/bcgov/range-ios) (Deprecated by range-web)
 - [MyRA Web application Github Repository](https://github.com/bcgov/range-web)
 - [MyRa API Github Repository](https://github.com/bcgov/range-api)
-- [Our current Sprint Backlog is visible on Trello](https://trello.com/b/YxiYOPGU)
+- [Our current Sprint Backlog is visible on Github issues checkout the range-web and range-api repos to see what's going on]
 - [See the database Schema on Schema-Spy](http://schema-spy-range-myra-dev.pathfinder.gov.bc.ca/)
 
 ## Features
