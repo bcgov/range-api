@@ -143,18 +143,26 @@ export default class Agreement extends Model {
       let results = [];
       const q = db
         .select(myFields)
-        .distinct('agreement.forest_file_id')
         .from(Agreement.table)
         .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
         .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
-        .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
-        .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
-        .leftJoin('client_agreement', { 'plan.agreement_id': 'client_agreement.agreement_id' })
-        .leftJoin('user_account as agreement_holder', (builder) => {
+        .leftJoin('plan', (builder) => {
           // eslint-disable-next-line no-shadow
-          builder.onIn('agreement_holder.client_id', (builder) => {
-            builder.select('client_id').from('client_agreement').where('agreement_id', db.ref('plan.agreement_id')).andWhere('client_type_id', 1);
+          builder.on('plan.id', '=', (builder) => {
+            builder.select('id').from('plan').where('agreement_id', db.ref('agreement.forest_file_id')).limit(1);
+          });
+        })
+        .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
+        .leftJoin('ref_client as agreement_holder', (builder) => {
+          // eslint-disable-next-line no-shadow
+          builder.onIn('agreement_holder.id', (builder) => {
+            builder
+              .select('client_id')
+              .from('client_agreement')
+              .where('agreement_id', db.ref('agreement.forest_file_id'))
+              .andWhere('client_type_id', 1)
+              .limit(1);
           });
         })
         .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
