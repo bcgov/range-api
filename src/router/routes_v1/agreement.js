@@ -76,35 +76,35 @@ const agreementCountForUser = async (user) => {
 };
 
 const getAgreeementsForAH = async ({
-  page = undefined, limit = undefined,
+  page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = true, sendFullPlan = false, staffDraft = false,
 }) => {
   const ids = await Agreement.agreementsForClientId(db, user.clientId);
   const agreements = await Agreement.findWithAllRelations(
-    db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
+    db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
   return agreements;
 };
 
 const getAgreementsForRangeOfficer = async ({
-  page = undefined, limit = undefined,
+  page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = false, sendFullPlan = true, staffDraft = true,
 }) => {
   const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
   const ids = zones.map(zone => zone.id);
   const agreements = await Agreement.findWithAllRelations(
-    db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft,
+    db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
 
   return agreements;
 };
 
 const getAgreementsForAdmin = async ({
-  page = undefined, limit = undefined,
+  page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   latestPlan = true, sendFullPlan = false, staffDraft = true,
 }) => {
   const agreements = await Agreement.findWithAllRelations(
-    db, { }, page, limit, latestPlan, sendFullPlan, staffDraft,
+    db, { }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
   return agreements;
 };
@@ -142,12 +142,11 @@ router.get('/', asyncMiddleware(async (req, res) => {
 // Search agreements by RAN, contact name, and client name. This is only used by Web
 router.get('/search', asyncMiddleware(async (req, res) => {
   const { user, query } = req;
-  const { term = '', limit: l = 10, page: p = 1 } = query;
-  const page = Number(p);
-  const limit = Number(l);
-  const offset = limit * (page - 1);
+  const { term = '', orderBy = 'agreement.forest_file_id', order = 'asc' } = query;
+
+  const page = Number(query.page || 1);
+  const limit = Number(query.limit || 10);
   let agreements = [];
-  let totalPages = 0;
   let totalItems = 0;
 
   try {
@@ -163,44 +162,37 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       ]);
 
       // remove duplicate ids
-      const hash = {};
-      const nonDuplicateIDs = [];
-      allIDs.map((id) => {
-        if (hash[id]) return undefined;
-        hash[id] = true;
-        nonDuplicateIDs.push(id);
-        return id;
-      });
+      const nonDuplicateIDs = allIDs.filter((v, i) => allIDs.indexOf(v) === i);
 
       const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
-      totalPages = Math.ceil(okIDs.length / limit) || 1;
       totalItems = okIDs.length;
 
       const latestPlan = true;
       const sendFullPlan = false;
       const staffDraft = !user.isAgreementHolder();
-      const promises = okIDs
-        .slice(offset, offset + limit)
-        .map(agreementId =>
-          Agreement.findWithAllRelations(
-            db, { forest_file_id: agreementId }, undefined, undefined,
-            latestPlan, sendFullPlan, staffDraft,
-          ));
-
-      agreements = flatten(await Promise.all(promises));
+      agreements = await Agreement.findWithAllRelations(
+        db, { forest_file_id: okIDs }, page, limit,
+        latestPlan, sendFullPlan, staffDraft, orderBy, order,
+      );
     } else {
       const count = await agreementCountForUser(req.user);
 
       if (user.isAgreementHolder()) {
-        agreements = await getAgreeementsForAH({ user, page, limit });
+        agreements = await getAgreeementsForAH({ user, page, limit, orderBy, order });
       } else if (user.isRangeOfficer()) {
-        agreements = await getAgreementsForRangeOfficer({ user, page, limit, sendFullPlan: false });
+        agreements = await getAgreementsForRangeOfficer({
+          user,
+          page,
+          limit,
+          sendFullPlan: false,
+          orderBy,
+          order,
+        });
       } else if (user.isAdministrator()) {
-        agreements = await getAgreementsForAdmin({ page, limit });
+        agreements = await getAgreementsForAdmin({ page, limit, orderBy, order });
       } else {
-        throw errorWithCode('Unable to determine user roll', 500);
+        throw errorWithCode('Unable to determine user role', 500);
       }
-      totalPages = Math.ceil(count / limit) || 1;
       totalItems = count;
     }
 
@@ -208,6 +200,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
 
     // Make sure the user param supplied is not more than the actual total
     // pages.
+    const totalPages = Math.ceil(totalItems / limit) || 1;
     const currentPage = page > totalPages ? totalPages : page;
     const result = {
       perPage: limit,
