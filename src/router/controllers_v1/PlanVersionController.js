@@ -83,27 +83,10 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find version for plan', 404);
       }
 
-      const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': versionData.planId }, ['id', 'desc']);
-      if (!plan) {
-        throw errorWithCode('Could not find plan', 404);
-      }
-
-      const agreementId = await Plan.agreementForPlanId(db, plan.id);
+      const agreementId = await Plan.agreementForPlanId(db, versionData.planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-        db, { forest_file_id: agreementId },
-      );
-      await agreement.eagerloadAllOneToManyExceptPlan();
-      agreement.transformToV1();
-
-      await plan.eagerloadAllOneToMany();
-
-      return res.status(200).json({
-        ...plan,
-        agreement,
-        ...versionData,
-      }).end();
+      return res.json(versionData.snapshot).end();
     } catch (error) {
       logger.error(error);
       throw error;
