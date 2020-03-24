@@ -36,10 +36,10 @@ jobs:
 
         POSTGRESQL_PASSWORD: banana
         POSTGRESQL_USER: app_dv_myra
+
+        CI: true
       run: |
         npm ci
         make local-test-setup
         docker-compose up -d
         npm test -- --forceExit
-      env:
-        CI: true
