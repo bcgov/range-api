@@ -39,6 +39,7 @@ jobs:
 
         CI: true
       run: |
+        echo "$(printenv)" > .env
         npm ci
         make local-test-setup
         docker-compose up -d
