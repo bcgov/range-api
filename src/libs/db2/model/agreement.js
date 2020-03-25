@@ -148,28 +148,14 @@ export default class Agreement extends Model {
         .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
         .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
         .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
-        .leftJoin('plan', (builder) => {
-          // eslint-disable-next-line no-shadow
-          builder.on('plan.id', '=', (builder) => {
-            builder.select('id').from('plan').where('agreement_id', db.ref('agreement.forest_file_id')).limit(1);
-          });
-        })
+        .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
         .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
-        .leftJoin('ref_client as agreement_holder', (builder) => {
-          // eslint-disable-next-line no-shadow
-          builder.onIn('agreement_holder.id', (builder) => {
-            builder
-              .select('client_id')
-              .from('client_agreement')
-              .where('agreement_id', db.ref('agreement.forest_file_id'))
-              .andWhere('client_type_id', 1)
-              .limit(1);
-          });
-        })
+        .leftJoin('client_agreement', { 'agreement.forest_file_id': 'client_agreement.agreement_id', 'client_agreement.client_type_id': 1 })
+        .leftJoin('ref_client as agreement_holder',  { 'ref_client.id': 'client_agreement.client_id' })
         .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .orderBy(orderBy, order + (order === 'asc'? 'asc nulls last' : 'desc nulls first'));
+        .orderBy(orderBy, (order === 'asc'? 'asc nulls last' : 'desc nulls first'));
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
         const k = Object.keys(where)[0];
