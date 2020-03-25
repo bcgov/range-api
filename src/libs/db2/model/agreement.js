@@ -151,11 +151,11 @@ export default class Agreement extends Model {
         .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
         .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
         .leftJoin('client_agreement', { 'agreement.forest_file_id': 'client_agreement.agreement_id', 'client_agreement.client_type_id': 1 })
-        .leftJoin('ref_client as agreement_holder',  { 'ref_client.id': 'client_agreement.client_id' })
+        .leftJoin('ref_client as agreement_holder', { 'agreement_holder.id': 'client_agreement.client_id' })
         .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .orderBy(orderBy, (order === 'asc'? 'asc nulls last' : 'desc nulls first'));
+        .orderBy(orderBy, (order === 'asc' ? 'asc nulls last' : 'desc nulls first'));
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
         const k = Object.keys(where)[0];
