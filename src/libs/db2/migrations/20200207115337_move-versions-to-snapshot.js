@@ -54,7 +54,7 @@ exports.up = async (knex) => {
         await plan.eagerloadAllOneToMany();
 
         const snapshot = await PlanSnapshot.create(knex, {
-          snapshot: JSON.stringify(plan),
+          snapshot: JSON.stringify({ ...plan, agreement }),
           created_at: versionRecord.created_at,
           version: versionRecord.version,
           plan_id: currentPlanId,
