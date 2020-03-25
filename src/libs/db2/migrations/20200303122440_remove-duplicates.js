@@ -73,7 +73,10 @@ exports.up = async (knex) => {
           );
 
           const snapshot = await PlanSnapshot.create(knex, {
-            snapshot: JSON.stringify(plan),
+            snapshot: JSON.stringify({
+              ...plan,
+              agreement,
+            }),
             created_at: plan.created_at,
             version: lastVersion + (1 * i) + 1,
             plan_id: currentPlan.plan_id,
