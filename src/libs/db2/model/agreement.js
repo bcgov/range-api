@@ -155,7 +155,7 @@ export default class Agreement extends Model {
         .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
         .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
         .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .orderBy(orderBy, (order === 'asc' ? 'asc nulls last' : 'desc nulls first'));
+        .orderByRaw(`${orderBy} ${(order === 'asc' ? 'asc nulls last' : 'desc nulls first')}`);
 
       if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
         const k = Object.keys(where)[0];
