@@ -86,7 +86,7 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementForPlanId(db, versionData.planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      return res.json(versionData.snapshot).end();
+      return res.json({ ...versionData.snapshot, version: versionData.version }).end();
     } catch (error) {
       logger.error(error);
       throw error;
