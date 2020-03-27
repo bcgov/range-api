@@ -315,7 +315,7 @@ export default class Plan extends Model {
     const schedulePromises = snapshot.grazingSchedules.map(async (schedule) => {
       const newSchedule = await GrazingSchedule.create(db, schedule);
 
-      await GrazingScheduleEntry.remove(db, { grazingScheduleId: schedule.id });
+      await GrazingScheduleEntry.remove(db, { grazing_schedule_id: schedule.id });
 
       const entryPromises = schedule.grazingScheduleEntries.map(async (entry) => {
         const newEntry = await GrazingScheduleEntry.create(db, entry);
@@ -365,7 +365,7 @@ export default class Plan extends Model {
 
       const newActions = await Promise.all(actionPromises);
 
-      await MinisterIssuePasture.remove(db, { issue_id: issue.id });
+      await MinisterIssuePasture.remove(db, { minister_issue_id: issue.id });
 
       const ministerPasturePromises = issue.pastures.map(async (pastureId) => {
         const pasture = newPastures.find(p => p.original.id === pastureId);
