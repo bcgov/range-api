@@ -30,7 +30,7 @@ old_clients_in_plan_confirmation  as (
     from plan_confirmation a
     join plan c on c.id = a.plan_id
     left join ref_client b on b.id = a.client_id
-    where concat(a.client_id,':',c.id) not in (select GUID from actual_clients_in_plan_confirmation)
+    where concat(a.client_id,':',c.id) not in (select GUID from the_right_clients)
 )
 ,missing_clients_in_plan_confirmation as (
   select name,
