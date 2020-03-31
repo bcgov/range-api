@@ -42,8 +42,13 @@ old_clients_in_plan_confirmation  as (
         from the_right_clients
         where GUID not in (select GUID from actual_clients_in_plan_confirmation)
     )
-select name, agreement_id, client_id, plan_id, reason
+select b.name, agreement_id, client_id, plan_id, b.client_number, b.location_code, reason
 from missing_clients_in_plan_confirmation
+join ref_client b on client_id = b.id
+where plan_id in (select id from current_plans)
 union
-select name, agreement_id, client_id, plan_id, reason
+select b.name, agreement_id, client_id, plan_id, b.client_number, b.location_code, reason
 from old_clients_in_plan_confirmation
+join ref_client b on client_id = b.id
+where plan_id in (select id from current_plans)
+order by agreement_id desc
