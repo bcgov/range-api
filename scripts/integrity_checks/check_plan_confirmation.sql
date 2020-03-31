@@ -1,4 +1,9 @@
-with the_right_clients as ( 
+with current_plans as  (
+    select max(id) as id, agreement_id 
+    from plan
+    group by agreement_id
+),
+the_right_clients as ( 
 select b.name, 
        c.agreement_id,
        b.id as client_id,
