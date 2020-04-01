@@ -37,6 +37,7 @@ const {
   Agreement,
   Client,
   Zone,
+  ActiveClientAccount,
 } = dm2;
 
 const allowableIDsForUser = async (user, agreementIDs) => {
@@ -79,7 +80,18 @@ const getAgreeementsForAH = async ({
   page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = true, sendFullPlan = false, staffDraft = false,
 }) => {
-  const ids = await Agreement.agreementsForClientId(db, user.clientId);
+  const activeClientAccounts = await ActiveClientAccount.find(db, {
+    user_id: user.id,
+    active: true,
+  });
+
+  const allIds = await Promise.all(
+    activeClientAccounts.map(clientAccount =>
+      Agreement.agreementsForClientId(db, clientAccount.clientId),
+    ));
+
+  const ids = flatten(allIds);
+
   const agreements = await Agreement.findWithAllRelations(
     db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
