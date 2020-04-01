@@ -61,6 +61,7 @@ import ManagementConsiderationType from './model/managementconsiderationtype';
 import UserFeedback from './model/userfeedback';
 import Version from './model/version';
 import config from '../../config';
+import ActiveClientAccount from './model/activeclientaccount';
 
 export const connection = knex({
   client: 'pg',
@@ -134,5 +135,6 @@ export default class DataManager {
     this.ManagementConsiderationType = ManagementConsiderationType;
     this.UserFeedback = UserFeedback;
     this.Version = Version;
+    this.ActiveClientAccount = ActiveClientAccount;
   }
 }

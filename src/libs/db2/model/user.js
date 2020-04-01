@@ -184,11 +184,14 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
 
   if (this.isAgreementHolder()) {
     const [result] = await db
-      .table("client_agreement")
-      .where({ agreement_id: agreement.forestFileId, client_id: this.clientId })
+      .table('client_agreement')
+      .join('active_client_account', {
+        'active_client_account.client_id': 'client_agreement.client_id',
+      })
+      .where({ agreement_id: agreement.forestFileId, 'active_client_account.user_id': this.id, 'active_client_account.active': true })
       .count();
     const { count } = result || {};
-    return count !== "0";
+    return count !== '0';
   }
 
   if (this.isRangeOfficer()) {
