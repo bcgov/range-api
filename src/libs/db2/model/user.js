@@ -22,6 +22,7 @@
 
 import { SSO_ROLE_MAP } from "../../../constants";
 import Model from "./model";
+import ActiveClientAccount from './activeclientaccount';
 
 export default class User extends Model {
   constructor(data, db = undefined) {
@@ -154,6 +155,15 @@ export default class User extends Model {
       throw err;
     }
   }
+
+  async getLinkedClientIds(db) {
+    const activeClientAccounts = await ActiveClientAccount.find(db, {
+      user_id: this.id,
+      active: true,
+    });
+
+    return activeClientAccounts.map(activeClientAccount => activeClientAccount.clientId);
+  }
 }
 
 //
@@ -183,12 +193,12 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
   }
 
   if (this.isAgreementHolder()) {
+    const clientIds = await this.getLinkedClientIds(db);
+
     const [result] = await db
       .table('client_agreement')
-      .join('active_client_account', {
-        'active_client_account.client_id': 'client_agreement.client_id',
-      })
-      .where({ agreement_id: agreement.forestFileId, 'active_client_account.user_id': this.id, 'active_client_account.active': true })
+      .whereIn('client_agreement.client_id', clientIds)
+      .andWhere({ agreement_id: agreement.forestFileId })
       .count();
     const { count } = result || {};
     return count !== '0';
