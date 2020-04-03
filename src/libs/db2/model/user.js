@@ -41,7 +41,6 @@ export default class User extends Model {
       lastLoginAt: row.last_login_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      clientId: row.client_id,
       clientNumber: row.client_number,
       phoneNumber: row.phone_number
     };
@@ -52,7 +51,6 @@ export default class User extends Model {
     return [
       "id",
       "username",
-      "client_id",
       "given_name",
       "family_name",
       "email",
@@ -95,7 +93,8 @@ export default class User extends Model {
         const res = await db.raw(
           `
           SELECT user_account.*, ref_client.client_number FROM user_account
-          LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+          LEFT JOIN active_client_account ON active_client_account.user_id = user_account.id
+          LEFT JOIN ref_client ON ref_client.id = active_client_account.client_id
           WHERE user_account.id = ?;
         `,
           [id]
@@ -144,10 +143,11 @@ export default class User extends Model {
       const res = await db.raw(
         `
         SELECT user_account.*, ref_client.client_number FROM user_account
-        LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+        LEFT JOIN active_client_account ON active_client_account.user_id = user_account.id
+        LEFT JOIN ref_client ON ref_client.id = active_client_account.client_id
         WHERE user_account.id = ANY (?) ORDER BY ?;
       `,
-        [userIds, order]
+        [userIds, order],
       );
 
       return res.rows.map(User.mapRow);
