@@ -20,6 +20,7 @@ const dm = new DataManager(config);
 
 const {
   db,
+  ActiveClientAccount,
   Agreement,
   AgreementType,
   AgreementExemptionStatus,
@@ -503,7 +504,7 @@ const prepareTestSetup = async () => {
       });
 
       const { id } = await User.findOne(db, { username: user.username });
-      await User.update(db, { id }, { client_id: client.id });
+      await ActiveClientAccount.create(db, { user_id: id, client_id: client.id, active: true, type: 'owner' });
     });
 
     await Promise.all(clientsP);
