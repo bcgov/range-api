@@ -17,7 +17,6 @@ export default class User extends Model {
       if (a1.id === 1 || a1.id === '1') {
         if (a2.client_id) {
           const newObj = {};
-          newObj.clientId = a2.client_id;
           newObj.active = a2.active;
           newObj.id = a1.id;
           return newObj;
