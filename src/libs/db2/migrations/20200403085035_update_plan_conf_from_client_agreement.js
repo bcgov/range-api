@@ -32,15 +32,16 @@ exports.up = async function(knex) {
         with plans_existing_for_this_client_id as
         (select     id, 
                     agreement_id,
-                    NEW.client_id
+                    NEW.client_id as client_id
         from        plan 
-        where       agreement_id = NEW.agreement_id)
+        where       agreement_id = NEW.agreement_id
+        group by    id, agreement_id, client_id)
 
         insert into plan_confirmation (plan_id, client_id, confirmed)
         select      id, 
                     client_id,
                     'f'
-        from        plans_existing_for_this_client_id
+        from        plans_existing_for_this_client_id;
 
         RETURN NEW;
 
