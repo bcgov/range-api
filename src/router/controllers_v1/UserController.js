@@ -9,6 +9,7 @@ const {
   db,
   User,
   Client,
+  ActiveClientAccount,
 } = dm;
 
 export class UserController {
@@ -79,33 +80,55 @@ export class UserController {
     }
   }
 
-  static async assignClientId(req, res) {
-    try {
-      const { user, params } = req;
-      const { clientId, userId } = params;
+  static async addClientLink(req, res) {
+    const { user, params } = req;
+    const { clientId, userId } = params;
 
-      checkRequiredFields(
-        ['clientId', 'userId'], 'params', req,
-      );
-
-      if (user && user.isAgreementHolder()) {
-        throw errorWithCode('You do not have the permission as an agreement holder', 403);
-      }
-
-      const client = await Client.find(db, { client_number: clientId });
-      if (!client) {
-        throw errorWithCode('Client does not exist', 400);
-      }
-
-      const result = await User.update(db, { id: userId }, {
-        client_id: clientId,
-        active: true,
-      });
-
-      res.status(200).json(result).end();
-    } catch (error) {
-      throw error;
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
     }
+
+    checkRequiredFields(
+      ['clientId', 'userId'], 'params', req,
+    );
+
+    const client = await Client.find(db, { client_number: clientId });
+    if (!client) {
+      throw errorWithCode('Client does not exist', 400);
+    }
+
+    const result = await ActiveClientAccount.create(db, {
+      client_id: clientId,
+      user_id: userId,
+      active: true,
+      type: 'owner',
+    });
+
+    res.status(200).json(result).end();
+  }
+
+  static async removeClientLink(req, res) {
+    const { user, params } = req;
+    const { clientId, userId } = params;
+
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    checkRequiredFields(
+      ['clientId', 'userId'], 'params', req,
+    );
+
+    const result = await ActiveClientAccount.remove(db, {
+      client_id: clientId,
+      user_id: userId,
+    });
+
+    if (result === 0) {
+      throw errorWithCode("Client link doesn't exist for user", 404);
+    }
+
+    res.status(200).json(result).end();
   }
 }
 
