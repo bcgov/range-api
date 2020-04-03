@@ -43,8 +43,14 @@ const {
 const allowableIDsForUser = async (user, agreementIDs) => {
   let okIDs = [];
   if (user.isAgreementHolder()) {
-    const myIDs = await Agreement.agreementsForClientId(db, user.clientId);
-    okIDs = agreementIDs.filter(id => myIDs.includes(id));
+    const clientIds = await user.getLinkedClientIds(db);
+
+    const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
+    const allowableAgreementIds = clientAgreements.map(
+      clientAgreement => clientAgreement.agreementId,
+    );
+
+    okIDs = agreementIDs.filter(id => allowableAgreementIds.includes(id));
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.find(db, { user_id: user.id });
     const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
