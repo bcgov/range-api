@@ -1,0 +1,40 @@
+name: Node CI
+on:
+
+  pull_request:
+    branches:
+    - PR_DEPLOY_DEV
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get PR Info 
+      env:
+        PR_DEPLOY_FRIENDLY_SUFFIX: myra
+    - run: grep findThisVar $GITHUB_EVENT_PATH 
+      
+#    - name: Modify Build Config
+#    - uses: actions/checkout@v2
+#      env:
+#        POSTGRESQL_DATABASE: myra
+#      run: |
+#        echo "$(printenv)" > .env
+#        
+#    - name: Create Routes Deploy Config 
+#    - uses: actions/checkout@v2
+#      env:
+#
+#        
+#      run: |
+#        echo "$(printenv)" > .env
+#     
+#    - name: Modify Deploy Config 
+#    - #uses: actions/checkout@v2
+#      #env:
+#        POSTGRESQL_DATABASE: myra
+#        POSTGRESQL_DATABASE_TEST: myra_test
+#      run: |
+#        echo "$(printenv)" > .env
