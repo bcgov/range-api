@@ -160,6 +160,8 @@ export default class User extends Model {
     const activeClientAccounts = await ActiveClientAccount.find(db, {
       user_id: this.id,
       active: true,
+      // TODO: Remove after implementing agency agreements
+      type: 'owner',
     });
 
     return activeClientAccounts.map(activeClientAccount => activeClientAccount.clientId);
