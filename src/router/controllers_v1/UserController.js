@@ -53,7 +53,11 @@ export class UserController {
         await User.update(db, { id: user.id }, { pia_seen: true });
       }
 
-      res.status(200).json(user).end();
+      const clientIds = await user.getLinkedClientIds(db);
+
+      const clients = await Client.find(db, { id: clientIds });
+
+      res.status(200).json({ ...user, clients }).end();
     } catch (error) {
       throw error;
     }
