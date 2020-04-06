@@ -22,7 +22,7 @@
 
 import { SSO_ROLE_MAP } from "../../../constants";
 import Model from "./model";
-import ActiveClientAccount from './activeclientaccount';
+import UserClientLink from './userclientlink';
 
 export default class User extends Model {
   constructor(data, db = undefined) {
@@ -93,8 +93,8 @@ export default class User extends Model {
         const res = await db.raw(
           `
           SELECT user_account.*, ref_client.client_number FROM user_account
-          LEFT JOIN active_client_account ON active_client_account.user_id = user_account.id
-          LEFT JOIN ref_client ON ref_client.id = active_client_account.client_id
+          LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
+          LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
           WHERE user_account.id = ?;
         `,
           [id]
@@ -143,8 +143,8 @@ export default class User extends Model {
       const res = await db.raw(
         `
         SELECT user_account.*, ref_client.client_number FROM user_account
-        LEFT JOIN active_client_account ON active_client_account.user_id = user_account.id
-        LEFT JOIN ref_client ON ref_client.id = active_client_account.client_id
+        LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
+        LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
         WHERE user_account.id = ANY (?) ORDER BY ?;
       `,
         [userIds, order],
@@ -157,14 +157,14 @@ export default class User extends Model {
   }
 
   async getLinkedClientIds(db) {
-    const activeClientAccounts = await ActiveClientAccount.find(db, {
+    const clientLinks = await UserClientLink.find(db, {
       user_id: this.id,
       active: true,
       // TODO: Remove after implementing agency agreements
       type: 'owner',
     });
 
-    return activeClientAccounts.map(activeClientAccount => activeClientAccount.clientId);
+    return clientLinks.map(clientLink => clientLink.clientId);
   }
 }
 

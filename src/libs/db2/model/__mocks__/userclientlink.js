@@ -2,7 +2,7 @@ import assert from 'assert';
 import Model from '../model';
 import fixtures from '../../../../../__mocks__/fixtures';
 
-export default class ActiveClientAccount extends Model {
+export default class UserClientLink extends Model {
   static findWithExclusion() {
     return fixtures.allUsers;
   }

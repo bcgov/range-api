@@ -1,10 +1,10 @@
 import Model from './model';
 
-export default class ActiveClientAccount extends Model {
+export default class UserClientLink extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (ActiveClientAccount.fields.indexOf(`${ActiveClientAccount.table}.${key}`) > -1) {
+      if (UserClientLink.fields.indexOf(`${UserClientLink.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
@@ -16,10 +16,10 @@ export default class ActiveClientAccount extends Model {
     // primary key *must* be first!
     return [
       'id', 'user_id', 'client_id', 'active', 'created_at', 'updated_at',
-    ].map(f => `${ActiveClientAccount.table}.${f}`);
+    ].map(f => `${UserClientLink.table}.${f}`);
   }
 
   static get table() {
-    return 'active_client_account';
+    return 'user_client_link';
   }
 }

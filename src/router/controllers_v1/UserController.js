@@ -9,7 +9,7 @@ const {
   db,
   User,
   Client,
-  ActiveClientAccount,
+  UserClientLink,
   ClientAgreement,
 } = dm;
 
@@ -107,13 +107,13 @@ export class UserController {
       throw errorWithCode('Client does not exist', 400);
     }
 
-    const currentLink = await ActiveClientAccount.findOne(db,
+    const currentLink = await UserClientLink.findOne(db,
       { user_id: userId, client_id: clientId });
     if (currentLink) {
       throw errorWithCode(`Link between user ${userId} and client ${clientId} already exists.`, 400);
     }
 
-    const currentOwner = await ActiveClientAccount.findOne(db,
+    const currentOwner = await UserClientLink.findOne(db,
       { client_id: clientId, type: 'owner' });
     if (currentOwner) {
       throw errorWithCode(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`, 400);
@@ -139,7 +139,7 @@ export class UserController {
       }
     });
 
-    const result = await ActiveClientAccount.create(db, {
+    const result = await UserClientLink.create(db, {
       client_id: clientId,
       user_id: userId,
       active: true,
@@ -161,7 +161,7 @@ export class UserController {
       ['clientId', 'userId'], 'params', req,
     );
 
-    const result = await ActiveClientAccount.remove(db, {
+    const result = await UserClientLink.remove(db, {
       client_id: clientId,
       user_id: userId,
     });

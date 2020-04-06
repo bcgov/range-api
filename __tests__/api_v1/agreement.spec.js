@@ -23,7 +23,7 @@ jest.mock('../../src/libs/db2/model/agreement');
 jest.mock('../../src/libs/db2/model/ClientAgreement');
 jest.mock('../../src/libs/db2/model/client');
 jest.mock('../../src/libs/db2/model/zone');
-jest.mock('../../src/libs/db2/model/activeclientaccount');
+jest.mock('../../src/libs/db2/model/userclientlink');
 jest.mock('request-promise-native');
 
 describe('Test agreement route', () => {

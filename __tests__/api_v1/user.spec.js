@@ -23,7 +23,7 @@ import app from '../../src';
 jest.mock('../../src/libs/db2/model/user');
 jest.mock('request-promise-native');
 jest.mock('../../src/libs/db2/model/client');
-jest.mock('../../src/libs/db2/model/activeclientaccount');
+jest.mock('../../src/libs/db2/model/userclientlink');
 
 describe('Test user routes happy path', () => {
   afterAll(() => {
