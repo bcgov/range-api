@@ -39,7 +39,7 @@ router.get('/me', asyncMiddleware(UserController.me));
 router.put('/me', asyncMiddleware(UserController.updateMe));
 
 // Assign a client id to user
-router.post('/:userId?/client/:clientId?', asyncMiddleware(UserController.addClientLink));
+router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
 router.delete('/:userId?/client/:clientId?', asyncMiddleware(UserController.removeClientLink));
 
 module.exports = router;
