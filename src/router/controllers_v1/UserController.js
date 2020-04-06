@@ -10,6 +10,7 @@ const {
   User,
   Client,
   ActiveClientAccount,
+  ClientAgreement,
 } = dm;
 
 export class UserController {
@@ -81,21 +82,58 @@ export class UserController {
   }
 
   static async addClientLink(req, res) {
-    const { user, params } = req;
-    const { clientId, userId } = params;
+    const { user, params, body } = req;
+    const { userId } = params;
+    const { clientId } = body;
 
     if (user && user.isAgreementHolder()) {
       throw errorWithCode('Unauthorized', 403);
     }
 
     checkRequiredFields(
-      ['clientId', 'userId'], 'params', req,
+      ['userId'], 'params', req,
     );
 
-    const client = await Client.find(db, { client_number: clientId });
+    checkRequiredFields(
+      ['clientId'], 'body', req,
+    );
+
+    const client = await Client.findOne(db, { id: clientId });
     if (!client) {
       throw errorWithCode('Client does not exist', 400);
     }
+
+    const currentLink = await ActiveClientAccount.findOne(db,
+      { user_id: userId, client_id: clientId });
+    if (currentLink) {
+      throw errorWithCode(`Link between user ${userId} and client ${clientId} already exists.`, 400);
+    }
+
+    const currentOwner = await ActiveClientAccount.findOne(db,
+      { client_id: clientId, type: 'owner' });
+    if (currentOwner) {
+      throw errorWithCode(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`, 400);
+    }
+
+    const userToLink = new User({ id: userId });
+
+    const currentLinkedClientIds = await userToLink.getLinkedClientIds(db);
+
+    const currentLinkedAgreements = await ClientAgreement.find(db, {
+      client_id: currentLinkedClientIds,
+    });
+
+    const newLinkedAgreements = await ClientAgreement.find(db, { client_id: clientId });
+    const newLinkedAgreementIds = newLinkedAgreements.map(
+      clientAgreement => clientAgreement.agreementId,
+    );
+
+    // TODO: Remove this check after implementing agency agreements
+    currentLinkedAgreements.forEach((clientAgreement) => {
+      if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
+        throw errorWithCode(`Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ${clientAgreement.clientId} (${clientAgreement.agreementId})`, 400);
+      }
+    });
 
     const result = await ActiveClientAccount.create(db, {
       client_id: clientId,
