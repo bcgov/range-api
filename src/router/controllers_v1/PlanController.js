@@ -43,6 +43,10 @@ export default class PlanController {
       const { isStaff } = user.isAdministrator()? true : user.isRangeOfficer? true : false;
       const { isAH } user.isAgreementHolder()? true : false;
 
+      const { shouldBeLiveVersionForStaff } = ([6,13,14,15,16,12].includes(status_id) && isStaff)   
+        //redundant, but putting here to be explicit:
+      const { shouldBeLiveVersionForAH } = ([1,4,5,18,19,10].includes(status_id) && isAH)   
+
 
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
