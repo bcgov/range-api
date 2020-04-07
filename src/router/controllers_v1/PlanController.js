@@ -32,11 +32,18 @@ export default class PlanController {
     );
 
     try {
+
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
       }
       const { agreementId } = plan;
+
+      const { status_id } = plan.status.id
+      const { isStaff } = user.isAdministrator()? true : user.isRangeOfficer? true : false;
+      const { isAH } user.isAgreementHolder()? true : false;
+
+
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
