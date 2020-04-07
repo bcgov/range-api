@@ -6,10 +6,20 @@ export default class Client extends Model {
   static async find(db, where) {
     assert(db);
     assert(where);
-    assert(where.client_number);
+    assert(where.id);
 
     return {
-      clientId: where.client_number,
+      clientId: where.id,
+    };
+  }
+
+  static async findOne(db, where) {
+    assert(db);
+    assert(where);
+    assert(where.id);
+
+    return {
+      clientId: where.id,
     };
   }
 
