@@ -85,16 +85,27 @@ describe('Test user routes happy path', () => {
   });
 
   test('Creating a user client link', async (done) => {
-    const clientId = '00017130';
+    const clientId = 1;
     await request(app)
-      .post(`/api/v1/user/1/client/${clientId}`)
-      .expect(200).expect((res) => {
+      .post('/api/v1/user/1/client')
+      .send({ clientId })
+      .expect(200)
+      .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.id).toEqual(1);
         expect(result.clientId).toEqual(clientId);
         done();
       });
+  });
+
+  test('Creating an already existing link should return 400', async () => {
+    const clientId = 3;
+
+    await request(app)
+      .post('/api/v1/user/1/client')
+      .send({ clientId })
+      .expect(400);
   });
 
   // TODO: Test deleting client links
@@ -148,6 +159,7 @@ describe('Test user routes failure', () => {
   test('Creating a client link should fail if no user ID is provided', async (done) => {
     await request(app)
       .post('/api/v1/user/client/')
+      .send({ clientId: 1 })
       .expect(500);
     done();
   });
