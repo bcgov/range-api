@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import assert from 'assert';
 import Model from '../model';
 import fixtures from '../../../../../__mocks__/fixtures';
@@ -27,5 +28,11 @@ export default class User extends Model {
     } catch (err) {
       throw Error('Unexpected input or wrong user');
     }
+  }
+
+  getLinkedClientIds(db) {
+    assert(db);
+
+    return [1, 2, 3];
   }
 }
