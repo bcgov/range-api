@@ -1,10 +1,10 @@
 import assert from 'assert';
 import Model from '../model';
-import fixtures from '../../../../../__mocks__/fixtures';
+import fixtures from '../../../../../__mocks__/fixtures/userclientlink_mock.json';
 
 export default class UserClientLink extends Model {
   static findWithExclusion() {
-    return fixtures.allUsers;
+    return fixtures;
   }
 
   static create(db, values) {
@@ -19,5 +19,37 @@ export default class UserClientLink extends Model {
     } catch (err) {
       throw Error('Unexpected input or wrong user');
     }
+  }
+
+  static async findOne(db, where) {
+    assert(db);
+
+    const fixture = this.findWithExclusion();
+
+    if (where.client_id && where.user_id) {
+      return fixture.find(link => link.client_id === where.client_id)
+        ? this.transformToCamelCase(
+          fixture.find(link => link.client_id === where.client_id),
+        )
+        : undefined;
+    }
+
+    if (where.client_id) {
+      return fixture.find(link => link.client_id === where.client_id)
+        ? this.transformToCamelCase(
+          fixture.find(link => link.client_id === where.client_id),
+        )
+        : undefined;
+    }
+
+    if (where.user_id) {
+      return fixture.find(link => link.user_id === where.user_id)
+        ? this.transformToCamelCase(
+          fixture.find(link => link.user_id === where.user_id),
+        )
+        : undefined;
+    }
+
+    return undefined;
   }
 }
