@@ -42,7 +42,7 @@ export default class PlanController {
 
       const { status_id } = plan.status.id
       const { isStaff } = user.isAdministrator()? true : user.isRangeOfficer? true : false;
-      const { isAH } user.isAgreementHolder()? true : false;
+      const { isAH }  = user.isAgreementHolder()? true : false;
 
       const { shouldBeLiveVersionForStaff } = ([6,13,14,15,16,12].includes(status_id) && isStaff)   
         //redundant, but putting here to be explicit:
@@ -50,15 +50,16 @@ export default class PlanController {
 
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const versions = await PlanSnapshot.find(
+      const last_version = await PlanSnapshot.find(
         db,
         { plan_id: planId },
-      );
+      )[0];//todo figure out how to get last one from here
 
+        /*
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
       );
-      await agreement.eagerloadAllOneToManyExceptPlan();
+      await agreement.eagerloadAllOneToManyExceptPlan();//todo determine if this matters 
       agreement.transformToV1();
 
         
@@ -72,10 +73,9 @@ export default class PlanController {
             versionData = await PlanSnapshot.findOne(
             db,
             { plan_id: planId, version },
-      );
+      ); }
+      */
 
-
-      }
       plan.agreement = agreement;
 
       const mappedGrazingSchedules = await Promise.all(
