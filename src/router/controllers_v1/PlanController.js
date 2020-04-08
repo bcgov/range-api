@@ -12,6 +12,7 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
+  PlanSnapshot,
 } = dm;
 
 export default class PlanController {
@@ -47,8 +48,12 @@ export default class PlanController {
         //redundant, but putting here to be explicit:
       const { shouldBeLiveVersionForAH } = ([1,4,5,18,19,10].includes(status_id) && isAH)   
 
-
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const versions = await PlanSnapshot.find(
+        db,
+        { plan_id: planId },
+      );
 
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
@@ -56,7 +61,21 @@ export default class PlanController {
       await agreement.eagerloadAllOneToManyExceptPlan();
       agreement.transformToV1();
 
-      await plan.eagerloadAllOneToMany();
+        
+      const versionData;
+      if(shouldBeLiveVersionForStaff || shouldBeLiveVersionForAH)
+      {
+            await plan.eagerloadAllOneToMany();
+      }
+      else
+      {
+            versionData = await PlanSnapshot.findOne(
+            db,
+            { plan_id: planId, version },
+      );
+
+
+      }
       plan.agreement = agreement;
 
       const mappedGrazingSchedules = await Promise.all(
