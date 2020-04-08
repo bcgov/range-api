@@ -3,6 +3,7 @@ import { checkRequiredFields, objPathToCamelCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 
 const dm = new DataManager(config);
 const {
@@ -12,7 +13,6 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
-  PlanSnapshot,
 } = dm;
 
 export default class PlanController {
@@ -54,8 +54,8 @@ export default class PlanController {
         db,
         { plan_id: planId },
       )[0];//todo figure out how to get last one from here
-
-        /*
+        
+/*
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
       );
