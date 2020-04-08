@@ -50,10 +50,17 @@ export default class PlanController {
 
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const last_version = await PlanSnapshot.find(
+      const versions = await PlanSnapshot.find(
         db,
         { plan_id: planId },
-      )[0];//todo figure out how to get last one from here
+      );//todo figure out how to get last one from here
+        /*
+      if(versions.length() === 0){
+        throw errorWithCode('Plan doesn\'t exist o', 404);
+        */
+
+
+        logger.info(JSON.stringify(versions));
         
         
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
