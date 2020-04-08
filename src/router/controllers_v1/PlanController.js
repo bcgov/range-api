@@ -55,7 +55,7 @@ export default class PlanController {
         { plan_id: planId },
       )[0];//todo figure out how to get last one from here
         
-/*
+        
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
       );
@@ -63,7 +63,7 @@ export default class PlanController {
       agreement.transformToV1();
 
         
-      const versionData;
+      var versionData;
       if(shouldBeLiveVersionForStaff || shouldBeLiveVersionForAH)
       {
             await plan.eagerloadAllOneToMany();
@@ -72,9 +72,8 @@ export default class PlanController {
       {
             versionData = await PlanSnapshot.findOne(
             db,
-            { plan_id: planId, version },
+            { plan_id: planId, last_version },
       ); }
-      */
 
       plan.agreement = agreement;
 
