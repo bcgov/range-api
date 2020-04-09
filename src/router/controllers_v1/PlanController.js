@@ -43,7 +43,7 @@ export default class PlanController {
       const { agreementId } = plan;
       const  status_id  = plan.status["id"];
 
-      const  isStaff = user.isAdministrator()? true : user.isRangeOfficer? true : false;
+      const  isStaff = user.isAdministrator()? true : user.isRangeOfficer()? true : false;
       const  isAH = user.isAgreementHolder()? true : false;
 
       const shouldBeLiveVersionForStaff = ([6,13,14,15,16,12].includes(status_id) && isStaff)   
@@ -73,16 +73,19 @@ export default class PlanController {
       var versionData;
       if(shouldBeLiveVersionForStaff || shouldBeLiveVersionForAH)
       {
+          logger.info('loading live plan')
             await plan.eagerloadAllOneToMany();
       }
       else
       {
-        logger.info('was never there')
-          /*  versionData = await PlanSnapshot.findOne(
-            db,
-            { plan_id: planId, version: 1 },
+        logger.info('loading last version')
 
-      ); */
+        const versions = await PlanSnapshot.find(
+        db,
+        { plan_id: planId },
+      );//todo figure out how to get last one from here
+          logger.info(JSON.stringify(versions));
+      
       }
 
       plan.agreement = agreement;
