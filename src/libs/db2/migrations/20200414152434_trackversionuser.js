@@ -1,12 +1,12 @@
 
-exports.up = function(knex) {
+exports.up = async (knex) => {
   
-    knex.raw('ALTER TABLE plan_snapshot ADD COLUMN IF NOT EXISTS user_id INTEGER;')
+    await knex.raw("ALTER TABLE plan_snapshot ADD COLUMN IF NOT EXISTS user_id INTEGER;");
 
 };
 
-exports.down = function(knex) {
+exports.down = async (knex) => {
   
-    knex.raw('ALTER TABLE plan_snapshot DROP COLUMN IF EXISTS user_id;')
+    await knex.raw("ALTER TABLE plan_snapshot DROP COLUMN IF EXISTS user_id;");
 
 };
