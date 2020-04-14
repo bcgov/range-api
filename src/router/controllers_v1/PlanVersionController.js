@@ -18,7 +18,7 @@ export default class PlanVersionController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-
+    const userId = user.id
 
     try {
       const plan = await Plan.findById(db, planId);
@@ -29,7 +29,7 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const snapshot = await Plan.createSnapshot(db, planId);
+      const snapshot = await Plan.createSnapshot(db, planId,userId);
 
       return res.status(200).json(snapshot).end();
     } catch (error) {
