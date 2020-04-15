@@ -19,7 +19,7 @@ export default class PlanSnapshot extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'snapshot', 'plan_id', 'created_at', 'version', 'status_id',
+      'id', 'snapshot', 'plan_id', 'created_at', 'version', 'status_id','user_id',
     ].map(f => `${PlanSnapshot.table}.${f}`);
   }
 
