@@ -37,13 +37,20 @@ const {
   Agreement,
   Client,
   Zone,
+  ClientAgreement,
 } = dm2;
 
 const allowableIDsForUser = async (user, agreementIDs) => {
   let okIDs = [];
   if (user.isAgreementHolder()) {
-    const myIDs = await Agreement.agreementsForClientId(db, user.clientId);
-    okIDs = agreementIDs.filter(id => myIDs.includes(id));
+    const clientIds = await user.getLinkedClientIds(db);
+
+    const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
+    const allowableAgreementIds = clientAgreements.map(
+      clientAgreement => clientAgreement.agreementId,
+    );
+
+    okIDs = agreementIDs.filter(id => allowableAgreementIds.includes(id));
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.find(db, { user_id: user.id });
     const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
@@ -79,9 +86,13 @@ const getAgreeementsForAH = async ({
   page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = true, sendFullPlan = false, staffDraft = false,
 }) => {
-  const ids = await Agreement.agreementsForClientId(db, user.clientId);
+  const clientIds = await user.getLinkedClientIds(db);
+
+  const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
+  const agreementIds = clientAgreements.map(clientAgreement => clientAgreement.agreementId);
+
   const agreements = await Agreement.findWithAllRelations(
-    db, { forest_file_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
+    db, { forest_file_id: agreementIds }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
   return agreements;
 };

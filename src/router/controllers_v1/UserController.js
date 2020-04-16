@@ -9,6 +9,8 @@ const {
   db,
   User,
   Client,
+  UserClientLink,
+  ClientAgreement,
 } = dm;
 
 export class UserController {
@@ -51,7 +53,11 @@ export class UserController {
         await User.update(db, { id: user.id }, { pia_seen: true });
       }
 
-      res.status(200).json(user).end();
+      const clientIds = await user.getLinkedClientIds(db);
+
+      const clients = await Client.find(db, { id: clientIds });
+
+      res.status(200).json({ ...user, clients }).end();
     } catch (error) {
       throw error;
     }
@@ -79,33 +85,92 @@ export class UserController {
     }
   }
 
-  static async assignClientId(req, res) {
-    try {
-      const { user, params } = req;
-      const { clientId, userId } = params;
+  static async addClientLink(req, res) {
+    const { user, params, body } = req;
+    const { userId } = params;
+    const { clientId } = body;
 
-      checkRequiredFields(
-        ['clientId', 'userId'], 'params', req,
-      );
-
-      if (user && user.isAgreementHolder()) {
-        throw errorWithCode('You do not have the permission as an agreement holder', 403);
-      }
-
-      const client = await Client.find(db, { client_number: clientId });
-      if (!client) {
-        throw errorWithCode('Client does not exist', 400);
-      }
-
-      const result = await User.update(db, { id: userId }, {
-        client_id: clientId,
-        active: true,
-      });
-
-      res.status(200).json(result).end();
-    } catch (error) {
-      throw error;
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
     }
+
+    checkRequiredFields(
+      ['userId'], 'params', req,
+    );
+
+    checkRequiredFields(
+      ['clientId'], 'body', req,
+    );
+
+    const client = await Client.findOne(db, { id: clientId });
+    if (!client) {
+      throw errorWithCode('Client does not exist', 400);
+    }
+
+    const currentLink = await UserClientLink.findOne(db,
+      { user_id: userId, client_id: clientId });
+    if (currentLink) {
+      throw errorWithCode(`Link between user ${userId} and client ${clientId} already exists.`, 400);
+    }
+
+    const currentOwner = await UserClientLink.findOne(db,
+      { client_id: clientId, type: 'owner' });
+    if (currentOwner) {
+      throw errorWithCode(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`, 400);
+    }
+
+    const userToLink = new User({ id: userId });
+
+    const currentLinkedClientIds = await userToLink.getLinkedClientIds(db);
+
+    const currentLinkedAgreements = await ClientAgreement.find(db, {
+      client_id: currentLinkedClientIds,
+    });
+
+    const newLinkedAgreements = await ClientAgreement.find(db, { client_id: clientId });
+    const newLinkedAgreementIds = newLinkedAgreements.map(
+      clientAgreement => clientAgreement.agreementId,
+    );
+
+    // TODO: Remove this check after implementing agency agreements
+    currentLinkedAgreements.forEach((clientAgreement) => {
+      if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
+        throw errorWithCode(`Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ${clientAgreement.clientId} (${clientAgreement.agreementId})`, 400);
+      }
+    });
+
+    const result = await UserClientLink.create(db, {
+      client_id: clientId,
+      user_id: userId,
+      active: true,
+      type: 'owner',
+    });
+
+    res.status(200).json(result).end();
+  }
+
+  static async removeClientLink(req, res) {
+    const { user, params } = req;
+    const { clientId, userId } = params;
+
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    checkRequiredFields(
+      ['clientId', 'userId'], 'params', req,
+    );
+
+    const result = await UserClientLink.remove(db, {
+      client_id: clientId,
+      user_id: userId,
+    });
+
+    if (result === 0) {
+      throw errorWithCode("Client link doesn't exist for user", 404);
+    }
+
+    res.status(200).json(result).end();
   }
 }
 

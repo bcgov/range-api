@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import assert from 'assert';
 import Model from '../model';
 import fixtures from '../../../../../__mocks__/fixtures';
@@ -17,7 +18,6 @@ export default class User extends Model {
       if (a1.id === 1 || a1.id === '1') {
         if (a2.client_id) {
           const newObj = {};
-          newObj.clientId = a2.client_id;
           newObj.active = a2.active;
           newObj.id = a1.id;
           return newObj;
@@ -28,5 +28,11 @@ export default class User extends Model {
     } catch (err) {
       throw Error('Unexpected input or wrong user');
     }
+  }
+
+  getLinkedClientIds(db) {
+    assert(db);
+
+    return [1, 2, 3];
   }
 }

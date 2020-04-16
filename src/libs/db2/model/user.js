@@ -22,6 +22,7 @@
 
 import { SSO_ROLE_MAP } from "../../../constants";
 import Model from "./model";
+import UserClientLink from './userclientlink';
 
 export default class User extends Model {
   constructor(data, db = undefined) {
@@ -40,7 +41,6 @@ export default class User extends Model {
       lastLoginAt: row.last_login_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      clientId: row.client_id,
       clientNumber: row.client_number,
       phoneNumber: row.phone_number
     };
@@ -51,7 +51,6 @@ export default class User extends Model {
     return [
       "id",
       "username",
-      "client_id",
       "given_name",
       "family_name",
       "email",
@@ -94,7 +93,8 @@ export default class User extends Model {
         const res = await db.raw(
           `
           SELECT user_account.*, ref_client.client_number FROM user_account
-          LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+          LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
+          LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
           WHERE user_account.id = ?;
         `,
           [id]
@@ -143,16 +143,28 @@ export default class User extends Model {
       const res = await db.raw(
         `
         SELECT user_account.*, ref_client.client_number FROM user_account
-        LEFT JOIN ref_client ON user_account.client_id = ref_client.id
+        LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
+        LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
         WHERE user_account.id = ANY (?) ORDER BY ?;
       `,
-        [userIds, order]
+        [userIds, order],
       );
 
       return res.rows.map(User.mapRow);
     } catch (err) {
       throw err;
     }
+  }
+
+  async getLinkedClientIds(db) {
+    const clientLinks = await UserClientLink.find(db, {
+      user_id: this.id,
+      active: true,
+      // TODO: Remove after implementing agency agreements
+      type: 'owner',
+    });
+
+    return clientLinks.map(clientLink => clientLink.clientId);
   }
 }
 
@@ -183,12 +195,15 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
   }
 
   if (this.isAgreementHolder()) {
+    const clientIds = await this.getLinkedClientIds(db);
+
     const [result] = await db
-      .table("client_agreement")
-      .where({ agreement_id: agreement.forestFileId, client_id: this.clientId })
+      .table('client_agreement')
+      .whereIn('client_agreement.client_id', clientIds)
+      .andWhere({ agreement_id: agreement.forestFileId })
       .count();
     const { count } = result || {};
-    return count !== "0";
+    return count !== '0';
   }
 
   if (this.isRangeOfficer()) {
