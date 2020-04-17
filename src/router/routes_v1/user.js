@@ -38,6 +38,8 @@ router.get('/me', asyncMiddleware(UserController.me));
 // Get User info
 router.put('/me', asyncMiddleware(UserController.updateMe));
 
+router.get('/:userId', asyncMiddleware(UserController.show));
+
 // Assign a client id to user
 router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
 router.delete('/:userId?/client/:clientId?', asyncMiddleware(UserController.removeClientLink));
