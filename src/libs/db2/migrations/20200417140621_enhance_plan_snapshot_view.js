@@ -2,7 +2,6 @@
 exports.up = function(knex) {
     knex.raw(```
     create view plan_snapshot_summary as (
-
 with all_snapshots as (
   select 
     id, 
@@ -65,6 +64,7 @@ current_snapshots as (
   from 
     plan_snapshot 
   group by 
+    id, 
     plan_id, 
     snapshot_status_id
 ), 
@@ -103,32 +103,30 @@ most_current_in_each_status as (
     version
 ), 
 legal_snapshot_summary as (
-  all_snapshots.id, 
-  case (
-    when all_snapshots.snapshot_status_id in (20, 8, 9, 12) then all_snapshots.created_at else null
-  ) end as effective_legal_start, 
-  case (
-    when exists (
+  select 
+    all_snapshots.id, 
+    case when (
+      all_snapshots.snapshot_status_id in (20, 8, 9, 12)
+    ) then all_snapshots.created_at else null end as effective_legal_start, 
+    case when exists (
       select 
         id 
       from 
         plan_snapshot 
       where 
         plan_id = all_snapshots.plan_id 
-        and 
+        and version = (all_snapshots.version + 1)
+    ) then (
+      select 
+        created_at 
+      from 
+        plan_snapshot 
       where 
-        version = (all_snapshots.version + 1)
-    ) then 
-    select 
-      created_at 
-    from 
-      plan_snapshot 
-    where 
-      plan_id = all_snapshots.plan_id 
-      and 
-    where 
-      version = (all_snapshots.version + 1) else null
-  ) end as effective_legal_end
+        plan_id = all_snapshots.plan_id 
+        and version = (all_snapshots.version + 1)
+    ) else null end as effective_legal_end 
+  from 
+    all_snapshots
 ) 
 select 
   all_snapshots.plan_id, 
@@ -139,17 +137,13 @@ select
   all_snapshots.created_at, 
   all_snapshots.user_id, 
   legal_snapshot_summary.effective_legal_start, 
-  legal_snapshot_summary.effective_legal_end ,
-
+  legal_snapshot_summary.effective_legal_end 
 from 
   all_snapshots 
   join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
   join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
   and all_snapshots.version = (last_snapshot.version + 1) 
-  join plan p on p.id = all_snapshots.plan_id 
-from 
-  all_snapshots als 
-  join plans_in_progress_with_AH pipwAH
+  join plan p on p.id = all_snapshots.plan_id
 
 )```
   
