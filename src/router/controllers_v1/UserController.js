@@ -1,4 +1,4 @@
-import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 // import { checkRequiredFields } from '../../libs/utils';
@@ -110,13 +110,16 @@ export class UserController {
     const currentLink = await UserClientLink.findOne(db,
       { user_id: userId, client_id: clientId });
     if (currentLink) {
-      throw errorWithCode(`Link between user ${userId} and client ${clientId} already exists.`, 400);
+      logger.error(`Link between user ${userId} and client ${clientId} already exists.`);
+      throw errorWithCode('This user is already linked to the selected client', 400);
     }
 
     const currentOwner = await UserClientLink.findOne(db,
       { client_id: clientId, type: 'owner' });
     if (currentOwner) {
-      throw errorWithCode(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`, 400);
+      const currentOwnerUser = await User.findById(db, currentOwner.userId);
+      logger.error(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`);
+      throw errorWithCode(`User "${currentOwnerUser.givenName} ${currentOwnerUser.familyName}" is already linked to the selected client.`, 400);
     }
 
     const userToLink = new User({ id: userId });
@@ -133,11 +136,16 @@ export class UserController {
     );
 
     // TODO: Remove this check after implementing agency agreements
-    currentLinkedAgreements.forEach((clientAgreement) => {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const clientAgreement of currentLinkedAgreements) {
       if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
-        throw errorWithCode(`Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ${clientAgreement.clientId} (${clientAgreement.agreementId})`, 400);
+        // eslint-disable-next-line no-await-in-loop
+        const existingClient = await Client.findById(db, clientAgreement.clientId);
+
+        logger.error(`Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ID ${clientAgreement.clientId} (${clientAgreement.agreementId})`);
+        throw errorWithCode(`Cannot link selected client because it shares an agreement with client ${existingClient.name}, # ${existingClient.clientNumber} - ${existingClient.locationCode} (${clientAgreement.agreementId})`, 400);
       }
-    });
+    }
 
     const result = await UserClientLink.create(db, {
       client_id: clientId,
@@ -171,6 +179,23 @@ export class UserController {
     }
 
     res.status(200).json(result).end();
+  }
+
+  static async show(req, res) {
+    const { user, params } = req;
+    const { userId } = params;
+
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const userToFind = await User.findById(db, userId);
+
+    const clientIds = await userToFind.getLinkedClientIds(db);
+
+    const clients = await Client.find(db, { id: clientIds });
+
+    res.status(200).json({ ...userToFind, clients }).end();
   }
 }
 
