@@ -142,8 +142,8 @@ select
   legal_snapshot_summary.effective_legal_end 
 from 
   all_snapshots 
-  join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
-  join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
+  left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
+  left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
