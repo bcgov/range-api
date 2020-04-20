@@ -129,13 +129,15 @@ legal_snapshot_summary as (
     all_snapshots
 ) 
 select 
-  all_snapshots.plan_id, 
   all_snapshots.id as snapshot_id, 
-  all_snapshots.version, 
-  all_snapshots.snapshot_status_id as to_status_id, 
-  last_snapshot.snapshot_status_id as from_status_id, 
+  all_snapshots.snapshot,
+  all_snapshots.plan_id, 
   all_snapshots.created_at, 
+  all_snapshots.version, 
+  all_snapshots.snapshot_status_id as status_id,
   all_snapshots.user_id, 
+  last_snapshot.snapshot_status_id as from_status_id, 
+  all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
   legal_snapshot_summary.effective_legal_end 
 from 
