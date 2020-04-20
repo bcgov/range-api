@@ -150,5 +150,6 @@ from
 };
 
 exports.down = function(knex) {
+    knex.raw('drop view plan_snapshot_summary;')
   
 };
