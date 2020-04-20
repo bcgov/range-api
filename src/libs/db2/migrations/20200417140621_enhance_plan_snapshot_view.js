@@ -147,7 +147,7 @@ from
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
-)```
+```)
   
 };
 
