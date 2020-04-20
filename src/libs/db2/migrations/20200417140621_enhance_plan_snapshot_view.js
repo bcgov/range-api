@@ -116,7 +116,8 @@ legal_snapshot_summary as (
       where 
         plan_id = all_snapshots.plan_id 
         and version = (all_snapshots.version + 1)
-    ) then (
+    ) and all_snapshots.snapshot_status_id in (20, 8, 9, 12)
+    then (
       select 
         created_at 
       from 
