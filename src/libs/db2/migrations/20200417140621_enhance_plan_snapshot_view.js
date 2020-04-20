@@ -151,7 +151,7 @@ from
   
 };
 
-exports.up = function(knex) {
+exports.down = async (knex) => {
     knex.raw('drop view plan_snapshot_summary;')
   
 };
