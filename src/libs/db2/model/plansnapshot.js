@@ -20,11 +20,12 @@ export default class PlanSnapshot extends Model {
     // primary key *must* be first!
     return [
       'id', 'snapshot', 'plan_id', 'created_at', 'version', 'status_id','user_id',
+        'from_status_id', 'to_status_id','effective_legal_start', 'effective_legal_end'
     ].map(f => `${PlanSnapshot.table}.${f}`);
   }
 
   static get table() {
-    return 'plan_snapshot';
+    return 'plan_snapshot_summary';
   }
 
   async fetchStatus(db) {
