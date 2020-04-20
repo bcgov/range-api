@@ -1,6 +1,6 @@
 
 exports.up = function(knex) {
-    knex.raw(```
+    knex.raw(`
     create view plan_snapshot_summary as (
 with all_snapshots as (
   select 
@@ -147,7 +147,7 @@ from
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
-```)
+`)
   
 };
 
