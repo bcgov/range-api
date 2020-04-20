@@ -1,6 +1,6 @@
 
-exports.up = function(knex) {
-    knex.raw(`
+exports.up = async (knex) => {
+  await knex.raw(`
     create view plan_snapshot_summary as (
 with all_snapshots as (
   select 
@@ -151,7 +151,7 @@ from
   
 };
 
-exports.down = function(knex) {
+exports.up = function(knex) {
     knex.raw('drop view plan_snapshot_summary;')
   
 };
