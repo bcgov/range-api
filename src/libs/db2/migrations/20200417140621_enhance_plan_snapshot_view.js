@@ -129,7 +129,7 @@ legal_snapshot_summary as (
     all_snapshots
 ) 
 select 
-  all_snapshots.id as snapshot_id, 
+  all_snapshots.id, 
   all_snapshots.snapshot,
   all_snapshots.plan_id, 
   all_snapshots.created_at, 
