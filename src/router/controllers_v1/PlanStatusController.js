@@ -51,6 +51,8 @@ export default class PlanStatusController {
       }
 
       const updatedPlan = await Plan.update(db, { id: planId }, body);
+      const snapshot = await Plan.createSnapshot(db, planId,user.id);
+      
       return updatedPlan;
     } catch (err) {
       logger.error(`Error: Unable to update plan: ${err.message}`);
