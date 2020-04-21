@@ -14,47 +14,6 @@ with all_snapshots as (
   from 
     plan_snapshot
 ), 
-plans_currently_in_progress_with_AH as (
-  select 
-    id, 
-    false as withStaff, 
-    true as withAH 
-  from 
-    plan 
-  where 
-    status_id in (1)
-), 
-plans_currently_in_progress_with_Staff as (
-  select 
-    id, 
-    true as withStaff, 
-    false as withAH 
-  from 
-    plan 
-  where 
-    status_id not in (1, 20, 8, 9, 12)
-), 
-plans_currently_approved as (
-  select 
-    id, 
-    true as IsApproved, 
-    false as IsInProgress 
-  from 
-    plan 
-  where 
-    status_id in (20, 8, 9, 12)
-), 
-plan_current_summary as (
-  select 
-    * 
-  from 
-    plans_currently_in_progress_with_AH 
-  union all 
-  select 
-    * 
-  from 
-    plans_currently_in_progress_with_Staff
-), 
 current_snapshots as (
   select 
     id, 
