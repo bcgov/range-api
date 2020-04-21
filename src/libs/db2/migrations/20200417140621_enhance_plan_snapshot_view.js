@@ -102,6 +102,33 @@ most_current_in_each_status as (
     plan_id, 
     version
 ), 
+privacy_snapshots as (
+select 
+  als.id, 
+  case when current_snapshots.id is null 
+  and exists (
+    select 
+      id 
+    from 
+      current_snapshots 
+    where 
+      current_snapshots.plan_id = als.plan_id 
+      and snapshot_status_id not in (20, 8, 9, 12)
+  ) 
+  and not exists (
+    select 
+      id 
+    from 
+      all_snapshots 
+    where 
+      plan_id = als.plan_id 
+      and version > als.version 
+      and user_id != als.user_id
+  ) then true else false end as isPrivacyVersion 
+from 
+  all_snapshots als 
+  left join current_snapshots on als.id = current_snapshots.id
+),
 legal_snapshot_summary as (
   select 
     all_snapshots.id, 
@@ -140,11 +167,13 @@ select
   last_snapshot.snapshot_status_id as from_status_id, 
   all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
-  legal_snapshot_summary.effective_legal_end 
+  legal_snapshot_summary.effective_legal_end,
+  privacy_snapshots.isPrivacyVersion
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
   left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
+  join privacy_snapshots on privacy_snapshots.id = all_snapshots.id
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
