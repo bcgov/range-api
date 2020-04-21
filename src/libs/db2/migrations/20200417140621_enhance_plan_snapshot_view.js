@@ -27,26 +27,6 @@ current_snapshots as (
     plan_id, 
     snapshot_status_id
 ), 
-last_snapshot_with_different_status as (
-  select 
-    alls.id, 
-    alls.plan_id, 
-    alls.snapshot_status_id, 
-    max(alls.version) as most_recent_version 
-  from 
-    all_snapshots alls 
-    join current_snapshots cs on cs.plan_id = alls.plan_id 
-  where 
-    alls.snapshot_status_id != cs.snapshot_status_id 
-  group by 
-    alls.plan_id, 
-    alls.version, 
-    alls.snapshot_status_id, 
-    alls.id 
-  order by 
-    alls.plan_id, 
-    most_recent_version desc
-), 
 most_current_in_each_status as (
   select 
     id, 
