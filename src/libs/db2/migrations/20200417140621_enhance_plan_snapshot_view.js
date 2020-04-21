@@ -17,57 +17,29 @@ with all_snapshots as (
 current_snapshots as (
   select 
     id, 
-    max(version), 
-    cast(snapshot ->> 'statusId' as INTEGER) as snapshot_status_id, 
+    max(version) as version, 
+    (max(version) - 1) as previous_version,
     plan_id 
   from 
     plan_snapshot 
   group by 
     id, 
-    plan_id, 
-    snapshot_status_id
-), 
-most_current_in_each_status as (
-  select 
-    id, 
-    snapshot_status_id, 
-    max(version), 
     plan_id 
-  from 
-    all_snapshots 
-  group by 
-    id, 
-    snapshot_status_id, 
-    plan_id, 
-    version
 ), 
-privacy_snapshots as (
-select 
-  als.id, 
-  case when current_snapshots.id is null 
-  and exists (
-    select 
-      id 
-    from 
-      current_snapshots 
-    where 
-      current_snapshots.plan_id = als.plan_id 
-      and snapshot_status_id not in (20, 8, 9, 12)
-  ) 
-  and not exists (
-    select 
-      id 
-    from 
-      all_snapshots 
-    where 
-      plan_id = als.plan_id 
-      and version > als.version 
-      and user_id != als.user_id
-  ) then true else false end as isPrivacyVersion 
-from 
-  all_snapshots als 
-  left join current_snapshots on als.id = current_snapshots.id
+current_WIP_rups as (
+select als.id, als.plan_id, als.snapshot_status_id
+from all_snapshots als
+inner join current_snapshots on current_snapshots.id = als.id 
+where snapshot_status_id not in (20, 8, 9, 12)
 ),
+privacy_snapshots as (
+select id, max(version), true as isPrivacyVersion
+from all_snapshots als
+where plan_id in (select plan_id from current_WIP_rups where current_WIP_rups.plan_id = als.plan_id limit 1)
+and als.snapshot_status_id != (select current_WIP_rups.snapshot_status_id from current_WIP_rups where current_WIP_rups.plan_id = als.plan_id order by version desc limit 1)
+group by id, version
+)
+,
 legal_snapshot_summary as (
   select 
     all_snapshots.id, 
@@ -107,12 +79,12 @@ select
   all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
   legal_snapshot_summary.effective_legal_end,
-  privacy_snapshots.isPrivacyVersion
+  coalesce(privacy_snapshots.isPrivacyVersion, false) as isPrivacyVersion
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
+  left join privacy_snapshots on privacy_snapshots.id = all_snapshots.id
   left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
-  join privacy_snapshots on privacy_snapshots.id = all_snapshots.id
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
