@@ -27,6 +27,37 @@ export default class PlanSnapshot extends Model {
     return 'plan_snapshot';
   }
 
+static async findSummary(db, where, order = undefined) {
+    let results = [];
+    const q = db
+      .table('plan_snapshot_summary')
+      .select('*');
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+      const k = Object.keys(where)[0];
+      const v = where[k];
+      q.whereIn(k, v);
+    } else {
+      q.where(where);
+    }
+    if (order && order.length > 0) {
+      results = await q.orderBy(...order);
+    } else {
+      results = await q;
+    }
+    const objs = results.map((row) => {
+      const obj = Object.create(this.prototype, {
+        db: {
+          enumerable: false,
+          value: db,
+          writable: false,
+        },
+      });
+      Object.assign(obj, this.transformToCamelCase(row));
+      return obj;
+    });
+    return objs;
+  }
+
   async fetchStatus(db) {
     const status = await PlanStatus.findOne(db, { id: this.statusId });
 

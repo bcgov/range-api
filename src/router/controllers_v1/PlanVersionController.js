@@ -53,7 +53,7 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const versions = await PlanSnapshot.find(
+      const versions = await PlanSnapshot.findSummary(
         db,
         { plan_id: planId },
       );
