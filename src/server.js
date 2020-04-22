@@ -21,20 +21,25 @@
 
 import { logger, started } from '@bcgov/nodejs-common-utils';
 import config from './config';
-import app from './index';
+import createApp from './index';
 
 const env = config.get('environment');
 const port = config.get('port');
 const isDev = env !== 'production';
 
-app.listen(port, '0.0.0.0', (err) => {
-  if (err) {
-    return logger.error(`There was a problem starting the server, ${err.message}`);
-  }
-  if (isDev) {
-    return started(port);
-  }
-  return logger.info(`Production server running on port: ${port}`);
-});
-
-module.exports = app;
+createApp()
+  .then((app) => {
+    app.listen(port, '0.0.0.0', (err) => {
+      if (err) {
+        return logger.error(`There was a problem starting the server, ${err.message}`);
+      }
+      if (isDev) {
+        return started(port);
+      }
+      return logger.info(`Production server running on port: ${port}`);
+    });
+  })
+  .catch((err) => {
+    logger.error('There was a problem creating the server.');
+    logger.error(`Error: ${err.message}`);
+  });

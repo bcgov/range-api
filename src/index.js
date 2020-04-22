@@ -28,49 +28,60 @@ import compression from 'compression';
 import flash from 'connect-flash';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import auth from './libs/authmware';
+import initPassport from './libs/authmware';
+import initRouter from './router';
 
-const app = express();
-const options = {
-  inflate: true,
-  limit: '3000kb',
-  type: 'image/*',
-};
+/**
+ * @returns {Express.Application} express app
+ */
+async function createServer() {
+  const app = express();
+  const options = {
+    inflate: true,
+    limit: '3000kb',
+    type: 'image/*',
+  };
 
-app.use(compression());
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({
-  extended: true,
-}));
-app.use(bodyParser.json());
-app.use(bodyParser.raw(options));
-app.use(flash());
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(
+    bodyParser.urlencoded({
+      extended: true,
+    }),
+  );
+  app.use(bodyParser.json());
+  app.use(bodyParser.raw(options));
+  app.use(flash());
 
-// Authentication middleware
-app.use(auth(app));
+  // Initialize passport config
+  await initPassport(app);
 
-// Server API routes
-require('./router')(app);
+  // Server API routes
+  initRouter(app);
 
-// Error handling middleware. This needs to be last in or it will
-// not get called.
-app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  logger.error(err.message);
-  let code = 500;
-  // Checking code is valid http status or not
-  if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
-    ({ code } = err);
-  }
+  // Error handling middleware. This needs to be last in or it will
+  // not get called.
+  app.use((err, req, res) => {
+    // eslint-disable-line no-unused-vars
+    logger.error(err.message);
+    let code = 500;
+    // Checking code is valid http status or not
+    if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
+      ({ code } = err);
+    }
 
-  // Getting message from error.
-  const message = err.message ? err.message : 'Internal Server Error';
+    // Getting message from error.
+    const message = err.message ? err.message : 'Internal Server Error';
 
-  // Sending error status.
-  res.status(code).json({ error: message, success: false });
+    // Sending error status.
+    res.status(code).json({ error: message, success: false });
 
-  if (!['test', 'unit_test'].includes(process.env.NODE_ENV)) {
-    throw err;
-  }
-});
+    if (!['test', 'unit_test'].includes(process.env.NODE_ENV)) {
+      throw err;
+    }
+  });
 
-module.exports = app;
+  return app;
+}
+
+export default createServer;
