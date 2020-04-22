@@ -50,9 +50,18 @@ export default class PlanStatusController {
           break;
       }
 
+        if(!([20, 8, 9, 12].includes((await Plan.find(db, { id: planId })).statusId)))
+        {
+            const snapshot = await Plan.createSnapshot(db, planId,user.id);
+        }
+
       const updatedPlan = await Plan.update(db, { id: planId }, body);
-      const snapshot = await Plan.createSnapshot(db, planId,user.id);
-      
+
+        if([20, 8, 9, 12].includes(status.id))
+        {
+            const snapshot = await Plan.createSnapshot(db, planId,user.id);
+        }
+
       return updatedPlan;
     } catch (err) {
       logger.error(`Error: Unable to update plan: ${err.message}`);
@@ -104,9 +113,6 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
-      if (statusId === 12) {
-        await Plan.createSnapshot(db, planId);
-      }
       return res.status(200).json(status).end();
     } catch (err) {
       logger.error(`PlanStatusController:update: fail with error: ${err.message}`);
