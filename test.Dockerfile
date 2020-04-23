@@ -1,4 +1,4 @@
-FROM node:11.0.0
+FROM node:12.16.2
 
 RUN apt-get update
 RUN npm install -g npm
