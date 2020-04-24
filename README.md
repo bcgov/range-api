@@ -25,6 +25,26 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 
 ## Usage
 
+### Environment variables
+
+Before being able to run the API and/or tests, you need to setup some environment variables. Copy and paste this into a `.env` file:
+```
+POSTGRESQL_DATABASE=myra
+POSTGRESQL_DATABASE_TEST=myra_test
+POSTGRESQL_HOST=db
+POSTGRESQL_PORT=5432
+
+PROJECT=myra_range
+ENVIRONMENT=development
+API_PORT=8080
+BUILD_TARGET=base
+
+POSTGRESQL_PASSWORD= banana
+POSTGRESQL_USER=app_dv_myra
+```
+
+> If using `direnv`, create a `.envrc` file containing `dotenv` to automatically load the environment variables into your shell. (https://github.com/direnv/direnv/issues/284#issuecomment-315275436)
+
 ### Running tests
 
 In general, there are two separate docker-compose projects that allow for isolation of the development and test environments. The development environment is the default project, and can be accessed as normally through `docker-compose`. In order to run commands against the test project, you must add the `-p` flag to specify you want to use the `myra-test` project: `docker-compose -p myra-test`.
