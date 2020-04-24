@@ -119,7 +119,7 @@ export class UserController {
     if (currentOwner) {
       const currentOwnerUser = await User.findById(db, currentOwner.userId);
       logger.error(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`);
-      throw errorWithCode(`User "${currentOwnerUser.givenName} ${currentOwnerUser.familyName}" is already linked to the selected client.`, 400);
+      throw errorWithCode(`Cannot link client to this user because it is already linked to another user (${currentOwnerUser.givenName} ${currentOwnerUser.familyName}).`, 400);
     }
 
     const userToLink = new User({ id: userId });
