@@ -41,7 +41,8 @@ local:      |  print-status  build-local run-local         ## Task-Alias -- Run 
 local-setup: | print-status build-local run-db seed-local close-db
 local-debug: | print-status build-local run-debug
 local-test-setup: print-status build-local-test run-db-test seed-local-test close-db-test
-local-test: | print-status build-local-test test-local 
+local-test: | print-status test-local
+local-test-watch: | print-status test-local-watch 
 
 
 # ------------------------------------------------------------------------------
@@ -94,11 +95,11 @@ close-db: ## -- Target : Runs the local development containers.
 
 close-db-test: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Closing local db for test...\n+"
-	@docker-compose -f test.docker-compose.yml stop db
+	@docker-compose -f test.docker-compose.yml -p myra-test stop db
 
 run-db-test: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Running db for test locally...\n+"
-	@docker-compose -f test.docker-compose.yml up -d db
+	@docker-compose -f test.docker-compose.yml -p myra-test up -d db
 
 close-local: ## -- Target : Closes the local development containers.
 	@echo "+\n++ Make: Closing local container ...\n+"
@@ -114,16 +115,20 @@ seed-local:
 	@docker-compose -f docker-compose.yml run range_api npm run initialize_docker 
 
 seed-local-test:
-	@echo "+\n++ Make: Seeding local database ...\n+"
-	@docker-compose -f test.docker-compose.yml run range_api npm run initialize_docker 
+	@echo "+\n++ Make: Seeding local test database ...\n+"
+	@docker-compose -f test.docker-compose.yml -p myra-test run range_api npm run initialize_docker 
 
 test-local-d: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
-	@docker-compose -f test.docker-compose.yml up -d
+	@docker-compose -f test.docker-compose.yml -p myra-test up -d
 
 test-local: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
-	@docker-compose -f test.docker-compose.yml up
+	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
+
+test-watch: ## -- .
+	@echo "+\n++ Make: Running unit test ...\n+"
+	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test:watch
 
 build-local-test: ## -- Target : Builds the local development containers.
 	@echo "+\n++ Make: Building local Docker image ...\n+"
@@ -131,11 +136,11 @@ build-local-test: ## -- Target : Builds the local development containers.
 
 close-local-test: ## -- Target : Closes the local development containers.
 	@echo "+\n++ Make: Closing local test container ...\n+"
-	@docker-compose -f test.docker-compose.yml down
+	@docker-compose -f test.docker-compose.yml -p myra-test down
 
 clean-local-test: ## -- Target : Closes and clean local development containers.
 	@echo "+\n++ Make: Closing and cleaning test local container ...\n+"
-	@docker-compose -f test.docker-compose.yml down -v
+	@docker-compose -f test.docker-compose.yml -p myra-test down -v
 
 
 # ------------------------------------------------------------------------------
@@ -148,7 +153,7 @@ database: ## <Helper> :: Executes into database container.
 
 database-test: ## <Helper> :: Executes into the test database container.
 	@echo "Make: Shelling into local database container ..."
-	@docker-compose -f docker-compose.yml exec db psql -U $(POSTGRESQL_USER) -W $(POSTGRESQL_DATABASE_TEST)
+	@docker-compose -f docker-compose.yml -p myra-test exec db psql -U $(POSTGRESQL_USER) -W $(POSTGRESQL_DATABASE_TEST)
 
 workspace: ## <Workspcae> :: Excute into API container
 	@echo "Make: Shelling into local api container ..."
