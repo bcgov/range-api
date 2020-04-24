@@ -27,20 +27,46 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 
 ### Running tests
 
-In order to run the test suite, you must first prepare a local test environment.
-```bash
-make local-test-setup
-docker-compose up -d
-```
+In general, there are two separate docker-compose projects that allow for isolation of the development and test environments. The development environment is the default project, and can be accessed as normally through `docker-compose`. In order to run commands against the test project, you must add the `-p` flag to specify you want to use the `myra-test` project: `docker-compose -p myra-test`.
 
-Then you should be able to run tests.
-```bash
-npm test
-```
+#### How to run tests:
 
-> If you are coming across any strange errors while running tests, try 
-completely removing the test environment using `docker-compose down -v`, and
-retry these steps.
+1. Setup the test environment (ie. building images and seeding the database. This step doesn't have to be run every time): 
+    ```
+    make local-test-setup
+    ```
+
+2. Make sure test database is running (This step only has to be run if the test database is not already running):
+    ```
+    docker-compose -f test.docker-compose.yml -p myra-test up -d db
+    ```
+
+3. Run tests: 
+    ```
+    docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
+    ```
+    (or `npm run test:watch`)
+
+This way, tests run inside of a docker container, allowing for reproducability, but also still let you interact with Jest's watch mode.
+
+If you don't want to write out these long `docker-compose` commands  every time, there are some helpful `make` shortcuts that run the exact same commands as above.
+
+1. Setup the test environment:
+    ```
+    make local-test-setup
+    ```
+2. Make sure test database is running:
+    ```
+    make run-db-test
+    ```
+3. Run tests:
+    ```
+    make local-test
+    ```
+    or
+    ```
+    make local-test-watch
+    ```
 
 ## Requirements
 
