@@ -23,7 +23,7 @@ import createApp from '../../src';
 jest.mock('../../src/libs/db2/model/user');
 jest.mock('request-promise-native');
 jest.mock('../../src/libs/db2/model/client');
-
+jest.mock('../../src/libs/db2/model/userclientlink');
 
 describe('Test user routes happy path', () => {
   afterAll(() => {
@@ -88,20 +88,36 @@ describe('Test user routes happy path', () => {
       });
   });
 
-  test('should return update client id of user', async (done) => {
+  test('Creating a user client link', async (done) => {
     const app = await createApp();
+  
+    const clientId = 1;
 
-    const clientId = '00017130';
     await request(app)
-      .put(`/api/v1/user/1/client/${clientId}`)
-      .expect(200).expect((res) => {
+      .post('/api/v1/user/1/client')
+      .send({ clientId })
+      .expect(200)
+      .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
-        expect(result.id).toEqual('1');
+        expect(result.id).toEqual(1);
         expect(result.clientId).toEqual(clientId);
         done();
       });
   });
+
+  test('Creating an already existing link should return 400', async () => {
+    const app = await createApp();
+    
+    const clientId = 3;
+
+    await request(app)
+      .post('/api/v1/user/1/client')
+      .send({ clientId })
+      .expect(400);
+  });
+
+  // TODO: Test deleting client links
 });
 
 describe('Test user routes failure', () => {
@@ -144,19 +160,20 @@ describe('Test user routes failure', () => {
   });
 
   // Update client id fail case: no client id in param
-  test('should return 500 while updating client id without client id', async (done) => {
+  test('Creating a client link should fail if no client ID is provided', async (done) => {
     const app = await createApp();
     await request(app)
-      .put('/api/v1/user/1/client/')
+      .post('/api/v1/user/1/client/')
       .expect(500);
     done();
   });
 
   // Update client id fail case: no id in param
-  test('should return 500 while updating client id without user', async (done) => {
+  test('Creating a client link should fail if no user ID is provided', async (done) => {
     const app = await createApp();
     await request(app)
-      .put('/api/v1/user/client/')
+      .post('/api/v1/user/client/')
+      .send({ clientId: 1 })
       .expect(500);
     done();
   });

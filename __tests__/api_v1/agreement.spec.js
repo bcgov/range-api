@@ -20,28 +20,38 @@ import passport from 'passport';
 import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/agreement');
+jest.mock('../../src/libs/db2/model/ClientAgreement');
 jest.mock('../../src/libs/db2/model/client');
 jest.mock('../../src/libs/db2/model/zone');
+jest.mock('../../src/libs/db2/model/userclientlink');
 jest.mock('request-promise-native');
 
 describe('Test agreement route', () => {
+  beforeAll(() => {
+    passport.aUser.canAccessAgreement = jest.fn().mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    delete passport.aUser.isRangeOfficer;
+    delete passport.aUser.isAdministrator;
+    delete passport.aUser.getLinkedClientIds;
+    passport.aUser.isAgreementHolder = () => false;
+    passport.aUser.canAccessAgreement.mockClear();
+  });
+
   test('should fetch all agreements for agreement holder for user', async (done) => {
     const app = await createApp();
 
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(200).expect((res) => {
         const result = res.body[0];
         expect(typeof result).toBe('object');
         expect(result.forestFileId).toEqual('RAN076843');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -52,17 +62,13 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(200).expect((res) => {
         const result = res.body[0];
         expect(typeof result).toBe('object');
         expect(result.forestFileId).toEqual('RAN076843');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -73,7 +79,7 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(401).expect((res) => {
@@ -81,10 +87,6 @@ describe('Test agreement route', () => {
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('This endpoint is forbidden for the admin user');
         expect(result.success).toEqual(false);
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -96,7 +98,7 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(500).expect((res) => {
@@ -104,10 +106,6 @@ describe('Test agreement route', () => {
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('Unable to determine user roll');
         expect(result.success).toEqual(false);
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -120,7 +118,7 @@ describe('Test agreement route search', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement/search?term=965&page=1&limit=10')
       .expect(200).expect((res) => {
@@ -131,10 +129,6 @@ describe('Test agreement route search', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -155,10 +149,6 @@ describe('Test agreement route search', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -169,7 +159,7 @@ describe('Test agreement route search', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.id = 1;
     await request(app)
       .get('/api/v1/agreement/search?term=965&page=1&limit=10')
@@ -180,10 +170,6 @@ describe('Test agreement route search', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -196,7 +182,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200).expect((res) => {
@@ -207,10 +193,6 @@ describe('Test agreement route search without term', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -221,7 +203,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200).expect((res) => {
@@ -232,10 +214,6 @@ describe('Test agreement route search without term', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -246,7 +224,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.clientId = 67896675;
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200).expect((res) => {
@@ -256,10 +234,6 @@ describe('Test agreement route search without term', () => {
         expect(result.totalItems).toBeTruthy();
         expect(result.totalPages).toBeTruthy();
         expect(result.agreements).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -272,17 +246,14 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(true);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
       .expect(200).expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.forestFileId).toEqual('RAN076843');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -293,17 +264,13 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
       .expect(200).expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.forestFileId).toEqual('RAN076843');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -314,17 +281,13 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
       .expect(200).expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.forestFileId).toEqual('RAN076843');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         done();
       });
   });
@@ -335,7 +298,8 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(false);
     passport.aUser.id = 2;
     await request(app)
       .get('/api/v1/agreement/RAN076843')
@@ -344,10 +308,6 @@ describe('Test agreement route to get single agreement', () => {
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('You do not access to this agreement');
         expect(result.success).toEqual(false);
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
       });
@@ -361,7 +321,8 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     const update = {
       x: 'x',
@@ -374,9 +335,6 @@ describe('Test agreement route update agreement', () => {
       .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
         passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
@@ -389,7 +347,8 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     const update = {
     };
@@ -402,10 +361,6 @@ describe('Test agreement route update agreement', () => {
         expect(typeof result).toBe('object');
         expect(result.success).toEqual(false);
         expect(result.error).toBeTruthy();
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
       });
@@ -417,7 +372,8 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     await request(app)
       .put('/api/v1/agreement/RAN076843/zone')
@@ -426,10 +382,6 @@ describe('Test agreement route update agreement', () => {
       .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
       });
@@ -441,7 +393,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.id = 1;
     await request(app)
       .put('/api/v1/agreement/RAN999999/zone')
@@ -452,10 +404,6 @@ describe('Test agreement route update agreement', () => {
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('Unable to find agreement');
         expect(result.success).toEqual(false);
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
       });
@@ -467,7 +415,8 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.clientId = '00162356';
+    passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
+    passport.aUser.canAccessAgreement.mockReturnValue(false);
     passport.aUser.id = 1;
     await request(app)
       .put('/api/v1/agreement/RAN999999/zone')
@@ -478,10 +427,6 @@ describe('Test agreement route update agreement', () => {
         expect(typeof result).toBe('object');
         expect(result.error).toEqual('zoneId must be provided in body and be numeric');
         expect(result.success).toEqual(false);
-        delete passport.aUser.isRangeOfficer;
-        delete passport.aUser.isAdministrator;
-        delete passport.aUser.clientId;
-        passport.aUser.isAgreementHolder = () => false;
         passport.aUser.id = 1;
         done();
       });

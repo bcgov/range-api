@@ -20,6 +20,7 @@ const dm = new DataManager(config);
 
 const {
   db,
+  UserClientLink,
   Agreement,
   AgreementType,
   AgreementExemptionStatus,
@@ -169,6 +170,7 @@ const updateUser = async data => {
   let updated = 0;
 
   console.log("Start updating Users");
+  console.log('records to process:  ' + data.length);
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const { contact_phone_number, contact_email_address } = record;
@@ -207,6 +209,7 @@ const updateUser = async data => {
 
 const updateAgreement = async data => {
   console.log("Start updating Agreements");
+  console.log('records to process:  ' + data.length);
   const districts = await District.find(db, {});
   const districtCodesMap = {};
   districts.map(d => {
@@ -371,10 +374,12 @@ const updateUsage = async data => {
 };
 
 const updateClient = async data => {
+  console.log('records to process:  ' + data.length);
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
   let deleted = 0;
+
   console.log("Start updating Clients");
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -444,6 +449,20 @@ const updateClient = async data => {
           client_type_id: clientType.id
         });
       }
+     if(agreement && clientAgreement && clientType) // update if different
+        {
+            if(clientAgreement.client_type_id !== clientType.id)
+            {
+                ClientAgreement.update(
+                  db,
+                  { id: clientAgreement.id },
+                  {
+                      agreement_id: agreementId,
+                      client_type_id: clientType.id
+                  }
+                );
+            }
+        }
     } catch (error) {
       console.log(
         `Error with message = ${
@@ -485,7 +504,7 @@ const prepareTestSetup = async () => {
       });
 
       const { id } = await User.findOne(db, { username: user.username });
-      await User.update(db, { id }, { client_id: client.id });
+      await UserClientLink.create(db, { user_id: id, client_id: client.id, active: true, type: 'owner' });
     });
 
     await Promise.all(clientsP);
@@ -555,10 +574,16 @@ const getFTAToken = async url => {
 const updateFTAData = async (licensee, client, usage) => {
   let msg = "";
   msg = msg + (await updateUser(licensee)) + "\n";
-  msg = msg + (await updateClient(client)) + "\n";
+  msg = msg + (await updateAgreement(licensee)) + "\n";
+
+    //delete stales first
+  msg = msg + (await updateClient(client.filter(item => ['P', 'C'].includes(item.forest_file_client_type_code)))) + "\n";
+    //create where missing
+  msg = msg + (await updateClient(client.filter(item => ['A', 'B'].includes(item.forest_file_client_type_code)))) + "\n";
+
+
   msg = msg + (await updateDistrict(licensee)) + "\n";
   msg = msg + (await updateZone(licensee)) + "\n";
-  msg = msg + (await updateAgreement(licensee)) + "\n";
   msg = msg + (await updateUsage(usage));
 
   console.log(msg);

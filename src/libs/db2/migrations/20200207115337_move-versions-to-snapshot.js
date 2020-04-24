@@ -28,44 +28,46 @@ exports.up = async (knex) => {
     plan_version.canonical_id;
   `);
 
-  const promises = rows.map(async ({
-    past_plan_ids: pastPlanIds = [],
-    current_plan_id: currentPlanId,
-  }) => {
-    const snapshotsP = pastPlanIds.map(async (planId) => {
-      const { rows: [versionRecord] } = await knex.raw(`
-        SELECT * FROM plan_version WHERE plan_id = ?;
-      `, [planId]);
+  const promises = rows
+    .filter(row => row.past_plan_ids !== null)
+    .map(async ({
+      past_plan_ids: pastPlanIds = [],
+      current_plan_id: currentPlanId,
+    }) => {
+      const snapshotsP = pastPlanIds.map(async (planId) => {
+        const { rows: [versionRecord] } = await knex.raw(`
+          SELECT * FROM plan_version WHERE plan_id = ?;
+        `, [planId]);
 
-      const [plan] = await Plan.findWithStatusExtension(knex, {
-        'plan.id': planId },
-      ['id', 'desc']);
+        const [plan] = await Plan.findWithStatusExtension(knex, {
+          'plan.id': planId },
+        ['id', 'desc']);
 
-      const agreementId = await Plan.agreementForPlanId(knex, plan.id);
+        const agreementId = await Plan.agreementForPlanId(knex, plan.id);
 
-      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-        knex, { forest_file_id: agreementId },
-      );
-      await agreement.eagerloadAllOneToManyExceptPlan();
-      agreement.transformToV1();
+        const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
+          knex, { forest_file_id: agreementId },
+        );
+        await agreement.eagerloadAllOneToManyExceptPlan();
+        agreement.transformToV1();
 
-      await plan.eagerloadAllOneToMany();
+        await plan.eagerloadAllOneToMany();
 
-      const snapshot = await PlanSnapshot.create(knex, {
-        snapshot: JSON.stringify(plan),
-        created_at: versionRecord.created_at,
-        version: versionRecord.version,
-        plan_id: currentPlanId,
-        status_id: plan.statusId,
+        const snapshot = await PlanSnapshot.create(knex, {
+          snapshot: JSON.stringify({ ...plan, agreement }),
+          created_at: versionRecord.created_at,
+          version: versionRecord.version,
+          plan_id: currentPlanId,
+          status_id: plan.statusId,
+        });
+
+        return snapshot;
       });
 
-      return snapshot;
+      const snapshots = await Promise.all(snapshotsP);
+
+      return snapshots;
     });
-
-    const snapshots = await Promise.all(snapshotsP);
-
-    return snapshots;
-  });
 
   await Promise.all(promises);
 };

@@ -225,4 +225,29 @@ describe('Test Plan routes', () => {
       .get(`${baseUrl}/10`)
       .expect(404);
   });
+
+  test.only('Restoring a snapshot of a plan', async () => {
+    await request(app)
+      .post(baseUrl)
+      .expect(200);
+
+    const newName = 'A different name';
+    const originalName = (await dm.db('plan').where('id', 1).first()).range_name;
+    
+    await dm.db.raw('UPDATE plan SET range_name=? WHERE id=1', [newName]);
+
+    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(newName);
+
+    await request(app)
+      .post(`${baseUrl}/1/restore`)
+      .expect(200);
+
+    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(originalName);
+  });
+
+  test('Restoring a nonexistant snapshot of a plan throws a 404 error', async () => {
+    await request(app)
+      .post(`${baseUrl}/1/restore`)
+      .expect(404);
+  });
 });

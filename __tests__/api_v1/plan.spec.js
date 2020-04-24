@@ -36,7 +36,7 @@ const body = {
   rangeName: 'Create Admin Test',
   planStartDate: '2019-01-21T08:00:00.000Z',
   planEndDate: '2022-12-30T08:00:00.000Z',
-  agreementId: 'RAN123456',
+  agreementId: 'RAN076843',
   uploaded: true,
   createdAt: '2019-03-28T16:35:58.040Z',
   updatedAt: '2019-03-28T16:35:58.040Z',

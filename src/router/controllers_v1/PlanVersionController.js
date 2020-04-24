@@ -18,7 +18,7 @@ export default class PlanVersionController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-
+    const userId = user.id
 
     try {
       const plan = await Plan.findById(db, planId);
@@ -29,7 +29,7 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const snapshot = await Plan.createSnapshot(db, planId);
+      const snapshot = await Plan.createSnapshot(db, planId,userId);
 
       return res.status(200).json(snapshot).end();
     } catch (error) {
@@ -53,10 +53,12 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const versions = await PlanSnapshot.find(
+      const versions = await PlanSnapshot.findSummary(
         db,
         { plan_id: planId },
       );
+
+      await Promise.all(versions.map(v => v.fetchStatus(db)));
 
       return res.status(200).json({ versions }).end();
     } catch (error) {
@@ -81,29 +83,34 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find version for plan', 404);
       }
 
-      const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': versionData.planId }, ['id', 'desc']);
+      const agreementId = await Plan.agreementForPlanId(db, versionData.planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      return res.json({ ...versionData.snapshot, version: versionData.version }).end();
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+  }
+
+
+  static async restoreVersion(req, res) {
+    const { user, params } = req;
+    const { planId, version } = params;
+
+    try {
+      const plan = await Plan.findById(db, planId);
       if (!plan) {
         throw errorWithCode('Could not find plan', 404);
       }
 
-      const agreementId = await Plan.agreementForPlanId(db, plan.id);
+      const agreementId = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-        db, { forest_file_id: agreementId },
-      );
-      await agreement.eagerloadAllOneToManyExceptPlan();
-      agreement.transformToV1();
+      await Plan.restoreVersion(db, planId, version);
 
-      await plan.eagerloadAllOneToMany();
-
-      return res.status(200).json({
-        ...plan,
-        agreement,
-        ...versionData,
-      }).end();
+      res.status(200).end();
     } catch (error) {
-      logger.error(error);
       throw error;
     }
   }
