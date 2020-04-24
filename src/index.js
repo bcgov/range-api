@@ -34,7 +34,7 @@ import initRouter from './router';
 /**
  * @returns {Express.Application} express app
  */
-async function createServer() {
+async function createApp() {
   const app = express();
   const options = {
     inflate: true,
@@ -61,8 +61,11 @@ async function createServer() {
 
   // Error handling middleware. This needs to be last in or it will
   // not get called.
-  app.use((err, req, res) => {
-    // eslint-disable-line no-unused-vars
+
+  // We need to include every parameter for the middleware function, or else
+  // express will never run it.
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, next) => {
     logger.error(err.message);
     let code = 500;
     // Checking code is valid http status or not
@@ -84,4 +87,4 @@ async function createServer() {
   return app;
 }
 
-export default createServer;
+export default createApp;
