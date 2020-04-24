@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../src';
+import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/plan');
 jest.mock('../../src/libs/db2/model/agreement');
@@ -11,6 +11,8 @@ jest.mock('request-promise-native');
 
 describe('Test Plan routes', () => {
   test('Fetching plan for a specific id for admin', async () => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;

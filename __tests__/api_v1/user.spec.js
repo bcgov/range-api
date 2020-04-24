@@ -18,7 +18,7 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 
-import app from '../../src';
+import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/user');
 jest.mock('request-promise-native');
@@ -32,6 +32,7 @@ describe('Test user routes happy path', () => {
 
   // Test all user routes
   test('All user route with 200 and resp length > 0', async (done) => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/user')
       .expect(200).expect((res) => {
@@ -52,6 +53,7 @@ describe('Test user routes happy path', () => {
 
   // Test /me route get
   test('should return user with id 1', async (done) => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/user/me')
       .expect(200).expect((res) => {
@@ -64,6 +66,8 @@ describe('Test user routes happy path', () => {
 
   // Test /me route put
   test('should update user', async (done) => {
+    const app = await createApp();
+
     const update = {
       givenName: 'lao',
       familyName: 'Ballabh',
@@ -85,6 +89,8 @@ describe('Test user routes happy path', () => {
   });
 
   test('should return update client id of user', async (done) => {
+    const app = await createApp();
+
     const clientId = '00017130';
     await request(app)
       .put(`/api/v1/user/1/client/${clientId}`)
@@ -107,6 +113,8 @@ describe('Test user routes failure', () => {
   });
 
   test('AgreementHolder should return 403', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     try {
       await request(app).get('/api/v1/user').expect(403);
@@ -119,6 +127,7 @@ describe('Test user routes failure', () => {
 
   // Test /me route
   test('should fail update user', async (done) => {
+    const app = await createApp();
     // const update = {};
     await request(app)
       .put('/api/v1/user/me')
@@ -136,6 +145,7 @@ describe('Test user routes failure', () => {
 
   // Update client id fail case: no client id in param
   test('should return 500 while updating client id without client id', async (done) => {
+    const app = await createApp();
     await request(app)
       .put('/api/v1/user/1/client/')
       .expect(500);
@@ -144,6 +154,7 @@ describe('Test user routes failure', () => {
 
   // Update client id fail case: no id in param
   test('should return 500 while updating client id without user', async (done) => {
+    const app = await createApp();
     await request(app)
       .put('/api/v1/user/client/')
       .expect(500);

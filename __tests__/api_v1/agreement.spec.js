@@ -17,7 +17,7 @@
 import request from 'supertest';
 import passport from 'passport';
 
-import app from '../../src';
+import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/agreement');
 jest.mock('../../src/libs/db2/model/client');
@@ -26,6 +26,8 @@ jest.mock('request-promise-native');
 
 describe('Test agreement route', () => {
   test('should fetch all agreements for agreement holder for user', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -45,6 +47,8 @@ describe('Test agreement route', () => {
   });
 
   test('should fetch all agreements for rage officer for user', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -64,6 +68,8 @@ describe('Test agreement route', () => {
   });
 
   test('should fail for admin', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
@@ -85,6 +91,8 @@ describe('Test agreement route', () => {
 
 
   test('should fail for unknown user', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -107,6 +115,8 @@ describe('Test agreement route', () => {
 
 describe('Test agreement route search', () => {
   test('should search for agreement holder', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -130,6 +140,8 @@ describe('Test agreement route search', () => {
   });
 
   test('should search for range officer', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -152,6 +164,8 @@ describe('Test agreement route search', () => {
   });
 
   test('should search for admin', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
@@ -177,6 +191,8 @@ describe('Test agreement route search', () => {
 
 describe('Test agreement route search without term', () => {
   test('should search(without term) for agreement holder', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -200,6 +216,8 @@ describe('Test agreement route search without term', () => {
   });
 
   test('should search(without term) for range officer', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -223,6 +241,8 @@ describe('Test agreement route search without term', () => {
   });
 
   test('should search(without term)) for admin', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
@@ -247,6 +267,8 @@ describe('Test agreement route search without term', () => {
 
 describe('Test agreement route to get single agreement', () => {
   test('should fetch agreement for agreement holder', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -266,6 +288,8 @@ describe('Test agreement route to get single agreement', () => {
   });
 
   test('should fetch all agreements for agreement Range officer', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -285,6 +309,8 @@ describe('Test agreement route to get single agreement', () => {
   });
 
   test('should fetch all agreements for agreement admin', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
@@ -304,6 +330,8 @@ describe('Test agreement route to get single agreement', () => {
   });
 
   test('should fail to fetch for agreement admin', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
@@ -328,6 +356,8 @@ describe('Test agreement route to get single agreement', () => {
 
 describe('Test agreement route update agreement', () => {
   test('should update agreement', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -354,6 +384,8 @@ describe('Test agreement route update agreement', () => {
   });
 
   test('should fail to update agreement', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -380,6 +412,8 @@ describe('Test agreement route update agreement', () => {
   });
 
   test('should update agreement zone', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -402,6 +436,8 @@ describe('Test agreement route update agreement', () => {
   });
 
   test('should fail to update agreement zone for wrong agreement', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
@@ -426,6 +462,8 @@ describe('Test agreement route update agreement', () => {
   });
 
   test('should fail to update agreement zone for wrong request zone', async (done) => {
+    const app = await createApp();
+
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;

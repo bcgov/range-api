@@ -16,13 +16,14 @@
 //
 
 import { default as request } from 'supertest'; // eslint-disable-line
-import app from '../../src';
+import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/zone');
 jest.mock('request-promise-native');
 
 describe('Test zone routes', () => {
   test('Fetching all zones for a specific district should succeed ', async () => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/zone')
       .query({ districtId: 'FOO' })
@@ -36,6 +37,7 @@ describe('Test zone routes', () => {
   });
 
   test('Fetching all zones should succeed', async () => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/zone')
       .expect(200)

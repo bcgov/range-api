@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../src';
+import createApp from '../../src';
 import userMocks from '../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../__mocks__/fixtures/agreement_mock.json';
@@ -28,16 +28,6 @@ import config from '../../src/config';
 const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
-
-const hasNested = (object, key, i = 0) => {
-  const keys = Object.keys(object);
-
-  if (Object.prototype.hasOwnProperty.call(object, key)) return true;
-  if (object && typeof object === 'object' && keys.length > 0) {
-    return Object.keys(object).some(k => object[k] && hasNested(object[k], key, i + 1));
-  }
-  return false;
-};
 
 const { canAccessAgreement } = passport.aUser;
 const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
@@ -139,6 +129,7 @@ describe('Test Plan routes', () => {
 
   // GET /plan/:planId
   test('Fetching plan for a specific id', async () => {
+    const app = await createApp();
     await request(app)
       .get(`${baseUrl}/1`)
       .expect(200)
@@ -150,6 +141,7 @@ describe('Test Plan routes', () => {
 
   // GET /plan/:planId where planId does not exist
   test('Fetching a non-existent plan should throw a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .get(`${baseUrl}/3`)
       .expect(404);
@@ -157,6 +149,7 @@ describe('Test Plan routes', () => {
 
   // POST /plan
   test('Create a new plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -165,6 +158,7 @@ describe('Test Plan routes', () => {
 
   // POST /plan - creating a plan for a bad :agreementId should throw a 404 error
   test('Creating a plan for a non-existent agreementId should throw an error', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send({ ...body, agreementId: 'bad' })
@@ -174,6 +168,7 @@ describe('Test Plan routes', () => {
 
   // POST /plan - attempting to create a plan with an existing :planId should throw a 409 error
   test('Creating a plan with an existing planId should throw a 409 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send({ ...body, id: 1 })
@@ -182,6 +177,8 @@ describe('Test Plan routes', () => {
 
   // PUT /plan/:planId
   test('Updating a plan', async () => {
+    const app = await createApp();
+
     const rangeName = 'ABC Range';
 
     await request(app)
@@ -197,6 +194,8 @@ describe('Test Plan routes', () => {
 
   // PUT /plan/:planId/status - APPROVED
   test('Changing a plan\'s status to approved sets the "effective_at" date', async () => {
+    const app = await createApp();
+
     const status = { statusId: 12, code: 'A' };
 
     await request(app)
@@ -218,6 +217,8 @@ describe('Test Plan routes', () => {
 
   // PUT /plan/:planId/status - if :statusId is not numeric it should throw a 400 error
   test('Updating a plan with a non-numeric statusId should throw a 400 error', async () => {
+    const app = await createApp();
+
     const status = { statusId: 'word' };
 
     await request(app)
@@ -227,6 +228,8 @@ describe('Test Plan routes', () => {
   });
   // PUT /plan/:planId/status - if :statusId is not valid it should throw a 403 error
   test('Updating a plan with an invalid statusId should throw a 403 error', async () => {
+    const app = await createApp();
+
     const status = { statusId: 100 };
 
     await request(app)
@@ -238,6 +241,8 @@ describe('Test Plan routes', () => {
 
   // PUT /plan/:planId/confirmation/:confirmationId - update existing amendment confirmation
   test('Updating an existing amendment confirmation', async () => {
+    const app = await createApp();
+
     const confirmation = {
       planId: 1,
       clientId: 1,
@@ -256,6 +261,8 @@ describe('Test Plan routes', () => {
 
   // POST /plan/:planId/status-record - create a plan status history
   test('Creating a plan status history', async () => {
+    const app = await createApp();
+
     const statusHistory = {
       planId: 1,
       fromPlanStatusId: 4,

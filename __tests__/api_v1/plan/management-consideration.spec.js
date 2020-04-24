@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -73,6 +73,7 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Creating a management consideration', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -88,6 +89,7 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Creating a management consideration on a nonexistant plan throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/3/management-consideration')
       .send(body)
@@ -95,6 +97,8 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Updating an existing management consideration', async () => {
+    const app = await createApp();
+
     const detail = 'These are different details than before';
 
     await request(app)
@@ -126,6 +130,7 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Updating a nonexistant management consideration throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/200`)
       .send(body)
@@ -133,6 +138,7 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Deleting an existing management consideration', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1`)
       .send()
@@ -140,6 +146,7 @@ describe('Test Management Consideration routes', () => {
   });
 
   test('Deleting a nonexistant management consideration throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/100`)
       .send()
