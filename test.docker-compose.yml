@@ -33,8 +33,6 @@ services:
       dockerfile: Dockerfile
       args:
         - PORT:${POSTGRESQL_PORT}
-    ports:
-      - ${POSTGRESQL_PORT}:${POSTGRESQL_PORT}
     environment:
       - POSTGRES_USER=${POSTGRESQL_USER}
       - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
@@ -46,6 +44,3 @@ networks:
   local:
     driver: bridge
     name: ${PROJECT}-${ENVIRONMENT}-network-test
-volumes:
-  postgres_test:
-    name: ${PROJECT}-${ENVIRONMENT}-vol-test-postgres
