@@ -126,7 +126,7 @@ test-local: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
 	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test -- --forceExit
 
-test-watch: ## -- .
+test-local-watch: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
 	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test:watch
 

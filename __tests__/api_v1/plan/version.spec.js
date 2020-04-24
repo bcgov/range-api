@@ -226,7 +226,8 @@ describe('Test Plan routes', () => {
       .expect(404);
   });
 
-  test.only('Restoring a snapshot of a plan', async () => {
+  test('Restoring a snapshot of a plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .expect(200);
@@ -246,6 +247,7 @@ describe('Test Plan routes', () => {
   });
 
   test('Restoring a nonexistant snapshot of a plan throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/restore`)
       .expect(404);
