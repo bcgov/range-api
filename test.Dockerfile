@@ -30,5 +30,3 @@ COPY .env /home/nodejs/app
 ENV NODE_PATH /home/nodejs/app/src
 
 EXPOSE 8080 9229
-
-CMD ["npm", "run", "test:watch"]
