@@ -1,6 +1,6 @@
 import { default as request } from "supertest"; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -138,6 +138,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a new pasture', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(pastureBody)
@@ -153,6 +154,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a new pasture adds it to the current version plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(pastureBody)
@@ -171,6 +173,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Trying to create a pasture with an already-used id should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send({ ...pastureBody, id: 1 })
@@ -178,6 +181,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a pasture affects the current version of the plan', async () => {
+    const app = await createApp();
+
     const name = "Roop's Pasture 2.0";
 
     const planId = 1;
@@ -195,6 +200,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community`)
       .send(plantCommunityBody)
@@ -210,6 +216,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community on a nonexistant pasture should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/4/plant-community`)
       .send(plantCommunityBody)
@@ -217,6 +224,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community with an incorrenct purpose of action should error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community`)
       .send({ ...plantCommunityBody, purposeOfAction: 'not an allowed value' })
@@ -224,6 +232,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community action', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/1/action`)
       .send(plantCommunityActionBody)
@@ -239,6 +248,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a plant community', async () => {
+    const app = await createApp();
     const name = 'My updated plant community';
 
     await request(app)
@@ -254,6 +264,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a non-existant plant community throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1/plant-community/10`)
       .send({ ...plantCommunityBody })
@@ -261,6 +272,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a plant community on an non-existant pasture throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/10/plant-community/1`)
       .send({ ...plantCommunityBody })
@@ -268,6 +280,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a plant community', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/1`)
       .expect(204);
@@ -276,6 +289,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a nonexistant plant community throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/2`)
       .expect(400);
@@ -284,6 +298,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community action on a nonexistant pasture should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/12/plant-community/1/action`)
       .send(plantCommunityActionBody)
@@ -291,6 +306,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a plant community action on a nonexistant plant community should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/10/action`)
       .send(plantCommunityActionBody)
@@ -300,6 +316,7 @@ describe('Test Pasture routes', () => {
   test('Updating a plant community action', async () => {
     const name = 'new name for plant community action';
 
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1/plant-community/1/action/1`)
       .send({ name })
@@ -314,6 +331,7 @@ describe('Test Pasture routes', () => {
   test('Updating a nonexistant plant community action throws a 404 error', async () => {
     const name = 'new name for plant community action';
 
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1/plant-community/1/action/10`)
       .send({ name })
@@ -326,6 +344,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a plant community action', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/1/action/1`)
       .expect(204);
@@ -334,6 +353,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a nonexistant plant community action throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/1/action/10`)
       .expect(400);
@@ -342,6 +362,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating an indicator plant', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/1/indicator-plant`)
       .send(indicatorPlantBody)
@@ -357,6 +378,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating an indicator plant on a nonexistant pasture should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/10/plant-community/1/indicator-plant`)
       .send(indicatorPlantBody)
@@ -364,6 +386,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating an indicator plant on a nonexistant plant community should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/10/indicator-plant`)
       .send(indicatorPlantBody)
@@ -371,6 +394,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating an indicator plant with an incorrect criteria should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/1/indicator-plant`)
       .send({ ...indicatorPlantBody, criteria: 'not a real criteria' })
@@ -378,6 +402,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating an indicator plant', async () => {
+    const app = await createApp();
     const value = 100.4;
 
     await request(app)
@@ -394,6 +419,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a nonexistant indicator plant throws a 404 error', async () => {
+    const app = await createApp();
     const value = 100.4;
 
     await request(app)
@@ -407,6 +433,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating an indicator plant on a non-existant plant community throws a 500 error', async () => {
+    const app = await createApp();
     const value = 100.4;
 
     await request(app)
@@ -420,6 +447,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting an indicator plant', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/1/indicator-plant/1`)
       .expect(204);
@@ -429,6 +457,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a nonexistant indicator plant throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1/plant-community/1/indicator-plant/2`)
       .expect(400);
@@ -440,6 +469,7 @@ describe('Test Pasture routes', () => {
   // Monitoring area
 
   test('Creating a monitoring area', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/1/monitoring-area`)
       .send(monitoringAreaBody)
@@ -479,6 +509,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a monitoring area on a nonexistant pasture should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/10/plant-community/1/monitoring-area`)
       .send(monitoringAreaBody)
@@ -486,6 +517,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a monitoring area on a nonexistant plant community should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/10/monitoring-area`)
       .send(monitoringAreaBody)
@@ -493,6 +525,7 @@ describe('Test Pasture routes', () => {
   });
 
   test('Creating a monitoring area with an incorrect purpose type should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/plant-community/1/monitoring-area`)
       .send({ ...monitoringAreaBody, purposeTypeIds: [10, 100, '2', 1] })
@@ -500,6 +533,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a monitoring area', async () => {
+    const app = await createApp();
+
     const name = 'new area name';
     const purposes = await dm.db('monitoring_area_purpose');
     expect(purposes).toHaveLength(1);
@@ -531,6 +566,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a monitoring area purpose via update', async () => {
+    const app = await createApp();
+
     const purposes = await dm.db('monitoring_area_purpose');
     expect(purposes).toHaveLength(1);
 
@@ -547,6 +584,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Updating a nonexistant monitoring area throws a 404 error', async () => {
+    const app = await createApp();
+
     const name = 'new area name';
 
     await request(app)
@@ -560,6 +599,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a monitoring area', async () => {
+    const app = await createApp();
+
     expect(await dm.db('monitoring_area')).toHaveLength(1);
     expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
 
@@ -572,6 +613,8 @@ describe('Test Pasture routes', () => {
   });
 
   test('Deleting a nonexistant monitoring area throws a 400 error', async () => {
+    const app = await createApp();
+
     expect(await dm.db('monitoring_area')).toHaveLength(1);
     expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
 

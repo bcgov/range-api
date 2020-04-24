@@ -74,7 +74,7 @@
     "build": "cross-env NODE_ENV=production gulp",
     "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
     "test": "cross-env NODE_ENV=unit_test jest --verbose --coverage --runInBand __tests__",
-    "test:watch": "cross-env NODE_ENV=unit_test jest --verbose __tests__ --watch",
+    "test:watch": "cross-env NODE_ENV=unit_test jest --verbose __tests__ --watch --runInBand",
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js src __tests__ __testHelpers__ __mocks__",
     "import": "node build/scripts/import.js",

@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -85,6 +85,7 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Creating a minister issue action', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -108,6 +109,8 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Only sets noGraze when type is timing', async () => {
+    const app = await createApp();
+
     const actionTypeId = 5;
 
     await request(app)
@@ -127,6 +130,8 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Only sets other field when type is other', async () => {
+    const app = await createApp();
+
     const actionTypeId = 6;
 
     await request(app)
@@ -149,6 +154,7 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Creating a minister issue action on a nonexistant minister issue throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/1/issue/2/action')
       .send(body)
@@ -156,6 +162,7 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Updating a minister issue action', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1`)
       .send(body)
@@ -176,6 +183,7 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Deleting a minister issue action', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1`)
       .expect(204);
@@ -185,6 +193,7 @@ describe('Test Minister Issue Action routes', () => {
   });
 
   test('Deleting a non-existant minister issue action does nothing', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/10`)
       .expect(204);

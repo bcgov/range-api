@@ -1,6 +1,6 @@
 import { default as request } from "supertest"; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -70,6 +70,7 @@ describe('Test Additional Requirement routes', () => {
   });
 
   test('Creating an additional requirement', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -85,6 +86,8 @@ describe('Test Additional Requirement routes', () => {
   });
 
   test('Updating an additional requirement', async () => {
+    const app = await createApp();
+
     const detail = 'Different details';
 
     await request(app)
@@ -102,12 +105,14 @@ describe('Test Additional Requirement routes', () => {
   });
 
   test('Updating a nonexistant additional requirement throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/2`)
       .expect(404);
   });
 
   test('Deleting an additional requirement', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1`)
       .expect(204);
@@ -118,6 +123,7 @@ describe('Test Additional Requirement routes', () => {
   });
 
   test('Deleting a nonexistant additional requirement throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/5`)
       .expect(400);

@@ -1,6 +1,6 @@
 import { default as request } from "supertest"; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -70,6 +70,7 @@ describe('Test Invasive Plant routes', () => {
   });
 
   test('Creating an invasive plant checklist', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -80,6 +81,7 @@ describe('Test Invasive Plant routes', () => {
   });
 
   test('Creating an invasive plant checklist when one already exists throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -95,6 +97,7 @@ describe('Test Invasive Plant routes', () => {
   });
 
   test('Creating an invasive plant checklist for a nonexistant plan throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/3/invasive-plant-checklist')
       .send(body)
@@ -102,6 +105,7 @@ describe('Test Invasive Plant routes', () => {
   });
 
   test('Updating an existing invasive plant checklist', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -126,6 +130,7 @@ describe('Test Invasive Plant routes', () => {
   });
 
   test('Updating a nonexistant invasive plant checklist throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1`)
       .send(body)

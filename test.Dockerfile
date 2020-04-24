@@ -1,4 +1,4 @@
-FROM node:11.0.0
+FROM node:12.16.2
 
 RUN apt-get update
 RUN npm install -g npm
@@ -30,5 +30,3 @@ COPY .env /home/nodejs/app
 ENV NODE_PATH /home/nodejs/app/src
 
 EXPOSE 8080 9229
-
-CMD ["npm", "run", "test:watch"]

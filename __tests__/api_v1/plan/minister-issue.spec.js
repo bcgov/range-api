@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -79,6 +79,7 @@ describe('Test Minister Issue routes', () => {
   });
 
   test('Creating a minister issue', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -94,6 +95,7 @@ describe('Test Minister Issue routes', () => {
   });
 
   test('Creating a minister issue on a nonexistant plan should throw a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/2/issue')
       .send(body)
@@ -101,6 +103,7 @@ describe('Test Minister Issue routes', () => {
   });
 
   test('Updating an existing minister issue', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/1`)
       .send(body)
@@ -116,6 +119,7 @@ describe('Test Minister Issue routes', () => {
   });
 
   test('Updating a nonexistant minister issue throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/100`)
       .send(body)
@@ -123,6 +127,7 @@ describe('Test Minister Issue routes', () => {
   });
 
   test('Deleting an existing minister issue', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1`)
       .expect(204);

@@ -1,6 +1,6 @@
 import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -120,6 +120,8 @@ describe('Test Plan routes', () => {
   });
 
   test('Creating a new version', async () => {
+    const app = await createApp();
+
     const planId = 1;
     await request(app)
       .post(baseUrl)
@@ -130,12 +132,14 @@ describe('Test Plan routes', () => {
   });
 
   test('Throws a 404 error if the plan does not exist with that ID', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/10/version')
       .expect(404);
   });
 
   test('Creates an identical snapshot of the plan and stores it as JSON', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .expect(200);
@@ -162,6 +166,7 @@ describe('Test Plan routes', () => {
   });
 
   test('Getting each version of a plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .expect(200);
@@ -190,12 +195,14 @@ describe('Test Plan routes', () => {
   });
 
   test('Getting the versions of a nonexistant plan throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/plan/3/version')
       .expect(404);
   });
 
   test('Getting a specific version of a plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .expect(200);
@@ -213,12 +220,14 @@ describe('Test Plan routes', () => {
   });
 
   test('Getting a nonexistant version of a plan throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .get(`${baseUrl}/10`)
       .expect(404);
   });
 
-  test.only('Restoring a snapshot of a plan', async () => {
+  test('Restoring a snapshot of a plan', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .expect(200);
@@ -238,6 +247,7 @@ describe('Test Plan routes', () => {
   });
 
   test('Restoring a nonexistant snapshot of a plan throws a 404 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/restore`)
       .expect(404);
