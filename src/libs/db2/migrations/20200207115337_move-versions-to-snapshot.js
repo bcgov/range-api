@@ -53,15 +53,16 @@ exports.up = async (knex) => {
 
         await plan.eagerloadAllOneToMany();
 
-        const snapshot = await PlanSnapshot.create(knex, {
-          snapshot: JSON.stringify({ ...plan, agreement }),
-          created_at: versionRecord.created_at,
-          version: versionRecord.version,
-          plan_id: currentPlanId,
-          status_id: plan.statusId,
-        });
-
-        return snapshot;
+        await knex.raw(`
+          INSERT INTO plan_snapshot (snapshot, created_at, version, plan_id, status_id)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [
+          JSON.stringify({ ...plan, agreement }),
+          versionRecord.created_at,
+          versionRecord.version,
+          currentPlanId,
+          plan.statusId,
+        ]);
       });
 
       const snapshots = await Promise.all(snapshotsP);
