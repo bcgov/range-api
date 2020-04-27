@@ -28,49 +28,63 @@ import compression from 'compression';
 import flash from 'connect-flash';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import auth from './libs/authmware';
+import initPassport from './libs/authmware';
+import initRouter from './router';
 
-const app = express();
-const options = {
-  inflate: true,
-  limit: '3000kb',
-  type: 'image/*',
-};
+/**
+ * @returns {Express.Application} express app
+ */
+async function createApp() {
+  const app = express();
+  const options = {
+    inflate: true,
+    limit: '3000kb',
+    type: 'image/*',
+  };
 
-app.use(compression());
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({
-  extended: true,
-}));
-app.use(bodyParser.json());
-app.use(bodyParser.raw(options));
-app.use(flash());
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(
+    bodyParser.urlencoded({
+      extended: true,
+    }),
+  );
+  app.use(bodyParser.json());
+  app.use(bodyParser.raw(options));
+  app.use(flash());
 
-// Authentication middleware
-app.use(auth(app));
+  // Initialize passport config
+  await initPassport(app);
 
-// Server API routes
-require('./router')(app);
+  // Server API routes
+  initRouter(app);
 
-// Error handling middleware. This needs to be last in or it will
-// not get called.
-app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  logger.error(err.message);
-  let code = 500;
-  // Checking code is valid http status or not
-  if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
-    ({ code } = err);
-  }
+  // Error handling middleware. This needs to be last in or it will
+  // not get called.
 
-  // Getting message from error.
-  const message = err.message ? err.message : 'Internal Server Error';
+  // We need to include every parameter for the middleware function, or else
+  // express will never run it.
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, next) => {
+    logger.error(err.message);
+    let code = 500;
+    // Checking code is valid http status or not
+    if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
+      ({ code } = err);
+    }
 
-  // Sending error status.
-  res.status(code).json({ error: message, success: false });
+    // Getting message from error.
+    const message = err.message ? err.message : 'Internal Server Error';
 
-  if (!['test', 'unit_test'].includes(process.env.NODE_ENV)) {
-    throw err;
-  }
-});
+    // Sending error status.
+    res.status(code).json({ error: message, success: false });
 
-module.exports = app;
+    if (!['test', 'unit_test'].includes(process.env.NODE_ENV)) {
+      throw err;
+    }
+  });
+
+  return app;
+}
+
+export default createApp;

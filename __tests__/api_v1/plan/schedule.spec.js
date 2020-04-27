@@ -1,6 +1,6 @@
 import { default as request } from "supertest"; // eslint-disable-line
 import passport from 'passport';
-import app from '../../../src';
+import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
@@ -87,6 +87,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Creating a schedule', async () => {
+    const app = await createApp();
     await request(app)
       .post(baseUrl)
       .send(body)
@@ -103,6 +104,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Creating a schedule with for a nonexistant plan throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .post('/api/v1/plan/3/schedule')
       .send(body)
@@ -110,6 +112,8 @@ describe('Test Schedule routes', () => {
   });
 
   test('Updating an existing schedule', async () => {
+    const app = await createApp();
+
     const narative = 'This is the new narrative';
     await request(app)
       .put(`${baseUrl}/1`)
@@ -128,6 +132,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Updating a nonexistant schedule throws a 500 error', async () => {
+    const app = await createApp();
     await request(app)
       .put(`${baseUrl}/100`)
       .send(body)
@@ -135,6 +140,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Deleting an existing schedule', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/1`)
       .send()
@@ -142,6 +148,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Deleting a nonexistant schedule throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .delete(`${baseUrl}/10`)
       .send()
@@ -149,6 +156,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Creating a schedule entry', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/entry`)
       .send(entryBody)
@@ -164,6 +172,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Creating an entry on a nonexistant schedule throws a 400 error', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/20/entry`)
       .send(entryBody)
@@ -171,6 +180,7 @@ describe('Test Schedule routes', () => {
   });
 
   test('Deleting an existing schedule entry', async () => {
+    const app = await createApp();
     await request(app)
       .post(`${baseUrl}/1/entry`)
       .send(entryBody)
@@ -191,6 +201,8 @@ describe('Test Schedule routes', () => {
   });
 
   test('Creating an entry by updating the schedule', async () => {
+    const app = await createApp();
+
     const grazingScheduleEntries = [entryBody];
 
     await request(app)

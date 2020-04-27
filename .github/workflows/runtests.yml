@@ -42,5 +42,5 @@ jobs:
         echo "$(printenv)" > .env
         npm ci
         make local-test-setup
-        docker-compose up -d
-        npm test -- --forceExit
+        make run-db-test
+        make local-test

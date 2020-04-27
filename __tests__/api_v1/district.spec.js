@@ -16,12 +16,13 @@
 
 import passport from 'passport';
 import request from 'supertest';
-import app from '../../src';
+import createApp from '../../src';
 
 jest.mock('../../src/libs/db2/model/district');
 jest.mock('request-promise-native');
 describe('Test district route', () => {
   test('should fetch all districts', async (done) => {
+    const app = await createApp();
     await request(app)
       .get('/api/v1/district')
       .expect(200).expect((res) => {
@@ -32,6 +33,8 @@ describe('Test district route', () => {
   });
 
   test('should fail to fetch all districts', async (done) => {
+    const app = await createApp();
+
     passport.aUser.failDistrict = true;
     await request(app)
       .get('/api/v1/district')
