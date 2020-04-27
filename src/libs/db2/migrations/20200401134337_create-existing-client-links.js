@@ -6,6 +6,10 @@ exports.up = async (knex) => {
 
   await Promise.all(
     userAccounts.map(async (user) => {
+      if (userAccounts.filter(u => u.client_id === user.client_id).length > 1) {
+        console.warn(`There are multiple users linked to client ID ${user.client_id}. Skipping creation of link to user ID ${user.id}`);
+        return;
+      }
       const result = await knex.raw(`
         INSERT INTO active_client_account(user_id, client_id, type, active)
         VALUES (?, ?, ?, ?);
