@@ -165,7 +165,8 @@ describe('Test Plan routes', () => {
     expect(snapshot).toEqual(JSON.parse(JSON.stringify(plan)));
   });
 
-  test('Getting each version of a plan', async () => {
+
+  test.skip('Getting each version of a plan', async () => {
     const app = await createApp();
     await request(app)
       .post(baseUrl)
