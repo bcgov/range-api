@@ -79,7 +79,7 @@ exports.up = async (knex) => {
               ...plan,
               agreement,
             }),
-            plan.created_at ?? null,
+            plan.created_at || null,
             lastVersion + (1 * i) + 1,
             currentPlan.plan_id,
             plan.statusId,
