@@ -1,5 +1,4 @@
 const Plan = require('../../../../build/src/libs/db2/model/plan').default;
-const PlanSnapshot = require('../../../../build/src/libs/db2/model/plansnapshot').default;
 const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
