@@ -55,7 +55,7 @@ exports.up = async (knex) => {
 
         await knex.raw(`
           INSERT INTO plan_snapshot (snapshot, created_at, version, plan_id, status_id)
-          VALUES (?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?)
         `, [
           JSON.stringify({ ...plan, agreement }),
           versionRecord.created_at,
