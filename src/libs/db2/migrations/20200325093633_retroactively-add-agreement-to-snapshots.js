@@ -1,4 +1,3 @@
-const PlanSnapshot = require('../../../../build/src/libs/db2/model/plansnapshot').default;
 const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
@@ -18,9 +17,9 @@ exports.up = async (knex) => {
 
       const newSnapshot = { ...snapshot, agreement };
 
-      await PlanSnapshot.update(knex, { id }, {
-        snapshot: JSON.stringify(newSnapshot),
-      });
+      await knex.raw(`
+        UPDATE plan_snapshot SET snapshot=? WHERE id=?
+      `, [JSON.stringify(newSnapshot), id]);
     }
   });
 

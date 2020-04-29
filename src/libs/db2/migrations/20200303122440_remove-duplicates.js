@@ -1,5 +1,4 @@
 const Plan = require('../../../../build/src/libs/db2/model/plan').default;
-const PlanSnapshot = require('../../../../build/src/libs/db2/model/plansnapshot').default;
 const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
@@ -72,23 +71,24 @@ exports.up = async (knex) => {
             [currentPlan.plan_id],
           );
 
-          const snapshot = await PlanSnapshot.create(knex, {
-            snapshot: JSON.stringify({
+          await knex.raw(`
+            INSERT INTO plan_snapshot (snapshot, created_at, version, plan_id, status_id)
+            VALUES (?, ?, ?, ?, ?)
+          `, [
+            JSON.stringify({
               ...plan,
               agreement,
             }),
-            created_at: plan.created_at,
-            version: lastVersion + (1 * i) + 1,
-            plan_id: currentPlan.plan_id,
-            status_id: plan.statusId,
-          });
+            plan.created_at || null,
+            lastVersion + (1 * i) + 1,
+            currentPlan.plan_id,
+            plan.statusId,
+          ]);
 
           console.log(`Deleting plan ${id}`);
 
           await knex.raw('DELETE FROM plan_version WHERE plan_id=?', [id]);
           await knex.raw('DELETE FROM plan WHERE id=?', [id]);
-
-          return snapshot;
         }
       }
     }),
