@@ -167,7 +167,7 @@ describe('Test Plan routes', () => {
   });
 
 
-  test.skip('Getting each version of a plan', async () => {
+  test('Getting each version of a plan', async () => {
     const app = await createApp();
     await request(app)
       .post(baseUrl)
