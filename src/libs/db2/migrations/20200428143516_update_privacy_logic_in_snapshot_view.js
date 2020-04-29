@@ -26,6 +26,12 @@ current_snapshots as (
     id, 
     plan_id 
 ), 
+most_recent_version_of_each_status as (
+select id,snapshot_status_id, plan_id, max(version)
+from all_snapshots
+group by id, plan_id, version,snapshot_status_id
+order by plan_id asc, version desc
+),
 current_WIP_rups as (
 select als.id, als.plan_id, als.snapshot_status_id
 from all_snapshots als
