@@ -35,15 +35,23 @@ order by plan_id asc, version desc
 ),
 privacy_versions as (
     select als.id,
-        case when exists (select id 
-                            from plan p
-                            where als.plan_id = id 
-                            and status_id = 1) 
-             and 
-                als.snapshot_status_id = 6
+        case when exists (select id from plan p where als.plan_id = id and status_id = 1) 
+             and als.snapshot_status_id = 6
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
-                                then true
-                            else false
+                 then 'StaffView' as privacyView
+        else when exists (select id from plan p where als.plan_id = id and status_id = 13) 
+             and als.snapshot_status_id = 1
+             and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
+                then 'AHView' as privacyView
+        else when exists (select id from plan p where als.plan_id = id and status_id = 5) 
+             and als.snapshot_status_id = 13
+             and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
+                then 'StaffView' as privacyView
+        else when exists (select id from plan p where als.plan_id = id and status_id = 19) 
+             and als.snapshot_status_id = 13
+             and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
+                then 'StaffView' as privacyView
+        else null
         end as isPrivacyVersion
     from  all_snapshots als
 
@@ -75,26 +83,6 @@ legal_snapshot_summary as (
   from 
     all_snapshots
 ), 
-select 
-  all_snapshots.id, 
-  all_snapshots.snapshot,
-  all_snapshots.plan_id, 
-  all_snapshots.created_at, 
-  all_snapshots.version, 
-  all_snapshots.snapshot_status_id as status_id,
-  all_snapshots.user_id, 
-  last_snapshot.snapshot_status_id as from_status_id, 
-  all_snapshots.snapshot_status_id as to_status_id, 
-  legal_snapshot_summary.effective_legal_start, 
-  legal_snapshot_summary.effective_legal_end,
-  coalesce(privacy_snapshots.isPrivacyVersion, false) as isPrivacyVersion
-from 
-  all_snapshots 
-  left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
-  left join privacy_snapshots on privacy_snapshots.id = all_snapshots.id
-  left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
-  and all_snapshots.version = (last_snapshot.version + 1) 
-  join plan p on p.id = all_snapshots.plan_id
 
 )`)
   
@@ -180,7 +168,7 @@ select
   all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
   legal_snapshot_summary.effective_legal_end,
-  coalesce(privacy_snapshots.isPrivacyVersion, false) as isPrivacyVersion
+  privacy_versions.privacyView
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
