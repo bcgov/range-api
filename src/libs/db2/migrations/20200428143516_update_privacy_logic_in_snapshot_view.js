@@ -82,9 +82,28 @@ legal_snapshot_summary as (
     ) else null end as effective_legal_end 
   from 
     all_snapshots
-), 
+) 
+select 
+  all_snapshots.id, 
+  all_snapshots.snapshot,
+  all_snapshots.plan_id, 
+  all_snapshots.created_at, 
+  all_snapshots.version, 
+  all_snapshots.snapshot_status_id as status_id,
+  all_snapshots.user_id, 
+  last_snapshot.snapshot_status_id as from_status_id, 
+  all_snapshots.snapshot_status_id as to_status_id, 
+  legal_snapshot_summary.effective_legal_start, 
+  legal_snapshot_summary.effective_legal_end
+  privacy_versions.privacyView
+from 
+  all_snapshots 
+  left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
+  left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
+  and all_snapshots.version = (last_snapshot.version + 1) 
+  join plan p on p.id = all_snapshots.plan_id
 
-)`)
+`)
   
 };
 
@@ -168,7 +187,7 @@ select
   all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
   legal_snapshot_summary.effective_legal_end,
-  privacy_versions.privacyView
+  coalesce(privacy_snapshots.isPrivacyVersion, false) as isPrivacyVersion
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
