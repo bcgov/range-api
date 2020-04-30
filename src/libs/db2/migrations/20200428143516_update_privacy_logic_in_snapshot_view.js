@@ -14,38 +14,40 @@ with all_snapshots as (
   from 
     plan_snapshot
 ), 
-current_snapshots as (
-  select 
-    id, 
-    max(version) as version, 
-    (max(version) - 1) as previous_version,
-    plan_id 
-  from 
-    plan_snapshot 
-  group by 
-    id, 
-    plan_id 
-), 
-most_recent_version_of_each_status as (
-select id,snapshot_status_id, plan_id, max(version)
-from all_snapshots
-group by id, plan_id, version,snapshot_status_id
+max_version_of_plan as (
+    select max(version) as version,
+    plan_id
+    from all_snapshots
+    group by plan_id
+),
+max_version_of_plan_in_each_status as (
+    select max(version) as  version,
+    plan_id,
+    snapshot_status_id
+    from  all_snapshots
+    group by plan_id, snapshot_status_id
+),
+most_recent_snapshot_of_each_status as (
+select als.id,als.snapshot_status_id,als.plan_id,als.version
+from max_version_of_plan_in_each_status mr
+inner join all_snapshots als on mr.plan_id = als.plan_id and mr.version = als.version
 order by plan_id asc, version desc
 ),
-current_WIP_rups as (
-select als.id, als.plan_id, als.snapshot_status_id
-from all_snapshots als
-inner join current_snapshots on current_snapshots.id = als.id 
-where snapshot_status_id not in (20, 8, 9, 12)
+privacy_versions as (
+    select als.id,
+        case when exists (select id 
+                            from plan p
+                            where als.plan_id = id 
+                            and status_id = 1) 
+             and 
+                als.snapshot_status_id = 6
+             and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
+                                then true
+                            else false
+        end as isPrivacyVersion
+    from  all_snapshots als
+
 ),
-privacy_snapshots as (
-select id, max(version), true as isPrivacyVersion
-from all_snapshots als
-where plan_id in (select plan_id from current_WIP_rups where current_WIP_rups.plan_id = als.plan_id limit 1)
-and als.snapshot_status_id != (select current_WIP_rups.snapshot_status_id from current_WIP_rups where current_WIP_rups.plan_id = als.plan_id order by version desc limit 1)
-group by id, version
-)
-,
 legal_snapshot_summary as (
   select 
     all_snapshots.id, 
@@ -72,7 +74,7 @@ legal_snapshot_summary as (
     ) else null end as effective_legal_end 
   from 
     all_snapshots
-) 
+), 
 select 
   all_snapshots.id, 
   all_snapshots.snapshot,
