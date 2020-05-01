@@ -103,7 +103,7 @@ from
   left join privacy_versions on privacy_versions.id = all_snapshots.id
   join plan p on p.id = all_snapshots.plan_id
 
-)`)
+);`)
   
 };
 
@@ -195,6 +195,7 @@ from
   left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
+  );
 
 `)
   
