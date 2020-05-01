@@ -1,7 +1,7 @@
 
 exports.up = async (knex) => {
   await knex.raw(`
-    alter view if exists plan_snapshot_summary as (
+  CREATE OR REPLACE view plan_snapshot_summary as (
 with all_snapshots as (
   select 
     id, 
@@ -109,7 +109,7 @@ from
 
 exports.down = async (knex) => {
 await knex.raw(`
-    alter view if exists plan_snapshot_summary as (
+    create or replace exists plan_snapshot_summary as (
 with all_snapshots as (
   select 
     id, 
