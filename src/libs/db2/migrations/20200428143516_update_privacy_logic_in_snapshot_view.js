@@ -94,12 +94,13 @@ select
   last_snapshot.snapshot_status_id as from_status_id, 
   all_snapshots.snapshot_status_id as to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
-  legal_snapshot_summary.effective_legal_end
+  legal_snapshot_summary.effective_legal_end,
   privacy_versions.privacyView
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
   left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
+  left join privacy_versions on privacy_versions.id = all_snapshots.id
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
@@ -191,7 +192,7 @@ select
 from 
   all_snapshots 
   left join legal_snapshot_summary on legal_snapshot_summary.id = all_snapshots.id 
-  left join privacy_snapshots on privacy_snapshots.id = all_snapshots.id
+  left join on privacy_snapshots.id = all_snapshots.id
   left join all_snapshots last_snapshot on all_snapshots.plan_id = last_snapshot.plan_id 
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
