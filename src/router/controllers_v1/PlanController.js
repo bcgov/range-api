@@ -38,7 +38,6 @@ export default class PlanController {
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
       }
-        logger.info(JSON.stringify(plan))
 
       const { agreementId } = plan;
       const  status_id  = plan.status["id"];
@@ -46,22 +45,22 @@ export default class PlanController {
       const  isStaff = user.isAdministrator()? true : user.isRangeOfficer()? true : false;
       const  isAH = user.isAgreementHolder()? true : false;
 
-      const shouldBeLiveVersionForStaff = ([6,13,14,15,16,12].includes(status_id) && isStaff)   
-        //redundant, but putting here to be explicit:
-      const shouldBeLiveVersionForAH = ([1,4,5,18,19,10].includes(status_id) && isAH)   
+      var privacyVersion; 
+      var privacyVersionRaw; 
+      if(isStaff) {
+        privacyVersionRaw = (await PlanSnapshot.findSummary(db, {plan_id: planId, privacyview: 'StaffView'}))[0];
+        privacyVersion = (privacyVersionRaw == null)? null : privacyVersionRaw.snapshot;
+        logger.info(JSON.stringify(privacyVersion));
+      }
+      else {
+        privacyVersionRaw = (await PlanSnapshot.findSummary(db, {plan_id: planId, privacyview: 'AHView'}))[0];
+        privacyVersion = (privacyVersionRaw == null)? null : privacyVersionRaw.snapshot;
+      }
+        
+      const shouldBeLiveVersion = (privacyVersion == null)? true : false;
+      logger.info('shouldBeLiveVersion: ' + shouldBeLiveVersion);
 
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
-      /*
-        const versions = await PlanSnapshot.find(
-        db,
-        { plan_id: planId },
-      );//todo figure out how to get last one from here
-      
-      if(versions.length() === 0){
-        throw errorWithCode('Plan doesn\'t exist o', 404);
-
-        */
 
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
@@ -70,43 +69,43 @@ export default class PlanController {
       agreement.transformToV1();
 
         
-      var versionData;
-      if(shouldBeLiveVersionForStaff || shouldBeLiveVersionForAH)
+      if(shouldBeLiveVersion)
       {
           logger.info('loading live plan')
             await plan.eagerloadAllOneToMany();
+          plan.agreement = agreement;
+
+          const mappedGrazingSchedules = await Promise.all(
+            plan.grazingSchedules.map(async schedule => ({
+              ...schedule,
+              sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
+            })),
+          );
+
+          return res.status(200).json({
+            ...plan,
+            grazingSchedules: mappedGrazingSchedules,
+          }).end();
       }
       else
       {
         logger.info('loading last version')
 
-        const versions = await PlanSnapshot.find(
-        db,
-        { plan_id: planId },
-      );//todo figure out how to get last one from here
-          logger.info(JSON.stringify(versions));
+          privacyVersion;
+          logger.info(JSON.stringify(privacyVersion));
+          return res.status(200).json({
+              ...privacyVersion
+          }).end();
+        }
       
       }
 
-      plan.agreement = agreement;
+         catch (error) {
+          logger.error(`Unable to fetch plan, error: ${error.message}`);
+          throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
+         }
 
-      const mappedGrazingSchedules = await Promise.all(
-        plan.grazingSchedules.map(async schedule => ({
-          ...schedule,
-          sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
-        })),
-      );
-
-      return res.status(200).json({
-        ...plan,
-        grazingSchedules: mappedGrazingSchedules,
-      }).end();
-    } catch (error) {
-      logger.error(`Unable to fetch plan, error: ${error.message}`);
-      throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
-    }
   }
-
   /**
    * Create Plan
    * @param {*} req : express req object
