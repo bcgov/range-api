@@ -91,7 +91,10 @@ export default class PlanController {
       {
         logger.info('loading last version')
 
-          privacyVersion;
+          delete privacyVersion.status;
+          privacyVersion.status = plan.status;
+          delete privacyVersion.status_id;
+          privacyVersion.status_id = status_id;
           logger.info(JSON.stringify(privacyVersion));
           return res.status(200).json({
               ...privacyVersion
