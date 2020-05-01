@@ -103,7 +103,7 @@ from
   left join privacy_versions on privacy_versions.id = all_snapshots.id
   join plan p on p.id = all_snapshots.plan_id
 
-`)
+)`)
   
 };
 
