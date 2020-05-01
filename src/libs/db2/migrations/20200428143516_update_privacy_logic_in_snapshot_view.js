@@ -38,23 +38,22 @@ privacy_versions as (
         case when exists (select id from plan p where als.plan_id = id and status_id = 1) 
              and als.snapshot_status_id = 6
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
-                 then 'StaffView' as privacyView
+                 then 'StaffView' 
         else when exists (select id from plan p where als.plan_id = id and status_id = 13) 
              and als.snapshot_status_id = 1
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
-                then 'AHView' as privacyView
+                then 'AHView' 
         else when exists (select id from plan p where als.plan_id = id and status_id = 5) 
              and als.snapshot_status_id = 13
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
-                then 'StaffView' as privacyView
+                then 'StaffView' 
         else when exists (select id from plan p where als.plan_id = id and status_id = 19) 
              and als.snapshot_status_id = 13
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
-                then 'StaffView' as privacyView
+                then 'StaffView' 
         else null
-        end as isPrivacyVersion
+        end as privacyView
     from  all_snapshots als
-
 ),
 legal_snapshot_summary as (
   select 
