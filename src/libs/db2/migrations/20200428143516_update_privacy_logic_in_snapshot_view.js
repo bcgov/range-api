@@ -39,15 +39,15 @@ privacy_versions as (
              and als.snapshot_status_id = 6
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
                  then 'StaffView' 
-        else when exists (select id from plan p where als.plan_id = id and status_id = 13) 
+        when exists (select id from plan p where als.plan_id = id and status_id = 13) 
              and als.snapshot_status_id = 1
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
                 then 'AHView' 
-        else when exists (select id from plan p where als.plan_id = id and status_id = 5) 
+        when exists (select id from plan p where als.plan_id = id and status_id = 5) 
              and als.snapshot_status_id = 13
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
                 then 'StaffView' 
-        else when exists (select id from plan p where als.plan_id = id and status_id = 19) 
+        when exists (select id from plan p where als.plan_id = id and status_id = 19) 
              and als.snapshot_status_id = 13
              and exists (select id from most_recent_snapshot_of_each_status where id  =  als.id) 
                 then 'StaffView' 
