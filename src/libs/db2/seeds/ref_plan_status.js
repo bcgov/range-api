@@ -167,6 +167,13 @@ exports.seed = async (knex) => {
       name: 'Stands - Review',
       active: true,
     },
+    {
+      description_full: '',
+      description_short: '',
+      code: 'SNR',
+      name: 'Stands - Not Reviewed',
+      active: true,
+    },
   ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();
