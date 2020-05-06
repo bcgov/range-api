@@ -276,4 +276,57 @@ export default class PlanController {
 
     res.status(204).end();
   }
+
+  static async discardAmendment(req, res) {
+    const { params, user } = req;
+    const { planId } = params;
+
+    checkRequiredFields(['planId'], 'params', req);
+
+    const plan = await Plan.findById(db, planId);
+    if (!plan) {
+      throw errorWithCode('Could not find plan', 404);
+    }
+
+    if (Plan.isLegal(plan) || !Plan.isAmendment(plan)) {
+      throw errorWithCode('This plan is not an amendment, and cannot be discarded.', 400);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const prevLegalVersion = await db
+      .table('plan_snapshot_summary')
+      .whereIn('status_id', Plan.legalStatuses)
+      .andWhere({
+        plan_id: planId,
+      })
+      .orderBy('created_at', 'desc')
+      .first();
+
+    if (!prevLegalVersion) {
+      throw errorWithCode('Could not find previous legal version.', 500);
+    }
+
+    logger.info(`Restoring snapshot ID ${prevLegalVersion.id} for plan ${planId}`);
+
+    await Plan.restoreVersion(db, planId, prevLegalVersion.version);
+
+    const versionsToDiscard = await db
+      .table('plan_snapshot_summary')
+      .select('id')
+      .where({ plan_id: planId })
+      .andWhereRaw('created_at > ?::timestamp', [prevLegalVersion.created_at.toISOString()]);
+
+    const versionIdsToDiscard = versionsToDiscard.map(v => v.id);
+
+    logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
+
+    await db
+      .table('plan_snapshot')
+      .update({ is_discarded: true })
+      .whereIn('id', versionIdsToDiscard);
+
+    res.status(200).end();
+  }
 }
