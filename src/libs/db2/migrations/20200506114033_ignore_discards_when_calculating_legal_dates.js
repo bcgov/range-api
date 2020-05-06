@@ -155,7 +155,7 @@ snapshots_with_legal_statuses AS (
   FROM 
     all_snapshots 
   WHERE 
-    all_snapshots.snapshot_status_id IN (20, 8, 9, 12) 
+    all_snapshots.snapshot_status_id IN (20, 8, 9, 12, 21) 
     AND all_snapshots.is_discarded = false
 ), 
 legal_snapshot_summary AS (
