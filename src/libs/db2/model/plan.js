@@ -64,6 +64,8 @@ export default class Plan extends Model {
     this.creator = new User(User.extract(data));
   }
 
+  static legalStatuses = [20, 8, 9, 12]
+
   static get fields() {
     // TODO:(jl) Work with consumers to remove 'agreement_id' from the selected
     // fields.
@@ -701,6 +703,14 @@ export default class Plan extends Model {
       db.raw('ROLLBACK');
       throw e;
     }
+  }
+
+  static isLegal(plan) {
+    return Plan.legalStatuses.includes(plan.statusId);
+  }
+
+  static isAmendment(plan) {
+    return plan.amendmentTypeId !== null;
   }
 
   async eagerloadAllOneToMany() {
