@@ -64,7 +64,7 @@ export default class Plan extends Model {
     this.creator = new User(User.extract(data));
   }
 
-  static legalStatuses = [20, 8, 9, 12]
+  static legalStatuses = [20, 8, 9, 12, 21]
 
   static get fields() {
     // TODO:(jl) Work with consumers to remove 'agreement_id' from the selected
