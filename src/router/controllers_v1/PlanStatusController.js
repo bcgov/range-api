@@ -50,7 +50,7 @@ export default class PlanStatusController {
           break;
       }
 
-        if(!([20, 8, 9, 12].includes((await Plan.find(db, { id: planId })).statusId)))
+        if(!([20, 8, 9, 12].includes((await Plan.find(db, { id: planId })).statusId)) && !([20, 8, 9, 12].includes(status.id)))
         {
             const snapshot = await Plan.createSnapshot(db, planId,user.id);
         }
