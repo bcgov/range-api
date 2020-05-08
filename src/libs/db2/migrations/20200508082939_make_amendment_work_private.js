@@ -161,6 +161,17 @@ privacy_versions AS (
 						and effective_legal_start is not null 
 						and effective_legal_end is null) 
 	THEN 'StaffView' 
+
+	--ah minor awaiting signatures
+	WHEN 	EXISTS ( SELECT id FROM PLAN p 
+			           WHERE als.plan_id = id 
+				   AND status_id = 18 
+					and 	Cast(als.snapshot ->> 'amendmentTypeId' AS INTEGER) = 1) 
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+					WHERE 	id = als.id 
+						and effective_legal_start is not null 
+						and effective_legal_end is null) 
+	THEN 'StaffView' 
 	ELSE NULL
     END AS privacyView 
   FROM 
