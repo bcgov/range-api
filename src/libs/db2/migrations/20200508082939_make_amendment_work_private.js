@@ -151,6 +151,16 @@ privacy_versions AS (
     		AND als.snapshot_status_id = 22 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+
+	--ah minor initiated
+	WHEN 	EXISTS ( SELECT id FROM PLAN p 
+			           WHERE als.plan_id = id 
+				   AND status_id = 23)
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+					WHERE 	id = als.id 
+						and effective_legal_start is not null 
+						and effective_legal_end is null) 
+	THEN 'StaffView' 
 	ELSE NULL
     END AS privacyView 
   FROM 
