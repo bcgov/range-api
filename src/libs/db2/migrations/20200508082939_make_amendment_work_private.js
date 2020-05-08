@@ -139,7 +139,6 @@ privacy_versions AS (
 					WHERE 	als.plan_id = id 
 					AND 	status_id = 1 
 					and 	Cast(als.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
-    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary )
     		AND als.snapshot_status_id = 22 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
