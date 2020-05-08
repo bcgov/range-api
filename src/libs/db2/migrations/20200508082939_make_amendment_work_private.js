@@ -74,6 +74,10 @@ privacy_versions AS (
     		AND als.snapshot_status_id = 13 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 22) 
+    		AND als.snapshot_status_id in (20, 8, 9, 12, 21) 
+    		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
+	THEN 'StaffView' 
 	ELSE NULL
     END AS privacyView 
   FROM 
