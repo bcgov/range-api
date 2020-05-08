@@ -50,6 +50,48 @@ most_recent_snapshot_of_each_status AS (
     plan_id ASC, 
     version DESC
 ), 
+snapshots_with_legal_statuses AS (
+  SELECT 
+    all_snapshots.id, 
+    all_snapshots.plan_id, 
+    all_snapshots.created_at, 
+    all_snapshots.snapshot_status_id,
+    Row_number() OVER (
+      ORDER BY 
+        plan_id, 
+        version ASC
+    ) AS legal_version 
+  FROM 
+    all_snapshots 
+  WHERE 
+    all_snapshots.snapshot_status_id IN (20, 8, 9, 12, 21) 
+    AND all_snapshots.is_discarded = false
+), 
+legal_snapshot_summary AS (
+  SELECT 
+    swl.id, 
+    swl.created_at AS effective_legal_start, 
+    swl.snapshot_status_id,
+    CASE WHEN EXISTS (
+      SELECT 
+        id 
+      FROM 
+        snapshots_with_legal_statuses 
+      WHERE 
+        plan_id = swl.plan_id 
+        AND legal_version = (swl.legal_version + 1)
+    ) THEN (
+      SELECT 
+        created_at 
+      FROM 
+        snapshots_with_legal_statuses 
+      WHERE 
+        plan_id = swl.plan_id 
+        AND legal_version = (swl.legal_version + 1)
+    ) ELSE NULL END AS effective_legal_end 
+  FROM 
+    snapshots_with_legal_statuses swl
+), 
 privacy_versions AS (
   SELECT 
     als.id, 
@@ -58,7 +100,7 @@ privacy_versions AS (
 	WHEN 	EXISTS ( SELECT id 	FROM 	PLAN p 
 					WHERE 	als.plan_id = id 
 					AND 	status_id = 1 
-					and 	Cast(asl.snapshot ->> 'amendmentTypeId' AS INTEGER) is null) 
+					and 	Cast(als.snapshot ->> 'amendmentTypeId' AS INTEGER) is null) 
 	    	AND als.snapshot_status_id = 6 
 	    	AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
@@ -97,7 +139,7 @@ privacy_versions AS (
 					WHERE 	als.plan_id = id 
 					AND 	status_id = 1 
 					and 	Cast(als.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
-    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary )
     		AND als.snapshot_status_id = 22 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
@@ -107,7 +149,6 @@ privacy_versions AS (
 					WHERE 	als.plan_id = id 
 					AND 	status_id = 18 
 					and 	Cast(als.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
-    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
     		AND als.snapshot_status_id = 22 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
@@ -115,46 +156,6 @@ privacy_versions AS (
     END AS privacyView 
   FROM 
     all_snapshots als
-), 
-snapshots_with_legal_statuses AS (
-  SELECT 
-    all_snapshots.id, 
-    all_snapshots.plan_id, 
-    all_snapshots.created_at, 
-    Row_number() OVER (
-      ORDER BY 
-        plan_id, 
-        version ASC
-    ) AS legal_version 
-  FROM 
-    all_snapshots 
-  WHERE 
-    all_snapshots.snapshot_status_id IN (20, 8, 9, 12, 21) 
-    AND all_snapshots.is_discarded = false
-), 
-legal_snapshot_summary AS (
-  SELECT 
-    swl.id, 
-    swl.created_at AS effective_legal_start, 
-    CASE WHEN EXISTS (
-      SELECT 
-        id 
-      FROM 
-        snapshots_with_legal_statuses 
-      WHERE 
-        plan_id = swl.plan_id 
-        AND legal_version = (swl.legal_version + 1)
-    ) THEN (
-      SELECT 
-        created_at 
-      FROM 
-        snapshots_with_legal_statuses 
-      WHERE 
-        plan_id = swl.plan_id 
-        AND legal_version = (swl.legal_version + 1)
-    ) ELSE NULL END AS effective_legal_end 
-  FROM 
-    snapshots_with_legal_statuses swl
 ) 
 SELECT 
   all_snapshots.id, 
