@@ -90,6 +90,8 @@ privacy_versions AS (
 					WHERE 	id = als.id 
 						and effective_legal_start is not null 
 						and effective_legal_end is null) 
+	THEN 'AHView' 
+
 	--staff mandatory kicked to AH court
 	WHEN 	EXISTS ( SELECT id 	FROM 	PLAN p 
 					WHERE 	als.plan_id = id 
