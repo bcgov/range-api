@@ -54,29 +54,51 @@ privacy_versions AS (
   SELECT 
     als.id, 
     CASE 
-	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 1) 
+	--when in AH draft
+	WHEN 	EXISTS ( SELECT id 	FROM 	PLAN p 
+					WHERE 	als.plan_id = id 
+					AND 	status_id = 1 
+					and 	Cast(asl.snapshot ->> 'amendmentTypeId' AS INTEGER) is null) 
 	    	AND als.snapshot_status_id = 6 
 	    	AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+
+	-- agreement holder submits back
 	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 13) 
     		AND als.snapshot_status_id = 1 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'AHView' 
+
 	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 5) 
     		AND als.snapshot_status_id = 13 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+	
 	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 19) 
     		AND als.snapshot_status_id = 13 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+
 	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 18) 
     		AND als.snapshot_status_id = 13 
     		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
+
+	--staff mandatory initiated
 	WHEN 	EXISTS ( SELECT id FROM PLAN p WHERE als.plan_id = id AND status_id = 22) 
-    		AND als.snapshot_status_id in (20, 8, 9, 12, 21) 
-    		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+					WHERE 	id = als.id 
+						and effective_legal_start is not null 
+						and effective_legal_end is null) 
+	--staff mandatory kicked to AH court
+	WHEN 	EXISTS ( SELECT id 	FROM 	PLAN p 
+					WHERE 	als.plan_id = id 
+					AND 	status_id = 1 
+					and 	Cast(asl.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+					WHERE 	id = als.id 
+						and effective_legal_start is not null 
+						and effective_legal_end is null) 
 	THEN 'StaffView' 
 	ELSE NULL
     END AS privacyView 
