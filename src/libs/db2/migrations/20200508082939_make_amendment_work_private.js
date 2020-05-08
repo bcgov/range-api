@@ -98,9 +98,18 @@ privacy_versions AS (
 					AND 	status_id = 1 
 					and 	Cast(asl.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
     		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
-					WHERE 	id = als.id 
-						and effective_legal_start is not null 
-						and effective_legal_end is null) 
+    		AND als.snapshot_status_id = 22 
+    		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
+	THEN 'StaffView' 
+
+	--staff mandatory getting signed
+	WHEN 	EXISTS ( SELECT id 	FROM 	PLAN p 
+					WHERE 	als.plan_id = id 
+					AND 	status_id = 18 
+					and 	Cast(asl.snapshot ->> 'amendmentTypeId' AS INTEGER) = 2) 
+    		AND EXISTS ( SELECT id 	FROM 	legal_snapshot_summary 
+    		AND als.snapshot_status_id = 22 
+    		AND EXISTS ( SELECT id FROM most_recent_snapshot_of_each_status WHERE id = als.id) 
 	THEN 'StaffView' 
 	ELSE NULL
     END AS privacyView 
