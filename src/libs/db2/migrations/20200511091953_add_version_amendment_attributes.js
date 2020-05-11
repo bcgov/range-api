@@ -252,7 +252,7 @@ legal_version_reason as (
 	from associated_legal_versions av
 	left join legal_reason_summary lr on lr.associated_legal_id = av.associated_legal_id
 	
-),
+)
 SELECT 
   all_snapshots.id, 
   all_snapshots.snapshot, 
