@@ -43,6 +43,8 @@ POSTGRESQL_PASSWORD= banana
 POSTGRESQL_USER=app_dv_myra
 ```
 
+**Note that these environment variables _must_ be available in your shell. You can use a tool like `direnv`, or run `source .env` directly.**
+
 > If using `direnv`, create a `.envrc` file containing `dotenv` to automatically load the environment variables into your shell. (https://github.com/direnv/direnv/issues/284#issuecomment-315275436)
 
 ### Running tests
