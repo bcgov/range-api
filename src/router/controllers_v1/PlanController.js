@@ -3,6 +3,7 @@ import { checkRequiredFields, objPathToCamelCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 
 const dm = new DataManager(config);
 const {
@@ -36,28 +37,57 @@ export default class PlanController {
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
       }
+
       const { agreementId } = plan;
+      const statusId = plan?.status?.id;
+
+      const isStaff = user.isAdministrator() || user.isRangeOfficer();
+
+      const [privacyVersionRaw] = await PlanSnapshot.findSummary(db,
+        { plan_id: planId,
+          privacyview: isStaff ? 'StaffView' : 'AHView',
+        });
+      const privacyVersion = privacyVersionRaw?.snapshot;
+      logger.info(JSON.stringify(privacyVersion));
+
+      const shouldBeLiveVersion = (privacyVersion == null);
+      logger.info(`shouldBeLiveVersion: ${shouldBeLiveVersion}`);
+
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
       );
-      await agreement.eagerloadAllOneToManyExceptPlan();
+      await agreement.eagerloadAllOneToManyExceptPlan();// todo determine if this matters
       agreement.transformToV1();
 
-      await plan.eagerloadAllOneToMany();
-      plan.agreement = agreement;
 
-      const mappedGrazingSchedules = await Promise.all(
-        plan.grazingSchedules.map(async schedule => ({
-          ...schedule,
-          sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
-        })),
-      );
+      if (shouldBeLiveVersion) {
+        logger.info('loading live plan');
+        await plan.eagerloadAllOneToMany();
+        plan.agreement = agreement;
 
+        const mappedGrazingSchedules = await Promise.all(
+          plan.grazingSchedules.map(async schedule => ({
+            ...schedule,
+            sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
+          })),
+        );
+
+        return res.status(200).json({
+          ...plan,
+          grazingSchedules: mappedGrazingSchedules,
+        }).end();
+      }
+
+      logger.info('loading last version');
+
+      privacyVersion.status_id = statusId;
+      logger.info(JSON.stringify(privacyVersion));
       return res.status(200).json({
-        ...plan,
-        grazingSchedules: mappedGrazingSchedules,
+        ...privacyVersion,
+        status: plan.status,
+        statusId: plan.statusId,
       }).end();
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
@@ -245,5 +275,58 @@ export default class PlanController {
     }
 
     res.status(204).end();
+  }
+
+  static async discardAmendment(req, res) {
+    const { params, user } = req;
+    const { planId } = params;
+
+    checkRequiredFields(['planId'], 'params', req);
+
+    const plan = await Plan.findById(db, planId);
+    if (!plan) {
+      throw errorWithCode('Could not find plan', 404);
+    }
+
+    if (Plan.isLegal(plan) || !Plan.isAmendment(plan)) {
+      throw errorWithCode('This plan is not an amendment, and cannot be discarded.', 400);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const prevLegalVersion = await db
+      .table('plan_snapshot_summary')
+      .whereIn('status_id', Plan.legalStatuses)
+      .andWhere({
+        plan_id: planId,
+      })
+      .orderBy('created_at', 'desc')
+      .first();
+
+    if (!prevLegalVersion) {
+      throw errorWithCode('Could not find previous legal version.', 500);
+    }
+
+    logger.info(`Restoring snapshot ID ${prevLegalVersion.id} for plan ${planId}`);
+
+    await Plan.restoreVersion(db, planId, prevLegalVersion.version);
+
+    const versionsToDiscard = await db
+      .table('plan_snapshot_summary')
+      .select('id')
+      .where({ plan_id: planId })
+      .andWhereRaw('created_at > ?::timestamp', [prevLegalVersion.created_at.toISOString()]);
+
+    const versionIdsToDiscard = versionsToDiscard.map(v => v.id);
+
+    logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
+
+    await db
+      .table('plan_snapshot')
+      .update({ is_discarded: true })
+      .whereIn('id', versionIdsToDiscard);
+
+    res.status(200).end();
   }
 }

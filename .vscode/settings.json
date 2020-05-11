@@ -10,4 +10,5 @@
         "plan",
         "to"
     ],
+    "editor.formatOnSave": false
 }

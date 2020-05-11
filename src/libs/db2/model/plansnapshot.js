@@ -19,7 +19,7 @@ export default class PlanSnapshot extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'snapshot', 'plan_id', 'created_at', 'version', 'status_id','user_id',
+      'id', 'snapshot', 'plan_id', 'created_at', 'version', 'status_id', 'user_id', 'is_discarded',
     ].map(f => `${PlanSnapshot.table}.${f}`);
   }
 
@@ -27,7 +27,7 @@ export default class PlanSnapshot extends Model {
     return 'plan_snapshot';
   }
 
-static async findSummary(db, where, order = undefined) {
+  static async findSummary(db, where, order = undefined) {
     let results = [];
     const q = db
       .table('plan_snapshot_summary')

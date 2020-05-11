@@ -58,6 +58,9 @@ router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(PlanStatus
 // create a plan status history
 router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.storeStatusHistory));
 
+// discard amendment
+router.post('/:planId?/discard-amendment', asyncMiddleware(PlanController.discardAmendment));
+
 //
 // Versions
 //

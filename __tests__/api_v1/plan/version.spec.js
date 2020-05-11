@@ -26,6 +26,7 @@ import DataManager from '../../../src/libs/db2';
 import config from '../../../src/config';
 import Plan from '../../../src/libs/db2/model/plan';
 import Agreement from '../../../src/libs/db2/model/agreement';
+import Model from '../../../src/libs/db2/model/model';
 
 const dm = new DataManager(config);
 
@@ -165,6 +166,7 @@ describe('Test Plan routes', () => {
     expect(snapshot).toEqual(JSON.parse(JSON.stringify(plan)));
   });
 
+
   test('Getting each version of a plan', async () => {
     const app = await createApp();
     await request(app)
@@ -175,7 +177,7 @@ describe('Test Plan routes', () => {
       .post(baseUrl)
       .expect(200);
 
-    const versions = (await dm.db('plan_snapshot').where('plan_id', 1));
+    const versions = (await dm.db('plan_snapshot_summary').where('plan_id', 1));
 
     await request(app)
       .get(`${baseUrl}`)
@@ -183,13 +185,18 @@ describe('Test Plan routes', () => {
       .expect((res) => {
         expect(res.body.versions).toHaveLength(versions.length);
         expect(res.body.versions).toEqual(
-          // eslint-disable-next-line camelcase
-          versions.map(({ created_at, plan_id, status_id, ...v }) => ({
-            ...v,
-            createdAt: created_at.toISOString(),
-            planId: plan_id,
-            statusId: status_id,
-          })),
+          versions
+            .map(Model.transformToCamelCase)
+            .map(v => ({
+              ...v,
+              createdAt: v.createdAt.toISOString(),
+              status: {
+                active: true,
+                code: 'C',
+                id: 1,
+                name: 'Created',
+              },
+            })),
         );
       });
   });

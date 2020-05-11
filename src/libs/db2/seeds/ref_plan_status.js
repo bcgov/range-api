@@ -27,6 +27,7 @@ const table = 'ref_plan_status';
 exports.seed = async (knex) => {
   const ref = [
     {
+      id: 1,
       description_full: '',
       description_short: '',
       code: 'C',
@@ -34,6 +35,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 2,
       description_full: '',
       description_short: '',
       code: 'O',
@@ -41,6 +43,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 3,
       description_full: '',
       description_short: '',
       code: 'P',
@@ -48,6 +51,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 4,
       description_full: '',
       description_short: '',
       code: 'D',
@@ -55,6 +59,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 5,
       description_full: '',
       description_short: '',
       code: 'R',
@@ -62,6 +67,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 6,
       description_full: '',
       description_short: '',
       code: 'SD',
@@ -69,6 +75,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 7,
       description_full: '',
       description_short: '',
       code: 'WM',
@@ -76,6 +83,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 8,
       description_full: '',
       description_short: '',
       code: 'SW',
@@ -83,6 +91,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 9,
       description_full: '',
       description_short: '',
       code: 'S',
@@ -90,6 +99,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 10,
       description_full: '',
       description_short: '',
       code: 'NF',
@@ -97,6 +107,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 11,
       description_full: '',
       description_short: '',
       code: 'NA',
@@ -104,6 +115,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 12,
       description_full: '',
       description_short: '',
       code: 'A',
@@ -112,6 +124,7 @@ exports.seed = async (knex) => {
     },
 
     {
+      id: 13,
       description_full: '',
       description_short: '',
       code: 'SR',
@@ -119,6 +132,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 14,
       description_full: '',
       description_short: '',
       code: 'SFD',
@@ -126,6 +140,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 15,
       description_full: '',
       description_short: '',
       code: 'RR',
@@ -133,6 +148,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 16,
       description_full: '',
       description_short: '',
       code: 'RNR',
@@ -140,6 +156,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 17,
       description_full: '',
       description_short: '',
       code: 'RFD',
@@ -147,6 +164,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 18,
       description_full: '',
       description_short: '',
       code: 'AC',
@@ -154,6 +172,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 19,
       description_full: '',
       description_short: '',
       code: 'RFS',
@@ -161,10 +180,43 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
+      id: 20,
       description_full: '',
       description_short: '',
       code: 'MSR',
       name: 'Stands - Review',
+      active: true,
+    },
+    {
+      id: 21,
+      description_full: '',
+      description_short: '',
+      code: 'SNR',
+      name: 'Stands - Not Reviewed',
+      active: true,
+    },
+    {
+      id: 22,
+      description_full: '',
+      description_short: '',
+      code: 'APS',
+      name: 'Mandatory Amendment in Progress - Staff',
+      active: true,
+    },
+    {
+      id: 23,
+      description_full: '',
+      description_short: '',
+      code: 'APA',
+      name: 'Amendment in Progress - AH',
+      active: true,
+    },
+    {
+      id: 24,
+      description_full: '',
+      description_short: '',
+      code: 'SAM',
+      name: 'Submitted as Mandatory',
       active: true,
     },
   ].map((item, index) => ({ ...item, id: index + 1 }));

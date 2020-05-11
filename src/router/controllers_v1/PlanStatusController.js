@@ -50,17 +50,19 @@ export default class PlanStatusController {
           break;
       }
 
-        if(!([20, 8, 9, 12].includes((await Plan.find(db, { id: planId })).statusId)))
-        {
-            const snapshot = await Plan.createSnapshot(db, planId,user.id);
-        }
+      // Don't create a snapshot if the plan we're updating the status for
+      // already has a legal status
+      const originalPlan = await Plan.findById(db, planId);
+      if (!Plan.isLegal(originalPlan)) {
+        await Plan.createSnapshot(db, planId, user.id);
+      }
 
       const updatedPlan = await Plan.update(db, { id: planId }, body);
 
-        if([20, 8, 9, 12].includes(status.id))
-        {
-            const snapshot = await Plan.createSnapshot(db, planId,user.id);
-        }
+      // If the new status was legal, create a snapshot after updating
+      if (Plan.isLegal(updatedPlan)) {
+        await Plan.createSnapshot(db, planId, user.id);
+      }
 
       return updatedPlan;
     } catch (err) {
