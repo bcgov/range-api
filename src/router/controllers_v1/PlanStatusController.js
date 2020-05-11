@@ -158,7 +158,7 @@ export default class PlanStatusController {
       if (allConfirmed) {
         const planStatuses = await PlanStatus.find(db, { active: true });
         const statusCode = isMinorAmendment === 'true'
-          ? PLAN_STATUS.STANDS
+          ? PLAN_STATUS.STANDS_NOT_REVIEWED
           : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find(s => s.code === statusCode);
         const plan = await PlanStatusController.updatePlanStatus(planId, status, user);
