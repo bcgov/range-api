@@ -183,6 +183,8 @@ legal_version_reason as (
 	  select 
 	    als.id, 
 	    als.plan_id, 
+	    als.snapshot_status_id,
+	    als.snapshot,
 	    als.version, 
 	    swl.id as associated_legal_id 
 	  from 
@@ -204,10 +206,53 @@ legal_version_reason as (
 		0
 	      )
 	    )
-	) 
-	select * from associated_legal_versions
+	),
+        AH_mandatories as (
+		select associated_legal_id, 'AH Mandatory' as legal_reason
+		from associated_legal_versions
+		where snapshot_status_id = 23 
+		and 	Cast(snapshot ->> 'amendmentTypeId' AS INTEGER) = 2 
+		group by associated_legal_id, legal_reason
+	),
+        Staff_mandatories as (
+		select associated_legal_id, 'Staff Mandatory' as legal_reason
+		from associated_legal_versions
+		where snapshot_status_id = 22 
+		group by associated_legal_id, legal_reason
+	),
+        AH_minors as (
+		select associated_legal_id, 'AH Minor' as legal_reason
+		from associated_legal_versions
+		where snapshot_status_id = 23 
+		and 	Cast(snapshot ->> 'amendmentTypeId' AS INTEGER) = 1 
+		group by associated_legal_id, legal_reason
+	),
+        inital_RUPS as (
+		select associated_legal_id, 'Initial RUP' as legal_reason
+		from associated_legal_versions
+		where snapshot_status_id = 12 
+		and 	Cast(snapshot ->> 'amendmentTypeId' AS INTEGER) is null
+		group by associated_legal_id, legal_reason
+	),
+	legal_reason_summary as (
+
+		select associated_legal_id ,  legal_reason
+		from AH_mandatories
+		union all
+		select associated_legal_id ,  legal_reason
+		from Staff_mandatories
+		union all
+		select associated_legal_id ,  legal_reason
+		from AH_minors
+		union all
+		select associated_legal_id ,  legal_reason
+		from inital_RUPS
+	)
+	select av.id, av.associated_legal_id, lr.legal_reason
+	from associated_legal_versions av
+	left join legal_reason_summary lr on lr.associated_legal_id = av.associated_legal_id
+	
 ),
-endpoint_query as (
 SELECT 
   all_snapshots.id, 
   all_snapshots.snapshot, 
@@ -216,6 +261,8 @@ SELECT
   all_snapshots.version, 
   all_snapshots.snapshot_status_id AS status_id, 
   all_snapshots.user_id, 
+  legal_version_reason.legal_reason,
+  legal_version_reason.associated_legal_id,
   last_snapshot.snapshot_status_id AS from_status_id, 
   all_snapshots.snapshot_status_id AS to_status_id, 
   legal_snapshot_summary.effective_legal_start, 
@@ -225,12 +272,10 @@ FROM
   all_snapshots 
   LEFT JOIN legal_snapshot_summary ON legal_snapshot_summary.id = all_snapshots.id 
   LEFT JOIN all_snapshots last_snapshot ON all_snapshots.plan_id = last_snapshot.plan_id 
+  LEFT JOIN legal_version_reason on  all_snapshots.id = legal_version_reason.id
   AND all_snapshots.version = (last_snapshot.version + 1) 
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
-)
-select legal_version_reason.*, als.snapshot_status_id from legal_version_reason 
-join all_snapshots als on als.id = legal_version_reason.id where legal_version_reason.plan_id = 204 order by legal_version_reason.version asc
 );`)
   
 };
