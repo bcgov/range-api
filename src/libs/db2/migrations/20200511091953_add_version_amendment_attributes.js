@@ -2,7 +2,6 @@
 exports.up = async (knex) => {
   await knex.raw(`
 drop view if exists plan_snapshot_summary;
-create view plan_snapshot_summary as (
 WITH all_snapshots AS (
   SELECT 
     id, 
@@ -82,6 +81,17 @@ legal_snapshot_summary AS (
         plan_id = swl.plan_id 
         AND legal_version = (swl.legal_version + 1)
     ) THEN (
+	false
+    ) ELSE true END AS isCurrentLegalVersion,
+    CASE WHEN EXISTS (
+      SELECT 
+        id 
+      FROM 
+        snapshots_with_legal_statuses 
+      WHERE 
+        plan_id = swl.plan_id 
+        AND legal_version = (swl.legal_version + 1)
+    ) THEN (
       SELECT 
         created_at 
       FROM 
@@ -89,7 +99,7 @@ legal_snapshot_summary AS (
       WHERE 
         plan_id = swl.plan_id 
         AND legal_version = (swl.legal_version + 1)
-    ) ELSE NULL END AS effective_legal_end 
+    ) ELSE (select plan_end_date from plan where plan_id = swl.plan_id order by version desc limit 1) END AS effective_legal_end 
   FROM 
     snapshots_with_legal_statuses swl
 ), 
@@ -223,8 +233,7 @@ legal_version_reason as (
         AH_minors as (
 		select associated_legal_id, 'AH Minor' as legal_reason
 		from associated_legal_versions
-		where snapshot_status_id = 23 
-		and 	Cast(snapshot ->> 'amendmentTypeId' AS INTEGER) = 1 
+		where snapshot_status_id = 21 
 		group by associated_legal_id, legal_reason
 	),
         inital_RUPS as (
@@ -251,13 +260,12 @@ legal_version_reason as (
 	select av.id, av.associated_legal_id, lr.legal_reason
 	from associated_legal_versions av
 	left join legal_reason_summary lr on lr.associated_legal_id = av.associated_legal_id
-	
 )
 SELECT 
   all_snapshots.id, 
-  all_snapshots.snapshot, 
   all_snapshots.plan_id, 
   all_snapshots.created_at, 
+  all_snapshots.snapshot,
   all_snapshots.version, 
   all_snapshots.snapshot_status_id AS status_id, 
   all_snapshots.user_id, 
@@ -272,10 +280,11 @@ FROM
   all_snapshots 
   LEFT JOIN legal_snapshot_summary ON legal_snapshot_summary.id = all_snapshots.id 
   LEFT JOIN all_snapshots last_snapshot ON all_snapshots.plan_id = last_snapshot.plan_id 
-  LEFT JOIN legal_version_reason on  all_snapshots.id = legal_version_reason.id
-  AND all_snapshots.version = (last_snapshot.version + 1) 
+  	AND all_snapshots.version = (last_snapshot.version + 1) 
+  LEFT JOIN legal_version_reason on  legal_version_reason.id = all_snapshots.id 
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
+order by version desc
 );`)
   
 };
