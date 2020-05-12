@@ -1,6 +1,7 @@
 exports.up = async (knex) => {
   await knex.raw(`
 drop view if exists plan_snapshot_summary;
+create view plan_snapshot_summary as (
 WITH all_snapshots AS (
   SELECT 
     id, 
