@@ -209,7 +209,7 @@ export default class Plan extends Model {
 
     const { snapshot } = planSnapshot;
 
-    await Plan.update(db, { id: planId }, snapshot);
+    await Plan.update(db, { id: planId }, { ...snapshot, isRestored: true });
 
     await Pasture.remove(db, { plan_id: planId });
     const pasturePromises = snapshot.pastures.map(async (pasture) => {
