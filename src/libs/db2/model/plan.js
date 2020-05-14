@@ -156,7 +156,7 @@ export default class Plan extends Model {
     return result.agreement_id;
   }
 
-  static async createSnapshot(db, planId,userId) {
+  static async createSnapshot(db, planId, userId) {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
       throw errorWithCode('Plan doesn\'t exist', 404);
@@ -187,7 +187,7 @@ export default class Plan extends Model {
       created_at: new Date(),
       version: lastVersion + 1,
       status_id: plan.statusId,
-      user_id: userId
+      user_id: userId,
     });
 
     return snapshotRecord;
