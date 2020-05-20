@@ -4,6 +4,7 @@ import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PLAN_STATUS } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 
 const dm = new DataManager(config);
 const {
@@ -60,8 +61,28 @@ export default class PlanStatusController {
       const updatedPlan = await Plan.update(db, { id: planId }, body);
 
       // If the new status was legal, create a snapshot after updating
-      if (Plan.isLegal(updatedPlan)) {
+      if (Plan.isLegal(updatedPlan) || status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
         await Plan.createSnapshot(db, planId, user.id);
+      }
+
+      if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+        const [prevLegal] = await PlanSnapshot.findSummary(db, {
+          plan_id: planId,
+          is_current_legal_version: true,
+        });
+        const { rows: [{ max: lastVersion }] } = await db.raw(`
+          SELECT MAX(version) FROM plan_snapshot
+          WHERE plan_id = ?
+        `, [planId]);
+
+        await PlanSnapshot.create(db, {
+          snapshot: prevLegal.snapshot,
+          plan_id: planId,
+          version: lastVersion + 1,
+          created_at: new Date(),
+          status_id: prevLegal.statusId,
+          user_id: user.id,
+        });
       }
 
       return updatedPlan;
