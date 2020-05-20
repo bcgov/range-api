@@ -66,10 +66,14 @@ export default class PlanStatusController {
       }
 
       if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
-        const [prevLegal] = await PlanSnapshot.findSummary(db, {
-          plan_id: planId,
-          is_current_legal_version: true,
-        });
+        // eslint-disable-next-line no-unused-vars
+        const { rows: [standsReview, standsNotReview, prevLegal] } = await db.raw(`
+          SELECT * FROM plan_snapshot 
+          WHERE status_id = ANY(?) 
+          AND plan_id = ?
+          ORDER BY created_at DESC;
+        `, [Plan.legalStatuses, planId]);
+
         const { rows: [{ max: lastVersion }] } = await db.raw(`
           SELECT MAX(version) FROM plan_snapshot
           WHERE plan_id = ?
@@ -80,7 +84,7 @@ export default class PlanStatusController {
           plan_id: planId,
           version: lastVersion + 1,
           created_at: new Date(),
-          status_id: prevLegal.statusId,
+          status_id: prevLegal.status_id,
           user_id: user.id,
         });
       }
