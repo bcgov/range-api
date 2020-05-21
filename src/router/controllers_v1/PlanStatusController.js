@@ -66,13 +66,18 @@ export default class PlanStatusController {
       }
 
       if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+        /*
+         *  The previous legal version should always be right before the "stands"
+         *  version for the minor amendment that was just determined to be
+         *  wrongly made without effect.
+         */
         // eslint-disable-next-line no-unused-vars
-        const { rows: [standsReview, standsNotReview, prevLegal] } = await db.raw(`
-          SELECT * FROM plan_snapshot 
-          WHERE status_id = ANY(?) 
+        const { rows: [stands, prevLegal] } = await db.raw(`
+          SELECT * FROM plan_snapshot_summary
+          WHERE effective_legal_end IS NOT NULL
           AND plan_id = ?
           ORDER BY created_at DESC;
-        `, [Plan.legalStatuses, planId]);
+        `, [planId]);
 
         const { rows: [{ max: lastVersion }] } = await db.raw(`
           SELECT MAX(version) FROM plan_snapshot
