@@ -76,6 +76,7 @@ export default class Plan extends Model {
       'notes', 'alt_business_name', 'agreement_id', 'status_id',
       'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
       'effective_at', 'submitted_at', 'creator_id', 'canonical_id',
+      'is_restored',
     ].map(f => `${Plan.table}.${f}`);
   }
 
@@ -156,7 +157,7 @@ export default class Plan extends Model {
     return result.agreement_id;
   }
 
-  static async createSnapshot(db, planId,userId) {
+  static async createSnapshot(db, planId, userId) {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
       throw errorWithCode('Plan doesn\'t exist', 404);
@@ -187,7 +188,7 @@ export default class Plan extends Model {
       created_at: new Date(),
       version: lastVersion + 1,
       status_id: plan.statusId,
-      user_id: userId
+      user_id: userId,
     });
 
     return snapshotRecord;
@@ -208,7 +209,7 @@ export default class Plan extends Model {
 
     const { snapshot } = planSnapshot;
 
-    await Plan.update(db, { id: planId }, snapshot);
+    await Plan.update(db, { id: planId }, { ...snapshot, isRestored: true });
 
     await Pasture.remove(db, { plan_id: planId });
     const pasturePromises = snapshot.pastures.map(async (pasture) => {
