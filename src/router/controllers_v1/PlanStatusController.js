@@ -4,6 +4,7 @@ import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PLAN_STATUS } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 
 const dm = new DataManager(config);
 const {
@@ -60,8 +61,37 @@ export default class PlanStatusController {
       const updatedPlan = await Plan.update(db, { id: planId }, { ...body, is_restored: false });
 
       // If the new status was legal, create a snapshot after updating
-      if (!originalPlan.isRestored && Plan.isLegal(updatedPlan)) {
+      if (!originalPlan.isRestored && Plan.isLegal(updatedPlan) || status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
         await Plan.createSnapshot(db, planId, user.id);
+      }
+
+      if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+        /*
+         *  The previous legal version should always be right before the "stands"
+         *  version for the minor amendment that was just determined to be
+         *  wrongly made without effect.
+         */
+        // eslint-disable-next-line no-unused-vars
+        const { rows: [stands, prevLegal] } = await db.raw(`
+          SELECT * FROM plan_snapshot_summary
+          WHERE effective_legal_end IS NOT NULL
+          AND plan_id = ?
+          ORDER BY created_at DESC;
+        `, [planId]);
+
+        const { rows: [{ max: lastVersion }] } = await db.raw(`
+          SELECT MAX(version) FROM plan_snapshot
+          WHERE plan_id = ?
+        `, [planId]);
+
+        await PlanSnapshot.create(db, {
+          snapshot: prevLegal.snapshot,
+          plan_id: planId,
+          version: lastVersion + 1,
+          created_at: new Date(),
+          status_id: prevLegal.status_id,
+          user_id: user.id,
+        });
       }
 
       return updatedPlan;
