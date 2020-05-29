@@ -43,6 +43,23 @@ POSTGRESQL_PASSWORD=banana
 POSTGRESQL_USER=app_dv_myra
 ```
 
+If you find yourself on a Windows machine and can't get docker to play nice with WSL or otherwise need to get it rolling on Windows, throw this in .env.ps1, and after installing Make for Windows the below commands will still work, just make sure to run `powershell .env.ps1` first.  If you don't have a policy set yet to run powershell scripts (it is disabled by default) first run `Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser` or just set one for the process, that is up to you.
+
+```
+$env:POSTGRESQL_DATABASE = "myra"
+$env:POSTGRESQL_DATABASE_TEST = "myra_test"
+$env:POSTGRESQL_HOST = "db"
+$env:POSTGRESQL_PORT = "5432"
+
+$env:PROJECT = "myra_range"
+$env:ENVIRONMENT = "development"
+$env:API_PORT = "8080"
+$env:BUILD_TARGET = "base"
+
+$env:POSTGRESQL_PASSWORD = "banana"
+$env:POSTGRESQL_USER = "app_dv_myra"
+```
+
 **Note that these environment variables _must_ be available in your shell. You can use a tool like `direnv`, or run `source .env` directly.**
 
 > If using `direnv`, create a `.envrc` file containing `dotenv` to automatically load the environment variables into your shell. (https://github.com/direnv/direnv/issues/284#issuecomment-315275436)
