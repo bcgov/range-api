@@ -61,7 +61,11 @@ export default class PlanStatusController {
       const updatedPlan = await Plan.update(db, { id: planId }, body);
 
       // If the new status was legal, create a snapshot after updating
-      if (Plan.isLegal(updatedPlan) || status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+      if (
+        Plan.isLegal(updatedPlan)
+        || status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT
+        || status.code === PLAN_STATUS.NOT_APPROVED
+      ) {
         await Plan.createSnapshot(db, planId, user.id);
       }
 
@@ -75,6 +79,29 @@ export default class PlanStatusController {
         const { rows: [stands, prevLegal] } = await db.raw(`
           SELECT * FROM plan_snapshot_summary
           WHERE effective_legal_end IS NOT NULL
+          AND plan_id = ?
+          ORDER BY created_at DESC;
+        `, [planId]);
+
+        const { rows: [{ max: lastVersion }] } = await db.raw(`
+          SELECT MAX(version) FROM plan_snapshot
+          WHERE plan_id = ?
+        `, [planId]);
+
+        await PlanSnapshot.create(db, {
+          snapshot: prevLegal.snapshot,
+          plan_id: planId,
+          version: lastVersion + 1,
+          created_at: new Date(),
+          status_id: prevLegal.status_id,
+          user_id: user.id,
+        });
+      }
+
+      if (status.code === PLAN_STATUS.NOT_APPROVED) {
+        const { rows: [prevLegal] } = await db.raw(`
+          SELECT * FROM plan_snapshot_summary
+          WHERE is_current_legal_version = true
           AND plan_id = ?
           ORDER BY created_at DESC;
         `, [planId]);
