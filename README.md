@@ -25,6 +25,8 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 
 ## Usage
 
+See below for env vars to set up before running `make local-setup && make run-local` to start development with docker containers for the api and db.  Read on for how to run a separate set of containers for running tests.
+
 ### Environment variables
 
 Before being able to run the API and/or tests, you need to setup some environment variables. Copy and paste this into a `.env` file:
