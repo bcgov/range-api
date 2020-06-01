@@ -490,8 +490,8 @@ const prepareTestSetup = async () => {
     const katie = await User.findOne(db, { username: "idir\\kmenke" });
     await Zone.update(db, { code: "TEST2" }, { user_id: katie.id });
     await Zone.update(db, { code: "TEST4" }, { user_id: katie.id });
-    const amir = await User.findOne(db, { username: "idir\\ashayega" });
-    await Zone.update(db, { code: "TEST3" }, { user_id: amir.id });
+    const githubrangeofficer = await User.findOne(db, { username: "githubrangeofficer" });
+    await Zone.update(db, { code: "TEST3" }, { user_id: githubrangeofficer.id });
     const rangeAppTester = await User.findOne(db, {
       username: "bceid\\rangeapptester"
     });

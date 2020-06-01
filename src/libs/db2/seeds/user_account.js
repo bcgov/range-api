@@ -27,10 +27,10 @@ const table = 'user_account';
 exports.seed = async (knex) => {
   const ref = [
     {
-      username: 'rangestaff',
+      username: 'githubrangeofficer',
       given_name: 'Range',
       family_name: 'Staff',
-      email: 'amir+1@freshworks.io',
+      email: 'rangeofficeroftheweb@internet.org',
       active: true,
     },
     {
