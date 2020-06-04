@@ -266,7 +266,7 @@ export default class Agreement extends Model {
     // if latestPlan && staffDraft returns the most recent plan except the one whose status is staff draft
     // if latestPlan && !staffDraft returns the most recent plan
     if (latestPlan) {
-      const planStatusWhere = staffDraft && { code: [PLAN_STATUS.STAFF_DRAFT] };
+      const planStatusWhere = staffDraft || { code: [PLAN_STATUS.STAFF_DRAFT] };
       const notAllowedStatuses = await PlanStatus.find(this.db, planStatusWhere);
       const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
       plans = await Plan.findWithStatusExtension(this.db, where, order, 1, 1, whereNot);
