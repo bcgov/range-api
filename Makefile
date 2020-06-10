@@ -44,6 +44,7 @@ local-test-setup: print-status build-local-test run-db-test seed-local-test clos
 local-test: | print-status test-local
 local-test-watch: | print-status test-local-watch 
 
+e2e-setup: | print-status build-e2e run-db-e2e seed-e2e close-db-e2e
 
 # ------------------------------------------------------------------------------
 # Status Output
@@ -142,6 +143,21 @@ clean-local-test: ## -- Target : Closes and clean local development containers.
 	@echo "+\n++ Make: Closing and cleaning test local container ...\n+"
 	@docker-compose -f test.docker-compose.yml -p myra-test down -v
 
+# E2E tests
+run-e2e:
+	@docker-compose -f e2e.docker-compose.yml -p myra-e2e up -d
+
+build-e2e:
+	@docker-compose -f e2e.docker-compose.yml -p myra-e2e build
+
+run-db-e2e:
+	@docker-compose -f e2e.docker-compose.yml -p myra-e2e up -d db
+
+seed-e2e:
+	@docker-compose -f e2e.docker-compose.yml -p myra-e2e run range_api npm run initialize_docker 
+
+close-db-e2e:
+	@docker-compose -f e2e.docker-compose.yml -p myra-e2e stop db
 
 # ------------------------------------------------------------------------------
 # Helper Commands

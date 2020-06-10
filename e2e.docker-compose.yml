@@ -1,0 +1,48 @@
+version: "3.5"
+
+services:
+  range_api:
+    image: ${PROJECT}-${ENVIRONMENT}-api-e2e-img
+    container_name: ${PROJECT}-${ENVIRONMENT}-e2e-api
+    build:
+      context: ./
+      dockerfile: dev.Dockerfile
+    ports:
+      - 8081:8081
+    volumes:
+      - ./src:/home/nodejs/app/src
+      - ./scripts:/home/nodejs/app/scripts
+      - ./__tests__:/home/nodejs/app/__tests__
+      - ./__testHelpers__:/home/nodejs/app/__testHelpers__
+    environment:
+      - PORT=8081
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_USER=${POSTGRESQL_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - NODE_ENV=${ENVIRONMENT}
+      - POSTGRESQL_PORT=${POSTGRESQL_PORT}
+    networks:
+      - local
+  db:
+    image: ${PROJECT}-${ENVIRONMENT}-postgress-e2e-img
+    container_name: ${PROJECT}-${ENVIRONMENT}-e2e-db
+    build:
+     context: ./services/db
+     dockerfile: Dockerfile
+     args:
+      - PORT:${POSTGRESQL_PORT}
+    environment:
+     - POSTGRES_USER=${POSTGRESQL_USER}
+     - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+     - POSTGRES_DB=${POSTGRESQL_DATABASE}
+    networks:
+      - local
+
+networks:
+  local:
+    driver: bridge
+    name: ${PROJECT}-${ENVIRONMENT}-e2e-network
+volumes:
+  postgres:
+    name: ${PROJECT}-${ENVIRONMENT}-vol-e2e-postgres
