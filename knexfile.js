@@ -13,6 +13,7 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: process.env.POSTGRESQL_HOST,
+      port: process.env.POSTGRESQL_PORT || 5432,
       database: process.env.POSTGRESQL_DATABASE_TEST,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
@@ -31,6 +32,7 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: process.env.POSTGRESQL_HOST,
+      port: process.env.POSTGRESQL_PORT || 5432,
       database: process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
@@ -55,6 +57,7 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: process.env.POSTGRESQL_HOST,
+      port: process.env.POSTGRESQL_PORT || 5432,
       database: process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
