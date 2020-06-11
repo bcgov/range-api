@@ -32,6 +32,8 @@ services:
      dockerfile: Dockerfile
      args:
       - PORT:${POSTGRESQL_PORT}
+    ports:
+      - 5433:5432
     environment:
      - POSTGRES_USER=${POSTGRESQL_USER}
      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
