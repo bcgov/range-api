@@ -43,15 +43,15 @@ exports.up = async function(knex) {
 					(	select 	id 
 						from 	ref_client 
 						where 	client_number = (select client_number from ref_client where id = NEW.client_id)
-					)
+					);
 			)
 	then
 
-        insert into plan_confirmation (plan_id, client_id, confirmed)
-        select      id, 
-                    client_id,
-                    'f'
-        from        plans_existing_for_this_client_id;
+		insert into plan_confirmation (plan_id, client_id, confirmed)
+		select      id, 
+			    client_id,
+			    'f'
+		from        plans_existing_for_this_client_id;
 
 
 	else
@@ -63,10 +63,10 @@ exports.up = async function(knex) {
 				from 	ref_client 
 				where 	client_number = (select client_number from ref_client where id = NEW.client_id)
 			)
-			and plan_id in (select id from plans_existing_for_this_client_id)
+			and plan_id in (select id from plans_existing_for_this_client_id);
 
 
-        end if
+        end if;
 
         RETURN NEW;
 
