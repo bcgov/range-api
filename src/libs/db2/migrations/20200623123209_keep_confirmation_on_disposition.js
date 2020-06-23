@@ -109,7 +109,7 @@ exports.up = async function(knex) {
     await knex.schema.raw(delete_trigger);
 };
 
-exports.up = async function(knex) {
+exports.down = async function(knex) {
     const create_plan_conf_records = `
     drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;
     CREATE FUNCTION update_plan_conf_to_reflect_client_agreement() 
