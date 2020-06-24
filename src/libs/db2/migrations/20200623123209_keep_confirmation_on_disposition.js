@@ -29,15 +29,16 @@ exports.up = async function(knex) {
 
     IF (TG_OP = 'INSERT') THEN
     
-        with plans_existing_for_this_client_id as
-        (select     id, 
-                    agreement_id,
-                    NEW.client_id as client_id
-        from        plan 
-        where       agreement_id = NEW.agreement_id
-        group by    id, agreement_id, client_id)
 
 	if not exists (
+				with plans_existing_for_this_client_id as
+				(select     id, 
+					    agreement_id,
+					    NEW.client_id as client_id
+				from        plan 
+				where       agreement_id = NEW.agreement_id
+				group by    id, agreement_id, client_id)
+
 				select * from plans_existing_for_this_client_id 
 				where 	client_id in 
 					(	select 	id 
@@ -46,6 +47,13 @@ exports.up = async function(knex) {
 					);
 			)
 	then
+		with plans_existing_for_this_client_id as
+		(select     id, 
+			    agreement_id,
+			    NEW.client_id as client_id
+		from        plan 
+		where       agreement_id = NEW.agreement_id
+		group by    id, agreement_id, client_id)
 
 		insert into plan_confirmation (plan_id, client_id, confirmed)
 		select      id, 
@@ -55,15 +63,22 @@ exports.up = async function(knex) {
 
 
 	else
+		with plans_existing_for_this_client_id as
+		(select     id, 
+			    agreement_id,
+			    NEW.client_id as client_id
+		from        plan 
+		where       agreement_id = NEW.agreement_id
+		group by    id, agreement_id, client_id)
 
-	update plan_confirmation
-	set client_id = NEW.client_id
-	where 	client_id in 
-			(	select 	id 
-				from 	ref_client 
-				where 	client_number = (select client_number from ref_client where id = NEW.client_id)
-			)
-			and plan_id in (select id from plans_existing_for_this_client_id);
+		update plan_confirmation
+		set client_id = NEW.client_id
+		where 	client_id in 
+				(	select 	id 
+					from 	ref_client 
+					where 	client_number = (select client_number from ref_client where id = NEW.client_id)
+				)
+				and plan_id in (select id from plans_existing_for_this_client_id);
 
 
         end if;
