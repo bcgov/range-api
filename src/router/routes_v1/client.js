@@ -49,17 +49,33 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Search clients
 router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '' } = req.query;
+  const { term = '', groupByClientNumber = false } = req.query;
 
-  try {
-    if (req.user && req.user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 401);
-    }
+  if (req.user && req.user.isAgreementHolder()) {
+    throw errorWithCode('Unauthorized', 401);
+  }
 
-    const results = await Client.searchByNameWithAllFields(db, term);
+  const results = await Client.searchByNameWithAllFields(db, term);
+
+  if (groupByClientNumber) {
+    const clients = results.reduce((acc, { id, locationCode, ...client }) => {
+      if (acc.find(c => c.clientNumber === client.clientNumber)) {
+        return acc.map(c =>
+          (c.clientNumber === client.clientNumber
+            ? {
+              ...c,
+              ids: [...c.ids, id],
+              locationCodes: [...c.locationCodes, locationCode],
+            }
+            : c));
+      }
+
+      return [...acc, { ...client, ids: [id], locationCodes: [locationCode] }];
+    }, []);
+
+    res.status(200).json(clients).end();
+  } else {
     res.status(200).json(results).end();
-  } catch (err) {
-    throw err;
   }
 }));
 
@@ -80,6 +96,25 @@ router.get('/:clientId', asyncMiddleware(async (req, res) => {
     }
 
     res.status(200).json(results.pop()).end();
+  } catch (err) {
+    throw err;
+  }
+}));
+
+// Get all client records with a given client number
+router.get('/all/:clientNumber', asyncMiddleware(async (req, res) => {
+  const {
+    clientNumber,
+  } = req.params;
+
+  try {
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 401);
+    }
+
+    const clients = await Client.find(db, { client_number: clientNumber });
+
+    res.status(200).json({ clients }).end();
   } catch (err) {
     throw err;
   }
