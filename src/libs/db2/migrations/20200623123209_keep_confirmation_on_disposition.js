@@ -31,20 +31,21 @@ exports.up = async function(knex) {
     
 
 	if not exists (
-				with plans_existing_for_this_client_id as
-				(select     id, 
+				select     id, 
 					    agreement_id,
 					    NEW.client_id as client_id
 				from        plan 
+				join 		client_agreement on client_agreement.agreement_id = plan.agreement_id
 				where       agreement_id = NEW.agreement_id
-				group by    id, agreement_id, client_id)
+				
+				and
+					client_id in 
+						(	select 	id 
+							from 	ref_client 
+							where 	client_number = (select client_number from ref_client where id = NEW.client_id)
+						)
+				group by    id, agreement_id, client_id
 
-				select * from plans_existing_for_this_client_id 
-				where 	client_id in 
-					(	select 	id 
-						from 	ref_client 
-						where 	client_number = (select client_number from ref_client where id = NEW.client_id)
-					);
 			)
 	then
 		with plans_existing_for_this_client_id as
