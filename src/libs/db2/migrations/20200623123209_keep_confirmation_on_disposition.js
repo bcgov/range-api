@@ -39,7 +39,7 @@ exports.up = async function(knex) {
 				where       plan.agreement_id = NEW.agreement_id
 				
 				and
-					cleint_agreement.client_id in 
+					client_agreement.client_id in 
 						(	select 	id 
 							from 	ref_client 
 							where 	client_number = (select client_number from ref_client where id = NEW.client_id)
