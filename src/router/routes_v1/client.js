@@ -24,11 +24,16 @@ import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
+import Plan from '../../libs/db2/model/plan';
+import { PlanRouteHelper } from '../helpers';
 
 const dm = new DataManager(config);
 const {
   db,
   Client,
+  ClientAgreement,
+  Agreement,
+  User,
 } = dm;
 
 const router = new Router();
@@ -83,6 +88,61 @@ router.get('/:clientId', asyncMiddleware(async (req, res) => {
   } catch (err) {
     throw err;
   }
+}));
+
+router.get('/agreements/:planId', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+  } = req.params;
+
+  if (!req.user || req.user.isAgreementHolder()) {
+    throw errorWithCode('Unauthorized', 401);
+  }
+
+  const { agreementId } = await Plan.findOne(db, { id: planId });
+
+  await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
+
+  const clientAgreements = await ClientAgreement.find(db, { agreement_id: agreementId });
+
+  const clientAgreementObjects = await Promise.all(
+    clientAgreements.map(async (ca) => {
+      const clientAgreement = ca;
+
+      const client = await Client.findOne(db, { id: clientAgreement.clientId });
+      clientAgreement.client = client;
+
+      if (clientAgreement.agentId) {
+        const agent = await User.findOne(db, { id: clientAgreement.agentId });
+        clientAgreement.agent = agent;
+      }
+    }),
+  );
+
+  res.json(clientAgreementObjects).end();
+}));
+
+router.put('/agreements/:planId/:clientAgreementId', asyncMiddleware(async (req, res) => {
+  const {
+    planId,
+    clientAgreementId,
+  } = req.params;
+  const {
+    user,
+    body,
+  } = req;
+
+  if (!user || user.isAgreementHolder()) {
+    throw errorWithCode('Unauthorized', 401);
+  }
+
+  const { agreementId } = await Plan.findOne(db, { id: planId });
+
+  await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
+
+  const clientAgreement = await ClientAgreement.update(db, { id: clientAgreementId }, body);
+
+  res.json(clientAgreement).end();
 }));
 
 module.exports = router;
