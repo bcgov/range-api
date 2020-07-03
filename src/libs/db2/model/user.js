@@ -142,10 +142,10 @@ export default class User extends Model {
 
       const res = await db.raw(
         `
-        SELECT user_account.*, ref_client.client_number FROM user_account
+        SELECT DISTINCT ON (user_account.id) user_id, user_account.*, ref_client.client_number FROM user_account
         LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
         LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
-        WHERE user_account.id = ANY (?) ORDER BY ?;
+        WHERE user_account.id = ANY (?) ORDER BY user_account.id, ?;
       `,
         [userIds, order],
       );
