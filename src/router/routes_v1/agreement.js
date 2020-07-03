@@ -40,7 +40,7 @@ const {
   ClientAgreement,
 } = dm2;
 
-const allowableIDsForUser = async (user, agreementIDs) => {
+const allowableIDsForUser = async (user, agreementIDs, selectedZoneIds) => {
   let okIDs = [];
   if (user.isAgreementHolder()) {
     const clientIds = await user.getLinkedClientIds(db);
@@ -52,8 +52,13 @@ const allowableIDsForUser = async (user, agreementIDs) => {
 
     okIDs = agreementIDs.filter(id => allowableAgreementIds.includes(id));
   } else if (user.isRangeOfficer()) {
-    const zones = await Zone.find(db, { user_id: user.id });
-    const zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
+    let zpromise
+    if(selectedZoneIds === undefined || selectedZoneIds[0] === "") {
+      const zones = await Zone.find(db, { user_id: user.id });
+      zpromise = zones.map(zone => Agreement.agreementsForZoneId(db, zone.id));
+    } else {
+      zpromise = selectedZoneIds.map(zoneId => Agreement.agreementsForZoneId(db, zoneId));
+    }
     const myIDs = flatten(await Promise.all(zpromise));
     okIDs = agreementIDs.filter(id => myIDs.includes(id));
   } else {
@@ -96,6 +101,19 @@ const getAgreeementsForAH = async ({
   );
   return agreements;
 };
+
+const getAgreementsForZones = async ({ page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
+selectedZoneIds, latestPlan = false, sendFullPlan = true, staffDraft = true,
+
+}) => {
+
+  const agreements = await Agreement.findWithAllRelations(
+    db, { zone_id: selectedZoneIds }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
+  );
+
+  return agreements;
+
+}
 
 const getAgreementsForRangeOfficer = async ({
   page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
@@ -153,7 +171,13 @@ router.get('/', asyncMiddleware(async (req, res) => {
 // Search agreements by RAN, contact name, and client name. This is only used by Web
 router.get('/search', asyncMiddleware(async (req, res) => {
   const { user, query } = req;
-  const { term = '', orderBy = 'agreement.forest_file_id', order = 'asc' } = query;
+  const { term = '', orderBy = 'agreement.forest_file_id', order = 'asc', selectedZones = "" } = query;
+
+  let zones
+
+  if(selectedZones !== "") {
+    zones = selectedZones.split(",")
+  }
 
   const page = Number(query.page || 1);
   const limit = Number(query.limit || 10);
@@ -175,7 +199,7 @@ router.get('/search', asyncMiddleware(async (req, res) => {
       // remove duplicate ids
       const nonDuplicateIDs = allIDs.filter((v, i) => allIDs.indexOf(v) === i);
 
-      const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs);
+      const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs, zones);
       totalItems = okIDs.length;
 
       const latestPlan = true;
@@ -186,25 +210,32 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         latestPlan, sendFullPlan, staffDraft, orderBy, order,
       );
     } else {
-      const count = await agreementCountForUser(req.user);
 
-      if (user.isAgreementHolder()) {
-        agreements = await getAgreeementsForAH({ user, page, limit, orderBy, order });
-      } else if (user.isRangeOfficer()) {
-        agreements = await getAgreementsForRangeOfficer({
-          user,
-          page,
-          limit,
-          sendFullPlan: false,
-          orderBy,
-          order,
-        });
-      } else if (user.isAdministrator()) {
-        agreements = await getAgreementsForAdmin({ page, limit, orderBy, order });
+      if(zones === undefined || zones[0] === "") {
+        const count = await agreementCountForUser(req.user);
+
+        if (user.isAgreementHolder()) {
+          agreements = await getAgreeementsForAH({ user, page, limit, orderBy, order });
+        } else if (user.isRangeOfficer()) {
+
+          agreements = await getAgreementsForRangeOfficer({
+            user,
+            page,
+            limit,
+            sendFullPlan: false,
+            orderBy,
+            order,
+          });
+        } else if (user.isAdministrator()) {
+          agreements = await getAgreementsForAdmin({ page, limit, orderBy, order });
+        } else {
+          throw errorWithCode('Unable to determine user role', 500);
+        }
+        totalItems = count;
       } else {
-        throw errorWithCode('Unable to determine user role', 500);
+        agreements = await getAgreementsForZones({selectedZoneIds: zones})
+        totalItems = agreements.length
       }
-      totalItems = count;
     }
 
     agreements.map(agreement => agreement.transformToV1());
