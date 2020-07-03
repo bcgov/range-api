@@ -27,7 +27,7 @@ import Model from './model';
 export default class ClientType extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'agreement_id', 'client_id', 'client_type_id']
+    return ['id', 'agreement_id', 'client_id', 'client_type_id', 'agent_id']
       .map(field => `${this.table}.${field}`);
   }
 
