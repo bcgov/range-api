@@ -576,10 +576,10 @@ const updateFTAData = async (licensee, client, usage) => {
   msg = msg + (await updateUser(licensee)) + "\n";
   msg = msg + (await updateAgreement(licensee)) + "\n";
 
-    //delete stales first
-  msg = msg + (await updateClient(client.filter(item => ['P', 'C'].includes(item.forest_file_client_type_code)))) + "\n";
-    //create where missing
+    //create where missing, dispositions with signed plans will get client_id updated in plan_conf
   msg = msg + (await updateClient(client.filter(item => ['A', 'B'].includes(item.forest_file_client_type_code)))) + "\n";
+    //delete stales last
+  msg = msg + (await updateClient(client.filter(item => ['P', 'C'].includes(item.forest_file_client_type_code)))) + "\n";
 
 
   msg = msg + (await updateDistrict(licensee)) + "\n";
