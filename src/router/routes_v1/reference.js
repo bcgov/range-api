@@ -48,7 +48,6 @@ const {
   ManagementConsiderationType,
   AdditionalRequirementCategory,
   Zone,
-  User
 } = dm;
 
 const router = new Router();
@@ -75,7 +74,6 @@ router.get('/', asyncMiddleware(async (req, res) => {
     const managementConsiderationType = await ManagementConsiderationType.find(db, where);
     const additionalRequirementCategory = await AdditionalRequirementCategory.find(db, where);
     const zones = await Zone.find(db, {});
-    const users = await User.find(db, { id: zones.map(zone => zone.userId) })
 
     const errorMessage = 'Unable to fetch reference data';
 
@@ -97,8 +95,7 @@ router.get('/', asyncMiddleware(async (req, res) => {
       MONITORING_AREA_PURPOSE_TYPE: monitoringAreaPurposeType || { error: errorMessage },
       MANAGEMENT_CONSIDERATION_TYPE: managementConsiderationType || { error: errorMessage },
       ADDITIONAL_REQUIREMENT_CATEGORY: additionalRequirementCategory || { error: errorMessage },
-      ZONES: zones || {error: errorMessage},
-      USERS: users || {error: errorMessage}
+      ZONES: zones || { error: errorMessage },
     };
 
     res.status(200).json(response);
