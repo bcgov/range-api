@@ -111,7 +111,7 @@ router.get('/agreements/:planId', asyncMiddleware(async (req, res) => {
     planId,
   } = req.params;
 
-  if (!req.user || req.user.isAgreementHolder()) {
+  if (!req.user) {
     throw errorWithCode('Unauthorized', 401);
   }
 
@@ -132,6 +132,8 @@ router.get('/agreements/:planId', asyncMiddleware(async (req, res) => {
         const agent = await User.findOne(db, { id: clientAgreement.agentId });
         clientAgreement.agent = agent;
       }
+
+      return clientAgreement;
     }),
   );
 
