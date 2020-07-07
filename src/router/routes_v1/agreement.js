@@ -46,7 +46,8 @@ const allowableIDsForUser = async (user, agreementIDs, selectedZoneIds = []) => 
     const clientIds = await user.getLinkedClientIds(db);
 
     const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
-    const allowableAgreementIds = clientAgreements.map(
+    const agentAgreements = await ClientAgreement.find(db, { agent_id: user.id });
+    const allowableAgreementIds = [...agentAgreements, ...clientAgreements].map(
       clientAgreement => clientAgreement.agreementId,
     );
 
@@ -100,12 +101,26 @@ const getAgreeementsForAH = async ({
   const clientIds = await user.getLinkedClientIds(db);
 
   const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
-  const agreementIds = clientAgreements.map(clientAgreement => clientAgreement.agreementId);
+  const agentClientAgreements = await ClientAgreement.find(db, { agent_id: user.id });
+  const agreementIds = [...clientAgreements, ...agentClientAgreements]
+    .map(clientAgreement => clientAgreement.agreementId);
 
   const agreements = await Agreement.findWithAllRelations(
-    db, { forest_file_id: agreementIds }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
+    db,
+    { forest_file_id: agreementIds },
+    page,
+    limit,
+    latestPlan,
+    sendFullPlan,
+    staffDraft,
+    orderBy,
+    order,
   );
-  return agreements;
+  return agreements.map((a) => {
+    const agreement = a;
+    agreement.isAgent = agentClientAgreements.some(ca => ca.agreementId === a.id);
+    return a;
+  });
 };
 
 const getAgreementsForZones = async ({
