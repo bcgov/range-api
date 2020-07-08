@@ -34,7 +34,7 @@ export default class PlanConfirmation extends Model {
   }
 
   static get fields() {
-    return ['id', 'plan_id', 'client_id', 'confirmed', 'created_at', 'updated_at'];
+    return ['id', 'plan_id', 'client_id', 'confirmed', 'created_at', 'updated_at', 'user_id', 'is_own_signature'];
   }
 
   static get table() {

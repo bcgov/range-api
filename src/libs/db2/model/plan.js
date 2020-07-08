@@ -729,6 +729,12 @@ export default class Plan extends Model {
     const confirmations = await PlanConfirmation.find(
       this.db, { plan_id: this.id },
     );
+    for (const confirmation of confirmations) {
+      if (confirmation.userId) {
+        const user = await User.findOne(this.db, { id: confirmation.userId });
+        confirmation.user = user;
+      }
+    }
     this.confirmations = confirmations || [];
   }
 
