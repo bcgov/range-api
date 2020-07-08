@@ -201,6 +201,8 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
       .table('client_agreement')
       .whereIn('client_agreement.client_id', clientIds)
       .andWhere({ agreement_id: agreement.forestFileId })
+      .orWhere('client_agreement.agent_id', this.id)
+      .andWhere({ agreement_id: agreement.forestFileId })
       .count();
     const { count } = result || {};
     return count !== '0';
