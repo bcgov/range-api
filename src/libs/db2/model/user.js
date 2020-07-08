@@ -210,11 +210,12 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
 
   if (this.isRangeOfficer()) {
     const [result] = await db
-      .table("agreement")
-      .join("ref_zone", { "agreement.zone_id": "ref_zone.id" })
+      .table('agreement')
+      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+      .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
       .where({
-        "ref_zone.user_id": this.id,
-        "agreement.forest_file_id": agreement.forestFileId
+        'ref_zone.district_id': db.ref('ref_district.id'),
+        'agreement.forest_file_id': agreement.forestFileId,
       })
       .count();
     const { count } = result || {};
