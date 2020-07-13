@@ -355,6 +355,29 @@ export default class PlanController {
     res.json(planFile).end();
   }
 
+  static async updateAttachment(req, res) {
+    const { params, user, body } = req;
+    const { planId, attachmentId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+    const planFile = await PlanFile.findById(db, attachmentId);
+    if (!planFile) {
+      throw errorWithCode('Could not find file', 404);
+    }
+
+    const newPlanFile = await PlanFile.update(db, { id: attachmentId }, {
+      access: body.access ?? 'staff_only',
+    });
+
+    res.json(newPlanFile).end();
+  }
+
   static async removeAttachment(req, res) {
     const { params, user } = req;
     const { planId, attachmentId } = params;
