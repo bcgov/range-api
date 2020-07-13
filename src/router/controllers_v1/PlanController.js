@@ -13,6 +13,7 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
+  PlanFile,
 } = dm;
 
 export default class PlanController {
@@ -328,5 +329,49 @@ export default class PlanController {
       .whereIn('id', versionIdsToDiscard);
 
     res.status(200).end();
+  }
+
+  static async storeAttachment(req, res) {
+    const { params, user, body } = req;
+    const { planId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const planFile = await PlanFile.create(db, {
+      name: body.name,
+      url: body.url,
+      type: body.type,
+      access: body.access ?? 'staff_only',
+      plan_id: planId,
+      user_id: user.id,
+    });
+
+    res.json(planFile).end();
+  }
+
+  static async removeAttachment(req, res) {
+    const { params, user } = req;
+    const { planId, attachmentId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const result = await PlanFile.removeById(db, attachmentId);
+
+    if (result === 0) {
+      throw errorWithCode('Could not find attachment', 400);
+    }
+
+    res.status(204).end();
   }
 }

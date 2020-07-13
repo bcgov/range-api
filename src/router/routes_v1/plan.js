@@ -61,6 +61,12 @@ router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.stor
 // discard amendment
 router.post('/:planId?/discard-amendment', asyncMiddleware(PlanController.discardAmendment));
 
+// add attachment
+router.post('/:planId?/attachment', asyncMiddleware(PlanController.storeAttachment));
+
+// remove attachment
+router.delete('/:planId?/attachment/:attachmentId?', asyncMiddleware(PlanController.removeAttachment));
+
 //
 // Versions
 //
