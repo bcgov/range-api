@@ -44,6 +44,7 @@ import MinisterIssueAction from './ministerissueaction';
 import MinisterIssuePasture from './ministerissuepasture';
 import PlanSnapshot from './plansnapshot';
 import Agreement from './agreement';
+import PlanFile from './PlanFile';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -446,6 +447,16 @@ export default class Plan extends Model {
     );
 
     await Promise.all(newStatusHistoryPromises);
+
+    const filePromises = snapshot.files.map(
+      async (file) => {
+        const newFile = await PlanFile.create(db, file);
+
+        return newFile;
+      },
+    );
+
+    await Promise.all(filePromises);
   }
 
   static async duplicateAll(db, planId) {
@@ -723,6 +734,7 @@ export default class Plan extends Model {
     await this.fetchInvasivePlantChecklist();
     await this.fetchAdditionalRequirements();
     await this.fetchManagementConsiderations();
+    await this.fetchFiles();
   }
 
   async fetchPlanConfirmations() {
@@ -810,5 +822,12 @@ export default class Plan extends Model {
     const considerations = await ManagementConsideration.findWithType(this.db, where);
 
     this.managementConsiderations = considerations || [];
+  }
+
+  async fetchFiles() {
+    const where = { plan_id: this.id };
+    const planFiles = await PlanFile.find(this.db, where);
+
+    this.files = planFiles;
   }
 }
