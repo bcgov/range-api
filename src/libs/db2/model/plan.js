@@ -828,6 +828,10 @@ export default class Plan extends Model {
     const where = { plan_id: this.id };
     const planFiles = await PlanFile.find(this.db, where);
 
+    for (const file of planFiles) {
+      file.user = await User.findById(this.db, file.userId)
+    }
+
     this.files = planFiles;
   }
 }
