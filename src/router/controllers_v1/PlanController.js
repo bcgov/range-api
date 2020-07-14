@@ -16,6 +16,19 @@ const {
   PlanFile,
 } = dm;
 
+const filterFiles = (files, user) => files.filter((file) => {
+  switch (file.access) {
+    case 'staff_only':
+      return user.isRangeOfficer() || user.isAdministrator();
+    case 'user_only':
+      return file.userId === user.id;
+    case 'everyone':
+      return true;
+    default:
+      return false;
+  }
+});
+
 export default class PlanController {
   // --
   // Plan Resource / Doc / Table CRUD Operation
@@ -68,6 +81,8 @@ export default class PlanController {
         await plan.eagerloadAllOneToMany();
         plan.agreement = agreement;
 
+        const filteredFiles = filterFiles(plan.files, user);
+
         const mappedGrazingSchedules = await Promise.all(
           plan.grazingSchedules.map(async schedule => ({
             ...schedule,
@@ -78,6 +93,7 @@ export default class PlanController {
         return res.status(200).json({
           ...plan,
           grazingSchedules: mappedGrazingSchedules,
+          files: filteredFiles,
         }).end();
       }
 
@@ -85,8 +101,11 @@ export default class PlanController {
 
       privacyVersion.status_id = statusId;
       logger.info(JSON.stringify(privacyVersion));
+
+      const filteredFiles = filterFiles(privacyVersion.files, user);
       return res.status(200).json({
         ...privacyVersion,
+        files: filteredFiles,
         status: plan.status,
         statusId: plan.statusId,
       }).end();
