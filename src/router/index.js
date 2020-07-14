@@ -38,7 +38,7 @@ import user from './routes_v1/user';
 import zone from './routes_v1/zone';
 import feedback from './routes_v1/feedback';
 import version from './routes_v1/version';
-import upload from './routes_v1/upload';
+import files from './routes_v1/files';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -61,5 +61,5 @@ module.exports = (app) => {
   app.use('/api/v1/report', report);
   app.use('/api/v1/user', user);
   app.use('/api/v1/feedback', feedback);
-  app.use('/api/v1/upload', upload);
+  app.use('/api/v1/files', files);
 };

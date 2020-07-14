@@ -1,6 +1,13 @@
 import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
 import * as Minio from 'minio';
 import { Router } from 'express';
+import DataManager from '../../libs/db2';
+
+const dm = new DataManager();
+const {
+  db,
+  PlanFile,
+} = dm;
 
 const endPoint = process.env.MINIO_ENDPOINT;
 const publicEndPoint = process.env.MINIO_PUBLIC_ENDPOINT;
@@ -40,12 +47,53 @@ const client = new Minio.Client({
 
 const router = new Router();
 
-router.get('/signed-url', asyncMiddleware(async (req, res) => {
+router.get('/upload-url', asyncMiddleware(async (req, res) => {
   if (!req.query.name) {
     throw errorWithCode('You must provide a filename via the `name` parameter', 400);
   }
 
   const url = await client.presignedPutObject(bucket, req.query.name);
+
+  res.json({
+    url: publicEndPoint
+      ? url.replace(endPoint, publicEndPoint)
+      : url,
+  });
+}));
+
+router.get('/download-url', asyncMiddleware(async (req, res) => {
+  const { user } = req;
+
+  if (!req.query.id) {
+    throw errorWithCode('You must provide the file id via the `id` parameter', 400);
+  }
+
+  const planFile = await PlanFile.findById(db, Number(req.query.id));
+
+  if (!planFile) {
+    throw errorWithCode('File does not exist', 404);
+  }
+
+  const { access } = planFile;
+
+  switch (access) {
+    case 'staff_only':
+      if (!user.isRangeOfficer() && !user.isAdministrator()) {
+        throw errorWithCode('Unauthorized', 403);
+      }
+      break;
+    case 'user_only':
+      if (user.id !== planFile.userId) {
+        throw errorWithCode('Unauthorized', 403);
+      }
+      break;
+    case 'everyone':
+      break;
+    default:
+      throw errorWithCode('Unauthorized', 403);
+  }
+
+  const url = await client.presignedGetObject(bucket, planFile.name);
 
   res.json({
     url: publicEndPoint
