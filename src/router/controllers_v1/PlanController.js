@@ -55,7 +55,7 @@ export default class PlanController {
       const { agreementId } = plan;
       const statusId = plan?.status?.id;
 
-      const isStaff = user.isAdministrator() || user.isRangeOfficer();
+      const isStaff = user.isAdministrator() || user.isRangeOfficer() || user.isDecisionMaker();
 
       const [privacyVersionRaw] = await PlanSnapshot.findSummary(db,
         { plan_id: planId,
@@ -72,7 +72,7 @@ export default class PlanController {
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
         db, { forest_file_id: agreementId },
       );
-      await agreement.eagerloadAllOneToManyExceptPlan();// todo determine if this matters
+      await agreement.eagerloadAllOneToManyExceptPlan();
       agreement.transformToV1();
 
 
@@ -89,6 +89,7 @@ export default class PlanController {
             sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
           })),
         );
+        console.log(plan);
 
         return res.status(200).json({
           ...plan,
