@@ -222,6 +222,20 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
     return count !== "0";
   }
 
+  if (this.isDecisionMaker()) {
+    const [result] = await db
+      .table('agreement')
+      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+      .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+      .where({
+        'ref_district.user_id': this.id,
+        'agreement.forest_file_id': agreement.forestFileId,
+      })
+      .count();
+    const { count } = result || {};
+    return count !== '0';
+  }
+
   return false;
 };
 
@@ -235,4 +249,8 @@ User.prototype.isAgreementHolder = function() {
 
 User.prototype.isRangeOfficer = function() {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
+};
+
+User.prototype.isDecisionMaker = function() {
+  return this.roles && this.roles.includes(SSO_ROLE_MAP.DECISION_MAKER);
 };
