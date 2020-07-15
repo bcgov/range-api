@@ -29,6 +29,7 @@ import { flatten } from 'lodash';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import { isNumeric } from '../../libs/utils';
+import District from '../../libs/db2/model/district';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -62,6 +63,11 @@ const allowableIDsForUser = async (user, agreementIDs, selectedZoneIds = []) => 
     }
     const myIDs = flatten(await Promise.all(zpromise));
     okIDs = agreementIDs.filter(id => myIDs.includes(id));
+  } else if (user.isDecisionMaker()) {
+    const districts = await District.find(db, { user_id: user.id });
+    const zones = await Zone.find(db, { district_id: districts.map(d => d.id) });
+    const agreements = await Agreement.find(db, { zone_id: zones.map(z => z.id) });
+    okIDs = agreementIDs.filter(id => agreements.some(a => a.forestFileId === id));
   } else {
     okIDs = agreementIDs;
   }
@@ -75,12 +81,17 @@ const agreementCountForUser = async (user) => {
     const ids = await Agreement.agreementsForClientId(db, user.clientId);
     count = ids.length;
   } else if (user.isRangeOfficer()) {
-    const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
+    const zones = await Zone.findWithDistrictUser(db, { 'ref_zone.user_id': user.id });
     const zids = zones.map(zone => zone.id);
     const ids = await Agreement.find(db, { zone_id: zids });
     count = ids.length;
   } else if (user.isAdministrator()) {
     count = await Agreement.count(db);
+  } else if (user.isDecisionMaker()) {
+    const districts = await District.find(db, { user_id: user.id });
+    const zones = await Zone.find(db, { district_id: districts.map(d => d.id) });
+    const agreements = await Agreement.find(db, { zone_id: zones.map(z => z.id) });
+    count = agreements.length;
   } else {
     throw errorWithCode('Unable to determine user roll', 500);
   }
@@ -123,6 +134,28 @@ const getAgreeementsForAH = async ({
   });
 };
 
+const getAgreeementsForDM = async ({
+  page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
+  user, latestPlan = true, sendFullPlan = false, staffDraft = false,
+}) => {
+  const districts = await District.find(db, { user_id: user.id });
+
+  const zones = await Zone.find(db, { district_id: districts.map(d => d.id) });
+
+  const agreements = await Agreement.findWithAllRelations(
+    db,
+    { zone_id: zones.map(z => z.id) },
+    page,
+    limit,
+    latestPlan,
+    sendFullPlan,
+    staffDraft,
+    orderBy,
+    order,
+  );
+  return agreements;
+};
+
 const getAgreementsForZones = async ({
   page = undefined,
   limit = undefined,
@@ -152,7 +185,7 @@ const getAgreementsForRangeOfficer = async ({
   page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = false, sendFullPlan = true, staffDraft = true,
 }) => {
-  const zones = await Zone.findWithDistrictUser(db, { user_id: user.id });
+  const zones = await Zone.findWithDistrictUser(db, { 'ref_zone.user_id': user.id });
   const ids = zones.map(zone => zone.id);
   const agreements = await Agreement.findWithAllRelations(
     db, { zone_id: ids }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
@@ -238,36 +271,40 @@ router.get('/search', asyncMiddleware(async (req, res) => {
         db, { forest_file_id: okIDs }, page, limit,
         latestPlan, sendFullPlan, staffDraft, orderBy, order,
       );
-    } else if (zones.length === 0) {
-      const count = await agreementCountForUser(req.user);
+    } else {
+      const count = zones.length === 0
+        ? await agreementCountForUser(req.user)
+        : await agreementCountForZones(zones);
 
       if (user.isAgreementHolder()) {
         agreements = await getAgreeementsForAH({ user, page, limit, orderBy, order });
       } else if (user.isRangeOfficer()) {
-        agreements = await getAgreementsForRangeOfficer({
-          user,
-          page,
-          limit,
-          sendFullPlan: false,
-          orderBy,
-          order,
-        });
+        if (zones.length === 0) {
+          agreements = await getAgreementsForRangeOfficer({
+            user,
+            page,
+            limit,
+            sendFullPlan: false,
+            orderBy,
+            order,
+          });
+        } else {
+          agreements = await getAgreementsForZones({
+            selectedZoneIds: zones,
+            page,
+            limit,
+            orderBy,
+            order,
+          });
+        }
+      } else if (user.isDecisionMaker()) {
+        agreements = await getAgreeementsForDM({ user, page, limit, orderBy, order });
       } else if (user.isAdministrator()) {
         agreements = await getAgreementsForAdmin({ page, limit, orderBy, order });
       } else {
         throw errorWithCode('Unable to determine user roll', 500);
       }
       totalItems = count;
-    } else {
-      totalItems = await agreementCountForZones(zones);
-
-      agreements = await getAgreementsForZones({
-        selectedZoneIds: zones,
-        page,
-        limit,
-        orderBy,
-        order,
-      });
     }
 
     agreements.map(agreement => agreement.transformToV1());
