@@ -23,6 +23,12 @@ services:
       - POSTGRESQL_HOST=${POSTGRESQL_HOST}
       - NODE_ENV=${ENVIRONMENT}
       - POSTGRESQL_PORT=${POSTGRESQL_PORT}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PUBLIC_ENDPOINT=localhost
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=secretminiokey123
+      - MINIO_BUCKET=myra-dev
     networks:
       - local
   db:
@@ -43,6 +49,34 @@ services:
       - local
     volumes:
       - postgres:/var/lib/postgresql/data
+  minio:
+    image: minio/minio
+    volumes:
+      - minio-data:/data/minio
+    ports:
+      - 9000
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: secretminiokey123
+      MINIO_DOMAIN: localhost 
+    command: server /data/minio 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - local
+  minio-nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 9000:9000
+    depends_on:
+      - minio
+    networks:
+      - local
 
 networks:
   local:
@@ -51,3 +85,5 @@ networks:
 volumes:
   postgres:
     name: ${PROJECT}-${ENVIRONMENT}-vol-postgres
+  minio-data:
+    name: minio-data-dev

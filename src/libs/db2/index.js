@@ -62,6 +62,7 @@ import UserFeedback from './model/userfeedback';
 import Version from './model/version';
 import config from '../../config';
 import UserClientLink from './model/userclientlink';
+import PlanFile from './model/PlanFile';
 
 export const connection = knex({
   client: 'pg',
@@ -136,5 +137,6 @@ export default class DataManager {
     this.UserFeedback = UserFeedback;
     this.Version = Version;
     this.UserClientLink = UserClientLink;
+    this.PlanFile = PlanFile;
   }
 }

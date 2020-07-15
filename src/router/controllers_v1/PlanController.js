@@ -13,7 +13,21 @@ const {
   PlanConfirmation,
   PlanStatus,
   AdditionalRequirement,
+  PlanFile,
 } = dm;
+
+const filterFiles = (files, user) => files.filter((file) => {
+  switch (file.access) {
+    case 'staff_only':
+      return user.isRangeOfficer() || user.isAdministrator();
+    case 'user_only':
+      return file.userId === user.id;
+    case 'everyone':
+      return true;
+    default:
+      return false;
+  }
+});
 
 export default class PlanController {
   // --
@@ -67,6 +81,8 @@ export default class PlanController {
         await plan.eagerloadAllOneToMany();
         plan.agreement = agreement;
 
+        const filteredFiles = filterFiles(plan.files, user);
+
         const mappedGrazingSchedules = await Promise.all(
           plan.grazingSchedules.map(async schedule => ({
             ...schedule,
@@ -77,6 +93,7 @@ export default class PlanController {
         return res.status(200).json({
           ...plan,
           grazingSchedules: mappedGrazingSchedules,
+          files: filteredFiles,
         }).end();
       }
 
@@ -84,8 +101,11 @@ export default class PlanController {
 
       privacyVersion.status_id = statusId;
       logger.info(JSON.stringify(privacyVersion));
+
+      const filteredFiles = filterFiles(privacyVersion.files, user);
       return res.status(200).json({
         ...privacyVersion,
+        files: filteredFiles,
         status: plan.status,
         statusId: plan.statusId,
       }).end();
@@ -328,5 +348,72 @@ export default class PlanController {
       .whereIn('id', versionIdsToDiscard);
 
     res.status(200).end();
+  }
+
+  static async storeAttachment(req, res) {
+    const { params, user, body } = req;
+    const { planId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const planFile = await PlanFile.create(db, {
+      name: body.name,
+      url: body.url,
+      type: body.type,
+      access: body.access ?? 'staff_only',
+      plan_id: planId,
+      user_id: user.id,
+    });
+
+    res.json(planFile).end();
+  }
+
+  static async updateAttachment(req, res) {
+    const { params, user, body } = req;
+    const { planId, attachmentId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+    const planFile = await PlanFile.findById(db, attachmentId);
+    if (!planFile) {
+      throw errorWithCode('Could not find file', 404);
+    }
+
+    const newPlanFile = await PlanFile.update(db, { id: attachmentId }, {
+      access: body.access ?? 'staff_only',
+    });
+
+    res.json(newPlanFile).end();
+  }
+
+  static async removeAttachment(req, res) {
+    const { params, user } = req;
+    const { planId, attachmentId } = params;
+
+    if (!user || !user.isRangeOfficer()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const agreementId = await Plan.agreementForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+    const result = await PlanFile.removeById(db, attachmentId);
+
+    if (result === 0) {
+      throw errorWithCode('Could not find attachment', 400);
+    }
+
+    res.status(204).end();
   }
 }
