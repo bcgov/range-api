@@ -36,6 +36,7 @@ describe('Test agreement route', () => {
     delete passport.aUser.isAdministrator;
     delete passport.aUser.getLinkedClientIds;
     passport.aUser.isAgreementHolder = () => false;
+    passport.aUser.isDecisionMaker = () => false;
     passport.aUser.canAccessAgreement.mockClear();
   });
 
@@ -159,6 +160,7 @@ describe('Test agreement route search', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
+    passport.aUser.isDecisionMaker = () => false;
     passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.id = 1;
     await request(app)
