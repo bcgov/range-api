@@ -43,6 +43,8 @@ BUILD_TARGET=base
 
 POSTGRESQL_PASSWORD=banana
 POSTGRESQL_USER=app_dv_myra
+
+SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
 ```
 
 If you find yourself on a Windows machine and can't get docker to play nice with WSL or otherwise need to get it rolling on Windows, throw this in .env.ps1, and after installing Make for Windows the below commands will still work, just make sure to run `powershell .env.ps1` first.  If you don't have a policy set yet to run powershell scripts (it is disabled by default) first run `Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser` or just set one for the process, that is up to you.

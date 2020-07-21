@@ -38,6 +38,10 @@ if (env === 'development') {
  * and added to the config.
  */
 
+if (!process.env.SSO_URL) {
+  throw new Error('SSO_URL is not set');
+}
+
 // overrides are always as defined
 nconf.overrides({
   environment: env,
@@ -49,6 +53,13 @@ nconf.overrides({
     database: process.env.POSTGRESQL_DATABASE,
     host: process.env.POSTGRESQL_HOST,
     port: process.env.POSTGRESQL_PORT,
+  },
+  sso: {
+    clientId: 'myrangebc',
+    callback: '/v1/auth/callback',
+    authUrl: `${process.env.SSO_URL}/auth`,
+    tokenUrl: `${process.env.SSO_URL}/token`,
+    certsUrl: `${process.env.SSO_URL}/certs`,
   },
 });
 
