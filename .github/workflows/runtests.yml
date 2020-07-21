@@ -36,6 +36,8 @@ jobs:
 
         POSTGRESQL_PASSWORD: banana
         POSTGRESQL_USER: app_dv_myra
+      
+        SSO_URL: https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
 
         CI: true
       run: |

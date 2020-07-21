@@ -29,6 +29,7 @@ services:
       - MINIO_ACCESS_KEY=minio
       - MINIO_SECRET_KEY=secretminiokey123
       - MINIO_BUCKET=myra-test
+      - SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
     networks:
       - local
   db:
