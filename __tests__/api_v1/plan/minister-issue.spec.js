@@ -2,6 +2,7 @@ import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
+import districtMocks from '../../../__mocks__/fixtures/ref_district_mock.json';
 import zoneMocks from '../../../__mocks__/fixtures/ref_zone_mock.json';
 import agreementMocks from '../../../__mocks__/fixtures/agreement_mock.json';
 import issueMocks from '../../../__mocks__/fixtures/minister_issue_mock.json';
@@ -32,6 +33,7 @@ const body = {
 
 const truncateTables = async () => {
   await dm.db.schema.raw(truncate('user_account'));
+  await dm.db.schema.raw(truncate('ref_district'));
   await dm.db.schema.raw(truncate('ref_zone'));
   await dm.db.schema.raw(truncate('agreement'));
   await dm.db.schema.raw(truncate('client_agreement'));
@@ -62,6 +64,7 @@ describe('Test Minister Issue routes', () => {
     const clientAgreement = clientAgreementMocks[0];
     const planConfirmation = planConfirmationMocks[0];
     await dm.db('user_account').insert([user]);
+    await dm.db('ref_district').insert(districtMocks);
     await dm.db('ref_zone').insert([zone]);
     await dm.db('agreement').insert([agreement]);
     await dm.db('client_agreement').insert([clientAgreement]);
