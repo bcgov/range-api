@@ -39,7 +39,6 @@ if (!bucket) {
 const client = new Minio.Client({
   endPoint,
   port: Number(port),
-  useSSL: process.env.NODE_ENV === 'production',
   accessKey,
   secretKey,
   s3ForcePathStyle: true,
@@ -54,10 +53,12 @@ router.get('/upload-url', asyncMiddleware(async (req, res) => {
 
   const url = await client.presignedPutObject(bucket, req.query.name);
 
+  const publicUrl = publicEndPoint
+    ? url.replace(endPoint, publicEndPoint)
+    : url;
+
   res.json({
-    url: publicEndPoint
-      ? url.replace(endPoint, publicEndPoint)
-      : url,
+    url: process.env.NODE_ENV === 'production' ? publicUrl.replace('http', 'https') : publicUrl,
   });
 }));
 
@@ -95,10 +96,12 @@ router.get('/download-url', asyncMiddleware(async (req, res) => {
 
   const url = await client.presignedGetObject(bucket, planFile.name);
 
+  const publicUrl = publicEndPoint
+    ? url.replace(endPoint, publicEndPoint)
+    : url;
+
   res.json({
-    url: publicEndPoint
-      ? url.replace(endPoint, publicEndPoint)
-      : url,
+    url: process.env.NODE_ENV === 'production' ? publicUrl.replace('http', 'https') : publicUrl,
   });
 }));
 
