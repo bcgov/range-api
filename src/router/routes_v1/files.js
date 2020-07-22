@@ -39,6 +39,7 @@ if (!bucket) {
 const client = new Minio.Client({
   endPoint,
   port: Number(port),
+  useSSL: false,
   accessKey,
   secretKey,
   s3ForcePathStyle: true,
