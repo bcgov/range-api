@@ -62,7 +62,6 @@ export default class PlanController {
           privacyview: isStaff ? 'StaffView' : 'AHView',
         });
       const privacyVersion = privacyVersionRaw?.snapshot;
-      logger.info(JSON.stringify(privacyVersion));
 
       const shouldBeLiveVersion = (privacyVersion == null);
       logger.info(`shouldBeLiveVersion: ${shouldBeLiveVersion}`);
@@ -89,7 +88,6 @@ export default class PlanController {
             sortBy: schedule.sortBy && objPathToCamelCase(schedule.sortBy),
           })),
         );
-        console.log(plan);
 
         return res.status(200).json({
           ...plan,
@@ -101,7 +99,6 @@ export default class PlanController {
       logger.info('loading last version');
 
       privacyVersion.status_id = statusId;
-      logger.info(JSON.stringify(privacyVersion));
 
       const filteredFiles = filterFiles(privacyVersion.files, user);
       return res.status(200).json({
