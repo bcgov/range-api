@@ -7,12 +7,6 @@ The Range Mobile Pathfinder project is developing a suite of applications to sup
 
 The goal is to move important crown land management documents from paper to digital, and to make this information accessible in the field through disconnected mobile devices. This also supports a new and consistent process for Range staff across the province to support decision making processes.
 
-An Agile Scrum team is developing the Alpha product to test basic fuctions after March 31, 2018. Future releases will lead towards an application that can be used by staff and public range use agreement holders, on multiple platforms.
-
-- [For the latest product vision and feature roadmap, please see our RealtimeBoard](https://realtimeboard.com/app/board/o9J_kzhjVKg=/) 
-
-For the Alpha Release, the **API** documented here are supporting both the MyRa iOS application and the Myra Web Application functions. 
-
 ### Related MyRA Documentation
 
 - [MyRA iOS application Github Repository](https://github.com/bcgov/range-ios) (Deprecated by range-web)
@@ -21,11 +15,7 @@ For the Alpha Release, the **API** documented here are supporting both the MyRa 
 - [Our current Sprint Backlog is visible on Github issues checkout the range-web and range-api repos to see what's going on]
 - [See the database Schema on Schema-Spy](http://schema-spy-range-myra-dev.pathfinder.gov.bc.ca/)
 
-## Features
-
 ## Usage
-
-See below for env vars to set up before running `make local-setup && make run-local` to start development with docker containers for the api and db.  Read on for how to run a separate set of containers for running tests.
 
 ### Environment variables
 
@@ -47,6 +37,12 @@ POSTGRESQL_USER=app_dv_myra
 SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
 ```
 
+**Note that these environment variables _must_ be available in your shell. You can use a tool like `direnv`, or run `source .env` directly.**
+
+> If using `direnv`, create a `.envrc` file containing `dotenv` to automatically load the environment variables into your shell. (https://github.com/direnv/direnv/issues/284#issuecomment-315275436)
+
+#### Windows
+
 If you find yourself on a Windows machine and can't get docker to play nice with WSL or otherwise need to get it rolling on Windows, throw this in .env.ps1, and after installing Make for Windows the below commands will still work, just make sure to run `powershell .env.ps1` first.  If you don't have a policy set yet to run powershell scripts (it is disabled by default) first run `Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser` or just set one for the process, that is up to you.
 
 ```
@@ -62,15 +58,27 @@ $env:BUILD_TARGET = "base"
 
 $env:POSTGRESQL_PASSWORD = "banana"
 $env:POSTGRESQL_USER = "app_dv_myra"
+
+$env:SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
 ```
 
-**Note that these environment variables _must_ be available in your shell. You can use a tool like `direnv`, or run `source .env` directly.**
+### Running the API locally
 
-> If using `direnv`, create a `.envrc` file containing `dotenv` to automatically load the environment variables into your shell. (https://github.com/direnv/direnv/issues/284#issuecomment-315275436)
+1. Build containers and seed database:
+    ```
+    make local-setup
+    ```
+
+2. Run API:
+    ```
+    make run-local
+    ```
+
+3. API will be available at http://localhost:8080/api
 
 ### Running tests
 
-In general, there are two separate docker-compose projects that allow for isolation of the development and test environments. The development environment is the default project, and can be accessed as normally through `docker-compose`. In order to run commands against the test project, you must add the `-p` flag to specify you want to use the `myra-test` project: `docker-compose -p myra-test`.
+In general, there are two separate docker-compose projects that allow for isolation of the development and test environments. The development environment is the default project, and can be managed as usual through `docker-compose`. In order to run commands against the test project, you must add the `-p` flag to specify you want to use the `myra-test` project: `docker-compose -p myra-test`.
 
 #### How to run tests:
 
@@ -91,33 +99,6 @@ In general, there are two separate docker-compose projects that allow for isolat
     (or `npm run test:watch`)
 
 This way, tests run inside of a docker container, allowing for reproducability, but also still let you interact with Jest's watch mode.
-
-If you don't want to write out these long `docker-compose` commands  every time, there are some helpful `make` shortcuts that run the exact same commands as above.
-
-1. Setup the test environment:
-    ```
-    make local-test-setup
-    ```
-2. Make sure test database is running:
-    ```
-    make run-db-test
-    ```
-3. Run tests:
-    ```
-    make local-test
-    ```
-    or
-    ```
-    make local-test-watch
-    ```
-
-## Requirements
-
-## Installation
-
-## Project Status
-
-## Getting Help or Reporting an Issue
 
 ## How to Contribute
 
