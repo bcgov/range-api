@@ -95,7 +95,7 @@ router.get('/:clientId', asyncMiddleware(async (req, res) => {
       throw errorWithCode('Unauthorized', 401);
     }
 
-    const results = await Client.find(db, { id: clientId });
+    const results = await Client.find(db, { client_number: clientId });
     if (results.length === 0) {
       res.status(404).json({ error: 'Not found' }).end();
     }

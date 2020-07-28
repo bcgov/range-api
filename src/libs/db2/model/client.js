@@ -41,13 +41,13 @@ export default class Client extends Model {
   }
 
   // To match previous Agreement (sequelize) schema.
-  // get id() {
-  //   return this.clientNumber;
-  // }
+  get id() {
+    return this.clientNumber;
+  }
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'client_number', 'location_code', 'name', 'licensee_start_date', 'licensee_end_date']
+    return ['client_number', 'location_codes', 'name', 'licensee_start_date', 'licensee_end_date']
       .map(field => `${this.table}.${field}`);
   }
 
@@ -68,7 +68,7 @@ export default class Client extends Model {
     const results = await db
       .select(myFields)
       .from(Client.table)
-      .join('client_agreement', { 'client_agreement.client_id': 'ref_client.id' })
+      .join('client_agreement', { 'client_agreement.client_id': 'ref_client.client_number' })
       .join('ref_client_type', { 'client_agreement.client_type_id': 'ref_client_type.id' })
       .where({ 'client_agreement.agreement_id': agreement.forestFileId });
 
