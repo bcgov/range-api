@@ -76,6 +76,54 @@ $env:SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/ope
 
 3. API will be available at http://localhost:8080/api
 
+### Setting up users
+
+First, make sure you have both the API and frontend running (https://github.com/bcgov/range-web for more info). As well, the user you're logging in as must have the correct role in SSO.
+
+To access the database with `psql`, run `make database`.
+
+The steps to get your user ready for the various roles are each a little different. Before doing any of them, you must have first signed in to create an associated row for your user in the database, and know the ID of that record.
+
+#### Range Officer
+
+In `ref_zone`, set the `user_id` of any of the seeded `TEST*` zones to your user's ID. You can also assign yourself to all of the `TEST*` zones for convenience. By default there are 6 test zones seeded.
+
+```sql
+UPDATE ref_zone
+SET user_id=<user-id>
+WHERE code='TEST1'; -- Or `WHERE code LIKE 'TEST%'` to assign to all test zones
+```
+
+#### Agreement Holder
+
+> 💡(There are existing BCeID users that are already set up as agreement holders, if you know the credentials.)
+
+Agreement holder's are a little bit more complicated. You have to create a `user_client_link` row that associates your `user_account` with one of the records in `ref_client`. The client you're linking to should exist in `ref_client`. Also keep in mind there may already be an existing link for a given `ref_client`. Feel free to delete it if you are getting a duplicate key error.
+
+```sql
+INSERT INTO user_client_link (client_id, user_id, active)
+SELECT ref_client.id, <your-user-id>, true
+FROM ref_client
+WHERE ref_client.name = 'Tom Haverford'; 
+```
+
+> There are a few pre-seeded client records named after various P&R characters. The only differences between them is that some are setup with multi-AH agreements, while others are single.  For example, Ann Perkins shares agreements with Ron Swanson, while April Ludgate is the only agreement holder on her RANs.
+> To see all client names:
+> 
+> ```sql
+> SELECT name FROM ref_client;
+> ```
+
+#### Decision Maker
+
+Decision maker's are assigned to whole districts. All of the test zones are in the same district, so in `ref_district` you can set the `user_id` of the `TST` district to your user's ID.
+
+```sql
+UPDATE ref_district
+SET user_id=<user-id>
+WHERE code='TST';
+```
+
 ### Running tests
 
 In general, there are two separate docker-compose projects that allow for isolation of the development and test environments. The development environment is the default project, and can be managed as usual through `docker-compose`. In order to run commands against the test project, you must add the `-p` flag to specify you want to use the `myra-test` project: `docker-compose -p myra-test`.
