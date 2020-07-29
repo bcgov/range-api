@@ -248,7 +248,7 @@ describe('Test Plan routes', () => {
 
     const confirmation = {
       planId: 1,
-      clientId: 1,
+      clientId: '09999901',
     };
 
     await request(app)
