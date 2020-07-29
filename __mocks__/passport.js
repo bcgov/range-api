@@ -50,7 +50,7 @@ const canAccessAgreement = (async (db, agreement) => {
 
 passport.aUser = user;
 passport.aUser.canAccessAgreement = canAccessAgreement.bind(user);
-passport.aUser.getLinkedClientIds = jest.fn().mockReturnValue(() => [3, 4, 5]);
+passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(() => [3, 4, 5]);
 passport.global = {};
 passport.setGlobal = (key, value) => {
   passport.global[key] = value;

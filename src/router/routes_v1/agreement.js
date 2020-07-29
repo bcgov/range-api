@@ -44,7 +44,7 @@ const {
 const allowableIDsForUser = async (user, agreementIDs, selectedZoneIds = []) => {
   let okIDs = [];
   if (user.isAgreementHolder()) {
-    const clientIds = await user.getLinkedClientIds(db);
+    const clientIds = await user.getLinkedClientNumbers(db);
 
     const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
     const agentAgreements = await ClientAgreement.find(db, { agent_id: user.id });
@@ -109,7 +109,7 @@ const getAgreeementsForAH = async ({
   page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc',
   user, latestPlan = true, sendFullPlan = false, staffDraft = false,
 }) => {
-  const clientIds = await user.getLinkedClientIds(db);
+  const clientIds = await user.getLinkedClientNumbers(db);
 
   const clientAgreements = await ClientAgreement.find(db, { client_id: clientIds });
   const agentClientAgreements = await ClientAgreement.find(db, { agent_id: user.id });

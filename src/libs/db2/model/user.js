@@ -94,7 +94,7 @@ export default class User extends Model {
           `
           SELECT user_account.*, ref_client.client_number FROM user_account
           LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
-          LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
+          LEFT JOIN ref_client ON ref_client.client_number = user_client_link.client_id
           WHERE user_account.id = ?;
         `,
           [id]
@@ -144,7 +144,7 @@ export default class User extends Model {
         `
         SELECT DISTINCT ON (user_account.id) user_id, user_account.*, ref_client.client_number FROM user_account
         LEFT JOIN user_client_link ON user_client_link.user_id = user_account.id
-        LEFT JOIN ref_client ON ref_client.id = user_client_link.client_id
+        LEFT JOIN ref_client ON ref_client.client_number = user_client_link.client_id
         WHERE user_account.id = ANY (?) ORDER BY user_account.id, ?;
       `,
         [userIds, order],
@@ -156,7 +156,7 @@ export default class User extends Model {
     }
   }
 
-  async getLinkedClientIds(db) {
+  async getLinkedClientNumbers(db) {
     const clientLinks = await UserClientLink.find(db, {
       user_id: this.id,
       active: true,
@@ -195,7 +195,7 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
   }
 
   if (this.isAgreementHolder()) {
-    const clientIds = await this.getLinkedClientIds(db);
+    const clientIds = await this.getLinkedClientNumbers(db);
 
     const [result] = await db
       .table('client_agreement')

@@ -53,9 +53,9 @@ export class UserController {
         await User.update(db, { id: user.id }, { pia_seen: true });
       }
 
-      const clientIds = await user.getLinkedClientIds(db);
+      const clientIds = await user.getLinkedClientNumbers(db);
 
-      const clients = await Client.find(db, { id: clientIds });
+      const clients = await Client.find(db, { client_number: clientIds });
 
       res.status(200).json({ ...user, clients }).end();
     } catch (error) {
@@ -102,7 +102,7 @@ export class UserController {
       ['clientId'], 'body', req,
     );
 
-    const client = await Client.findOne(db, { id: clientId });
+    const client = await Client.findOne(db, { client_number: clientId });
     if (!client) {
       throw errorWithCode('Client does not exist', 400);
     }
@@ -124,7 +124,7 @@ export class UserController {
 
     const userToLink = new User({ id: userId });
 
-    const currentLinkedClientIds = await userToLink.getLinkedClientIds(db);
+    const currentLinkedClientIds = await userToLink.getLinkedClientNumbers(db);
 
     const currentLinkedAgreements = await ClientAgreement.find(db, {
       client_id: currentLinkedClientIds,
@@ -159,18 +159,18 @@ export class UserController {
 
   static async removeClientLink(req, res) {
     const { user, params } = req;
-    const { clientId, userId } = params;
+    const { clientNumber, userId } = params;
 
     if (user && user.isAgreementHolder()) {
       throw errorWithCode('Unauthorized', 403);
     }
 
     checkRequiredFields(
-      ['clientId', 'userId'], 'params', req,
+      ['clientNumber', 'userId'], 'params', req,
     );
 
     const result = await UserClientLink.remove(db, {
-      client_id: clientId,
+      client_id: clientNumber,
       user_id: userId,
     });
 
@@ -191,9 +191,9 @@ export class UserController {
 
     const userToFind = await User.findById(db, userId);
 
-    const clientIds = await userToFind.getLinkedClientIds(db);
+    const clientIds = await userToFind.getLinkedClientNumbers(db);
 
-    const clients = await Client.find(db, { id: clientIds });
+    const clients = await Client.find(db, { client_number: clientIds });
 
     res.status(200).json({ ...userToFind, clients }).end();
   }

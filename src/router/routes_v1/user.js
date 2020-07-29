@@ -42,6 +42,6 @@ router.get('/:userId', asyncMiddleware(UserController.show));
 
 // Assign a client id to user
 router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
-router.delete('/:userId?/client/:clientId?', asyncMiddleware(UserController.removeClientLink));
+router.delete('/:userId?/client/:clientNumber?', asyncMiddleware(UserController.removeClientLink));
 
 module.exports = router;

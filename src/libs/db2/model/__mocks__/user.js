@@ -30,7 +30,7 @@ export default class User extends Model {
     }
   }
 
-  getLinkedClientIds(db) {
+  getLinkedClientNumbers(db) {
     assert(db);
 
     return [1, 2, 3];

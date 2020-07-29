@@ -54,40 +54,20 @@ router.get('/', asyncMiddleware(async (req, res) => {
 
 // Search clients
 router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '', groupByClientNumber = false } = req.query;
+  const { term = '' } = req.query;
 
   if (req.user && req.user.isAgreementHolder()) {
     throw errorWithCode('Unauthorized', 401);
   }
 
   const results = await Client.searchByNameWithAllFields(db, term);
-
-  if (groupByClientNumber) {
-    const clients = results.reduce((acc, { id, locationCode, ...client }) => {
-      if (acc.find(c => c.clientNumber === client.clientNumber)) {
-        return acc.map(c =>
-          (c.clientNumber === client.clientNumber
-            ? {
-              ...c,
-              ids: [...c.ids, id],
-              locationCodes: [...c.locationCodes, locationCode],
-            }
-            : c));
-      }
-
-      return [...acc, { ...client, ids: [id], locationCodes: [locationCode] }];
-    }, []);
-
-    res.status(200).json(clients).end();
-  } else {
-    res.status(200).json(results).end();
-  }
+  res.status(200).json(results).end();
 }));
 
-// Get by id
-router.get('/:clientId', asyncMiddleware(async (req, res) => {
+// Get by client number
+router.get('/:clientNumber', asyncMiddleware(async (req, res) => {
   const {
-    clientId,
+    clientNumber,
   } = req.params;
 
   try {
@@ -95,7 +75,7 @@ router.get('/:clientId', asyncMiddleware(async (req, res) => {
       throw errorWithCode('Unauthorized', 401);
     }
 
-    const results = await Client.find(db, { client_number: clientId });
+    const results = await Client.find(db, { client_number: clientNumber });
     if (results.length === 0) {
       res.status(404).json({ error: 'Not found' }).end();
     }
@@ -125,7 +105,7 @@ router.get('/agreements/:planId', asyncMiddleware(async (req, res) => {
     clientAgreements.map(async (ca) => {
       const clientAgreement = ca;
 
-      const client = await Client.findOne(db, { id: clientAgreement.clientId });
+      const client = await Client.findOne(db, { client_number: clientAgreement.clientId });
       clientAgreement.client = client;
 
       if (clientAgreement.agentId) {

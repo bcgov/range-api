@@ -502,7 +502,7 @@ const prepareTestSetup = async () => {
       });
 
       const { id } = await User.findOne(db, { username: user.username });
-      await UserClientLink.create(db, { user_id: id, client_id: client.client_number, active: true, type: 'owner' });
+      await UserClientLink.create(db, { user_id: id, client_id: client.clientNumber, active: true, type: 'owner' });
     });
 
     await Promise.all(clientsP);
