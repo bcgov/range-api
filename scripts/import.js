@@ -28,6 +28,8 @@ const {
   ClientType,
   ClientAgreement,
   District,
+  Plan,
+  PlanConfirmation,
   Usage,
   User,
   Zone
@@ -446,6 +448,15 @@ const updateClient = async data => {
           client_id: clientNumber,
           client_type_id: clientType.id
         });
+        // TODO: Create confirmations
+        const plan = await Plan.findOne(db, { agreement_id: agreementId })
+        if (plan) {
+          await PlanConfirmation.create(db, {
+            plan_id: plan.id,
+            confirmed: false,
+            client_id: clientNumber,
+          })
+        }
       }
      if(agreement && clientAgreement && clientType) // update if different
         {
@@ -513,6 +524,19 @@ const prepareTestSetup = async () => {
     throw error;
   }
 };
+
+const pruneConfirmations = async () => {
+  await db.raw(`
+    WITH extra_confirmations AS (
+      SELECT plan_confirmation.id FROM plan_confirmation
+      LEFT JOIN plan ON plan.id = plan_confirmation.plan_id
+      LEFT JOIN client_agreement ON client_agreement.agreement_id = plan.agreement_id
+      WHERE client_agreement.client_id != plan_confirmation.client_id
+    )
+    DELETE FROM plan_confirmation
+    WHERE id IN (SELECT id FROM extra_confirmations)
+  `)
+}
 
 const loadFile = name =>
   new Promise((resolve, reject) => {
@@ -631,6 +655,7 @@ const main = async () => {
       // await loadStaffDataFromCSV();
       console.log("Preparing test setup");
       await prepareTestSetup();
+      await pruneConfirmations();
     } else {
       await loadFTADataFromAPI();
     }
