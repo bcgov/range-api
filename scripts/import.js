@@ -448,15 +448,19 @@ const updateClient = async data => {
           client_id: clientNumber,
           client_type_id: clientType.id
         });
-        // TODO: Create confirmations
         const plan = await Plan.findOne(db, { agreement_id: agreementId })
         if (plan) {
+          const existingConfirmation = await PlanConfirmation.findOne(db, {
+            plan_id: plan.id, client_id: clientNumber
+          })
+          if (!existingConfirmation) {
           await PlanConfirmation.create(db, {
             plan_id: plan.id,
             confirmed: false,
             client_id: clientNumber,
           })
         }
+      }
       }
      if(agreement && clientAgreement && clientType) // update if different
         {
