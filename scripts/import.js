@@ -530,8 +530,12 @@ const pruneConfirmations = async () => {
     WITH extra_confirmations AS (
       SELECT plan_confirmation.id FROM plan_confirmation
       LEFT JOIN plan ON plan.id = plan_confirmation.plan_id
-      LEFT JOIN client_agreement ON client_agreement.agreement_id = plan.agreement_id
-      WHERE client_agreement.client_id != plan_confirmation.client_id
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM client_agreement
+        WHERE agreement_id = plan.agreement_id
+          AND client_id = plan_confirmation.client_id
+      )
     )
     DELETE FROM plan_confirmation
     WHERE id IN (SELECT id FROM extra_confirmations)
