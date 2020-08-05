@@ -530,7 +530,8 @@ const prepareTestSetup = async () => {
 };
 
 const pruneConfirmations = async () => {
-  await db.raw(`
+  console.log('Pruning confirmations...');
+  const res = await db.raw(`
     WITH extra_confirmations AS (
       SELECT plan_confirmation.id FROM plan_confirmation
       LEFT JOIN plan ON plan.id = plan_confirmation.plan_id
@@ -544,6 +545,7 @@ const pruneConfirmations = async () => {
     DELETE FROM plan_confirmation
     WHERE id IN (SELECT id FROM extra_confirmations)
   `)
+  console.log(`Deleted ${res.rowCount} confirmations`);
 }
 
 const loadFile = name =>
@@ -666,6 +668,7 @@ const main = async () => {
       await pruneConfirmations();
     } else {
       await loadFTADataFromAPI();
+      await pruneConfirmations();
     }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
