@@ -77,7 +77,7 @@ export default class Plan extends Model {
       'notes', 'alt_business_name', 'agreement_id', 'status_id',
       'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
       'effective_at', 'submitted_at', 'creator_id', 'canonical_id',
-      'is_restored', 'conditions',
+      'is_restored', 'conditions', 'proposed_conditions',
     ].map(f => `${Plan.table}.${f}`);
   }
 
