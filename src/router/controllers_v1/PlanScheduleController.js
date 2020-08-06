@@ -11,7 +11,6 @@ const {
   Plan,
   GrazingSchedule,
   GrazingScheduleEntry,
-  Pasture,
 } = dm;
 
 export default class PlanScheduleController {
@@ -60,6 +59,7 @@ export default class PlanScheduleController {
           ...entry,
           grazing_schedule_id: schedule.id,
           pasture_id: entry.pastureId,
+          livestock_count: entry.livestockCount.toString(),
         });
       });
 
@@ -137,7 +137,12 @@ export default class PlanScheduleController {
 
         return GrazingScheduleEntry.create(
           db,
-          { ...entry, grazing_schedule_id: schedule.id, pasture_id: entry.pastureId },
+          {
+            ...entry,
+            grazing_schedule_id: schedule.id,
+            pasture_id: entry.pastureId,
+            livestock_count: entry.livestockCount.toString(),
+          },
         );
       });
 
