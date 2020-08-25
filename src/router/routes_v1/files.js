@@ -80,7 +80,7 @@ router.get('/download-url', asyncMiddleware(async (req, res) => {
 
   switch (access) {
     case 'staff_only':
-      if (!user.isRangeOfficer() && !user.isAdministrator()) {
+      if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
         throw errorWithCode('Unauthorized', 403);
       }
       break;
