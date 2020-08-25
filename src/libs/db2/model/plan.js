@@ -448,6 +448,8 @@ export default class Plan extends Model {
 
     await Promise.all(newStatusHistoryPromises);
 
+    await PlanFile.remove(db, { plan_id: planId });
+
     const filePromises = snapshot.files.map(
       async (file) => {
         const newFile = await PlanFile.create(db, file);
