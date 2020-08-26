@@ -48,7 +48,7 @@ export default class PlanConfirmation extends Model {
     const promises = agreement.clients.map(client => (
       PlanConfirmation.create(db, {
         plan_id: planId,
-        client_id: client.id,
+        client_id: client.clientNumber,
         confirmed: false,
       })
     ));

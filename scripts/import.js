@@ -28,6 +28,8 @@ const {
   ClientType,
   ClientAgreement,
   District,
+  Plan,
+  PlanConfirmation,
   Usage,
   User,
   Zone
@@ -406,16 +408,15 @@ const updateClient = async data => {
     try {
       let client = await Client.findOne(db, {
         client_number: clientNumber,
-        location_code: clientLocationCode
       });
 
       if (client) {
         await Client.update(
           db,
-          { id: client.id },
+          { client_number: clientNumber },
           {
             name: clientName || "Unknown Name",
-            locationCode: clientLocationCode,
+            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
             startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null
           }
         );
@@ -424,7 +425,7 @@ const updateClient = async data => {
         client = await Client.create(db, {
           clientNumber: clientNumber,
           name: clientName || "Unknown Name",
-          locationCode: clientLocationCode,
+          locationCodes: [clientLocationCode],
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null
         });
         created += 1;
@@ -432,22 +433,34 @@ const updateClient = async data => {
       const agreement = await Agreement.findById(db, agreementId);
       const clientAgreement = await ClientAgreement.findOne(db, {
         agreement_id: agreementId,
-        client_id: client.id
+        client_id: clientNumber
       });
-    if(clientAgreement && (typeof clientType === 'undefined')) // clean up the stale ones here
-    {
+      if(clientAgreement && (typeof clientType === 'undefined')) { // clean up the stale ones here
         await ClientAgreement.remove(db, {
           agreement_id: agreementId,
-          client_id: client.id,
+          client_id: clientNumber,
         });
         deleted += 1;
-    }
-      if (agreement && !clientAgreement && clientType) { //only create if they are A or B
+      }
+      if (agreement && !clientAgreement && clientType) { // only create if they are A or B
         await ClientAgreement.create(db, {
           agreement_id: agreementId,
-          client_id: client.id,
+          client_id: clientNumber,
           client_type_id: clientType.id
         });
+        const plan = await Plan.findOne(db, { agreement_id: agreementId })
+        if (plan) {
+          const existingConfirmation = await PlanConfirmation.findOne(db, {
+            plan_id: plan.id, client_id: clientNumber
+          })
+          if (!existingConfirmation) {
+          await PlanConfirmation.create(db, {
+            plan_id: plan.id,
+            confirmed: false,
+            client_id: clientNumber,
+          })
+        }
+      }
       }
      if(agreement && clientAgreement && clientType) // update if different
         {
@@ -504,7 +517,7 @@ const prepareTestSetup = async () => {
       });
 
       const { id } = await User.findOne(db, { username: user.username });
-      await UserClientLink.create(db, { user_id: id, client_id: client.id, active: true, type: 'owner' });
+      await UserClientLink.create(db, { user_id: id, client_id: client.clientNumber, active: true, type: 'owner' });
     });
 
     await Promise.all(clientsP);
@@ -515,6 +528,25 @@ const prepareTestSetup = async () => {
     throw error;
   }
 };
+
+const pruneConfirmations = async () => {
+  console.log('Pruning confirmations...');
+  const res = await db.raw(`
+    WITH extra_confirmations AS (
+      SELECT plan_confirmation.id FROM plan_confirmation
+      LEFT JOIN plan ON plan.id = plan_confirmation.plan_id
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM client_agreement
+        WHERE agreement_id = plan.agreement_id
+          AND client_id = plan_confirmation.client_id
+      )
+    )
+    DELETE FROM plan_confirmation
+    WHERE id IN (SELECT id FROM extra_confirmations)
+  `)
+  console.log(`Deleted ${res.rowCount} confirmations`);
+}
 
 const loadFile = name =>
   new Promise((resolve, reject) => {
@@ -633,8 +665,10 @@ const main = async () => {
       // await loadStaffDataFromCSV();
       console.log("Preparing test setup");
       await prepareTestSetup();
+      await pruneConfirmations();
     } else {
       await loadFTADataFromAPI();
+      await pruneConfirmations();
     }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
