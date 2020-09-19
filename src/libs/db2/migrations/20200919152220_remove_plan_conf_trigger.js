@@ -1,0 +1,181 @@
+exports.up = async function(knex) {
+    const create_plan_conf_records = `
+    drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;
+    CREATE FUNCTION update_plan_conf_to_reflect_client_agreement() 
+    RETURNS trigger as  $$
+    BEGIN
+
+    IF (TG_OP = 'INSERT') THEN
+    
+
+	if not exists (
+				select     plan.id, 
+					    plan.agreement_id,
+					    NEW.client_id as client_id
+				from        plan 
+				join 		client_agreement on client_agreement.agreement_id = plan.agreement_id
+				where       plan.agreement_id = NEW.agreement_id
+				
+				and
+					client_agreement.client_id in 
+						(	select 	id 
+							from 	ref_client 
+							where 	client_number = (select client_number from ref_client where id = NEW.client_id)
+						)
+				group by    plan.id, plan.agreement_id, client_agreement.client_id
+
+			)
+	then
+		with plans_existing_for_this_client_id as
+		(select     id, 
+			    agreement_id,
+			    NEW.client_id as client_id
+		from        plan 
+		where       agreement_id = NEW.agreement_id
+		group by    id, agreement_id, client_id)
+
+		insert into plan_confirmation (plan_id, client_id, confirmed)
+		select      id, 
+			    client_id,
+			    'f'
+		from        plans_existing_for_this_client_id;
+
+
+	else select id from plan limit 1;
+
+        end if;
+
+        RETURN NEW;
+
+    END IF;
+        RETURN NEW;
+        
+    END;
+    $$ LANGUAGE plpgsql
+    `
+
+    await knex.schema.raw(create_plan_conf_records);
+
+    const insert_trigger = `
+    CREATE TRIGGER update_plan_conf_with_new_client_agreement AFTER INSERT 
+    ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
+    update_plan_conf_to_reflect_client_agreement()
+    `;
+
+    await knex.schema.raw(insert_trigger);
+  
+    const delete_trigger = `
+    CREATE TRIGGER update_plan_conf_with_old_client_agreement AFTER DELETE 
+    ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
+    update_plan_conf_to_reflect_client_agreement()
+    `;
+
+    await knex.schema.raw(delete_trigger);
+};
+
+
+exports.down = async function(knex) {
+    const create_plan_conf_records = `
+    drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;
+    CREATE FUNCTION update_plan_conf_to_reflect_client_agreement() 
+    RETURNS trigger as  $$
+    BEGIN
+
+    IF (TG_OP = 'INSERT') THEN
+    
+
+	if not exists (
+				select     plan.id, 
+					    plan.agreement_id,
+					    NEW.client_id as client_id
+				from        plan 
+				join 		client_agreement on client_agreement.agreement_id = plan.agreement_id
+				where       plan.agreement_id = NEW.agreement_id
+				
+				and
+					client_agreement.client_id in 
+						(	select 	id 
+							from 	ref_client 
+							where 	client_number = (select client_number from ref_client where id = NEW.client_id)
+						)
+				group by    plan.id, plan.agreement_id, client_agreement.client_id
+
+			)
+	then
+		with plans_existing_for_this_client_id as
+		(select     id, 
+			    agreement_id,
+			    NEW.client_id as client_id
+		from        plan 
+		where       agreement_id = NEW.agreement_id
+		group by    id, agreement_id, client_id)
+
+		insert into plan_confirmation (plan_id, client_id, confirmed)
+		select      id, 
+			    client_id,
+			    'f'
+		from        plans_existing_for_this_client_id;
+
+
+	else
+		with plans_existing_for_this_client_id as
+		(select     id, 
+			    agreement_id,
+			    NEW.client_id as client_id
+		from        plan 
+		where       agreement_id = NEW.agreement_id
+		group by    id, agreement_id, client_id)
+
+		update plan_confirmation
+		set client_id = NEW.client_id
+		where 	client_id in 
+				(	select 	id 
+					from 	ref_client 
+					where 	client_number = (select client_number from ref_client where id = NEW.client_id)
+				)
+				and plan_id in (select id from plans_existing_for_this_client_id);
+
+
+        end if;
+
+        RETURN NEW;
+
+    ELSEIF (TG_OP = 'DELETE') THEN
+
+        with plan_conf_to_delete as
+        (select     pc.id
+        from        plan p
+        join        plan_confirmation pc on pc.plan_id = p.id
+        where       agreement_id = OLD.agreement_id
+                    and pc.client_id  = OLD.client_id
+        )
+
+        delete from plan_confirmation 
+        where id in (select id from plan_conf_to_delete);
+
+        RETURN OLD;
+    END IF;
+        
+    END;
+    $$ LANGUAGE plpgsql
+    `
+
+    await knex.schema.raw(create_plan_conf_records);
+
+    const insert_trigger = `
+    CREATE TRIGGER update_plan_conf_with_new_client_agreement AFTER INSERT 
+    ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
+    update_plan_conf_to_reflect_client_agreement()
+    `;
+
+    await knex.schema.raw(insert_trigger);
+  
+    const delete_trigger = `
+    CREATE TRIGGER update_plan_conf_with_old_client_agreement AFTER DELETE 
+    ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
+    update_plan_conf_to_reflect_client_agreement()
+    `;
+
+    await knex.schema.raw(delete_trigger);
+};
+
