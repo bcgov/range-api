@@ -435,13 +435,13 @@ const updateClient = async data => {
         agreement_id: agreementId,
         client_id: clientNumber
       });
-      if(clientAgreement && (typeof clientType === 'undefined')) { // clean up the stale ones here
+      /*if(clientAgreement && (typeof clientType === 'undefined')) { // clean up the stale ones here
         await ClientAgreement.remove(db, {
           agreement_id: agreementId,
           client_id: clientNumber,
         });
         deleted += 1;
-      }
+      }*/
       if (agreement && !clientAgreement && clientType) { // only create if they are A or B
         await ClientAgreement.create(db, {
           agreement_id: agreementId,
