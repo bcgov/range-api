@@ -535,6 +535,7 @@ const pruneConfirmations = async () => {
     WITH extra_confirmations AS (
       SELECT plan_confirmation.id FROM plan_confirmation
       LEFT JOIN plan ON plan.id = plan_confirmation.plan_id
+	    AND plan.status_id NOT in (8,9,12,20,21)
       WHERE NOT EXISTS (
         SELECT 1
         FROM client_agreement
