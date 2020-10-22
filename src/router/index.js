@@ -32,6 +32,7 @@ import client from './routes_v1/client';
 import district from './routes_v1/district';
 import ehlo from './routes_v1/ehlo';
 import plan from './routes_v1/plan';
+import notification from './routes_v1/notification'
 import reference from './routes_v1/reference';
 import report from './routes_v1/report';
 import user from './routes_v1/user';
@@ -56,6 +57,7 @@ module.exports = (app) => {
   app.use('/api/v1/client', client);
   app.use('/api/v1/district', district);
   app.use('/api/v1/plan', plan);
+  app.use('/api/v1/notification', notification);
   app.use('/api/v1/reference', reference);
   app.use('/api/v1/zone', zone);
   app.use('/api/v1/report', report);
