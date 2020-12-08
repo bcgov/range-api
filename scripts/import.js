@@ -666,10 +666,10 @@ const main = async () => {
       // await loadStaffDataFromCSV();
       console.log("Preparing test setup");
       await prepareTestSetup();
-      await pruneConfirmations();
+      //await pruneConfirmations();
     } else {
       await loadFTADataFromAPI();
-      await pruneConfirmations();
+      //await pruneConfirmations();
     }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
