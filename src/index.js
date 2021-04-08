@@ -38,7 +38,7 @@ async function createApp() {
   const app = express();
   const options = {
     inflate: true,
-    limit: '3000kb',
+    limit: '30000kb',
     type: 'image/*',
   };
 
