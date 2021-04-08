@@ -49,7 +49,7 @@ async function createApp() {
       extended: true,
     }),
   );
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({limit: '99999kb'}));
   app.use(bodyParser.raw(options));
   app.use(flash());
 
