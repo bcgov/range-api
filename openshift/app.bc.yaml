@@ -95,7 +95,7 @@ parameters:
   displayName: Source Image Name
   description: The name of the source image.
   required: true
-  value: nodejs-6-base
+  value: nodejs-12-base
 - name: SOURCE_IMAGE_TAG
   displayName: Source Image Tag
   description: The tag of the source image.
@@ -114,7 +114,7 @@ parameters:
 - name: BASE_IMAGE_URL
   displayName: base image url
   requried: true
-  value:  registry.redhat.io/rhscl/nodejs-6-rhel7
+  value:  registry.redhat.io/rhscl/nodejs-12-rhel7
 - name: CPU_LIMIT
   displayName: Resources CPU Limit
   description: The resources CPU limit (in cores) for this build.
