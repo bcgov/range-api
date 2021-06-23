@@ -65,7 +65,7 @@ router.get('/upload-url', asyncMiddleware(async (req, res) => {
     : url;
 
   res.json({
-    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(url) : publicUrl,
+    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
   });
 }));
 
@@ -108,7 +108,7 @@ router.get('/download-url', asyncMiddleware(async (req, res) => {
     : url;
 
   res.json({
-    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(url) : publicUrl,
+    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
   });
 }));
 
