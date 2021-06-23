@@ -3,6 +3,12 @@ import * as Minio from 'minio';
 import { Router } from 'express';
 import DataManager from '../../libs/db2';
 
+const cleanProductionURL = (publicUrl) => {
+  publicUrl = publicUrl.replace('http', 'https');
+  publicUrl = publicUrl.replace(':9000/', '/');
+  return publicUrl;
+};
+
 const dm = new DataManager();
 const {
   db,
@@ -59,7 +65,7 @@ router.get('/upload-url', asyncMiddleware(async (req, res) => {
     : url;
 
   res.json({
-    url: process.env.NODE_ENV === 'production' ? publicUrl.replace('http', 'https') : publicUrl,
+    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(url) : publicUrl,
   });
 }));
 
@@ -102,7 +108,7 @@ router.get('/download-url', asyncMiddleware(async (req, res) => {
     : url;
 
   res.json({
-    url: process.env.NODE_ENV === 'production' ? publicUrl.replace('http', 'https') : publicUrl,
+    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(url) : publicUrl,
   });
 }));
 
