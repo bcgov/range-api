@@ -27,11 +27,12 @@ import Pasture from './pasture';
 export default class GrazingScheduleEntry extends Model {
   constructor(data, db = undefined) {
     const obj = {};
-    Object.keys(data).forEach((key) => {
-      if (GrazingScheduleEntry.fields.indexOf(`${GrazingScheduleEntry.table}.${key}`) > -1) {
-        obj[key] = data[key];
-      }
-    });
+    Object.keys(data)
+      .forEach((key) => {
+        if (GrazingScheduleEntry.fields.indexOf(`${GrazingScheduleEntry.table}.${key}`) > -1) {
+          obj[key] = data[key];
+        }
+      });
 
     super(obj, db);
 
@@ -49,7 +50,7 @@ export default class GrazingScheduleEntry extends Model {
     return 'grazing_schedule_entry';
   }
 
-  static async findWithLivestockType(db, where, order, page = undefined, limit = undefined) {
+  static async findWithLivestockType(db, where, order, orderRaw, page = undefined, limit = undefined) {
     const myFields = [
       ...GrazingScheduleEntry.fields,
       ...LivestockType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
@@ -65,7 +66,9 @@ export default class GrazingScheduleEntry extends Model {
         .join('pasture', { 'grazing_schedule_entry.pasture_id': 'pasture.id' })
         .where(where);
 
-      if (order) q.orderBy(...order);
+      if (orderRaw) {
+        q.orderByRaw(order);
+      } else if (order) q.orderBy(...order);
 
       q.orderBy('grazing_schedule_entry.updated_at', 'asc');
 
