@@ -37,7 +37,7 @@ export default class GrazingSchedule extends Model {
   // eslint-disable-next-line class-methods-use-this
   async fetchGrazingSchedulesEntries() {
     const order = (this.sortBy && this.sortOrder)
-      ? [this.sortBy.replace('livestock_type', 'ref_livestock').replace('.', '_'), this.sortOrder]
+      ? [this.sortBy.replace('livestock_type', 'ref_livestock').replace('.', '_').replace('days', 'date_out - date_in'), this.sortOrder]
       : undefined;
     const where = { grazing_schedule_id: this.id };
     const entries = await GrazingScheduleEntry.findWithLivestockType(this.db, where, order);
