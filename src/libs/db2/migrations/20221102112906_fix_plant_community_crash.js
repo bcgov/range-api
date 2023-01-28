@@ -1,5 +1,4 @@
-
-exports.up = function(knex) {
+exports.up = async function (knex) {
   await knex.raw(`
 CREATE OR REPLACE FUNCTION plant_community_no_null_name()
 RETURNS trigger AS
@@ -37,9 +36,9 @@ CREATE TRIGGER plant_community_action_name  BEFORE  insert OR update
     ON plant_community_action
     EXECUTE FUNCTION plant_community_action_no_null_name();
 `);
-  
+
 };
 
-exports.down = function(knex) {
-  
+exports.down = async function (knex) {
+
 };

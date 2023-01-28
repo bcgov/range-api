@@ -51,7 +51,10 @@ export default async function initPassport(app) {
   });
 
   try {
-    const { certificate, algorithm } = await getJwtCertificate(config.get('sso:certsUrl'));
+    const {
+      certificate,
+      algorithm
+    } = await getJwtCertificate(config.get('sso:certsUrl'));
 
     const opts = {};
     opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
@@ -67,11 +70,39 @@ export default async function initPassport(app) {
 
     const jwtStrategy = new JwtStrategy(opts, async (req, jwtPayload, done) => {
       try {
-        let user = await User.findOne(db, {
+
+        let user;
+
+        // first try the guid
+        user = await User.findOne(db, {
           username: jwtPayload.preferred_username,
         });
 
         if (!user) {
+          // try falling back by guessing what previous OIDC preferred username would have been
+          let computedUsername = null;
+
+          if (jwtPayload?.identity_provider === 'idir') {
+            computedUsername = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
+          } else if (jwtPayload?.identity_provider === 'bceidbusiness') {
+            computedUsername = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
+          }
+
+          if (computedUsername !== null) {
+            user = await User.findOne(db, {
+              username: computedUsername,
+            });
+            console.log(`migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`);
+            await User.update(db, {
+              username: computedUsername,
+            }, {
+              username: jwtPayload.preferred_username,
+            });
+          }
+        }
+
+        if (!user) {
+          // always create with the guid, if it iexists
           user = await User.create(db, {
             username: jwtPayload.preferred_username,
             email: jwtPayload.email,
@@ -82,9 +113,8 @@ export default async function initPassport(app) {
 
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
-        const clientAccess = jwtPayload.resource_access[config.get('sso:clientId')];
-        if (clientAccess && clientAccess.roles) {
-          user.roles = clientAccess.roles;
+        if (jwtPayload.client_roles.length !== 0) {
+          user.roles = jwtPayload.client_roles;
         } else {
           return done(errorWithCode('This account has not been assigned a role, please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
         }
