@@ -102,7 +102,7 @@ export default async function initPassport(app) {
         }
 
         if (!user) {
-          // always create with the guid, if it iexists
+          // always create with the guid, if it exists
           user = await User.create(db, {
             username: jwtPayload.preferred_username,
             email: jwtPayload.email,
@@ -113,7 +113,7 @@ export default async function initPassport(app) {
 
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
-        if (jwtPayload.client_roles.length !== 0) {
+        if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
           user.roles = jwtPayload.client_roles;
         } else {
           return done(errorWithCode('This account has not been assigned a role, please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
