@@ -22,9 +22,10 @@
 
 'use strict';
 
-import { logger, errorWithCode, getJwtCertificate } from '@bcgov/nodejs-common-utils';
+import { logger, errorWithCode } from '@bcgov/nodejs-common-utils';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
+import jwksRsa from 'jwks-rsa';
 import config from '../config';
 import DataManager from './db2';
 import { SSO_ROLE_MAP } from '../constants';
@@ -52,16 +53,15 @@ export default async function initPassport(app) {
   });
 
   try {
-    const {
-      certificate,
-      algorithm
-    } = await getJwtCertificate(config.get('sso:certsUrl'));
-
     const opts = {};
     opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-    opts.algorithms = [algorithm];
-    opts.secretOrKey = certificate;
     opts.passReqToCallback = true;
+    opts.secretOrKeyProvider = jwksRsa.passportJwtSecret({
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
+      jwksUri: config.get('sso:certsUrl')
+    });
 
     // For development purposes only ignore the expiration
     // time of tokens.
@@ -71,7 +71,6 @@ export default async function initPassport(app) {
 
     const jwtStrategy = new JwtStrategy(opts, async (req, jwtPayload, done) => {
       try {
-
         let user;
 
         // first try the guid
