@@ -27,6 +27,7 @@ import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import config from '../config';
 import DataManager from './db2';
+import { SSO_ROLE_MAP } from '../constants';
 
 const dm = new DataManager(config);
 const {
@@ -82,6 +83,7 @@ export default async function initPassport(app) {
           // try falling back by guessing what previous OIDC preferred username would have been
           let computedUsername = null;
 
+
           if (jwtPayload?.identity_provider === 'idir') {
             computedUsername = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
           } else if (jwtPayload?.identity_provider === 'bceidbusiness') {
@@ -106,17 +108,25 @@ export default async function initPassport(app) {
           user = await User.create(db, {
             username: jwtPayload.preferred_username,
             email: jwtPayload.email,
-            // givenName: jwtPayload.given_name,
-            // familyName: jwtPayload.family_name,
           });
         }
 
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
+
+        // minimal set of roles based on auth provider
+        const basicRoles = [];
+        if (jwtPayload?.identity_provider === 'idir') {
+          basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
+        } else if (jwtPayload?.identity_provider === 'bceidbusiness') {
+          basicRoles.push(SSO_ROLE_MAP.AGREEMENT_HOLDER);
+        }
+
         if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
-          user.roles = jwtPayload.client_roles;
+          // dedup roles
+          user.roles = basicRoles.concat(jwtPayload.client_roles.filter(r => basicRoles.indexOf(r) < 0));
         } else {
-          return done(errorWithCode('This account has not been assigned a role, please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
+          user.roles = basicRoles;
         }
 
         if (!user.isActive()) {
