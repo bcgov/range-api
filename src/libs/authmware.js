@@ -117,7 +117,8 @@ export default async function initPassport(app) {
         const basicRoles = [];
         if (jwtPayload?.identity_provider === 'idir') {
           basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
-        } else if (jwtPayload?.identity_provider === 'bceidbusiness') {
+        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
+          console.log(`Actual identity_provider string: "${jwtPayload.identity_provider}"`)
           basicRoles.push(SSO_ROLE_MAP.AGREEMENT_HOLDER);
         }
 
