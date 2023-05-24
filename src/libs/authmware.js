@@ -60,7 +60,7 @@ export default async function initPassport(app) {
       cache: true,
       rateLimit: true,
       jwksRequestsPerMinute: 5,
-      jwksUri: config.get('sso:certsUrl')
+      jwksUri: config.get('sso:certsUrl'),
     });
 
     // For development purposes only ignore the expiration
@@ -116,10 +116,27 @@ export default async function initPassport(app) {
         // minimal set of roles based on auth provider
         const basicRoles = [];
         if (jwtPayload?.identity_provider === 'idir') {
-          basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
-        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
-          console.log(`Actual identity_provider string: "${jwtPayload.identity_provider}"`)
-          basicRoles.push(SSO_ROLE_MAP.AGREEMENT_HOLDER);
+          let needsRO = true;
+          if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
+            if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.DECISION_MAKER)) {
+              needsRO = false;
+            }
+          }
+          if (needsRO) {
+            basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
+          }
+        } else if (jwtPayload?.identity_provider.toLowerCase()
+          .includes('bceid')) {
+          let needsClientRole = true;
+
+          if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
+            if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.ADMINISTRATOR)) {
+              needsClientRole = false;
+            }
+          }
+          if (needsClientRole) {
+            basicRoles.push(SSO_ROLE_MAP.AGREEMENT_HOLDER);
+          }
         }
 
         if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
