@@ -83,9 +83,9 @@ export default async function initPassport(app) {
           let computedUsername = null;
 
 
-          if (jwtPayload?.identity_provider === 'idir') {
+          if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
             computedUsername = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-          } else if (jwtPayload?.identity_provider === 'bceidbusiness') {
+          } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
             computedUsername = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
           }
 
@@ -93,12 +93,16 @@ export default async function initPassport(app) {
             user = await User.findOne(db, {
               username: computedUsername,
             });
-            console.log(`migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`);
-            await User.update(db, {
-              username: computedUsername,
-            }, {
-              username: jwtPayload.preferred_username,
-            });
+            if (user == null) {
+              console.log(`user ${computedUsername} not found in database, not migrating`);
+            } else {
+              console.log(`migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`);
+              await User.update(db, {
+                username: computedUsername,
+              }, {
+                username: jwtPayload.preferred_username,
+              });
+            }
           }
         }
 
