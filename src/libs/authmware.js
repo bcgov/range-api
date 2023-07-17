@@ -113,7 +113,17 @@ export default async function initPassport(app) {
             email: jwtPayload.email,
           });
         }
-
+        let ssoId = null;
+        if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
+          ssoId = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
+        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
+          ssoId = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
+        }
+        await User.update(db, {
+          id: user.id,
+        }, {
+          ssoId: ssoId,
+        });
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
 
