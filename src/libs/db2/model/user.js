@@ -42,7 +42,8 @@ export default class User extends Model {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       clientNumber: row.client_number,
-      phoneNumber: row.phone_number
+      phoneNumber: row.phone_number,
+      ssoId: row.sso_id,
     };
   }
 
@@ -57,7 +58,8 @@ export default class User extends Model {
       "phone_number",
       "active",
       "pia_seen",
-      "last_login_at"
+      "last_login_at",
+      "sso_id"
     ].map(field => `${this.table}.${field}`);
   }
 
