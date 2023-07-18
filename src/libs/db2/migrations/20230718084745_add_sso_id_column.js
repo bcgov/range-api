@@ -7,6 +7,4 @@ UPDATE user_account SET sso_id = username WHERE username LIKE 'bceid%' OR userna
 
 };
 
-exports.down = async function (knex) {
-  ALTER TABLE user_account DROP COLUMN sso_id;
-};
+exports.down = async function (knex) {};
