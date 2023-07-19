@@ -10,7 +10,7 @@ if (env === 'development') {
 
 module.exports = {
   test: {
-    client: 'postgresql',
+    client: 'pg',
     connection: {
       host: process.env.POSTGRESQL_HOST,
       port: process.env.POSTGRESQL_PORT || 5432,
@@ -29,7 +29,7 @@ module.exports = {
     },
   },
   development: {
-    client: 'postgresql',
+    client: 'pg',
     connection: {
       host: process.env.POSTGRESQL_HOST,
       port: process.env.POSTGRESQL_PORT || 5432,
@@ -54,7 +54,7 @@ module.exports = {
   },
 
   production: {
-    client: 'postgresql',
+    client: 'pg',
     connection: {
       host: process.env.POSTGRESQL_HOST,
       port: process.env.POSTGRESQL_PORT || 5432,
