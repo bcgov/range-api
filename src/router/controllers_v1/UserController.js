@@ -11,6 +11,13 @@ const {
   Client,
   UserClientLink,
   ClientAgreement,
+  UserFeedback,
+  PlanStatusHistory,
+  PlanConfirmation,
+  District,
+  Zone,
+  Plan,
+  PlanFile,
 } = dm;
 
 export class UserController {
@@ -83,6 +90,47 @@ export class UserController {
     } catch (error) {
       throw error;
     }
+  }
+
+  static async mergeAccounts(req, res) {
+    const { user, params, body } = req;
+    const { userId } = params;
+    const sourceAccountIds = body.accountIds;
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    checkRequiredFields(
+      ['userId'], 'params', req,
+    );
+
+    checkRequiredFields(
+      ['accountIds'], 'body', req,
+    );
+
+    const userRequest = await User.findOne(db, { id: userId });
+    if (!userRequest) {
+      throw errorWithCode('User does not exist', 400);
+    }
+
+    for (const id of sourceAccountIds) {
+      const account = await User.findOne(db, { id: id });
+      if (!account) {
+        throw errorWithCode('Invalid accountId supplied', 400);
+      }
+    }
+    for (const sourceUserId of sourceAccountIds) {
+      UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId })
+      UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId })
+      ClientAgreement.update(db, { agent_id: sourceUserId }, { agent_id: userId })
+      PlanStatusHistory.update(db, { user_id: sourceUserId }, { user_id: userId })
+      PlanConfirmation.update(db, { user_id: sourceUserId }, { user_id: userId })
+      District.update(db, { user_id: sourceUserId }, { user_id: userId })
+      Zone.update(db, { user_id: sourceUserId }, { user_id: userId })
+      Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId })
+      PlanFile.update(db, { user_id: sourceUserId }, { user_id: userId })
+    }
+    res.status(200).json().end();
   }
 
   static async addClientLink(req, res) {

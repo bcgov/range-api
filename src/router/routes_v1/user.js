@@ -44,4 +44,5 @@ router.get('/:userId', asyncMiddleware(UserController.show));
 router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
 router.delete('/:userId?/client/:clientNumber?', asyncMiddleware(UserController.removeClientLink));
 
+router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
 module.exports = router;

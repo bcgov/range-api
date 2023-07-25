@@ -78,7 +78,6 @@ export default class Model {
     const q = db
       .table(this.table)
       .select(...this.fields);
-
     if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
@@ -122,7 +121,7 @@ export default class Model {
   static async update(db, where, values) {
     // Only the keys returned by the `fields` getter can
     // be updated (by default). Override for different behaviour.
-    const obj = { };
+    const obj = {};
     this.fields
       .slice(1) // skip the PK, they can not be updated.
       .forEach((key) => {
@@ -142,8 +141,9 @@ export default class Model {
         .where(where)
         .update(obj)
         .returning(this.primaryKey);
-
-      return await this.findById(db, results.pop());
+      if (results.length > 0)
+        return await this.findById(db, results.pop());
+      return []
     } catch (err) {
       throw err;
     }
@@ -186,7 +186,7 @@ export default class Model {
     // Only the keys returned by the `fields` getter can
     // be used to create a new record (by default). Override for
     // different behaviour.
-    const obj = { };
+    const obj = {};
     this.fields.forEach((key) => {
       const aKey = key.split('.').pop();
       // check for both camel case and snake case values
