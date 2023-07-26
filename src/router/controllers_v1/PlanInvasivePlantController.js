@@ -27,7 +27,7 @@ export default class PlanInvasivePlantController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const ipcl = await InvasivePlantChecklist.findOne(db, { plan_id: planId });
@@ -57,7 +57,7 @@ export default class PlanInvasivePlantController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       delete body.planId;

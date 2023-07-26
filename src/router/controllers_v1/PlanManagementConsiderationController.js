@@ -27,7 +27,7 @@ export default class PlanManagementConsiderationController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const consideration = await ManagementConsideration.create(db, { ...body, plan_id: planId });
@@ -53,7 +53,7 @@ export default class PlanManagementConsiderationController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const consideration = await ManagementConsideration.update(
@@ -83,7 +83,7 @@ export default class PlanManagementConsiderationController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const result = await ManagementConsideration.removeById(db, considerationId);

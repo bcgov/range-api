@@ -142,7 +142,7 @@ export default class Plan extends Model {
   }
 
   // Fetch the Agreement ID associated with a given Plan
-  static async agreementForPlanId(db, planId) {
+  static async agreementIdForPlanId(db, planId) {
     if (!db || !planId) {
       return [];
     }
@@ -157,6 +157,23 @@ export default class Plan extends Model {
     const [result] = results;
     return result.agreement_id;
   }
+
+    // Fetch the Agreement ID associated with a given Plan
+    static async agreementForPlanId(db, planId) {
+      if (!db || !planId) {
+        return [];
+      }
+  
+      const results = await db
+        .select('*')
+        .from(Plan.table)
+        .where({ id: planId });
+  
+      if (results.length === 0) return null;
+  
+      const [result] = results;
+      return result;
+    }
 
   static async createSnapshot(db, planId, userId) {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);

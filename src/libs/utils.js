@@ -112,3 +112,10 @@ export const objPathToSnakeCase = path =>
     ),
     '.',
   );
+
+  export const substituteFields = (str, fields) => {
+    for (const key of Object.keys(fields)) {
+      str = str.replace(new RegExp(key, 'g'), fields[key]);
+    }
+    return str
+  }

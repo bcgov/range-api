@@ -44,7 +44,7 @@ export default class PlanMinisterIssueActionController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const issue = await MinisterIssue.findById(db, issueId);
@@ -116,7 +116,7 @@ export default class PlanMinisterIssueActionController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const data = {
@@ -168,7 +168,7 @@ export default class PlanMinisterIssueActionController {
       ['planId', 'issueId', 'actionId'], 'params', req,
     );
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
 

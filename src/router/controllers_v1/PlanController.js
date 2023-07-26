@@ -197,7 +197,7 @@ export default class PlanController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Don't allow the agreement relation to be updated.
@@ -246,7 +246,7 @@ export default class PlanController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       const requirement = await AdditionalRequirement.create(db, {
         ...body,
@@ -273,7 +273,7 @@ export default class PlanController {
 
     checkRequiredFields(['planId', 'requirementId'], 'params', req);
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(
       db,
       Agreement,
@@ -317,7 +317,7 @@ export default class PlanController {
 
     checkRequiredFields(['planId', 'requirementId'], 'params', req);
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(
       db,
       Agreement,
@@ -362,7 +362,7 @@ export default class PlanController {
       throw errorWithCode('This plan is not an amendment, and cannot be discarded.', 400);
     }
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const prevLegalVersion = await db
@@ -413,7 +413,7 @@ export default class PlanController {
       throw errorWithCode('Unauthorized', 403);
     }
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
 
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -445,7 +445,7 @@ export default class PlanController {
       throw errorWithCode('Unauthorized', 403);
     }
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
 
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
     const planFile = await PlanFile.findById(db, attachmentId);
@@ -475,7 +475,7 @@ export default class PlanController {
       throw errorWithCode('Unauthorized', 403);
     }
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const result = await PlanFile.removeById(db, attachmentId);

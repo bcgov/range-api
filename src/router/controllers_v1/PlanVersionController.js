@@ -26,7 +26,7 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find plan', 404);
       }
 
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const snapshot = await Plan.createSnapshot(db, planId,userId);
@@ -50,7 +50,7 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find plan', 404);
       }
 
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const versions = await PlanSnapshot.findSummary(
@@ -83,7 +83,7 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find version for plan', 404);
       }
 
-      const agreementId = await Plan.agreementForPlanId(db, versionData.planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, versionData.planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       return res.json({ ...versionData.snapshot, version: versionData.version }).end();
@@ -104,7 +104,7 @@ export default class PlanVersionController {
         throw errorWithCode('Could not find plan', 404);
       }
 
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       await Plan.restoreVersion(db, planId, version);

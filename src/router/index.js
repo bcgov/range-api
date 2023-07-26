@@ -31,14 +31,15 @@ import agreement from './routes_v1/agreement';
 import client from './routes_v1/client';
 import district from './routes_v1/district';
 import ehlo from './routes_v1/ehlo';
+import feedback from './routes_v1/feedback';
+import files from './routes_v1/files';
 import plan from './routes_v1/plan';
 import reference from './routes_v1/reference';
 import report from './routes_v1/report';
 import user from './routes_v1/user';
-import zone from './routes_v1/zone';
-import feedback from './routes_v1/feedback';
 import version from './routes_v1/version';
-import files from './routes_v1/files';
+import zone from './routes_v1/zone';
+import emailTemplate from './routes_v1/emailTemplate';
 
 const corsOptions = {
   // origin: config.get('appUrl'),
@@ -62,4 +63,5 @@ module.exports = (app) => {
   app.use('/api/v1/user', user);
   app.use('/api/v1/feedback', feedback);
   app.use('/api/v1/files', files);
+  app.use('/api/v1/emailTemplate', emailTemplate)
 };

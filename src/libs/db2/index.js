@@ -63,6 +63,7 @@ import Version from './model/version';
 import config from '../../config';
 import UserClientLink from './model/userclientlink';
 import PlanFile from './model/PlanFile';
+import EmailTemplate from './model/emailtemplate';
 
 export const connection = knex({
   client: 'pg',
@@ -138,5 +139,6 @@ export default class DataManager {
     this.Version = Version;
     this.UserClientLink = UserClientLink;
     this.PlanFile = PlanFile;
+    this.EmailTemplate = EmailTemplate;
   }
 }

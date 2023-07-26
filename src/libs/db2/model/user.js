@@ -168,6 +168,16 @@ export default class User extends Model {
 
     return clientLinks.map(clientLink => clientLink.clientId);
   }
+
+  static async fromClientId(db, clientId) {
+    const [result] = await db
+      .table('user_account')
+      .join('user_client_link', { 'user_client_link.user_id': 'user_account.id' })
+      .where({
+        'user_client_link.client_id': clientId,
+      });
+    return result || [];
+  }
 }
 
 //

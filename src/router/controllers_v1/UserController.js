@@ -31,7 +31,7 @@ export class UserController {
         throw errorWithCode('You do not have the permission as an agreement holder', 403);
       }
 
-      let order;
+      let order = [];
       if (orderCId) {
         order = ['client_id', orderCId];
       }
@@ -248,6 +248,5 @@ export class UserController {
 }
 
 const userController = new UserController();
-
 
 export default userController;

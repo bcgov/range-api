@@ -28,7 +28,7 @@ export default class PlanPastureController {
     const { params: { planId }, body, user } = req;
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
@@ -59,7 +59,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
@@ -94,7 +94,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const result = await Pasture.remove(
@@ -131,7 +131,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findOne(db, { id: pastureId });
@@ -170,7 +170,7 @@ export default class PlanPastureController {
       ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const pasture = await Pasture.findOne(db, { id: pastureId });
@@ -202,7 +202,7 @@ export default class PlanPastureController {
       ['planId', 'pastureId', 'communityId'], 'params', req,
     );
 
-    const agreementId = await Plan.agreementForPlanId(db, planId);
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const pasture = await Pasture.findById(db, pastureId);
@@ -241,7 +241,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -275,7 +275,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -317,7 +317,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -364,7 +364,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       if (!PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
@@ -404,7 +404,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       if (criteria && !PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
@@ -447,7 +447,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -494,7 +494,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -539,7 +539,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -614,7 +614,7 @@ export default class PlanPastureController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);

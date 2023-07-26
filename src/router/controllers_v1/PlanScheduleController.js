@@ -38,7 +38,7 @@ export default class PlanScheduleController {
     });
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
@@ -97,7 +97,7 @@ export default class PlanScheduleController {
     });
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
@@ -170,7 +170,7 @@ export default class PlanScheduleController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // WARNING: This will do a cascading delete on any grazing schedule
@@ -206,7 +206,7 @@ export default class PlanScheduleController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       // Use the planId from the URL so that we know exactly what plan
       // is being updated and to ensure its not reassigned.
@@ -246,7 +246,7 @@ export default class PlanScheduleController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.

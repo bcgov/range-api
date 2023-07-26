@@ -1,10 +1,14 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { isNumeric, checkRequiredFields } from '../../libs/utils';
+import { isNumeric, checkRequiredFields, substituteFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PLAN_STATUS } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
+import { Mailer } from '../../libs/mailer';
+import Client from '../../libs/db2/model/client';
+import User from '../../libs/db2/model/user';
+import EmailTemplate from '../../libs/db2/model/emailtemplate';
 
 const dm = new DataManager(config);
 const {
@@ -142,21 +146,16 @@ export default class PlanStatusController {
     const { statusId, note } = body;
     const { planId } = params;
 
-    checkRequiredFields(
-      ['planId'], 'params', req,
-    );
-    checkRequiredFields(
-      ['statusId'], 'body', req,
-    );
+    checkRequiredFields(['planId'], 'params', req,);
+    checkRequiredFields(['statusId'], 'body', req,);
 
     if (!isNumeric(statusId)) {
       throw errorWithCode('statusId must be numeric', 400);
     }
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const { 'agreement_id': agreementId, 'creator_id': creatorId } = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
       const planStatuses = await PlanStatus.find(db, { active: true });
       // make sure the status exists.
       const status = planStatuses.find(s => s.id === statusId);
@@ -173,13 +172,30 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
+      const emails = []
+      const creator = await User.findById(db, creatorId)
+      emails.push(creator.email)
+      const clients = await Client.clientsForAgreement(db, { 'forestFileId': agreementId })
+      for (const client of clients) {
+        const user = await User.fromClientId(db, client.clientNumber)
+        if (user && user.email)
+          emails.push(user.email)
+      }
+      const toStatus = await PlanStatus.findById(db, statusId)
+      const fromStatus = await PlanStatus.findById(db, prevStatusId)
+      const templates = await EmailTemplate.findWithExclusion(db, { 'name': 'Plan Status Change' })
+      const template = templates[0]
+      const emailFields = { '{agreementId}': agreementId, '{fromStatus}': fromStatus.name, '{toStatus}': toStatus.name }
+      const mailer = new Mailer()
+      mailer.sendEmail(emails, template.fromEmail, substituteFields(template.subject, emailFields),
+        substituteFields(template.body, emailFields), 'html')
       return res.status(200).json(status).end();
     } catch (err) {
-      logger.error(`PlanStatusController:update: fail with error: ${err.message}`);
+      logger.error(`PlanStatusController: update: fail with error: ${err.message} `);
       throw err;
+      }
     }
-  }
-
+  
   /**
    * Update plan amendment
    * @param {*} req : express req
@@ -199,7 +215,7 @@ export default class PlanStatusController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const confirmation = await PlanConfirmation.update(db, { id: confirmationId }, body);
@@ -248,7 +264,7 @@ export default class PlanStatusController {
     );
 
     try {
-      const agreementId = await Plan.agreementForPlanId(db, planId);
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const { id: historyId } = await PlanStatusHistory.create(db, {
