@@ -193,9 +193,9 @@ export default class PlanStatusController {
     } catch (err) {
       logger.error(`PlanStatusController: update: fail with error: ${err.message} `);
       throw err;
-      }
     }
-  
+  }
+
   /**
    * Update plan amendment
    * @param {*} req : express req
