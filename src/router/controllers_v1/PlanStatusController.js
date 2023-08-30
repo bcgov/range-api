@@ -9,6 +9,7 @@ import { Mailer } from '../../libs/mailer';
 import Client from '../../libs/db2/model/client';
 import User from '../../libs/db2/model/user';
 import EmailTemplate from '../../libs/db2/model/emailtemplate';
+import Zone from '../../libs/db2/model/zone';
 
 const dm = new DataManager(config);
 const {
@@ -154,7 +155,7 @@ export default class PlanStatusController {
     }
 
     try {
-      const { 'agreement_id': agreementId, 'creator_id': creatorId } = await Plan.agreementForPlanId(db, planId);
+      const { 'agreement_id': agreementId, 'creator_id': creatorId, 'zone_id': zoneId } = await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       const planStatuses = await PlanStatus.find(db, { active: true });
       // make sure the status exists.
@@ -162,7 +163,9 @@ export default class PlanStatusController {
       if (!status) {
         throw errorWithCode('You must supply a valid status ID', 403);
       }
-      const plan = await Plan.findOne(db, { id: planId });
+      const plan = await Plan.findById(db, planId);
+      const zone = await Zone.findById(db, zoneId)
+      const rangeOfficer = await User.findById(db, zone.userId)
       const { statusId: prevStatusId } = plan;
       await PlanStatusController.updatePlanStatus(planId, status, user);
       await PlanStatusHistory.create(db, {
@@ -185,7 +188,13 @@ export default class PlanStatusController {
       const fromStatus = await PlanStatus.findById(db, prevStatusId)
       const templates = await EmailTemplate.findWithExclusion(db, { 'name': 'Plan Status Change' })
       const template = templates[0]
-      const emailFields = { '{agreementId}': agreementId, '{fromStatus}': fromStatus.name, '{toStatus}': toStatus.name }
+      const emailFields = {
+        '{agreementId}': agreementId,
+        '{fromStatus}': fromStatus.name,
+        '{toStatus}': toStatus.name,
+        '{rangeOfficerName}': rangeOfficer.givenName + ' ' + rangeOfficer.familyName,
+        '{rangeOfficerEmail}': rangeOfficer.email,
+      }
       const mailer = new Mailer()
       mailer.sendEmail(emails, template.fromEmail, substituteFields(template.subject, emailFields),
         substituteFields(template.body, emailFields), 'html')
