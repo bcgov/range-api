@@ -48,7 +48,13 @@ export default class PlanController {
     checkRequiredFields(
       ['planId'], 'params', req,
     );
+    const response = await PlanController.fetchPlan(planId, user)
+    return res.status(200)
+      .json(response)
+      .end();
+  }
 
+  static async fetchPlan(planId, user,) {
     try {
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
@@ -95,14 +101,11 @@ export default class PlanController {
             };
           }),
         );
-
-        return res.status(200)
-          .json({
-            ...plan,
-            grazingSchedules: mappedGrazingSchedules,
-            files: filteredFiles,
-          })
-          .end();
+        return {
+          ...plan,
+          grazingSchedules: mappedGrazingSchedules,
+          files: filteredFiles,
+        }
       }
 
       logger.info('loading last version');
@@ -122,8 +125,8 @@ export default class PlanController {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(`There was a problem fetching the record. Error: ${error.message}`, error.code || 500);
     }
-  }
 
+  }
   /**
    * Create Plan
    * @param {*} req : express req object
@@ -487,4 +490,6 @@ export default class PlanController {
     res.status(204)
       .end();
   }
+
+
 }

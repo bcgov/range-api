@@ -37,6 +37,7 @@ import PlanMinisterIssueController from '../controllers_v1/PlanMinisterIssueCont
 import PlanMinisterIssueActionController from '../controllers_v1/PlanMinisterIssueActionController';
 import PlanInvasivePlantController from '../controllers_v1/PlanInvasivePlantController';
 import PlanManagementConsiderationController from '../controllers_v1/PlanManagementConsiderationController';
+import PDFGeneration from '../controllers_v1/PDFGeneration';
 
 const router = new Router();
 
@@ -213,4 +214,6 @@ router.put('/:planId?/management-consideration/:considerationId?', asyncMiddlewa
 // Delete a management consideration
 router.delete('/:planId?/management-consideration/:considerationId?', asyncMiddleware(PlanManagementConsiderationController.destroy));
 
+// Create a management consideration
+router.get('/:planId?/PDF', asyncMiddleware(PDFGeneration.generatePDF));
 module.exports = router;

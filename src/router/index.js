@@ -35,7 +35,6 @@ import feedback from './routes_v1/feedback';
 import files from './routes_v1/files';
 import plan from './routes_v1/plan';
 import reference from './routes_v1/reference';
-import report from './routes_v1/report';
 import user from './routes_v1/user';
 import version from './routes_v1/version';
 import zone from './routes_v1/zone';
@@ -59,7 +58,6 @@ module.exports = (app) => {
   app.use('/api/v1/plan', plan);
   app.use('/api/v1/reference', reference);
   app.use('/api/v1/zone', zone);
-  app.use('/api/v1/report', report);
   app.use('/api/v1/user', user);
   app.use('/api/v1/feedback', feedback);
   app.use('/api/v1/files', files);

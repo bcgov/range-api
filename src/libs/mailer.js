@@ -37,7 +37,7 @@ export class Mailer {
     try {
       const token = await this.getBearerToken()
       const emailPayload = { to, from, subject, body, bodyType, }
-      logger.debug("email payload: " + JSON.stringify(emailPayload)) 
+      logger.debug("email payload: " + JSON.stringify(emailPayload))
       await axios.post(emailEndpoint, JSON.stringify(emailPayload), {
         headers: {
           'Content-Type': 'application/json',
