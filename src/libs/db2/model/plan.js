@@ -109,36 +109,31 @@ export default class Plan extends Model {
       ...PlanExtension.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
+    let results = [];
+    const q = db
+      .select(myFields)
+      .from(Plan.table)
+      .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
+      // left join otherwise if extension is NULL we don't get any results
+      .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
+      .join('user_account', { 'plan.creator_id': 'user_account.id' })
+      .where({ ...where, uploaded: true })
+      .orderBy(...order);
 
-    try {
-      let results = [];
-      const q = db
-        .select(myFields)
-        .from(Plan.table)
-        .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
-        // left join otherwise if extension is NULL we don't get any results
-        .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
-        .join('user_account', { 'plan.creator_id': 'user_account.id' })
-        .where({ ...where, uploaded: true })
-        .orderBy(...order);
-
-      if (whereNot) {
-        results = q.andWhere(...whereNot);
-      }
-
-      if (page && limit) {
-        const offset = limit * (page - 1);
-        results = await q
-          .offset(offset)
-          .limit(limit);
-      } else {
-        results = await q;
-      }
-
-      return results.map(row => new Plan(row, db));
-    } catch (err) {
-      throw err;
+    if (whereNot) {
+      results = q.andWhere(...whereNot);
     }
+
+    if (page && limit) {
+      const offset = limit * (page - 1);
+      results = await q
+        .offset(offset)
+        .limit(limit);
+    } else {
+      results = await q;
+    }
+
+    return results.map(row => new Plan(row, db));
   }
 
   // Fetch the Agreement ID associated with a given Plan
@@ -176,7 +171,7 @@ export default class Plan extends Model {
     return result;
   }
 
-  static async createSnapshot(db, planId, userId) {
+  static async createSnapshot(db, planId, user) {
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
       throw errorWithCode('Plan doesn\'t exist', 404);
@@ -192,9 +187,6 @@ export default class Plan extends Model {
     await plan.eagerloadAllOneToMany();
     plan.agreement = agreement;
 
-    await plan.eagerloadAllOneToMany();
-
-    const snapshot = JSON.stringify(plan);
 
     const { rows: [{ max: lastVersion }] } = await db.raw(`
       SELECT MAX(version) FROM plan_snapshot
@@ -202,14 +194,13 @@ export default class Plan extends Model {
     `, [plan.id]);
 
     const snapshotRecord = await PlanSnapshot.create(db, {
-      snapshot,
+      snapshot: plan,
       plan_id: planId,
       created_at: new Date(),
       version: lastVersion + 1,
       status_id: plan.statusId,
-      user_id: userId,
-    });
-
+      user_id: user.id,
+    }, user);
     return snapshotRecord;
   }
 
@@ -849,7 +840,7 @@ export default class Plan extends Model {
     const planFiles = await PlanFile.find(this.db, where);
 
     for (const file of planFiles) {
-      file.user = await User.findById(this.db, file.userId)
+      file.user = await User.findById(this.db, file.userId);
     }
 
     this.files = planFiles;

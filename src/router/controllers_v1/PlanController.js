@@ -3,7 +3,9 @@ import { checkRequiredFields, objPathToCamelCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import { generatePDFResponse } from './PDFGeneration';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
+import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
 
 const dm = new DataManager(config);
 const {
@@ -48,19 +50,18 @@ export default class PlanController {
     checkRequiredFields(
       ['planId'], 'params', req,
     );
-    const response = await PlanController.fetchPlan(planId, user)
+    const response = await PlanController.fetchPlan(planId, user);
     return res.status(200)
       .json(response)
       .end();
   }
 
-  static async fetchPlan(planId, user,) {
+  static async fetchPlan(planId, user) {
     try {
       const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
       if (!plan) {
         throw errorWithCode('Plan doesn\'t exist', 404);
       }
-
       const { agreementId } = plan;
       const statusId = plan?.status?.id;
 
@@ -74,7 +75,6 @@ export default class PlanController {
       const privacyVersion = privacyVersionRaw?.snapshot;
 
       const shouldBeLiveVersion = (privacyVersion == null);
-      logger.info(`shouldBeLiveVersion: ${shouldBeLiveVersion}`);
 
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
@@ -84,9 +84,7 @@ export default class PlanController {
       await agreement.eagerloadAllOneToManyExceptPlan();
       agreement.transformToV1();
 
-
       if (shouldBeLiveVersion) {
-        logger.info('loading live plan');
         await plan.eagerloadAllOneToMany();
         plan.agreement = agreement;
 
@@ -105,7 +103,7 @@ export default class PlanController {
           ...plan,
           grazingSchedules: mappedGrazingSchedules,
           files: filteredFiles,
-        }
+        };
       }
 
       logger.info('loading last version');
@@ -491,5 +489,15 @@ export default class PlanController {
       .end();
   }
 
-
+  static async downloadPDF(req, res) {
+    const {
+      user,
+      params,
+    } = req;
+    const { planId } = params;
+    const plan = await PlanController.fetchPlan(planId, user);
+    plan.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
+    const response = await generatePDFResponse(plan);
+    res.json(response.data).end();
+  }
 }
