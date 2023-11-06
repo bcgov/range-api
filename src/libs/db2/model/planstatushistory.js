@@ -22,6 +22,7 @@
 
 'use strict';
 
+import AmendmentType from './amendmenttype';
 import Model from './model';
 import Plan from './plan';
 import User from './user';
@@ -90,5 +91,57 @@ export default class PlanStatusHistory extends Model {
       };
     }
     return null;
+  }
+
+  static async fetchAmendmentSubmissions(db, planId, startDate) {
+    const amendmentTypeArray = [];
+    const amendmentTypeRows = await AmendmentType.find(db, {});
+    amendmentTypeRows.forEach((element) => {
+      amendmentTypeArray[element.id] = element.description;
+    });
+    const results = await db
+      .select(['plan_status_history.id', 'plan_status_history.to_plan_status_id', 'plan_status_history.from_plan_status_id',
+        'plan_status_history.created_at', 'user_account.family_name', 'user_account.given_name'])
+      .table('plan_status_history')
+      .leftJoin('user_account', { 'plan_status_history.user_id': 'user_account.id' })
+      .andWhere({
+        plan_id: planId,
+      })
+      .orderBy('plan_status_history.created_at');
+    const response = [];
+    let lastMandatoryAmendment = null;
+    results.forEach((row) => {
+      if (startDate
+        && (new Date(startDate) < new Date(row.created_at))
+        && (new Date(startDate).toString() !== new Date(row.created_at).toString())) {
+        return;
+      }
+      if (row.to_plan_status_id === 21) {
+        response.push({
+          id: row.id,
+          createdAt: row.created_at,
+          submittedBy: `${row.given_name} ${row.family_name}`,
+          approvedAt: null,
+          approvedBy: null,
+          amendmentType: amendmentTypeArray[1],
+        });
+      } else if (row.from_plan_status_id === 22 || row.from_plan_status_id === 23) {
+        lastMandatoryAmendment = response.length;
+        response.push({
+          id: row.id,
+          createdAt: row.created_at,
+          submittedBy: `${row.given_name} ${row.family_name}`,
+          approvedAt: null,
+          approvedBy: null,
+          amendmentType: amendmentTypeArray[2],
+        });
+      } if (Plan.legalStatuses.indexOf(row.to_plan_status_id) !== -1) {
+        if (lastMandatoryAmendment !== null) {
+          response[lastMandatoryAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
+          response[lastMandatoryAmendment].approvedAt = row.created_at;
+        }
+      }
+    });
+    return response;
   }
 }

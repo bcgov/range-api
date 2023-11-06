@@ -95,7 +95,7 @@ export default class PlanStatusController {
         `, [planId]);
 
         await PlanSnapshot.create(db, {
-          snapshot: JSON.parse(prevLegal.snapshot),
+          snapshot: prevLegal.snapshot,
           plan_id: planId,
           version: lastVersion + 1,
           created_at: new Date(),
@@ -117,9 +117,8 @@ export default class PlanStatusController {
           WHERE plan_id = ?
         `, [planId]);
 
-        console.log('creating snapshot 44');
         await PlanSnapshot.create(db, {
-          snapshot: JSON.parse(prevLegal.snapshot),
+          snapshot: prevLegal.snapshot,
           plan_id: planId,
           version: lastVersion + 1,
           created_at: new Date(),
@@ -168,7 +167,6 @@ export default class PlanStatusController {
       const zone = await Zone.findById(db, zoneId);
       const rangeOfficer = await User.findById(db, zone.userId);
       const { statusId: prevStatusId } = plan;
-      await PlanStatusController.updatePlanStatus(planId, status, user);
       await PlanStatusHistory.create(db, {
         fromPlanStatusId: prevStatusId,
         toPlanStatusId: statusId,
@@ -176,6 +174,7 @@ export default class PlanStatusController {
         planId,
         userId: user.id,
       });
+      await PlanStatusController.updatePlanStatus(planId, status, user);
       const emails = [];
       const creator = await User.findById(db, creatorId);
       emails.push(creator.email);

@@ -22,7 +22,6 @@ export default class PlanVersionController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-    const userId = user.id;
 
     try {
       const plan = await Plan.findById(db, planId);
@@ -135,11 +134,13 @@ export default class PlanVersionController {
         db,
         { plan_id: planId, version },
       );
-      versionData.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
       if (!versionData) throw errorWithCode('Could not find version for plan', 404);
       res.setHeader('Content-disposition', `attachment; filename=${agreementId}.pdf`);
       res.setHeader('Content-type', 'application/pdf');
       if (!versionData.pdfFile) {
+        versionData.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
+        const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(db, planId, versionData.createdAt);
+        versionData.snapshot.amendmentSubmissions = amendmentSubmissions;
         const response = await generatePDFResponse(versionData.snapshot);
         PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
         res.send(response.data);

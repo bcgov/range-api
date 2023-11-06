@@ -199,7 +199,7 @@ const getAgreementsForAdmin = async ({
   latestPlan = true, sendFullPlan = false, staffDraft = true,
 }) => {
   const agreements = await Agreement.findWithAllRelations(
-    db, { }, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
+    db, {}, page, limit, latestPlan, sendFullPlan, staffDraft, orderBy, order,
   );
   return agreements;
 };

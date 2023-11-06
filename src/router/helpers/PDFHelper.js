@@ -98,8 +98,6 @@ export class AdditionalDetailsGenerator {
             pasture.pldPercentage = 0;
           }
         }
-        if (!pasture.allowableAum) { pasture.allowableAum = NOT_PROVIDED; }
-        if (!pasture.pldPercent) { pasture.pldPercent = NOT_PROVIDED; }
         if (!pasture.notes) { pasture.notes = NOT_PROVIDED; }
         for (const plantCommunity of pasture.plantCommunities) {
           if (plantCommunity) {

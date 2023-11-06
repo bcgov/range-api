@@ -77,7 +77,6 @@ export default class PlanSnapshot extends Model {
           db, values.plan_id, user,
         );
         if (!originalApproval) {
-
           originalApproval = {
             familyName: user.familyName,
             givenName: user.givenName,
@@ -85,6 +84,9 @@ export default class PlanSnapshot extends Model {
           };
         }
         values.snapshot.originalApproval = originalApproval;
+        const amendmentSubmissions =
+          await PlanStatusHistory.fetchAmendmentSubmissions(db, values.plan_id);
+        values.snapshot.amendmentSubmissions = amendmentSubmissions;
         const response = await generatePDFResponse(values.snapshot);
         values.pdf_file = response.data;
         values.snapshot = JSON.stringify(values.snapshot);

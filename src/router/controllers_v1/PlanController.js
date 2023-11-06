@@ -497,6 +497,8 @@ export default class PlanController {
     const { planId } = params;
     const plan = await PlanController.fetchPlan(planId, user);
     plan.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
+    const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(db, planId);
+    plan.amendmentSubmissions = amendmentSubmissions;
     const response = await generatePDFResponse(plan);
     res.json(response.data).end();
   }
