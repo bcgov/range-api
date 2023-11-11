@@ -31,7 +31,7 @@ export default class PlanSnapshot extends Model {
     return 'plan_snapshot';
   }
 
-  static async findSummary(db, where, order = undefined) {
+  static async findSummary(db, where, whereNotNull = undefined, order = undefined) {
     let results = [];
     const q = db
       .table('plan_snapshot_summary')
@@ -42,6 +42,9 @@ export default class PlanSnapshot extends Model {
       q.whereIn(k, v);
     } else {
       q.where(where);
+    }
+    if (whereNotNull) {
+      q.whereNotNull(whereNotNull);
     }
     if (order && order.length > 0) {
       results = await q.orderBy(...order);

@@ -59,6 +59,7 @@ export default class PlanVersionController {
       const versions = await PlanSnapshot.findSummary(
         db,
         { plan_id: planId },
+        'effective_legal_start',
       );
 
       await Promise.all(versions.map(v => v.fetchStatus(db)));
