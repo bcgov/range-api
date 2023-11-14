@@ -25,7 +25,7 @@ export const roundToSingleDecimalPlace = number => round(number, 1);
  * @returns {float} the total AUMs
  */
 export const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) =>
-  (numberOfAnimals * totalDays * auFactor) / DAYS_ON_THE_AVERAGE;
+  ((numberOfAnimals * totalDays * auFactor) / DAYS_ON_THE_AVERAGE).toFixed(0);
 
 /**
  * Present user friendly string when getting null or undefined value
@@ -94,8 +94,8 @@ export class AdditionalDetailsGenerator {
     for (const pasture of plan.pastures) {
       if (pasture) {
         for (const pasture of plan.pastures) {
-          if (isNaN(pasture.pldPercentage)) {
-            pasture.pldPercentage = 0;
+          if (!pasture.pldPercent || isNaN(pasture.pldPercent)) {
+            pasture.pldPercent = 0;
           }
         }
         if (!pasture.notes) { pasture.notes = NOT_PROVIDED; }
@@ -168,17 +168,18 @@ export class AdditionalDetailsGenerator {
             entry.auFactor = entry.livestockType?.auFactor;
             entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
             entry.pldAUM = roundToSingleDecimalPlace(calcPldAUMs(entry.totalAUM,
-              pasture.pldPercentage));
+              pasture.pldPercent));
             entry.crownAUM = roundToSingleDecimalPlace(calcCrownAUMs(entry.totalAUM, entry.pldAUM));
             schedule.crownTotalAUM += entry.crownAUM;
           }
         }
+        schedule.crownTotalAUM = schedule.crownTotalAUM.toFixed(0);
         if (plan.agreement.usage) {
           const usage = plan.agreement.usage.find(element => element.year === schedule.year);
           if (usage) schedule.authorizedAUM = usage.authorizedAum;
           if (schedule.authorizedAUM) {
             schedule.percentUse = ((schedule.crownTotalAUM
-              / schedule.authorizedAUM) * 100).toFixed(2);
+              / schedule.authorizedAUM) * 100).toFixed(0);
           }
         }
       }
@@ -189,7 +190,8 @@ export class AdditionalDetailsGenerator {
     plan.invasivePlantChecklist.isEmpty = !(plan.invasivePlantChecklist.beginInUninfestedArea
       || plan.invasivePlantChecklist.equipmentAndVehiclesParking
       || plan.invasivePlantChecklist.revegetate
-      || plan.invasivePlantChecklist.undercarrigesInspected);
+      || plan.invasivePlantChecklist.undercarrigesInspected
+      || plan.invasivePlantChecklist.other?.length > 0);
   }
 
   setStatusText(plan) {
