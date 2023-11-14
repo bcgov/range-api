@@ -62,7 +62,11 @@ export default class PlanVersionController {
         'effective_legal_start',
       );
 
-      await Promise.all(versions.map(v => v.fetchStatus(db)));
+      await Promise.all(versions.map(async (v) => {
+        v.fetchStatus(db);
+        v.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
+        return v;
+      }));
 
       return res.status(200).json({ versions }).end();
     } catch (error) {
