@@ -142,6 +142,6 @@ export default class PlanStatusHistory extends Model {
         }
       }
     });
-    return response;
+    return response.reverse();
   }
 }
