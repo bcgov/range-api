@@ -20,6 +20,7 @@
 
 'use strict';
 
+import { calcDateDiff, calcPldAUMs, calcCrownAUMs, calcTotalAUMs, roundToSingleDecimalPlace } from '../../../router/helpers/PDFHelper';
 import LivestockType from './livestocktype';
 import Model from './model';
 import Pasture from './pasture';
@@ -50,13 +51,13 @@ export default class GrazingScheduleEntry extends Model {
     return 'grazing_schedule_entry';
   }
 
-  static async findWithLivestockType(db, where, order, orderRaw, page = undefined, limit = undefined) {
+  static async findWithLivestockType(db, where, order, orderRaw,
+    page = undefined, limit = undefined) {
     const myFields = [
       ...GrazingScheduleEntry.fields,
       ...LivestockType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
       ...Pasture.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
     ];
-
     try {
       let results = [];
       const q = db
@@ -80,8 +81,7 @@ export default class GrazingScheduleEntry extends Model {
       } else {
         results = await q;
       }
-
-      return results.map(row => new GrazingScheduleEntry(row, db));
+      return results;
     } catch (err) {
       throw err;
     }

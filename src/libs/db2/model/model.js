@@ -141,9 +141,8 @@ export default class Model {
         .where(where)
         .update(obj)
         .returning(this.primaryKey);
-      if (results.length > 0)
-        return await this.findById(db, results.pop());
-      return []
+      if (results.length > 0) return await this.findById(db, results.pop());
+      return [];
     } catch (err) {
       throw err;
     }

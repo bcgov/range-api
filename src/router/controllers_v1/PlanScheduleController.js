@@ -128,7 +128,8 @@ export default class PlanScheduleController {
           return GrazingScheduleEntry.update(
             db,
             { id: entry.id },
-            { ...entryData,
+            {
+              ...entryData,
               grazing_schedule_id: schedule.id,
               pasture_id: entry.pastureId,
             },
@@ -260,6 +261,35 @@ export default class PlanScheduleController {
       const message = `PlanScheduleController:destroyScheduleEntry: fail for id => ${grazingScheduleEntryId}`;
       logger.error(`${message}, with error = ${error.message}`);
 
+      throw error;
+    }
+  }
+
+  static async updateSortOrder(req, res) {
+    const { params, user, body } = req;
+    const { planId, scheduleId } = params;
+    const { sortOrder } = body;
+    let { sortBy } = body;
+    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
+    try {
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      if (sortBy) {
+        sortBy = objPathToSnakeCase(sortBy.replace('livestockType', 'ref_livestock')).replace('.', '_');
+      }
+      const result = await db.raw(
+        `
+        UPDATE grazing_schedule set sort_by = ?, sort_order = ? WHERE id = ?;
+      `,
+        [sortBy, sortOrder, scheduleId],
+      );
+      if (result === 0) {
+        throw errorWithCode('No such grazing schedule entry exists', 400);
+      }
+      return res.status(204).end();
+    } catch (error) {
+      const message = `PlanScheduleController:updateSortOrder: fail for id => ${scheduleId}`;
+      logger.error(`${message}, with error = ${error.message}`);
       throw error;
     }
   }
