@@ -152,6 +152,9 @@ router.post('/:planId?/schedule', asyncMiddleware(PlanScheduleController.store))
 // Update an existing Schedule (and related Grazing Schedule Entries) of an existing Plan
 router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(PlanScheduleController.update));
 
+// Update an existing Schedule sort order
+router.put('/:planId?/schedule/:scheduleId?/sortOrder', asyncMiddleware(PlanScheduleController.updateSortOrder));
+
 // Remove a Schedule (and related Grazing Schedule Entries) from an existing Plan
 router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(PlanScheduleController.destroy));
 

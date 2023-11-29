@@ -186,6 +186,22 @@ export class AdditionalDetailsGenerator {
     }
   }
 
+  setMinisterIssuesPastureName(plan) {
+    for (const issue of plan.ministerIssues) {
+      if (issue) {
+        issue.pastureNames = [];
+        for (const pastureId of issue.pastures) {
+          if (pastureId) {
+            const pasture = plan.pastures.find(item => item.id === pastureId);
+            if (pasture) {
+              issue.pastureNames.push({ pastureName: pasture.name });
+            }
+          }
+        }
+      }
+    }
+  }
+
   setInvasivePlantCheckListIsEmpty(plan) {
     plan.invasivePlantChecklist.isEmpty = !(plan.invasivePlantChecklist.beginInUninfestedArea
       || plan.invasivePlantChecklist.equipmentAndVehiclesParking

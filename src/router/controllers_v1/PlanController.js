@@ -92,7 +92,11 @@ export default class PlanController {
 
         const mappedGrazingSchedules = await Promise.all(
           plan.grazingSchedules.map(async (schedule) => {
-            const sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
+            let sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
+            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pastureName', 'pasture.name');
+            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('refLivestockName', 'livestockType.name');
+            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pldAuMs', 'pldAUMs');
+            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('crownAuMs', 'crownAUMs');
             return {
               ...schedule,
               sortBy: sanitizedSortBy,
