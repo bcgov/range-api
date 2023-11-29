@@ -9,6 +9,7 @@ export const generatePDFResponse = async (plan) => {
   adg.setDocumentGenerationDate(plan);
   adg.setClientConfirmationStatus(plan);
   adg.setInvasivePlantCheckListIsEmpty(plan);
+  adg.setMinisterIssuesPastureName(plan);
   adg.setPlantCommunityDetails(plan);
   adg.setIndicatorPlantDetails(plan);
   adg.setScheduleDetails(plan);
