@@ -8,23 +8,27 @@ exports.up = async (knex) => {
       email text,
       requested_extension boolean null,
       created_at timestamptz not null default 'now'::text::timestamp(3) with time zone,
-      updated_at timestamptz not null default 'now'::text::timestamp(3) with time zone
+      updated_at timestamptz not null default 'now'::text::timestamp(3) with time zone,
+      foreign key (plan_id) references plan(id)
     )`);
   await knex.raw(`
     create trigger update_plan_extension_requests_changetimestamp before
     update
         on
         plan_extension_requests for each row execute function update_changetimestamp_column()
-    )`);
+    `);
 
   await knex.raw(`
     alter table plan add extension_status int4 null;
   `);
   await knex.raw(`
-    alter table plan add extension_required_votes int4 null;
+    alter table plan add extension_of int null;
   `);
   await knex.raw(`
-    alter table plan add extension_received_votes int4 null;
+    alter table plan add extension_required_votes int4 default 0;
+  `);
+  await knex.raw(`
+    alter table plan add extension_received_votes int4 default 0;
   `);
 };
 

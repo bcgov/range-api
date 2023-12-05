@@ -20,12 +20,12 @@
 
 /* eslint-env es6 */
 
-'use strict';
+"use strict";
 
 export default class Model {
   constructor(data, db = undefined) {
     // this hides `db` from for..in.
-    Object.defineProperty(this, 'db', {
+    Object.defineProperty(this, "db", {
       enumerable: false,
       value: db,
       writable: false,
@@ -36,11 +36,11 @@ export default class Model {
 
   static get fields() {
     // primary key *must* be first!
-    throw new Error('You must override fields()');
+    throw new Error("You must override fields()");
   }
 
   static get table() {
-    throw new Error('You must override table()');
+    throw new Error("You must override table()");
   }
 
   // // eslint-disable-next-line no-unused-vars
@@ -50,7 +50,9 @@ export default class Model {
 
   static get primaryKey() {
     const field = this.fields[0];
-    return field.indexOf('.') > -1 ? field.slice(field.indexOf('.') + 1) : field;
+    return field.indexOf(".") > -1
+      ? field.slice(field.indexOf(".") + 1)
+      : field;
   }
 
   static transformToCamelCase(data) {
@@ -63,22 +65,27 @@ export default class Model {
   }
 
   static toCamelCase(str) {
-    return str.replace(/_/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => { // eslint-disable-line arrow-body-style
-      return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
-    }).replace(/\s+/g, '');
+    return str
+      .replace(/_/g, " ")
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => {
+        // eslint-disable-line arrow-body-style
+        return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
+      })
+      .replace(/\s+/g, "");
   }
 
   static toSnakeCase(str) {
-    return str.replace(/([A-Z])/g, $1 => `_${$1.toLowerCase()}`);
+    return str.replace(/([A-Z])/g, ($1) => `_${$1.toLowerCase()}`);
   }
 
   // Find an object(s) with the provided where conditions
   static async find(db, where, order = undefined) {
     let results = [];
-    const q = db
-      .table(this.table)
-      .select(...this.fields);
-    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+    const q = db.table(this.table).select(...this.fields);
+    if (
+      Object.keys(where).length === 1 &&
+      where[Object.keys(where)[0]].constructor === Array
+    ) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -125,7 +132,7 @@ export default class Model {
     this.fields
       .slice(1) // skip the PK, they can not be updated.
       .forEach((key) => {
-        const aKey = key.split('.').pop();
+        const aKey = key.split(".").pop();
         // check for both camel case and snake case values
         if (values[Model.toCamelCase(aKey)] !== undefined) {
           obj[aKey] = values[Model.toCamelCase(aKey)];
@@ -149,11 +156,12 @@ export default class Model {
   }
 
   static async count(db, where = {}) {
-    const q = db
-      .table(this.table)
-      .count('*');
+    const q = db.table(this.table).count("*");
 
-    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
+    if (
+      Object.keys(where).length === 1 &&
+      where[Object.keys(where)[0]].constructor === Array
+    ) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -177,17 +185,21 @@ export default class Model {
    */
   static async setCanonicalId(db, id) {
     const data = await this.findById(db, id);
-    return this.update(db, { id }, { canonical_id: data.canonical_id || data.id });
+    return this.update(
+      db,
+      { id },
+      { canonical_id: data.canonical_id || data.id },
+    );
   }
 
   static async create(db, values) {
-    const fields = this.fields.map(f => f.split('.')[1]);
+    const fields = this.fields.map((f) => f.split(".")[1]);
     // Only the keys returned by the `fields` getter can
     // be used to create a new record (by default). Override for
     // different behaviour.
     const obj = {};
     this.fields.forEach((key) => {
-      const aKey = key.split('.').pop();
+      const aKey = key.split(".").pop();
       // check for both camel case and snake case values
       if (values[Model.toCamelCase(aKey)]) {
         obj[aKey] = values[Model.toCamelCase(aKey)];
@@ -203,7 +215,10 @@ export default class Model {
         .returning(this.primaryKey)
         .insert(obj);
 
-      if (fields.includes('canonical_id') && !(values.canonicalId || values.canonical_id)) {
+      if (
+        fields.includes("canonical_id") &&
+        !(values.canonicalId || values.canonical_id)
+      ) {
         await this.setCanonicalId(db, results[0]);
       }
       return await this.findById(db, results.pop());
@@ -220,10 +235,7 @@ export default class Model {
   }
 
   static async remove(db, where) {
-    const results = await db
-      .table(this.table)
-      .where(where)
-      .delete();
+    const results = await db.table(this.table).where(where).delete();
 
     return results;
   }
@@ -234,7 +246,7 @@ export default class Model {
     Object.keys(data).forEach((key) => {
       const prefix = this.table;
       if (key.startsWith(prefix)) {
-        const aKey = key.replace(prefix, '').slice(1);
+        const aKey = key.replace(prefix, "").slice(1);
         obj[aKey] = data[key];
       }
     });

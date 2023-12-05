@@ -18,33 +18,34 @@
 // Created by Jason Leach on 2018-05-10.
 //
 
-'use strict';
+"use strict";
 
-import { flatten } from 'lodash';
-import { errorWithCode } from '@bcgov/nodejs-common-utils';
-import GrazingSchedule from './grazingschedule';
-import Model from './model';
-import Pasture from './pasture';
-import PlanExtension from './planextension';
-import PlanStatus from './planstatus';
-import MinisterIssue from './ministerissue';
-import PlanStatusHistory from './planstatushistory';
-import PlanConfirmation from './planconfirmation';
-import User from './user';
-import InvasivePlantChecklist from './invasiveplantchecklist';
-import AdditionalRequirement from './additionalrequirement';
-import ManagementConsideration from './managementconsideration';
-import PlantCommunity from './plantcommunity';
-import IndicatorPlant from './indicatorplant';
-import MonitoringArea from './monitoringarea';
-import MonitoringAreaPurpose from './monitoringareapurpose';
-import PlantCommunityAction from './plantcommunityaction';
-import GrazingScheduleEntry from './grazingscheduleentry';
-import MinisterIssueAction from './ministerissueaction';
-import MinisterIssuePasture from './ministerissuepasture';
-import PlanSnapshot from './plansnapshot';
-import Agreement from './agreement';
-import PlanFile from './PlanFile';
+import { flatten } from "lodash";
+import { errorWithCode } from "@bcgov/nodejs-common-utils";
+import GrazingSchedule from "./grazingschedule";
+import Model from "./model";
+import Pasture from "./pasture";
+import PlanExtension from "./planextension";
+import PlanStatus from "./planstatus";
+import MinisterIssue from "./ministerissue";
+import PlanStatusHistory from "./planstatushistory";
+import PlanConfirmation from "./planconfirmation";
+import User from "./user";
+import InvasivePlantChecklist from "./invasiveplantchecklist";
+import AdditionalRequirement from "./additionalrequirement";
+import ManagementConsideration from "./managementconsideration";
+import PlantCommunity from "./plantcommunity";
+import IndicatorPlant from "./indicatorplant";
+import MonitoringArea from "./monitoringarea";
+import MonitoringAreaPurpose from "./monitoringareapurpose";
+import PlantCommunityAction from "./plantcommunityaction";
+import GrazingScheduleEntry from "./grazingscheduleentry";
+import MinisterIssueAction from "./ministerissueaction";
+import MinisterIssuePasture from "./ministerissuepasture";
+import PlanSnapshot from "./plansnapshot";
+import Agreement from "./agreement";
+import PlanFile from "./PlanFile";
+import PlanExtensionRequests from "./planextensionrequests";
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -60,12 +61,14 @@ export default class Plan extends Model {
     this.status = new PlanStatus(PlanStatus.extract(data));
     // The left join will return `null` values when no related record exists
     // so we manually exclude them.
-    const extension = new PlanExtension(PlanExtension.extract(data));
-    this.extension = extension.id === null ? null : extension;
+    // const extension = new PlanExtension(PlanExtension.extract(data));
+    // this.extension = extension.id === null ? null : extension;
+    this.requestedExtension = data.extension_requests_requested_extension;
+    this.requestedExtensionUserId = data.extension_requests_user_id;
     this.creator = new User(User.extract(data));
   }
 
-  static legalStatuses = [20, 8, 9, 12, 21]
+  static legalStatuses = [20, 8, 9, 12, 21];
 
   static get fields() {
     // TODO:(jl) Work with consumers to remove 'agreement_id' from the selected
@@ -73,26 +76,49 @@ export default class Plan extends Model {
 
     // primary key *must* be first!
     return [
-      'id', 'range_name', 'plan_start_date', 'plan_end_date',
-      'notes', 'alt_business_name', 'agreement_id', 'status_id',
-      'uploaded', 'amendment_type_id', 'created_at', 'updated_at',
-      'effective_at', 'submitted_at', 'creator_id', 'canonical_id',
-      'is_restored', 'conditions', 'proposed_conditions',
-    ].map(f => `${Plan.table}.${f}`);
+      "id",
+      "range_name",
+      "plan_start_date",
+      "plan_end_date",
+      "notes",
+      "alt_business_name",
+      "agreement_id",
+      "status_id",
+      "uploaded",
+      "amendment_type_id",
+      "created_at",
+      "updated_at",
+      "effective_at",
+      "submitted_at",
+      "creator_id",
+      "canonical_id",
+      "is_restored",
+      "conditions",
+      "proposed_conditions",
+      "extension_status",
+      "extension_required_votes",
+      "extension_received_votes",
+      "extension_of",
+    ].map((f) => `${Plan.table}.${f}`);
   }
 
   static get table() {
-    return 'plan';
+    return "plan";
   }
 
   static async findCurrentVersion(db, canonicalId) {
     try {
-      const { rows: [currentVersion] } = await db.raw(`
+      const {
+        rows: [currentVersion],
+      } = await db.raw(
+        `
         SELECT plan.*
         FROM plan_version
         INNER JOIN plan ON plan_version.plan_id = plan.id
         WHERE plan_version.canonical_id = ? AND version = -1;
-        `, [canonicalId]);
+        `,
+        [canonicalId],
+      );
       return currentVersion;
     } catch (e) {
       return null;
@@ -100,23 +126,27 @@ export default class Plan extends Model {
   }
 
   static async findWithStatusExtension(
-    db, where, order,
-    page = undefined, limit = undefined, whereNot = undefined,
+    db,
+    where,
+    order,
+    page = undefined,
+    limit = undefined,
+    whereNot = undefined,
   ) {
     const myFields = [
       ...Plan.fields,
-      ...PlanStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...PlanExtension.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...PlanExtension.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...User.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
     ];
     let results = [];
     const q = db
       .select(myFields)
       .from(Plan.table)
-      .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
+      .join("ref_plan_status", { "plan.status_id": "ref_plan_status.id" })
       // left join otherwise if extension is NULL we don't get any results
-      .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
-      .join('user_account', { 'plan.creator_id': 'user_account.id' })
+      .leftJoin("extension", { "plan.extension_id": "extension.id" })
+      .join("user_account", { "plan.creator_id": "user_account.id" })
       .where({ ...where, uploaded: true })
       .orderBy(...order);
 
@@ -126,14 +156,11 @@ export default class Plan extends Model {
 
     if (page && limit) {
       const offset = limit * (page - 1);
-      results = await q
-        .offset(offset)
-        .limit(limit);
+      results = await q.offset(offset).limit(limit);
     } else {
       results = await q;
     }
-
-    return results.map(row => new Plan(row, db));
+    return results.map((row) => new Plan(row, db));
   }
 
   // Fetch the Agreement ID associated with a given Plan
@@ -143,7 +170,7 @@ export default class Plan extends Model {
     }
 
     const results = await db
-      .select('agreement_id')
+      .select("agreement_id")
       .from(Plan.table)
       .where({ id: planId });
 
@@ -160,9 +187,11 @@ export default class Plan extends Model {
     }
 
     const results = await db
-      .select('*')
+      .select("*")
       .from(Plan.table)
-      .join(Agreement.table, { 'plan.agreement_id': 'agreement.forest_file_id' })
+      .join(Agreement.table, {
+        "plan.agreement_id": "agreement.forest_file_id",
+      })
       .where({ id: planId });
 
     if (results.length === 0) return null;
@@ -172,35 +201,47 @@ export default class Plan extends Model {
   }
 
   static async createSnapshot(db, planId, user) {
-    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
+    const [plan] = await Plan.findWithStatusExtension(
+      db,
+      { "plan.id": planId },
+      ["id", "desc"],
+    );
     if (!plan) {
-      throw errorWithCode('Plan doesn\'t exist', 404);
+      throw errorWithCode("Plan doesn't exist", 404);
     }
     const { agreementId } = plan;
 
-    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-      db, { forest_file_id: agreementId },
-    );
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(db, {
+      forest_file_id: agreementId,
+    });
     await agreement.eagerloadAllOneToManyExceptPlan();
     agreement.transformToV1();
 
     await plan.eagerloadAllOneToMany();
     plan.agreement = agreement;
 
-
-    const { rows: [{ max: lastVersion }] } = await db.raw(`
+    const {
+      rows: [{ max: lastVersion }],
+    } = await db.raw(
+      `
       SELECT MAX(version) FROM plan_snapshot
       WHERE plan_id = ?
-    `, [plan.id]);
+    `,
+      [plan.id],
+    );
 
-    const snapshotRecord = await PlanSnapshot.create(db, {
-      snapshot: plan,
-      plan_id: planId,
-      created_at: new Date(),
-      version: lastVersion + 1,
-      status_id: plan.statusId,
-      user_id: user.id,
-    }, user);
+    const snapshotRecord = await PlanSnapshot.create(
+      db,
+      {
+        snapshot: plan,
+        plan_id: planId,
+        created_at: new Date(),
+        version: lastVersion + 1,
+        status_id: plan.statusId,
+        user_id: user.id,
+      },
+      user,
+    );
     return snapshotRecord;
   }
 
@@ -329,13 +370,17 @@ export default class Plan extends Model {
     const schedulePromises = snapshot.grazingSchedules.map(async (schedule) => {
       const newSchedule = await GrazingSchedule.create(db, schedule);
 
-      await GrazingScheduleEntry.remove(db, { grazing_schedule_id: schedule.id });
-
-      const entryPromises = schedule.grazingScheduleEntries.map(async (entry) => {
-        const newEntry = await GrazingScheduleEntry.create(db, entry);
-
-        return newEntry;
+      await GrazingScheduleEntry.remove(db, {
+        grazing_schedule_id: schedule.id,
       });
+
+      const entryPromises = schedule.grazingScheduleEntries.map(
+        async (entry) => {
+          const newEntry = await GrazingScheduleEntry.create(db, entry);
+
+          return newEntry;
+        },
+      );
 
       const newEntries = await Promise.all(entryPromises);
 
@@ -360,9 +405,7 @@ export default class Plan extends Model {
       },
     );
 
-    await Promise.all(
-      additionalRequirementPromises,
-    );
+    await Promise.all(additionalRequirementPromises);
 
     await MinisterIssue.remove(db, { plan_id: planId });
 
@@ -382,7 +425,7 @@ export default class Plan extends Model {
       await MinisterIssuePasture.remove(db, { minister_issue_id: issue.id });
 
       const ministerPasturePromises = issue.pastures.map(async (pastureId) => {
-        const pasture = newPastures.find(p => p.original.id === pastureId);
+        const pasture = newPastures.find((p) => p.original.id === pastureId);
         const newPasture = await MinisterIssuePasture.create(db, {
           pasture_id: pasture.id,
           minister_issue_id: newIssue.id,
@@ -404,20 +447,17 @@ export default class Plan extends Model {
 
     await ManagementConsideration.remove(db, { plan_id: planId });
 
-    const managementConsiderationPromises = snapshot.managementConsiderations.map(
-      async (consideration) => {
+    const managementConsiderationPromises =
+      snapshot.managementConsiderations.map(async (consideration) => {
         const newConsideration = await ManagementConsideration.create(
           db,
           consideration,
         );
 
         return newConsideration;
-      },
-    );
+      });
 
-    await Promise.all(
-      managementConsiderationPromises,
-    );
+    await Promise.all(managementConsiderationPromises);
 
     await PlanConfirmation.remove(db, { plan_id: planId });
 
@@ -432,15 +472,12 @@ export default class Plan extends Model {
     await Promise.all(confirmationPromises);
 
     if (
-      snapshot.invasivePlantChecklist
-      && snapshot.invasivePlantChecklist.planId
+      snapshot.invasivePlantChecklist &&
+      snapshot.invasivePlantChecklist.planId
     ) {
       await InvasivePlantChecklist.remove(db, { plan_id: planId });
 
-      await InvasivePlantChecklist.create(
-        db,
-        snapshot.invasivePlantChecklist,
-      );
+      await InvasivePlantChecklist.create(db, snapshot.invasivePlantChecklist);
     }
 
     await PlanStatusHistory.remove(db, { plan_id: planId });
@@ -459,13 +496,11 @@ export default class Plan extends Model {
 
     await PlanFile.remove(db, { plan_id: planId });
 
-    const filePromises = snapshot.files.map(
-      async (file) => {
-        const newFile = await PlanFile.create(db, file);
+    const filePromises = snapshot.files.map(async (file) => {
+      const newFile = await PlanFile.create(db, file);
 
-        return newFile;
-      },
-    );
+      return newFile;
+    });
 
     await Promise.all(filePromises);
   }
@@ -482,7 +517,7 @@ export default class Plan extends Model {
     });
 
     try {
-      db.raw('BEGIN');
+      db.raw("BEGIN");
 
       const pasturePromises = plan.pastures.map(
         async ({ id: pastureId, ...pasture }) => {
@@ -509,7 +544,9 @@ export default class Plan extends Model {
                 },
               );
 
-              const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
+              const newIndicatorPlants = await Promise.all(
+                indicatorPlantPromises,
+              );
 
               const monitoringAreaPromises = plantCommunity.monitoringAreas.map(
                 async ({ id: monitoringAreaId, ...monitoringArea }) => {
@@ -520,10 +557,13 @@ export default class Plan extends Model {
 
                   const purposePromises = monitoringArea.purposes.map(
                     async ({ id: purposeId, ...purpose }) => {
-                      const newPurpose = await MonitoringAreaPurpose.create(db, {
-                        ...purpose,
-                        monitoring_area_id: newMonitoringArea.id,
-                      });
+                      const newPurpose = await MonitoringAreaPurpose.create(
+                        db,
+                        {
+                          ...purpose,
+                          monitoring_area_id: newMonitoringArea.id,
+                        },
+                      );
 
                       return newPurpose;
                     },
@@ -538,7 +578,9 @@ export default class Plan extends Model {
                 },
               );
 
-              const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
+              const newMonitoringAreas = await Promise.all(
+                monitoringAreaPromises,
+              );
 
               const actionPromises = plantCommunity.plantCommunityActions.map(
                 async ({ id: actionId, ...action }) => {
@@ -564,7 +606,6 @@ export default class Plan extends Model {
 
           const newPlantCommunities = await Promise.all(plantCommunityPromises);
 
-
           return {
             ...newPasture,
             plantCommunities: newPlantCommunities,
@@ -584,7 +625,9 @@ export default class Plan extends Model {
 
           const entryPromises = schedule.grazingScheduleEntries.map(
             async ({ id: entryId, ...entry }) => {
-              const pasture = newPastures.find(p => p.original.id === entry.pastureId);
+              const pasture = newPastures.find(
+                (p) => p.original.id === entry.pastureId,
+              );
               const newEntry = await GrazingScheduleEntry.create(db, {
                 ...entry,
                 grazing_schedule_id: newSchedule.id,
@@ -617,7 +660,9 @@ export default class Plan extends Model {
         },
       );
 
-      const newAdditionalRequirements = await Promise.all(additionalRequirementPromises);
+      const newAdditionalRequirements = await Promise.all(
+        additionalRequirementPromises,
+      );
 
       const ministerIssuePromises = plan.ministerIssues.map(
         async ({ id: issueId, ...issue }) => {
@@ -633,7 +678,6 @@ export default class Plan extends Model {
                 issue_id: newIssue.id,
               });
 
-
               return newAction;
             },
           );
@@ -642,7 +686,9 @@ export default class Plan extends Model {
 
           const ministerPasturePromises = issue.pastures.map(
             async (pastureId) => {
-              const pasture = newPastures.find(p => p.original.id === pastureId);
+              const pasture = newPastures.find(
+                (p) => p.original.id === pastureId,
+              );
               const newPasture = await MinisterIssuePasture.create(db, {
                 pasture_id: pasture.id,
                 minister_issue_id: newIssue.id,
@@ -652,7 +698,9 @@ export default class Plan extends Model {
             },
           );
 
-          const newMinisterPastures = await Promise.all(ministerPasturePromises);
+          const newMinisterPastures = await Promise.all(
+            ministerPasturePromises,
+          );
 
           return {
             ...newIssue,
@@ -675,7 +723,9 @@ export default class Plan extends Model {
         },
       );
 
-      const newConsiderations = await Promise.all(managementConsiderationPromises);
+      const newConsiderations = await Promise.all(
+        managementConsiderationPromises,
+      );
 
       const confirmationPromises = plan.confirmations.map(
         async ({ id: confirmationId, ...confirmation }) => {
@@ -692,10 +742,13 @@ export default class Plan extends Model {
 
       const { id, ...invasivePlantChecklist } = plan.invasivePlantChecklist;
 
-      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(db, {
-        ...invasivePlantChecklist,
-        plan_id: newPlan.id,
-      });
+      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(
+        db,
+        {
+          ...invasivePlantChecklist,
+          plan_id: newPlan.id,
+        },
+      );
 
       const newStatusHistoryPromises = plan.planStatusHistory.map(
         async ({ id: historyId, ...history }) => {
@@ -710,7 +763,7 @@ export default class Plan extends Model {
 
       await Promise.all(newStatusHistoryPromises);
 
-      db.raw('COMMIT');
+      db.raw("COMMIT");
 
       return {
         ...newPlan,
@@ -723,7 +776,7 @@ export default class Plan extends Model {
         confirmations: newConfirmations,
       };
     } catch (e) {
-      db.raw('ROLLBACK');
+      db.raw("ROLLBACK");
       throw e;
     }
   }
@@ -749,9 +802,9 @@ export default class Plan extends Model {
   }
 
   async fetchPlanConfirmations() {
-    const confirmations = await PlanConfirmation.find(
-      this.db, { plan_id: this.id },
-    );
+    const confirmations = await PlanConfirmation.find(this.db, {
+      plan_id: this.id,
+    });
     for (const confirmation of confirmations) {
       if (confirmation.userId) {
         const user = await User.findOne(this.db, { id: confirmation.userId });
@@ -763,12 +816,11 @@ export default class Plan extends Model {
 
   async fetchPastures() {
     const where = { plan_id: this.id };
-    const pastures = await Pasture.find(this.db, where, ['created_at']);
+    const pastures = await Pasture.find(this.db, where, ["created_at"]);
 
-    const promises = pastures.map(p =>
-      [
-        p.fetchPlantCommunities(this.db, { pasture_id: p.id }),
-      ]);
+    const promises = pastures.map((p) => [
+      p.fetchPlantCommunities(this.db, { pasture_id: p.id }),
+    ]);
 
     await Promise.all(flatten(promises));
 
@@ -776,16 +828,15 @@ export default class Plan extends Model {
   }
 
   async fetchGrazingSchedules() {
-    const order = ['year', 'asc'];
+    const order = ["year", "asc"];
     const where = { plan_id: this.id };
     const schedules = await GrazingSchedule.find(this.db, where, order);
     // egar load grazing schedule entries.
-    const promises = schedules.map(s => s.fetchGrazingSchedulesEntries(
-      this.db,
-      {
+    const promises = schedules.map((s) =>
+      s.fetchGrazingSchedulesEntries(this.db, {
         grazing_schedule_id: s.id,
-      },
-    ));
+      }),
+    );
     await Promise.all(promises);
 
     this.grazingSchedules = schedules || [];
@@ -796,11 +847,10 @@ export default class Plan extends Model {
     const ministerIssues = await MinisterIssue.findWithType(this.db, where);
 
     // eagar load pasture ids and minister issue actions.
-    const promises = ministerIssues.map(i =>
-      [
-        i.fetchPastureIds(this.db, { minister_issue_id: i.id }),
-        i.fetchMinisterIssueActions(this.db, { issue_id: i.id }),
-      ]);
+    const promises = ministerIssues.map((i) => [
+      i.fetchPastureIds(this.db, { minister_issue_id: i.id }),
+      i.fetchMinisterIssueActions(this.db, { issue_id: i.id }),
+    ]);
 
     await Promise.all(flatten(promises));
 
@@ -809,7 +859,10 @@ export default class Plan extends Model {
 
   async fetchPlanStatusHistory() {
     const where = { plan_id: this.id };
-    const planStatusHistory = await PlanStatusHistory.findWithUser(this.db, where);
+    const planStatusHistory = await PlanStatusHistory.findWithUser(
+      this.db,
+      where,
+    );
 
     this.planStatusHistory = planStatusHistory || [];
   }
@@ -823,14 +876,20 @@ export default class Plan extends Model {
 
   async fetchAdditionalRequirements() {
     const where = { plan_id: this.id };
-    const requirements = await AdditionalRequirement.findWithCategory(this.db, where);
+    const requirements = await AdditionalRequirement.findWithCategory(
+      this.db,
+      where,
+    );
 
     this.additionalRequirements = requirements || [];
   }
 
   async fetchManagementConsiderations() {
     const where = { plan_id: this.id };
-    const considerations = await ManagementConsideration.findWithType(this.db, where);
+    const considerations = await ManagementConsideration.findWithType(
+      this.db,
+      where,
+    );
 
     this.managementConsiderations = considerations || [];
   }
@@ -844,5 +903,33 @@ export default class Plan extends Model {
     }
 
     this.files = planFiles;
+  }
+
+  static async fetchExpiringPlanIds(db, endDateStart, endDateEnd, orderBy) {
+    const q = db
+      .select([
+        "plan.id as planId",
+        "client_agreement.id as clientAgreementId",
+        "client_agreement.agreement_id as agreementId",
+        "client_agreement.client_id as clientId",
+        "user_account.email as email",
+        "user_account.id as userId",
+      ])
+      .from(Plan.table)
+      .leftJoin("client_agreement", {
+        "plan.agreement_id": "client_agreement.agreement_id",
+      })
+      .leftJoin("user_client_link", {
+        "user_client_link.client_id": "client_agreement.client_id",
+      })
+      .leftJoin("user_account", {
+        "user_account.id": "user_client_link.user_id",
+      })
+      .where("plan_end_date", ">=", endDateStart)
+      .andWhere("plan_end_date", "<=", endDateEnd)
+      .whereNull("extension_status")
+      .orderBy(orderBy);
+    const results = await q;
+    return results;
   }
 }
