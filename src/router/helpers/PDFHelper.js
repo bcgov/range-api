@@ -86,6 +86,7 @@ export class AdditionalDetailsGenerator {
       client.confirmationStatus = 'Not Confirmed';
       if (confirmation && confirmation.confirmed === true) {
         client.confirmationStatus = 'Confirmed';
+        client.confirmationDate = confirmation.updatedAt;
       }
     }
   }
@@ -96,6 +97,9 @@ export class AdditionalDetailsGenerator {
         for (const pasture of plan.pastures) {
           if (!pasture.pldPercent || isNaN(pasture.pldPercent)) {
             pasture.pldPercent = 0;
+            pasture.pldPercentConverted = 0;
+          } else {
+            pasture.pldPercentConverted = pasture.pldPercent * 100;
           }
         }
         if (!pasture.notes) { pasture.notes = NOT_PROVIDED; }
