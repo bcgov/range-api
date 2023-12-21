@@ -32,10 +32,10 @@ const {
   PlanConfirmation,
   Usage,
   User,
-  Zone
+  Zone,
 } = dm;
 
-const isValidRecord = record => {
+const isValidRecord = (record) => {
   if (!/^RAN\d{6}$/.test(record.forest_file_id)) {
     return false;
   }
@@ -43,17 +43,18 @@ const isValidRecord = record => {
   return true;
 };
 
-const parseDate = dateAsString => new Date(dateAsString.replace(/-/g, "/"));
+const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, "/"));
 
 const skipping = (action, agreementId, index) => {
   if (agreementId.indexOf("RB") >= 0 || agreementId.indexOf("DL") >= 0) return;
   console.log(
-    `Skipping Record with aId: ${agreementId}, row: ${index +
-      2}, when: ${action}`
+    `Skipping Record with aId: ${agreementId}, row: ${
+      index + 2
+    }, when: ${action}`,
   );
 };
 
-const updateDistrict = async data => {
+const updateDistrict = async (data) => {
   let created = 0;
   console.log("Start updating District");
   for (let index = 0; index < data.length; index++) {
@@ -72,14 +73,14 @@ const updateDistrict = async data => {
       console.log(`Adding District with Code ${districtCode}`);
       await District.create(db, {
         code: districtCode,
-        description: "No description available"
+        description: "No description available",
       });
       created += 1;
     } catch (error) {
       console.log(
         `Error with message = ${
           error.message
-        }, District Code ${districtCode} row: ${index + 2}`
+        }, District Code ${districtCode} row: ${index + 2}`,
       );
       throw error;
     }
@@ -88,10 +89,10 @@ const updateDistrict = async data => {
   return `${created} districts were created.`;
 };
 
-const updateZone = async data => {
+const updateZone = async (data) => {
   const districts = await District.find(db, {});
   const districtCodesMap = {};
-  districts.map(d => {
+  districts.map((d) => {
     districtCodesMap[d.code] = d;
   });
   let created = 0;
@@ -104,7 +105,7 @@ const updateZone = async data => {
       district_admin_zone: zoneCode,
       org_unit_code: districtCode,
       zone_description: zoneDescription,
-      contact_email_address
+      contact_email_address,
     } = record;
     if (!isValidRecord(record) || !zoneCode) {
       skipping("Updating Zone", agreementId, index);
@@ -125,23 +126,23 @@ const updateZone = async data => {
         : null;
       const zone = await Zone.findOne(db, {
         code: zoneCode,
-        district_id: district.id
+        district_id: district.id,
       });
 
       if (!zone) {
         console.log(
-          `Adding Zone with Code ${zoneCode} District Code: ${districtCode}`
+          `Adding Zone with Code ${zoneCode} District Code: ${districtCode}`,
         );
         await Zone.create(db, {
           code: zoneCode,
           description: zoneDescription || "No description available",
           district_id: district.id,
-          user_id: staff && staff.id
+          user_id: staff && staff.id,
         });
         created += 1;
       } else {
         const data = {
-          description: zoneDescription || "No description available"
+          description: zoneDescription || "No description available",
         };
         if (staff) data.user_id = staff.id;
 
@@ -149,16 +150,16 @@ const updateZone = async data => {
           db,
           {
             code: zoneCode,
-            district_id: district.id
+            district_id: district.id,
           },
-          data
+          data,
         );
       }
     } catch (error) {
       console.log(
-        `Error with message = ${
-          error.message
-        }, Zone Code ${zoneCode} row: ${index + 2}`
+        `Error with message = ${error.message}, Zone Code ${zoneCode} row: ${
+          index + 2
+        }`,
       );
       throw error;
     }
@@ -167,12 +168,12 @@ const updateZone = async data => {
   return `${created} zones were created`;
 };
 
-const updateUser = async data => {
+const updateUser = async (data) => {
   let created = 0;
   let updated = 0;
 
   console.log("Start updating Users");
-  console.log('records to process:  ' + data.length);
+  console.log("records to process:  " + data.length);
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const { contact_phone_number, contact_email_address } = record;
@@ -187,7 +188,7 @@ const updateUser = async data => {
     if (email !== "" && phoneNumber !== "") {
       try {
         let user = await User.findOne(db, {
-          email
+          email,
         });
 
         if (user) {
@@ -195,8 +196,8 @@ const updateUser = async data => {
             db,
             { email },
             {
-              phoneNumber
-            }
+              phoneNumber,
+            },
           );
           updated += 1;
         }
@@ -209,18 +210,18 @@ const updateUser = async data => {
   return `${updated} users were updated`;
 };
 
-const updateAgreement = async data => {
+const updateAgreement = async (data) => {
   console.log("Start updating Agreements");
-  console.log('records to process:  ' + data.length);
+  console.log("records to process:  " + data.length);
   const districts = await District.find(db, {});
   const districtCodesMap = {};
-  districts.map(d => {
+  districts.map((d) => {
     districtCodesMap[d.code] = d;
   });
   const zones = await Zone.find(db, {});
   const agreementTypes = await AgreementType.find(db, {});
   const agreementTypesMap = {};
-  agreementTypes.map(at => {
+  agreementTypes.map((at) => {
     agreementTypesMap[at.code] = at;
   });
   const exemption = await AgreementExemptionStatus.findOne(db, { code: "N" }); // Not Exempt
@@ -235,7 +236,7 @@ const updateAgreement = async data => {
       org_unit_code: districtCode,
       file_type_code: agreementTypeCode,
       legal_effective_dt,
-      initial_expiry_dt
+      initial_expiry_dt,
     } = record;
 
     if (
@@ -248,7 +249,7 @@ const updateAgreement = async data => {
       continue;
     }
     const district = districtCodesMap[districtCode];
-    const zone = zones.find(zone => {
+    const zone = zones.find((zone) => {
       const { code, districtId } = zone;
       return code === zoneCode && districtId === district.id;
     });
@@ -272,8 +273,8 @@ const updateAgreement = async data => {
             agreementEndDate: new Date(initial_expiry_dt), // Short Format
             zoneId: zone.id,
             agreementTypeId: agreementType.id,
-            agreementExemptionStatusId: exemption.id
-          }
+            agreementExemptionStatusId: exemption.id,
+          },
         );
         updated += 1;
       } else {
@@ -283,15 +284,15 @@ const updateAgreement = async data => {
           agreementEndDate: new Date(initial_expiry_dt), // Short Format
           zoneId: zone.id,
           agreementTypeId: agreementType.id,
-          agreementExemptionStatusId: exemption.id
+          agreementExemptionStatusId: exemption.id,
         });
         created += 1;
       }
     } catch (error) {
       console.log(
-        `Error with message = ${
-          error.message
-        }, aId ${agreementId} row: ${index + 2}`
+        `Error with message = ${error.message}, aId ${agreementId} row: ${
+          index + 2
+        }`,
       );
       throw error;
     }
@@ -300,7 +301,7 @@ const updateAgreement = async data => {
   return `${created} agreements were created. ${updated} agreements were updated`;
 };
 
-const updateUsage = async data => {
+const updateUsage = async (data) => {
   let created = 0;
   let updated = 0;
   console.log("Start updating Usage");
@@ -314,7 +315,7 @@ const updateUsage = async data => {
       temp_increase,
       non_use_nonbillable,
       non_use_billable,
-      total_annual_use
+      total_annual_use,
     } = record;
     if (!isValidRecord(record) || !calendar_year) {
       skipping("Updating Usage", agreementId, index);
@@ -323,7 +324,7 @@ const updateUsage = async data => {
 
     try {
       const agreement = await Agreement.findOne(db, {
-        forest_file_id: agreementId
+        forest_file_id: agreementId,
       });
       if (!agreement) {
         console.log(`No Agreement with ID ${agreementId}`);
@@ -332,7 +333,7 @@ const updateUsage = async data => {
 
       const usage = await Usage.findOne(db, {
         agreement_id: agreementId,
-        year: calendar_year
+        year: calendar_year,
       });
 
       if (usage) {
@@ -346,8 +347,8 @@ const updateUsage = async data => {
             totalNonUse:
               Number(non_use_nonbillable) + Number(non_use_billable) || 0,
             totalAnnualUse: Number(total_annual_use) || 0,
-            agreementId: agreement.forestFileId
-          }
+            agreementId: agreement.forestFileId,
+          },
         );
         updated += 1;
       } else {
@@ -358,7 +359,7 @@ const updateUsage = async data => {
           totalNonUse:
             Number(non_use_nonbillable) + Number(non_use_billable) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
-          agreementId: agreement.forestFileId
+          agreementId: agreement.forestFileId,
         });
         created += 1;
       }
@@ -366,7 +367,7 @@ const updateUsage = async data => {
       console.log(
         `Error with message = ${
           error.message
-        }, usage year ${calendar_year} row: ${index + 2}`
+        }, usage year ${calendar_year} row: ${index + 2}`,
       );
       throw error;
     }
@@ -375,8 +376,8 @@ const updateUsage = async data => {
   return `${created} usage were created, ${updated} usage were updated`;
 };
 
-const updateClient = async data => {
-  console.log('records to process:  ' + data.length);
+const updateClient = async (data) => {
+  console.log("records to process:  " + data.length);
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
@@ -391,7 +392,7 @@ const updateClient = async data => {
       forest_file_client_type_code: clientTypeCode,
       client_number: clientNumber,
       client_name: clientName,
-      licensee_start_date: licenseeStartDate
+      licensee_start_date: licenseeStartDate,
     } = record;
 
     if (!isValidRecord(record) || !clientLocationCode) {
@@ -399,8 +400,8 @@ const updateClient = async data => {
       continue;
     }
 
-    const clientType = clientTypes.find(ct => ct.code === clientTypeCode);
-       
+    const clientType = clientTypes.find((ct) => ct.code === clientTypeCode);
+
     if (!clientType) {
       console.log(`No client type with ID ${agreementId}`);
     }
@@ -416,9 +417,11 @@ const updateClient = async data => {
           { client_number: clientNumber },
           {
             name: clientName || "Unknown Name",
-            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
-            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null
-          }
+            locationCodes: Array.from(
+              new Set(client.locationCodes.concat(clientLocationCode)),
+            ),
+            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+          },
         );
         updated += 1;
       } else {
@@ -426,14 +429,14 @@ const updateClient = async data => {
           clientNumber: clientNumber,
           name: clientName || "Unknown Name",
           locationCodes: [clientLocationCode],
-          startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null
+          startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
         });
         created += 1;
       }
       const agreement = await Agreement.findById(db, agreementId);
       const clientAgreement = await ClientAgreement.findOne(db, {
         agreement_id: agreementId,
-        client_id: clientNumber
+        client_id: clientNumber,
       });
       /*if(clientAgreement && (typeof clientType === 'undefined')) { // clean up the stale ones here
         await ClientAgreement.remove(db, {
@@ -442,45 +445,46 @@ const updateClient = async data => {
         });
         deleted += 1;
       }*/
-      if (agreement && !clientAgreement && clientType) { // only create if they are A or B
+      if (agreement && !clientAgreement && clientType) {
+        // only create if they are A or B
         await ClientAgreement.create(db, {
           agreement_id: agreementId,
           client_id: clientNumber,
-          client_type_id: clientType.id
+          client_type_id: clientType.id,
         });
-        const plan = await Plan.findOne(db, { agreement_id: agreementId })
+        const plan = await Plan.findOne(db, { agreement_id: agreementId });
         if (plan) {
           const existingConfirmation = await PlanConfirmation.findOne(db, {
-            plan_id: plan.id, client_id: clientNumber
-          })
-          if (!existingConfirmation) {
-          await PlanConfirmation.create(db, {
             plan_id: plan.id,
-            confirmed: false,
             client_id: clientNumber,
-          })
+          });
+          if (!existingConfirmation) {
+            await PlanConfirmation.create(db, {
+              plan_id: plan.id,
+              confirmed: false,
+              client_id: clientNumber,
+            });
+          }
         }
       }
-      }
-     if(agreement && clientAgreement && clientType) // update if different
-        {
-            if(clientAgreement.client_type_id !== clientType.id)
+      if (agreement && clientAgreement && clientType) {
+        // update if different
+        if (clientAgreement.client_type_id !== clientType.id) {
+          ClientAgreement.update(
+            db,
+            { id: clientAgreement.id },
             {
-                ClientAgreement.update(
-                  db,
-                  { id: clientAgreement.id },
-                  {
-                      agreement_id: agreementId,
-                      client_type_id: clientType.id
-                  }
-                );
-            }
+              agreement_id: agreementId,
+              client_type_id: clientType.id,
+            },
+          );
         }
+      }
     } catch (error) {
       console.log(
         `Error with message = ${
           error.message
-        }, client number ${clientNumber} row: ${index + 2}`
+        }, client number ${clientNumber} row: ${index + 2}`,
       );
       throw error;
     }
@@ -503,21 +507,32 @@ const prepareTestSetup = async () => {
     const katie = await User.findOne(db, { username: "idir\\kmenke" });
     await Zone.update(db, { code: "TEST2" }, { user_id: katie.id });
     await Zone.update(db, { code: "TEST4" }, { user_id: katie.id });
-    const githubrangeofficer = await User.findOne(db, { username: "githubrangeofficer" });
-    await Zone.update(db, { code: "TEST3" }, { user_id: githubrangeofficer.id });
+    const githubrangeofficer = await User.findOne(db, {
+      username: "githubrangeofficer",
+    });
+    await Zone.update(
+      db,
+      { code: "TEST3" },
+      { user_id: githubrangeofficer.id },
+    );
     const rangeAppTester = await User.findOne(db, {
-      username: "bceid\\rangeapptester"
+      username: "bceid\\rangeapptester",
     });
     await Zone.update(db, { code: "TEST6" }, { user_id: rangeAppTester.id });
 
     // assign clients
-    const clientsP = Object.values(mockData.users).map(async user => {
+    const clientsP = Object.values(mockData.users).map(async (user) => {
       const client = await Client.findOne(db, {
-        client_number: user.client_number
+        client_number: user.client_number,
       });
 
       const { id } = await User.findOne(db, { username: user.username });
-      await UserClientLink.create(db, { user_id: id, client_id: client.clientNumber, active: true, type: 'owner' });
+      await UserClientLink.create(db, {
+        user_id: id,
+        client_id: client.clientNumber,
+        active: true,
+        type: "owner",
+      });
     });
 
     await Promise.all(clientsP);
@@ -530,7 +545,7 @@ const prepareTestSetup = async () => {
 };
 
 const pruneConfirmations = async () => {
-  console.log('Pruning confirmations...');
+  console.log("Pruning confirmations...");
   const res = await db.raw(`
     WITH extra_confirmations AS (
       SELECT plan_confirmation.id FROM plan_confirmation
@@ -545,11 +560,11 @@ const pruneConfirmations = async () => {
     )
     DELETE FROM plan_confirmation
     WHERE id IN (SELECT id FROM extra_confirmations)
-  `)
+  `);
   console.log(`Deleted ${res.rowCount} confirmations`);
-}
+};
 
-const loadFile = name =>
+const loadFile = (name) =>
   new Promise((resolve, reject) => {
     const records = [];
     fs.readFile(name, "utf8", (err, contents) => {
@@ -557,7 +572,7 @@ const loadFile = name =>
         if (err) reject(err);
 
         const fields = data.shift();
-        data.forEach(line => {
+        data.forEach((line) => {
           const record = {};
           fields.forEach((value, i) => {
             const key = value.replace(/ /g, "_").toLowerCase();
@@ -579,7 +594,7 @@ const loadDataFromUrl = async (token, url) => {
     headers: { "content-type": "application/json", Authorization: token },
     method: "GET",
     uri: url,
-    json: true
+    json: true,
   };
 
   const response = await request(options);
@@ -587,7 +602,7 @@ const loadDataFromUrl = async (token, url) => {
   return response.items;
 };
 
-const getFTAToken = async url => {
+const getFTAToken = async (url) => {
   const options = {
     headers: { "content-type": "application/json" },
     method: "POST",
@@ -595,8 +610,8 @@ const getFTAToken = async url => {
     json: true,
     auth: {
       username: process.env.FTA_API_STORE_USERNAME,
-      password: process.env.FTA_API_STORE_PASSWORD
-    }
+      password: process.env.FTA_API_STORE_PASSWORD,
+    },
   };
 
   const response = await request(options);
@@ -606,16 +621,29 @@ const getFTAToken = async url => {
 
 const updateFTAData = async (licensee, client, usage) => {
   let msg = "";
+  msg = msg + (await updateDistrict(licensee)) + "\n";
   msg = msg + (await updateUser(licensee)) + "\n";
   msg = msg + (await updateAgreement(licensee)) + "\n";
 
-    //create where missing, dispositions with signed plans will get client_id updated in plan_conf
-  msg = msg + (await updateClient(client.filter(item => ['A', 'B'].includes(item.forest_file_client_type_code)))) + "\n";
-    //delete stales last
-  msg = msg + (await updateClient(client.filter(item => ['P', 'C'].includes(item.forest_file_client_type_code)))) + "\n";
+  //create where missing, dispositions with signed plans will get client_id updated in plan_conf
+  msg =
+    msg +
+    (await updateClient(
+      client.filter((item) =>
+        ["A", "B"].includes(item.forest_file_client_type_code),
+      ),
+    )) +
+    "\n";
+  //delete stales last
+  msg =
+    msg +
+    (await updateClient(
+      client.filter((item) =>
+        ["P", "C"].includes(item.forest_file_client_type_code),
+      ),
+    )) +
+    "\n";
 
-
-  msg = msg + (await updateDistrict(licensee)) + "\n";
   msg = msg + (await updateZone(licensee)) + "\n";
   msg = msg + (await updateUsage(usage));
 
@@ -638,10 +666,11 @@ const loadStaffDataFromCSV = async () => {
 };
 
 const loadFTADataFromAPI = async () => {
+  console.log("trying to get api token " + TOKEN_URL);
   const res = await getFTAToken(TOKEN_URL);
   const {
     access_token,
-    token_type
+    token_type,
     // expires_in,
   } = res;
   const token = `${token_type} ${access_token}`;
@@ -673,6 +702,8 @@ const main = async () => {
     }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
+
+    console.log(`${err.stack}`);
     process.exit(0);
     throw err;
   }
