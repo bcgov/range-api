@@ -30,11 +30,33 @@ exports.up = async (knex) => {
   await knex.raw(`
     alter table plan add extension_received_votes int4 default 0;
   `);
+  await knex.raw(`
+    INSERT INTO email_template
+    (name, from_email, subject, body)
+    VALUES('Request Plan Extension Votes',
+          'myrange@bc.gov.ca',
+          'Plan available for extension - {agreementId}',
+          'Plan for {agreementId} is available for extension. Please vote yes or no.');
+  `);
+  await knex.raw(`
+    INSERT INTO email_template
+    (name, from_email, subject, body)
+    VALUES('Plan Pending Extension',
+          'myrange@bc.gov.ca',
+          'Plan for {agreementId} is ready for extension',
+          'All agreement holders have approved plan extension. Plan for {agreementId} is ready for extension.');
+  `);
 };
 
 exports.down = async (knex) => {
-  await knex.raw('DROP TABLE plan_extension_requests');
-  await knex.raw('ALTER TABLE plan DROP COLUMN extension_status');
-  await knex.raw('ALTER TABLE plan DROP COLUMN extension_required_votes');
-  await knex.raw('ALTER TABLE plan DROP COLUMN extension_received_votes');
+  await knex.raw("DROP TABLE plan_extension_requests");
+  await knex.raw("ALTER TABLE plan DROP COLUMN extension_status");
+  await knex.raw("ALTER TABLE plan DROP COLUMN extension_required_votes");
+  await knex.raw("ALTER TABLE plan DROP COLUMN extension_received_votes");
+  await knex.raw(
+    "DELETE FROM email_template where name = 'Request Plan Extension Votes'",
+  );
+  await knex.raw(
+    "DELETE FROM email_template where name = 'Plan Pending Extension'",
+  );
 };

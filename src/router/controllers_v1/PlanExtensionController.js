@@ -12,7 +12,10 @@ import MinisterIssueAction from "../../libs/db2/model/ministerissueaction";
 import MinisterIssuePasture from "../../libs/db2/model/ministerissuepasture";
 import Pasture from "../../libs/db2/model/pasture";
 import PlanStatusHistory from "../../libs/db2/model/planstatushistory";
-import { checkRequiredFields } from "../../libs/utils";
+import { checkRequiredFields, substituteFields } from "../../libs/utils";
+import { Mailer } from "../../libs/mailer";
+import Agreement from "../../libs/db2/model/agreement";
+import EmailTemplate from "../../libs/db2/model/emailtemplate";
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -26,30 +29,56 @@ export default class PlanExtensionController {
   static async approveExtension(req, res) {
     const { params, user } = req;
     const { planId } = params;
-
     checkRequiredFields(["planId"], "params", req);
-
-    const extensionRequest = await PlanExtensionRequests.findOne(db, {
-      plan_id: planId,
-      user_id: user.id,
-    });
-    if (!extensionRequest)
-      throw errorWithCode("Extension request doesn't exist", 400);
-    const planEntry = await Plan.findOne(db, { id: planId });
-    if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
-      throw errorWithCode("All requests already received", 400);
+    const trx = await db.transaction();
+    try {
+      const extensionRequest = await PlanExtensionRequests.findOne(trx, {
+        plan_id: planId,
+        user_id: user.id,
+      });
+      if (!extensionRequest)
+        throw errorWithCode("Extension request doesn't exist", 400);
+      const planEntry = (
+        await Plan.findWithStatusExtension(trx, { "plan.id": planId }, [
+          "id",
+          "desc",
+        ])
+      )[0];
+      if (
+        planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
+      ) {
+        throw errorWithCode("All requests already received", 400);
+      }
+      await PlanExtensionRequests.update(
+        trx,
+        { plan_id: planId, user_id: user.id },
+        { requestedExtension: true },
+      );
+      await Plan.update(
+        trx,
+        { id: planId },
+        { extension_received_votes: planEntry.extensionReceivedVotes + 1 },
+      );
+      const agreement = (
+        await Agreement.findWithTypeZoneDistrictExemption(trx, {
+          forest_file_id: planEntry.agreementId,
+        })
+      )[0];
+      await PlanExtensionController.sendPlanReadyForExtensionEmail(
+        trx,
+        [agreement.zone.user.email],
+        {
+          "{agreementId}": planEntry.agreementId,
+        },
+      );
+      trx.commit();
+      console.log("Returning....");
+      return res.status(200).end();
+    } catch (error) {
+      console.error(error.stack);
+      trx.rollback();
+      return res.status(500).end();
     }
-    await PlanExtensionRequests.update(
-      db,
-      { plan_id: planId, user_id: user.id },
-      { requestedExtension: true },
-    );
-    await Plan.update(
-      db,
-      { id: planId },
-      { extension_received_votes: planEntry.extensionReceivedVotes + 1 },
-    );
-    return res.status(200).end();
   }
 
   /**
@@ -272,6 +301,10 @@ export default class PlanExtensionController {
         userId: user.id,
       });
       await Plan.createSnapshot(trx, newPlan.id, user);
+      // sendPlanExtendedEmail(trx, {
+      //   agreementId: newPlan.agreementId,
+      //   planEndDate: newPlan.planEndDate,
+      // });
       trx.commit();
       return res.status(200).json({ newPlanId: newPlan.id }).end();
     } catch (error) {
@@ -279,5 +312,19 @@ export default class PlanExtensionController {
       console.log(error.stack);
       throw errorWithCode(error, 500);
     }
+  }
+
+  static async sendPlanReadyForExtensionEmail(db, emails, parameters) {
+    const template = await EmailTemplate.findOne(db, {
+      name: "Request Plan Extension Votes",
+    });
+    const mailer = new Mailer();
+    await mailer.sendEmail(
+      emails,
+      template.fromEmail,
+      substituteFields(template.subject, parameters),
+      substituteFields(template.body, parameters),
+      "html",
+    );
   }
 }

@@ -118,7 +118,6 @@ export default class Agreement extends Model {
       });
       await Promise.all(promises);
     }
-
     return flatten(myAgreements);
   }
 
