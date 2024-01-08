@@ -18,23 +18,25 @@
 // Created by Jason Leach on 2018-05-04.
 //
 
-'use strict';
+"use strict";
 
 /* eslint-disable max-len */
 
-import { flatten } from 'lodash';
-import AgreementExemptionStatus from './agreementexemptionstatus';
-import AgreementType from './agreementtype';
-import Client from './client';
-import District from './district';
-import LivestockIdentifier from './livestockidentifier';
-import Model from './model';
-import Plan from './plan';
-import Usage from './usage';
-import User from './user';
-import Zone from './zone';
-import { PLAN_STATUS } from '../../../constants';
-import PlanStatus from './planstatus';
+import { flatten } from "lodash";
+import AgreementExemptionStatus from "./agreementexemptionstatus";
+import AgreementType from "./agreementtype";
+import Client from "./client";
+import District from "./district";
+import LivestockIdentifier from "./livestockidentifier";
+import Model from "./model";
+import Plan from "./plan";
+import Usage from "./usage";
+import User from "./user";
+import Zone from "./zone";
+import { PLAN_STATUS } from "../../../constants";
+import PlanStatus from "./planstatus";
+import PlanExtension from "./planextension";
+import PlanExtensionRequests from "./planextensionrequests";
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -44,24 +46,17 @@ export default class Agreement extends Model {
         obj[key] = data[key];
       }
     });
-
     super(obj, db);
-
-    // // hide this property so it is not automatically returned by the
-    // // API.
-    // delete this.forestFileId;
-    // Object.defineProperty(this, 'forestFileId', {
-    //   value: obj.forestFileId,
-    //   writable: false,
-    //   enumerable: false,
-    // });
-
     this.zone = new Zone(Zone.extract(data));
     this.zone.district = new District(District.extract(data));
     this.zone.user = new User(User.extract(data));
     this.agreementType = new AgreementType(AgreementType.extract(data));
-    // eslint-disable-next-line max-len
-    this.agreementExemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data));
+    if (data.plan_id) {
+      this.plan = new Plan(Plan.extract(data));
+      this.plan.status = new PlanStatus(PlanStatus.extract(data));
+    } else {
+      this.plan = null;
+    }
   }
 
   // To matche previous Agreement (sequelize) schema.
@@ -71,11 +66,18 @@ export default class Agreement extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['forest_file_id', 'agreement_start_date', 'agreement_end_date', 'zone_id', 'agreement_exemption_status_id', 'agreement_type_id'].map(f => `${Agreement.table}.${f}`);
+    return [
+      "forest_file_id",
+      "agreement_start_date",
+      "agreement_end_date",
+      "zone_id",
+      "agreement_exemption_status_id",
+      "agreement_type_id",
+    ].map((f) => `${Agreement.table}.${f}`);
   }
 
   static get table() {
-    return 'agreement';
+    return "agreement";
   }
 
   static async findWithAllRelations(...args) {
@@ -88,96 +90,121 @@ export default class Agreement extends Model {
       latestPlan = false,
       sendFullPlan = false,
       staffDraft = false,
-      orderBy = 'agreement.forest_file_id',
-      order = 'asc',
+      orderBy = "agreement.forest_file_id",
+      order = "asc",
     ] = args;
     let promises = [];
-    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, page, limit, orderBy, order);
-
+    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
+      db,
+      where,
+      page,
+      limit,
+      orderBy,
+      order,
+    );
     // fetch all data that is directly related to the agreement
     // `await` used here to allow the queries to start imediatly and
     // run in parallel. This greatly speeds up the fetch.
-    promises = myAgreements.map(async agreement => (
-      [
-        await agreement.eagerloadAllOneToManyExceptPlan(),
-        await agreement.fetchPlans(latestPlan, staffDraft),
-      ]
-    ));
-
+    promises = myAgreements.map(async (agreement) => [
+      await agreement.eagerloadAllOneToManyExceptPlan(),
+      // await agreement.fetchPlans(latestPlan, staffDraft),
+    ]);
     await Promise.all(flatten(promises));
 
     // fetch all data that is indirectly (nested) related to an agreement
     if (sendFullPlan) {
-      promises = [];
-      myAgreements.forEach((agreement) => {
-        promises = [
-          ...promises,
-          ...agreement.plans.map(async plan =>
-            [
-              await plan.eagerloadAllOneToMany(),
-            ]),
-        ];
+      myAgreements.forEach(async (agreement) => {
+        // await agreement.plan.eagerloadAllOneToMany();
       });
-
       await Promise.all(promises);
     }
-
     return flatten(myAgreements);
   }
 
-  static async findWithTypeZoneDistrictExemption(db, where, page = undefined, limit = undefined, orderBy = 'agreement.forest_file_id', order = 'asc') {
+  static async findWithTypeZoneDistrictExemption(
+    db,
+    where,
+    page = undefined,
+    limit = undefined,
+    orderBy = "plan.agreement_id",
+    order = "asc",
+  ) {
     if (!db || !where) {
       return [];
     }
 
     const myFields = [
       ...Agreement.fields,
-      ...Zone.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...AgreementType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...AgreementExemptionStatus.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...Zone.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...District.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...AgreementType.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      // ...AgreementExemptionStatus.fields.map(
+      //   (f) => `${f} AS ${f.replace(".", "_")}`,
+      // ),
+      ...User.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...Plan.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...PlanExtensionRequests.fields.map(
+        (f) => `${f} AS ${f.replace(".", "_")}`,
+      ),
     ];
 
-    try {
-      let results = [];
+    let results = [];
+    const q = db
+      .select(myFields)
+      .from(Agreement.table)
+      .leftJoin("plan", {
+        "agreement.forest_file_id": "plan.agreement_id",
+      })
+      .leftJoin("ref_plan_status", {
+        "plan.status_id": "ref_plan_status.id",
+      })
+      .leftJoin("ref_zone", { "agreement.zone_id": "ref_zone.id" })
+      .leftJoin("ref_district", { "ref_zone.district_id": "ref_district.id" })
+      .leftJoin("user_account", { "ref_zone.user_id": "user_account.id" })
 
-      const q = db
-        .select(myFields)
-        .from(Agreement.table)
-        .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
-        .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
-        .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
-        .leftJoin('plan', { 'agreement.forest_file_id': 'plan.agreement_id' })
-        .leftJoin('user_account as plan_creator', { 'plan.creator_id': 'plan_creator.id' })
-        .leftJoin('client_agreement', { 'agreement.forest_file_id': 'client_agreement.agreement_id', 'client_agreement.client_type_id': 1 })
-        .leftJoin('ref_client as agreement_holder', { 'agreement_holder.client_number': 'client_agreement.client_id' })
-        .leftJoin('ref_plan_status as plan_status', { 'plan.status_id': 'plan_status.id' })
-        .leftJoin('ref_agreement_type', { 'agreement.agreement_type_id': 'ref_agreement_type.id' })
-        .leftJoin('ref_agreement_exemption_status', { 'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id' })
-        .orderByRaw(`${orderBy} ${(order === 'asc' ? 'asc nulls last' : 'desc nulls first')}`);
+      .leftJoin("user_account as plan_creator", {
+        "plan.creator_id": "plan_creator.id",
+      })
 
-      if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
-        const k = Object.keys(where)[0];
-        const v = where[k];
-        q.whereIn(k, v);
-      } else {
-        q.where(where);
-      }
-
-      if (page && limit) {
-        const offset = limit * (page - 1);
-        results = await q
-          .offset(offset)
-          .limit(limit);
-      } else {
-        results = await q;
-      }
-
-      return results.map(row => new Agreement(row, db));
-    } catch (err) {
-      throw err;
+      .leftJoin("client_agreement", {
+        "agreement.forest_file_id": "client_agreement.agreement_id",
+        "client_agreement.client_type_id": 1,
+      })
+      .leftJoin("ref_client as agreement_holder", {
+        "agreement_holder.client_number": "client_agreement.client_id",
+      })
+      .leftJoin("ref_agreement_type", {
+        "agreement.agreement_type_id": "ref_agreement_type.id",
+      })
+      .leftJoin("plan_extension_requests", {
+        "plan.id": "plan_extension_requests.plan_id",
+        "user_account.id": "plan_extension_requests.user_id",
+      })
+      // .leftJoin("ref_agreement_exemption_status", {
+      //   "agreement.agreement_exemption_status_id":
+      //     "ref_agreement_exemption_status.id",
+      // })
+      .orderByRaw(
+        `${orderBy} ${order === "asc" ? "asc nulls last" : "desc nulls first"}`,
+      );
+    if (
+      Object.keys(where).length === 1 &&
+      where[Object.keys(where)[0]].constructor === Array
+    ) {
+      const k = Object.keys(where)[0];
+      const v = where[k];
+      q.whereIn(k, v);
+    } else {
+      q.where(where);
     }
+    if (page && limit) {
+      const offset = limit * (page - 1);
+      results = await q.offset(offset).limit(limit);
+    } else {
+      results = await q;
+    }
+    return results.map((row) => new Agreement(row, db));
   }
 
   static async agreementsForClientId(db, clientId) {
@@ -186,11 +213,11 @@ export default class Agreement extends Model {
     }
 
     const results = await db
-      .select('agreement_id')
-      .from('client_agreement')
+      .select("agreement_id")
+      .from("client_agreement")
       .where({ client_id: clientId });
 
-    return flatten(results.map(result => Object.values(result)));
+    return flatten(results.map((result) => Object.values(result)));
   }
 
   static async agreementsForZoneId(db, zoneId) {
@@ -199,11 +226,11 @@ export default class Agreement extends Model {
     }
 
     const results = await db
-      .select('forest_file_id')
+      .select("forest_file_id")
       .from(Agreement.table)
       .where({ zone_id: zoneId });
 
-    return flatten(results.map(result => Object.values(result)));
+    return flatten(results.map((result) => Object.values(result)));
   }
 
   static async searchForTerm(db, term) {
@@ -215,20 +242,20 @@ export default class Agreement extends Model {
       const results = await db
         .select(Agreement.primaryKey)
         .from(Agreement.table)
-        .where({ 'agreement.forest_file_id': term })
-        .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
+        .where({ "agreement.forest_file_id": term })
+        .orWhere("agreement.forest_file_id", "ilike", `%${term}%`);
 
       // return an array of `forest_file_id`
-      return flatten(results.map(result => Object.values(result)));
+      return flatten(results.map((result) => Object.values(result)));
     } catch (err) {
       throw err;
     }
   }
 
   static async update(db, where, values) {
-    const obj = { };
+    const obj = {};
     Agreement.fields.forEach((field) => {
-      const aKey = field.replace(Agreement.table, '').slice(1);
+      const aKey = field.replace(Agreement.table, "").slice(1);
       if (values[Model.toCamelCase(aKey)]) {
         obj[aKey] = values[Model.toCamelCase(aKey)];
       }
@@ -259,28 +286,56 @@ export default class Agreement extends Model {
   }
 
   async fetchPlans(latestPlan = false, staffDraft = false) {
-    const order = ['id', 'desc'];
+    const order = ["id", "desc"];
     const where = { agreement_id: this.forestFileId };
     let plans = [];
 
     // if latestPlan && staffDraft returns the most recent plan except the one whose status is staff draft
     // if latestPlan && !staffDraft returns the most recent plan
     if (latestPlan) {
-      const planStatusWhere = { code: staffDraft ? [] : [PLAN_STATUS.STAFF_DRAFT] };
-      const notAllowedStatuses = await PlanStatus.find(this.db, planStatusWhere);
-      const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
-      plans = await Plan.findWithStatusExtension(this.db, where, order, 1, 1, whereNot);
+      const planStatusWhere = {
+        code: staffDraft ? [] : [PLAN_STATUS.STAFF_DRAFT],
+      };
+      const notAllowedStatuses = await PlanStatus.find(
+        this.db,
+        planStatusWhere,
+      );
+      const whereNot = [
+        "status_id",
+        "not in",
+        notAllowedStatuses.map((s) => s.id),
+      ];
+      plans = await Plan.findWithStatusExtension(
+        this.db,
+        where,
+        order,
+        undefined,
+        undefined,
+        whereNot,
+      );
     }
-
     // if !latestPlan && staffDraft returns all the plans
     // if !latestPlan && !staffDraft returns all the plans without the ones whose status are staff draft
     if (!latestPlan) {
       if (staffDraft) {
         plans = await Plan.findWithStatusExtension(this.db, where, order);
       } else {
-        const notAllowedStatuses = await PlanStatus.find(this.db, { code: PLAN_STATUS.STAFF_DRAFT });
-        const whereNot = ['status_id', 'not in', notAllowedStatuses.map(s => s.id)];
-        plans = await Plan.findWithStatusExtension(this.db, where, order, undefined, undefined, whereNot);
+        const notAllowedStatuses = await PlanStatus.find(this.db, {
+          code: PLAN_STATUS.STAFF_DRAFT,
+        });
+        const whereNot = [
+          "status_id",
+          "not in",
+          notAllowedStatuses.map((s) => s.id),
+        ];
+        plans = await Plan.findWithStatusExtension(
+          this.db,
+          where,
+          order,
+          undefined,
+          undefined,
+          whereNot,
+        );
       }
     }
 
@@ -288,7 +343,7 @@ export default class Agreement extends Model {
   }
 
   async fetchUsage() {
-    const order = ['year', 'asc'];
+    const order = ["year", "asc"];
     const where = { agreement_id: this.forestFileId };
     const usage = await Usage.find(this.db, where, order);
     this.usage = usage;
@@ -296,7 +351,10 @@ export default class Agreement extends Model {
 
   async fetchLivestockIdentifiers() {
     const where = { agreement_id: this.forestFileId };
-    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(this.db, where);
+    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(
+      this.db,
+      where,
+    );
     this.livestockIdentifiers = livestockIdentifiers;
   }
 
@@ -306,7 +364,7 @@ export default class Agreement extends Model {
       return;
     }
 
-    Object.defineProperty(this, 'id', {
+    Object.defineProperty(this, "id", {
       enumerable: true,
       value: this.forestFileId,
       writable: false,

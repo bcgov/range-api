@@ -1,25 +1,23 @@
-import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { isNumeric, checkRequiredFields, substituteFields } from '../../libs/utils';
-import DataManager from '../../libs/db2';
-import config from '../../config';
-import { PLAN_STATUS } from '../../constants';
-import { PlanRouteHelper } from '../helpers';
-import PlanSnapshot from '../../libs/db2/model/plansnapshot';
-import { Mailer } from '../../libs/mailer';
-import Client from '../../libs/db2/model/client';
-import User from '../../libs/db2/model/user';
-import EmailTemplate from '../../libs/db2/model/emailtemplate';
-import Zone from '../../libs/db2/model/zone';
+import { errorWithCode, logger } from "@bcgov/nodejs-common-utils";
+import {
+  isNumeric,
+  checkRequiredFields,
+  substituteFields,
+} from "../../libs/utils";
+import DataManager from "../../libs/db2";
+import config from "../../config";
+import { PLAN_STATUS } from "../../constants";
+import { PlanRouteHelper } from "../helpers";
+import PlanSnapshot from "../../libs/db2/model/plansnapshot";
+import { Mailer } from "../../libs/mailer";
+import Client from "../../libs/db2/model/client";
+import User from "../../libs/db2/model/user";
+import EmailTemplate from "../../libs/db2/model/emailtemplate";
+import Zone from "../../libs/db2/model/zone";
 
 const dm = new DataManager(config);
-const {
-  db,
-  Plan,
-  PlanConfirmation,
-  PlanStatusHistory,
-  PlanStatus,
-  Agreement,
-} = dm;
+const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } =
+  dm;
 
 export default class PlanStatusController {
   // -------  Helper methods  -------
@@ -63,14 +61,17 @@ export default class PlanStatusController {
         await Plan.createSnapshot(db, planId, user);
       }
 
-      const updatedPlan = await Plan.update(db, { id: planId }, { ...body, is_restored: false });
+      const updatedPlan = await Plan.update(
+        db,
+        { id: planId },
+        { ...body, is_restored: false },
+      );
 
       // If the new status was legal, create a snapshot after updating
       if (
-        !originalPlan.isRestored
-        && Plan.isLegal(updatedPlan)
-        || status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT
-        || status.code === PLAN_STATUS.NOT_APPROVED
+        (!originalPlan.isRestored && Plan.isLegal(updatedPlan)) ||
+        status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT ||
+        status.code === PLAN_STATUS.NOT_APPROVED
       ) {
         await Plan.createSnapshot(db, planId, user);
       }
@@ -82,49 +83,77 @@ export default class PlanStatusController {
          *  wrongly made without effect.
          */
         // eslint-disable-next-line no-unused-vars
-        const { rows: [prevLegal] } = await db.raw(`
+        const {
+          rows: [prevLegal],
+        } = await db.raw(
+          `
           SELECT * FROM plan_snapshot_summary
           WHERE effective_legal_end IS NOT NULL
           AND plan_id = ?
           ORDER BY created_at DESC;
-        `, [planId]);
+        `,
+          [planId],
+        );
 
-        const { rows: [{ max: lastVersion }] } = await db.raw(`
+        const {
+          rows: [{ max: lastVersion }],
+        } = await db.raw(
+          `
           SELECT MAX(version) FROM plan_snapshot
           WHERE plan_id = ?
-        `, [planId]);
+        `,
+          [planId],
+        );
 
-        await PlanSnapshot.create(db, {
-          snapshot: prevLegal.snapshot,
-          plan_id: planId,
-          version: lastVersion + 1,
-          created_at: new Date(),
-          status_id: prevLegal.status_id,
-          user_id: user.id,
-        }, user);
+        await PlanSnapshot.create(
+          db,
+          {
+            snapshot: prevLegal.snapshot,
+            plan_id: planId,
+            version: lastVersion + 1,
+            created_at: new Date(),
+            status_id: prevLegal.status_id,
+            user_id: user.id,
+          },
+          user,
+        );
       }
 
       if (status.code === PLAN_STATUS.NOT_APPROVED) {
-        const { rows: [prevLegal] } = await db.raw(`
+        const {
+          rows: [prevLegal],
+        } = await db.raw(
+          `
           SELECT * FROM plan_snapshot_summary
           WHERE is_current_legal_version = true
           AND plan_id = ?
           ORDER BY created_at DESC;
-        `, [planId]);
+        `,
+          [planId],
+        );
 
-        const { rows: [{ max: lastVersion }] } = await db.raw(`
+        const {
+          rows: [{ max: lastVersion }],
+        } = await db.raw(
+          `
           SELECT MAX(version) FROM plan_snapshot
           WHERE plan_id = ?
-        `, [planId]);
+        `,
+          [planId],
+        );
 
-        await PlanSnapshot.create(db, {
-          snapshot: prevLegal.snapshot,
-          plan_id: planId,
-          version: lastVersion + 1,
-          created_at: new Date(),
-          status_id: prevLegal.status_id,
-          user_id: user.id,
-        }, user);
+        await PlanSnapshot.create(
+          db,
+          {
+            snapshot: prevLegal.snapshot,
+            plan_id: planId,
+            version: lastVersion + 1,
+            created_at: new Date(),
+            status_id: prevLegal.status_id,
+            user_id: user.id,
+          },
+          user,
+        );
       }
 
       return updatedPlan;
@@ -133,7 +162,6 @@ export default class PlanStatusController {
       throw err;
     }
   }
-
 
   // ----- Router Methods ------
   /**
@@ -147,21 +175,30 @@ export default class PlanStatusController {
     const { statusId, note } = body;
     const { planId } = params;
 
-    checkRequiredFields(['planId'], 'params', req);
-    checkRequiredFields(['statusId'], 'body', req);
+    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(["statusId"], "body", req);
 
     if (!isNumeric(statusId)) {
-      throw errorWithCode('statusId must be numeric', 400);
+      throw errorWithCode("statusId must be numeric", 400);
     }
 
     try {
-      const { agreement_id: agreementId, creator_id: creatorId, zone_id: zoneId } = await Plan.agreementForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const {
+        agreement_id: agreementId,
+        creator_id: creatorId,
+        zone_id: zoneId,
+      } = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
       const planStatuses = await PlanStatus.find(db, { active: true });
       // make sure the status exists.
-      const status = planStatuses.find(s => s.id === statusId);
+      const status = planStatuses.find((s) => s.id === statusId);
       if (!status) {
-        throw errorWithCode('You must supply a valid status ID', 403);
+        throw errorWithCode("You must supply a valid status ID", 403);
       }
       const plan = await Plan.findById(db, planId);
       const zone = await Zone.findById(db, zoneId);
@@ -170,7 +207,7 @@ export default class PlanStatusController {
       await PlanStatusHistory.create(db, {
         fromPlanStatusId: prevStatusId,
         toPlanStatusId: statusId,
-        note: note || ' ',
+        note: note || " ",
         planId,
         userId: user.id,
       });
@@ -178,28 +215,41 @@ export default class PlanStatusController {
       const emails = [];
       const creator = await User.findById(db, creatorId);
       emails.push(creator.email);
-      const clients = await Client.clientsForAgreement(db, { forestFileId: agreementId });
+      const clients = await Client.clientsForAgreement(db, {
+        forestFileId: agreementId,
+      });
       for (const client of clients) {
         const user = await User.fromClientId(db, client.clientNumber);
-        if (user && user.email) { emails.push(user.email); }
+        if (user && user.email) {
+          emails.push(user.email);
+        }
       }
       const toStatus = await PlanStatus.findById(db, statusId);
       const fromStatus = await PlanStatus.findById(db, prevStatusId);
-      const templates = await EmailTemplate.findWithExclusion(db, { name: 'Plan Status Change' });
+      const templates = await EmailTemplate.findWithExclusion(db, {
+        name: "Plan Status Change",
+      });
       const template = templates[0];
       const emailFields = {
-        '{agreementId}': agreementId,
-        '{fromStatus}': fromStatus.name,
-        '{toStatus}': toStatus.name,
-        '{rangeOfficerName}': `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
-        '{rangeOfficerEmail}': rangeOfficer.email,
+        "{agreementId}": agreementId,
+        "{fromStatus}": fromStatus.name,
+        "{toStatus}": toStatus.name,
+        "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
+        "{rangeOfficerEmail}": rangeOfficer.email,
       };
       const mailer = new Mailer();
-      mailer.sendEmail(emails, template.fromEmail, substituteFields(template.subject, emailFields),
-        substituteFields(template.body, emailFields), 'html');
+      mailer.sendEmail(
+        emails,
+        template.fromEmail,
+        substituteFields(template.subject, emailFields),
+        substituteFields(template.body, emailFields),
+        "html",
+      );
       return res.status(200).json(status).end();
     } catch (err) {
-      logger.error(`PlanStatusController: update: fail with error: ${err.message} `);
+      logger.error(
+        `PlanStatusController: update: fail with error: ${err.message} `,
+      );
       throw err;
     }
   }
@@ -218,16 +268,25 @@ export default class PlanStatusController {
     } = req;
     const { planId, confirmationId } = params;
 
-    checkRequiredFields(
-      ['planId', 'confirmationId'], 'params', req,
-    );
+    checkRequiredFields(["planId", "confirmationId"], "params", req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
-      const confirmation = await PlanConfirmation.update(db, { id: confirmationId }, body);
-      const allConfirmations = await PlanConfirmation.find(db, { plan_id: planId });
+      const confirmation = await PlanConfirmation.update(
+        db,
+        { id: confirmationId },
+        body,
+      );
+      const allConfirmations = await PlanConfirmation.find(db, {
+        plan_id: planId,
+      });
       let allConfirmed = true;
       allConfirmations.map((c) => {
         if (!c.confirmed) {
@@ -239,18 +298,25 @@ export default class PlanStatusController {
       // update the amendment status when the last agreement holder confirms
       if (allConfirmed) {
         const planStatuses = await PlanStatus.find(db, { active: true });
-        const statusCode = isMinorAmendment === 'true'
-          ? PLAN_STATUS.STANDS_NOT_REVIEWED
-          : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
-        const status = planStatuses.find(s => s.code === statusCode);
-        const plan = await PlanStatusController.updatePlanStatus(planId, status, user);
+        const statusCode =
+          isMinorAmendment === "true"
+            ? PLAN_STATUS.STANDS_NOT_REVIEWED
+            : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
+        const status = planStatuses.find((s) => s.code === statusCode);
+        const plan = await PlanStatusController.updatePlanStatus(
+          planId,
+          status,
+          user,
+        );
         plan.status = status;
         return res.status(200).json({ allConfirmed, plan, confirmation }).end();
       }
 
       return res.status(200).json({ allConfirmed, confirmation }).end();
     } catch (err) {
-      logger.error(`PlanStatusController:updateAmendment: fail with error: ${err.message}`);
+      logger.error(
+        `PlanStatusController:updateAmendment: fail with error: ${err.message}`,
+      );
       throw err;
     }
   }
@@ -264,28 +330,35 @@ export default class PlanStatusController {
     const { params, body, user } = req;
     const { planId } = params;
 
+    checkRequiredFields(["planId"], "params", req);
     checkRequiredFields(
-      ['planId'], 'params', req,
-    );
-    checkRequiredFields(
-      ['fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req,
+      ["fromPlanStatusId", "toPlanStatusId", "note"],
+      "body",
+      req,
     );
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       const { id: historyId } = await PlanStatusHistory.create(db, {
         ...body,
         planId,
         userId: user.id,
       });
-      const [planStatusHistory] = await PlanStatusHistory.findWithUser(
-        db, { 'plan_status_history.id': historyId },
-      );
+      const [planStatusHistory] = await PlanStatusHistory.findWithUser(db, {
+        "plan_status_history.id": historyId,
+      });
       return res.status(200).json(planStatusHistory).end();
     } catch (err) {
-      logger.error(`PlanStatusController:storeStatusHistory: fail with error: ${err.message}`);
+      logger.error(
+        `PlanStatusController:storeStatusHistory: fail with error: ${err.message}`,
+      );
       throw err;
     }
   }

@@ -84,6 +84,7 @@
     "test:security": "nsp check",
     "test:lint": "eslint --env node --ext .js src __tests__ __testHelpers__ __mocks__",
     "import": "node build/scripts/import.js",
+    "plan_extension": "node build/scripts/plan_extension.js",
     "initialize_docker": "npm run build && ./node_modules/.bin/knex migrate:latest && ./node_modules/.bin/knex seed:run && ./node_modules/.bin/babel-node scripts/import.js true",
     "initialize": "npm rum build && npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
   },
