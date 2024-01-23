@@ -45,9 +45,8 @@ export class Mailer {
     const emailEndpoint = `${this.emailServiceURL}/api/v1/email`;
     try {
       const token = await this.getBearerToken();
-      to = ["brijesh.y.amin@gmail.com"];
       const emailPayload = { to, from, subject, body, bodyType };
-      logger.debug("email payload: " + JSON.stringify(emailPayload));
+      logger.debug(`email payload: ${JSON.stringify(emailPayload)}`);
       await axios
         .post(emailEndpoint, JSON.stringify(emailPayload), {
           headers: {
@@ -56,9 +55,9 @@ export class Mailer {
           },
         })
         .then((response) => {
-          if (response.status > 199 && response.status < 300)
+          if (response.status > 199 && response.status < 300) {
             logger.info("Email sent successfully");
-          else logger.error(`Could not send Email: ${response.statusText}`);
+          } else logger.error(`Could not send Email: ${response.statusText}`);
         })
         .catch((error) => {
           logger.error(`Error sending email: ${JSON.stringify(error)}`);
