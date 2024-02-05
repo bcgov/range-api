@@ -18,148 +18,161 @@
 // Created by Jason Leach on 2018-01-18.
 //
 
-'use strict';
+"use strict";
 
-import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
-import { Router } from 'express';
-import config from '../../config';
-import DataManager from '../../libs/db2';
-import Plan from '../../libs/db2/model/plan';
-import { PlanRouteHelper } from '../helpers';
+import { asyncMiddleware, errorWithCode } from "@bcgov/nodejs-common-utils";
+import { Router } from "express";
+import config from "../../config";
+import DataManager from "../../libs/db2";
+import Plan from "../../libs/db2/model/plan";
+import { PlanRouteHelper } from "../helpers";
 
 const dm = new DataManager(config);
-const {
-  db,
-  Client,
-  ClientAgreement,
-  Agreement,
-  User,
-} = dm;
+const { db, Client, ClientAgreement, Agreement, User } = dm;
 
 const router = new Router();
 
 // Get all clients
-router.get('/', asyncMiddleware(async (req, res) => {
-  try {
-    if (req.user && req.user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 401);
-    }
-
-    const results = await Client.find(db, {});
-    res.status(200).json(results).end();
-  } catch (err) {
-    throw err;
-  }
-}));
-
-// Search clients
-router.get('/search', asyncMiddleware(async (req, res) => {
-  const { term = '' } = req.query;
-
-  if (req.user && req.user.isAgreementHolder()) {
-    throw errorWithCode('Unauthorized', 401);
-  }
-
-  const results = await Client.searchByNameWithAllFields(db, term);
-  res.status(200).json(results).end();
-}));
-
-// Get by client number
-router.get('/:clientNumber', asyncMiddleware(async (req, res) => {
-  const {
-    clientNumber,
-  } = req.params;
-
-  try {
-    if (req.user && req.user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 401);
-    }
-
-    const results = await Client.find(db, { client_number: clientNumber });
-    if (results.length === 0) {
-      res.status(404).json({ error: 'Not found' }).end();
-    }
-
-    res.status(200).json(results.pop()).end();
-  } catch (err) {
-    throw err;
-  }
-}));
-
-router.get('/agreements/:planId', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-  } = req.params;
-
-  if (!req.user) {
-    throw errorWithCode('Unauthorized', 401);
-  }
-
-  const { agreementId } = await Plan.findOne(db, { id: planId });
-
-  await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
-
-  const clientAgreements = await ClientAgreement.find(db, { agreement_id: agreementId });
-
-  const clientAgreementObjects = await Promise.all(
-    clientAgreements.map(async (ca) => {
-      const clientAgreement = ca;
-
-      const client = await Client.findOne(db, { client_number: clientAgreement.clientId });
-      clientAgreement.client = client;
-
-      if (clientAgreement.agentId) {
-        const agent = await User.findOne(db, { id: clientAgreement.agentId });
-        clientAgreement.agent = agent;
+router.get(
+  "/",
+  asyncMiddleware(async (req, res) => {
+    try {
+      if (req.user && req.user.isAgreementHolder()) {
+        throw errorWithCode("Unauthorized", 401);
       }
 
-      return clientAgreement;
-    }),
-  );
+      const results = await Client.find(db, {});
+      res.status(200).json(results).end();
+    } catch (err) {
+      throw err;
+    }
+  }),
+);
 
-  res.json(clientAgreementObjects).end();
-}));
+// Search clients
+router.get(
+  "/search",
+  asyncMiddleware(async (req, res) => {
+    const { term = "" } = req.query;
+    const results = await Client.searchByNameWithAllFields(db, term);
+    res.status(200).json(results).end();
+  }),
+);
 
-router.put('/agreements/:planId/:clientAgreementId', asyncMiddleware(async (req, res) => {
-  const {
-    planId,
-    clientAgreementId,
-  } = req.params;
-  const {
-    user,
-    body,
-  } = req;
+// Get by client number
+router.get(
+  "/:clientNumber",
+  asyncMiddleware(async (req, res) => {
+    const { clientNumber } = req.params;
 
-  if (!user || user.isAgreementHolder()) {
-    throw errorWithCode('Unauthorized', 401);
-  }
+    try {
+      if (req.user && req.user.isAgreementHolder()) {
+        throw errorWithCode("Unauthorized", 401);
+      }
 
-  const { agreementId } = await Plan.findOne(db, { id: planId });
+      const results = await Client.find(db, { client_number: clientNumber });
+      if (results.length === 0) {
+        res.status(404).json({ error: "Not found" }).end();
+      }
 
-  await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
+      res.status(200).json(results.pop()).end();
+    } catch (err) {
+      throw err;
+    }
+  }),
+);
 
-  const clientAgreement = await ClientAgreement.update(db, { id: clientAgreementId }, body);
+router.get(
+  "/agreements/:planId",
+  asyncMiddleware(async (req, res) => {
+    const { planId } = req.params;
 
-  res.json(clientAgreement).end();
-}));
-
-// Get all client records with a given client number
-router.get('/all/:clientNumber', asyncMiddleware(async (req, res) => {
-  const {
-    clientNumber,
-  } = req.params;
-
-  try {
-    if (req.user && req.user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 401);
+    if (!req.user) {
+      throw errorWithCode("Unauthorized", 401);
     }
 
-    const clients = await Client.find(db, { client_number: clientNumber });
+    const { agreementId } = await Plan.findOne(db, { id: planId });
 
-    res.status(200).json({ clients }).end();
-  } catch (err) {
-    throw err;
-  }
-}));
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      req.user,
+      agreementId,
+    );
+
+    const clientAgreements = await ClientAgreement.find(db, {
+      agreement_id: agreementId,
+    });
+
+    const clientAgreementObjects = await Promise.all(
+      clientAgreements.map(async (ca) => {
+        const clientAgreement = ca;
+
+        const client = await Client.findOne(db, {
+          client_number: clientAgreement.clientId,
+        });
+        clientAgreement.client = client;
+
+        if (clientAgreement.agentId) {
+          const agent = await User.findOne(db, { id: clientAgreement.agentId });
+          clientAgreement.agent = agent;
+        }
+
+        return clientAgreement;
+      }),
+    );
+
+    res.json(clientAgreementObjects).end();
+  }),
+);
+
+router.put(
+  "/agreements/:planId/:clientAgreementId",
+  asyncMiddleware(async (req, res) => {
+    const { planId, clientAgreementId } = req.params;
+    const { user, body } = req;
+
+    if (!user || user.isAgreementHolder()) {
+      throw errorWithCode("Unauthorized", 401);
+    }
+
+    const { agreementId } = await Plan.findOne(db, { id: planId });
+
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      req.user,
+      agreementId,
+    );
+
+    const clientAgreement = await ClientAgreement.update(
+      db,
+      { id: clientAgreementId },
+      body,
+    );
+
+    res.json(clientAgreement).end();
+  }),
+);
+
+// Get all client records with a given client number
+router.get(
+  "/all/:clientNumber",
+  asyncMiddleware(async (req, res) => {
+    const { clientNumber } = req.params;
+
+    try {
+      if (req.user && req.user.isAgreementHolder()) {
+        throw errorWithCode("Unauthorized", 401);
+      }
+
+      const clients = await Client.find(db, { client_number: clientNumber });
+
+      res.status(200).json({ clients }).end();
+    } catch (err) {
+      throw err;
+    }
+  }),
+);
 
 module.exports = router;

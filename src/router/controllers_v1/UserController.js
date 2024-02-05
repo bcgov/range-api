@@ -1,8 +1,7 @@
-import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { checkRequiredFields } from '../../libs/utils';
-import DataManager from '../../libs/db2';
-// import { checkRequiredFields } from '../../libs/utils';
-import config from '../../config';
+import { errorWithCode, logger } from "@bcgov/nodejs-common-utils";
+import { checkRequiredFields } from "../../libs/utils";
+import DataManager from "../../libs/db2";
+import config from "../../config";
 
 const dm = new DataManager(config);
 const {
@@ -24,21 +23,17 @@ export class UserController {
   // Fetching all users
   static async allUser(req, res) {
     try {
-      const { user, query } = req;
+      const { query } = req;
       const { orderCId, excludeBy: eBy, exclude: e } = query;
-
-      if (user && user.isAgreementHolder()) {
-        throw errorWithCode('You do not have the permission as an agreement holder', 403);
-      }
 
       let order = [];
       if (orderCId) {
-        order = ['client_id', orderCId];
+        order = ["client_id", orderCId];
       }
 
       let exclude;
       if (eBy && e) {
-        exclude = [eBy, 'ilike', `%${e}%`];
+        exclude = [eBy, "ilike", `%${e}%`];
       }
 
       const users = await User.findWithExclusion(db, {}, order, exclude);
@@ -64,7 +59,10 @@ export class UserController {
 
       const clients = await Client.find(db, { client_number: clientIds });
 
-      res.status(200).json({ ...user, clients }).end();
+      res
+        .status(200)
+        .json({ ...user, clients })
+        .end();
     } catch (error) {
       throw error;
     }
@@ -74,17 +72,17 @@ export class UserController {
     try {
       const { body, user } = req;
       const { id: userId } = user;
-      const {
-        givenName,
-        familyName,
-        phoneNumber,
-      } = body;
+      const { givenName, familyName, phoneNumber } = body;
 
-      const updated = await User.update(db, { id: userId }, {
-        givenName,
-        familyName,
-        phoneNumber,
-      });
+      const updated = await User.update(
+        db,
+        { id: userId },
+        {
+          givenName,
+          familyName,
+          phoneNumber,
+        },
+      );
 
       res.status(200).json(updated).end();
     } catch (error) {
@@ -96,39 +94,43 @@ export class UserController {
     const { user, params, body } = req;
     const { userId } = params;
     const sourceAccountIds = body.accountIds;
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 403);
-    }
+    checkRequiredFields(["userId"], "params", req);
 
-    checkRequiredFields(
-      ['userId'], 'params', req,
-    );
-
-    checkRequiredFields(
-      ['accountIds'], 'body', req,
-    );
+    checkRequiredFields(["accountIds"], "body", req);
 
     const userRequest = await User.findOne(db, { id: userId });
     if (!userRequest) {
-      throw errorWithCode('User does not exist', 400);
+      throw errorWithCode("User does not exist", 400);
     }
 
     for (const id of sourceAccountIds) {
       const account = await User.findOne(db, { id: id });
       if (!account) {
-        throw errorWithCode('Invalid accountId supplied', 400);
+        throw errorWithCode("Invalid accountId supplied", 400);
       }
     }
     for (const sourceUserId of sourceAccountIds) {
-      UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId })
-      UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId })
-      ClientAgreement.update(db, { agent_id: sourceUserId }, { agent_id: userId })
-      PlanStatusHistory.update(db, { user_id: sourceUserId }, { user_id: userId })
-      PlanConfirmation.update(db, { user_id: sourceUserId }, { user_id: userId })
-      District.update(db, { user_id: sourceUserId }, { user_id: userId })
-      Zone.update(db, { user_id: sourceUserId }, { user_id: userId })
-      Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId })
-      PlanFile.update(db, { user_id: sourceUserId }, { user_id: userId })
+      UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId });
+      UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId });
+      ClientAgreement.update(
+        db,
+        { agent_id: sourceUserId },
+        { agent_id: userId },
+      );
+      PlanStatusHistory.update(
+        db,
+        { user_id: sourceUserId },
+        { user_id: userId },
+      );
+      PlanConfirmation.update(
+        db,
+        { user_id: sourceUserId },
+        { user_id: userId },
+      );
+      District.update(db, { user_id: sourceUserId }, { user_id: userId });
+      Zone.update(db, { user_id: sourceUserId }, { user_id: userId });
+      Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId });
+      PlanFile.update(db, { user_id: sourceUserId }, { user_id: userId });
     }
     res.status(200).json().end();
   }
@@ -138,36 +140,42 @@ export class UserController {
     const { userId } = params;
     const { clientId } = body;
 
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 403);
-    }
+    checkRequiredFields(["userId"], "params", req);
 
-    checkRequiredFields(
-      ['userId'], 'params', req,
-    );
-
-    checkRequiredFields(
-      ['clientId'], 'body', req,
-    );
+    checkRequiredFields(["clientId"], "body", req);
 
     const client = await Client.findOne(db, { client_number: clientId });
     if (!client) {
-      throw errorWithCode('Client does not exist', 400);
+      throw errorWithCode("Client does not exist", 400);
     }
 
-    const currentLink = await UserClientLink.findOne(db,
-      { user_id: userId, client_id: clientId });
+    const currentLink = await UserClientLink.findOne(db, {
+      user_id: userId,
+      client_id: clientId,
+    });
     if (currentLink) {
-      logger.error(`Link between user ${userId} and client ${clientId} already exists.`);
-      throw errorWithCode('This user is already linked to the selected client', 400);
+      logger.error(
+        `Link between user ${userId} and client ${clientId} already exists.`,
+      );
+      throw errorWithCode(
+        "This user is already linked to the selected client",
+        400,
+      );
     }
 
-    const currentOwner = await UserClientLink.findOne(db,
-      { client_id: clientId, type: 'owner' });
+    const currentOwner = await UserClientLink.findOne(db, {
+      client_id: clientId,
+      type: "owner",
+    });
     if (currentOwner) {
       const currentOwnerUser = await User.findById(db, currentOwner.userId);
-      logger.error(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`);
-      throw errorWithCode(`Cannot link client to this user because it is already linked to another user (${currentOwnerUser.givenName} ${currentOwnerUser.familyName}).`, 400);
+      logger.error(
+        `There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`,
+      );
+      throw errorWithCode(
+        `Cannot link client to this user because it is already linked to another user (${currentOwnerUser.givenName} ${currentOwnerUser.familyName}).`,
+        400,
+      );
     }
 
     const userToLink = new User({ id: userId });
@@ -178,9 +186,11 @@ export class UserController {
       client_id: currentLinkedClientIds,
     });
 
-    const newLinkedAgreements = await ClientAgreement.find(db, { client_id: clientId });
+    const newLinkedAgreements = await ClientAgreement.find(db, {
+      client_id: clientId,
+    });
     const newLinkedAgreementIds = newLinkedAgreements.map(
-      clientAgreement => clientAgreement.agreementId,
+      (clientAgreement) => clientAgreement.agreementId,
     );
 
     // TODO: Remove this check after implementing agency agreements
@@ -188,10 +198,18 @@ export class UserController {
     for (const clientAgreement of currentLinkedAgreements) {
       if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
         // eslint-disable-next-line no-await-in-loop
-        const existingClient = await Client.findById(db, clientAgreement.clientId);
+        const existingClient = await Client.findById(
+          db,
+          clientAgreement.clientId,
+        );
 
-        logger.error(`Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ID ${clientAgreement.clientId} (${clientAgreement.agreementId})`);
-        throw errorWithCode(`Cannot link selected client because it shares an agreement with client ${existingClient.name}, # ${existingClient.clientNumber} - ${existingClient.locationCode} (${clientAgreement.agreementId})`, 400);
+        logger.error(
+          `Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ID ${clientAgreement.clientId} (${clientAgreement.agreementId})`,
+        );
+        throw errorWithCode(
+          `Cannot link selected client because it shares an agreement with client ${existingClient.name}, # ${existingClient.clientNumber} - ${existingClient.locationCode} (${clientAgreement.agreementId})`,
+          400,
+        );
       }
     }
 
@@ -199,7 +217,7 @@ export class UserController {
       client_id: clientId,
       user_id: userId,
       active: true,
-      type: 'owner',
+      type: "owner",
     });
 
     res.status(200).json(result).end();
@@ -209,13 +227,7 @@ export class UserController {
     const { user, params } = req;
     const { clientNumber, userId } = params;
 
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 403);
-    }
-
-    checkRequiredFields(
-      ['clientNumber', 'userId'], 'params', req,
-    );
+    checkRequiredFields(["clientNumber", "userId"], "params", req);
 
     const result = await UserClientLink.remove(db, {
       client_id: clientNumber,
@@ -233,17 +245,16 @@ export class UserController {
     const { user, params } = req;
     const { userId } = params;
 
-    if (user && user.isAgreementHolder()) {
-      throw errorWithCode('Unauthorized', 403);
-    }
-
     const userToFind = await User.findById(db, userId);
 
     const clientIds = await userToFind.getLinkedClientNumbers(db);
 
     const clients = await Client.find(db, { client_number: clientIds });
 
-    res.status(200).json({ ...userToFind, clients }).end();
+    res
+      .status(200)
+      .json({ ...userToFind, clients })
+      .end();
   }
 }
 
