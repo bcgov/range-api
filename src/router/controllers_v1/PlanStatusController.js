@@ -222,27 +222,29 @@ export default class PlanStatusController {
           emails.push(user.email);
         }
       }
-      const toStatus = await PlanStatus.findById(db, statusId);
-      const fromStatus = await PlanStatus.findById(db, prevStatusId);
-      const templates = await EmailTemplate.findWithExclusion(db, {
-        name: "Plan Status Change",
-      });
-      const template = templates[0];
-      const emailFields = {
-        "{agreementId}": agreementId,
-        "{fromStatus}": fromStatus.name,
-        "{toStatus}": toStatus.name,
-        "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
-        "{rangeOfficerEmail}": rangeOfficer.email,
-      };
-      const mailer = new Mailer();
-      mailer.sendEmail(
-        emails,
-        template.fromEmail,
-        substituteFields(template.subject, emailFields),
-        substituteFields(template.body, emailFields),
-        "html",
-      );
+      if (emails.length > 0) {
+        const toStatus = await PlanStatus.findById(db, statusId);
+        const fromStatus = await PlanStatus.findById(db, prevStatusId);
+        const templates = await EmailTemplate.findWithExclusion(db, {
+          name: "Plan Status Change",
+        });
+        const template = templates[0];
+        const emailFields = {
+          "{agreementId}": agreementId,
+          "{fromStatus}": fromStatus.name,
+          "{toStatus}": toStatus.name,
+          "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
+          "{rangeOfficerEmail}": rangeOfficer.email,
+        };
+        const mailer = new Mailer();
+        mailer.sendEmail(
+          emails,
+          template.fromEmail,
+          substituteFields(template.subject, emailFields),
+          substituteFields(template.body, emailFields),
+          "html",
+        );
+      }
       return res.status(200).json(status).end();
     } catch (err) {
       logger.error(
