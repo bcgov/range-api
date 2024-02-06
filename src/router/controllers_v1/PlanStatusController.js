@@ -212,12 +212,10 @@ export default class PlanStatusController {
         userId: user.id,
       });
       await PlanStatusController.updatePlanStatus(planId, status, user);
-      const emails = [];
-      const creator = await User.findById(db, creatorId);
-      emails.push(creator.email);
       const clients = await Client.clientsForAgreement(db, {
         forestFileId: agreementId,
       });
+      const emails = [];
       for (const client of clients) {
         const user = await User.fromClientId(db, client.clientNumber);
         if (user && user.email) {
