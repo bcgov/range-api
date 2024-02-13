@@ -215,36 +215,34 @@ export default class PlanStatusController {
       const clients = await Client.clientsForAgreement(db, {
         forestFileId: agreementId,
       });
-      const emails = [];
+      const emails = [rangeOfficer.email];
       for (const client of clients) {
         const user = await User.fromClientId(db, client.clientNumber);
         if (user && user.email) {
           emails.push(user.email);
         }
       }
-      if (emails.length > 0) {
-        const toStatus = await PlanStatus.findById(db, statusId);
-        const fromStatus = await PlanStatus.findById(db, prevStatusId);
-        const templates = await EmailTemplate.findWithExclusion(db, {
-          name: "Plan Status Change",
-        });
-        const template = templates[0];
-        const emailFields = {
-          "{agreementId}": agreementId,
-          "{fromStatus}": fromStatus.name,
-          "{toStatus}": toStatus.name,
-          "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
-          "{rangeOfficerEmail}": rangeOfficer.email,
-        };
-        const mailer = new Mailer();
-        mailer.sendEmail(
-          emails,
-          template.fromEmail,
-          substituteFields(template.subject, emailFields),
-          substituteFields(template.body, emailFields),
-          "html",
-        );
-      }
+      const toStatus = await PlanStatus.findById(db, statusId);
+      const fromStatus = await PlanStatus.findById(db, prevStatusId);
+      const templates = await EmailTemplate.findWithExclusion(db, {
+        name: "Plan Status Change",
+      });
+      const template = templates[0];
+      const emailFields = {
+        "{agreementId}": agreementId,
+        "{fromStatus}": fromStatus.name,
+        "{toStatus}": toStatus.name,
+        "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
+        "{rangeOfficerEmail}": rangeOfficer.email,
+      };
+      const mailer = new Mailer();
+      mailer.sendEmail(
+        emails,
+        template.fromEmail,
+        substituteFields(template.subject, emailFields),
+        substituteFields(template.body, emailFields),
+        "html",
+      );
       return res.status(200).json(status).end();
     } catch (err) {
       logger.error(
