@@ -14,6 +14,7 @@ import Client from "../../libs/db2/model/client";
 import User from "../../libs/db2/model/user";
 import EmailTemplate from "../../libs/db2/model/emailtemplate";
 import Zone from "../../libs/db2/model/zone";
+import PlanController from "./PlanController";
 
 const dm = new DataManager(config);
 const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } =
@@ -293,6 +294,8 @@ export default class PlanStatusController {
         return undefined;
       });
 
+      const plan = await PlanController.fetchPlan(planId, user);
+      let responseJson = null;
       // update the amendment status when the last agreement holder confirms
       if (allConfirmed) {
         const planStatuses = await PlanStatus.find(db, { active: true });
@@ -301,16 +304,23 @@ export default class PlanStatusController {
             ? PLAN_STATUS.STANDS_NOT_REVIEWED
             : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find((s) => s.code === statusCode);
-        const plan = await PlanStatusController.updatePlanStatus(
+        await PlanStatusHistory.create(db, {
+          fromPlanStatusId: plan.status.id,
+          toPlanStatusId: status.id,
+          note: " ",
+          planId,
+          userId: user.id,
+        });
+        const updatedPlan = await PlanStatusController.updatePlanStatus(
           planId,
           status,
           user,
         );
-        plan.status = status;
-        return res.status(200).json({ allConfirmed, plan, confirmation }).end();
+        updatedPlan.status = status;
+        responseJson = { allConfirmed, updatedPlan, confirmation };
       }
-
-      return res.status(200).json({ allConfirmed, confirmation }).end();
+      responseJson = { allConfirmed, confirmation };
+      return res.status(200).json(responseJson).end();
     } catch (err) {
       logger.error(
         `PlanStatusController:updateAmendment: fail with error: ${err.message}`,
