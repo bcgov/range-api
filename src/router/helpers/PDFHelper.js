@@ -184,7 +184,10 @@ export class AdditionalDetailsGenerator {
               entry.days,
               entry.auFactor,
             );
-            entry.pldAUM = calcPldAUMs(entry.totalAUM, pasture.pldPercent);
+            entry.pldAUM = calcPldAUMs(
+              entry.totalAUM,
+              pasture.pldPercent,
+            ).toFixed(1);
             entry.crownAUM = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
             schedule.crownTotalAUM += entry.crownAUM;
             entry.crownAUM = entry.crownAUM.toFixed(1);
