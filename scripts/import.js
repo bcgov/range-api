@@ -393,6 +393,7 @@ const updateClient = async (data) => {
       client_number: clientNumber,
       client_name: clientName,
       licensee_start_date: licenseeStartDate,
+      licensee_end_date: licenseeEndDate,
     } = record;
 
     if (!isValidRecord(record) || !clientLocationCode) {
@@ -412,6 +413,19 @@ const updateClient = async (data) => {
       });
 
       if (client) {
+        if (clientTypeCode === "P" || clientTypeCode === "C") {
+          const plans = await Plan.find(db, { agreement_id: agreementId });
+          plans.forEach(async (plan) => {
+            await PlanConfirmation.remove(db, {
+              client_id: client.id,
+              plan_id: plan.id,
+            });
+          });
+          await ClientAgreement.remove(db, {
+            client_id: client.id,
+            agreement_id: agreementId,
+          });
+        }
         await Client.update(
           db,
           { client_number: clientNumber },
@@ -421,6 +435,7 @@ const updateClient = async (data) => {
               new Set(client.locationCodes.concat(clientLocationCode)),
             ),
             startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+            endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
           },
         );
         updated += 1;
@@ -490,7 +505,7 @@ const updateClient = async (data) => {
     }
   }
 
-  return `${created} clients were created, ${updated} clients were updated,  ${deleted} deleted client agreements `;
+  return `${created} clients were created, ${updated} clients were updated`;
 };
 
 const prepareTestSetup = async () => {
