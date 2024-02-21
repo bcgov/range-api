@@ -393,18 +393,14 @@ const updateClient = async (data) => {
       client_number: clientNumber,
       client_name: clientName,
       licensee_start_date: licenseeStartDate,
+      licensee_end_date: licenseeEndDate,
     } = record;
 
     if (!isValidRecord(record) || !clientLocationCode) {
       skipping("Updating Client", agreementId, index);
       continue;
     }
-
     const clientType = clientTypes.find((ct) => ct.code === clientTypeCode);
-
-    if (!clientType) {
-      console.log(`No client type with ID ${agreementId}`);
-    }
 
     try {
       let client = await Client.findOne(db, {
@@ -412,6 +408,19 @@ const updateClient = async (data) => {
       });
 
       if (client) {
+        if (clientTypeCode === "P" || clientTypeCode === "C") {
+          const plans = await Plan.find(db, { agreement_id: agreementId });
+          plans.forEach(async (plan) => {
+            await PlanConfirmation.remove(db, {
+              client_id: client.id,
+              plan_id: plan.id,
+            });
+          });
+          await ClientAgreement.remove(db, {
+            client_id: client.id,
+            agreement_id: agreementId,
+          });
+        }
         await Client.update(
           db,
           { client_number: clientNumber },
@@ -421,6 +430,7 @@ const updateClient = async (data) => {
               new Set(client.locationCodes.concat(clientLocationCode)),
             ),
             startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+            endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
           },
         );
         updated += 1;
@@ -490,7 +500,7 @@ const updateClient = async (data) => {
     }
   }
 
-  return `${created} clients were created, ${updated} clients were updated,  ${deleted} deleted client agreements `;
+  return `${created} clients were created, ${updated} clients were updated`;
 };
 
 const prepareTestSetup = async () => {
@@ -625,25 +635,22 @@ const updateFTAData = async (licensee, client, usage) => {
   msg = msg + (await updateUser(licensee)) + "\n";
   msg = msg + (await updateAgreement(licensee)) + "\n";
 
+  const filteredClientsAB = client.filter((item) =>
+    ["A", "B"].includes(item.forest_file_client_type_code),
+  );
+  const filteredClientsPC = client
+    .filter((item) => ["P", "C"].includes(item.forest_file_client_type_code))
+    .filter((itemPC) => {
+      const foundAB = filteredClientsAB.find(
+        (itemAB) =>
+          itemAB.forest_file_id === itemPC.forest_file_id &&
+          itemAB.client_number === itemPC.client_number,
+      );
+      return !foundAB;
+    });
   //create where missing, dispositions with signed plans will get client_id updated in plan_conf
-  msg =
-    msg +
-    (await updateClient(
-      client.filter((item) =>
-        ["A", "B"].includes(item.forest_file_client_type_code),
-      ),
-    )) +
-    "\n";
-  //delete stales last
-  msg =
-    msg +
-    (await updateClient(
-      client.filter((item) =>
-        ["P", "C"].includes(item.forest_file_client_type_code),
-      ),
-    )) +
-    "\n";
-
+  msg = msg + (await updateClient(filteredClientsAB)) + "\n";
+  msg = msg + (await updateClient(filteredClientsPC)) + "\n";
   msg = msg + (await updateZone(licensee)) + "\n";
   msg = msg + (await updateUsage(usage));
 

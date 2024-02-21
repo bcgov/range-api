@@ -107,7 +107,6 @@ export default class Agreement extends Model {
     // run in parallel. This greatly speeds up the fetch.
     promises = myAgreements.map(async (agreement) => [
       await agreement.eagerloadAllOneToManyExceptPlan(),
-      // await agreement.fetchPlans(latestPlan, staffDraft),
     ]);
     await Promise.all(flatten(promises));
 
@@ -283,63 +282,6 @@ export default class Agreement extends Model {
   async fetchClients() {
     const clients = await Client.clientsForAgreement(this.db, this);
     this.clients = clients;
-  }
-
-  async fetchPlans(latestPlan = false, staffDraft = false) {
-    const order = ["id", "desc"];
-    const where = { agreement_id: this.forestFileId };
-    let plans = [];
-
-    // if latestPlan && staffDraft returns the most recent plan except the one whose status is staff draft
-    // if latestPlan && !staffDraft returns the most recent plan
-    if (latestPlan) {
-      const planStatusWhere = {
-        code: staffDraft ? [] : [PLAN_STATUS.STAFF_DRAFT],
-      };
-      const notAllowedStatuses = await PlanStatus.find(
-        this.db,
-        planStatusWhere,
-      );
-      const whereNot = [
-        "status_id",
-        "not in",
-        notAllowedStatuses.map((s) => s.id),
-      ];
-      plans = await Plan.findWithStatusExtension(
-        this.db,
-        where,
-        order,
-        undefined,
-        undefined,
-        whereNot,
-      );
-    }
-    // if !latestPlan && staffDraft returns all the plans
-    // if !latestPlan && !staffDraft returns all the plans without the ones whose status are staff draft
-    if (!latestPlan) {
-      if (staffDraft) {
-        plans = await Plan.findWithStatusExtension(this.db, where, order);
-      } else {
-        const notAllowedStatuses = await PlanStatus.find(this.db, {
-          code: PLAN_STATUS.STAFF_DRAFT,
-        });
-        const whereNot = [
-          "status_id",
-          "not in",
-          notAllowedStatuses.map((s) => s.id),
-        ];
-        plans = await Plan.findWithStatusExtension(
-          this.db,
-          where,
-          order,
-          undefined,
-          undefined,
-          whereNot,
-        );
-      }
-    }
-
-    this.plans = plans;
   }
 
   async fetchUsage() {
