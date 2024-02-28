@@ -20,8 +20,8 @@
 
 'use strict';
 
-import { SSO_ROLE_MAP } from '../../../constants';
-import Model from './model';
+import { SSO_ROLE_MAP } from "../../../constants";
+import Model from "./model";
 import UserClientLink from './userclientlink';
 
 export default class User extends Model {
@@ -44,23 +44,25 @@ export default class User extends Model {
       clientNumber: row.client_number,
       phoneNumber: row.phone_number,
       ssoId: row.sso_id,
+      roleId: row.role_id
     };
   }
 
   static get fields() {
     // primary key *must* be first!
     return [
-      'id',
-      'username',
-      'given_name',
-      'family_name',
-      'email',
-      'phone_number',
-      'active',
-      'pia_seen',
-      'last_login_at',
-      'sso_id',
-    ].map((field) => `${this.table}.${field}`);
+      "id",
+      "username",
+      "given_name",
+      "family_name",
+      "email",
+      "phone_number",
+      "active",
+      "pia_seen",
+      "last_login_at",
+      "sso_id",
+      "role_id"
+    ].map(field => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -248,7 +250,11 @@ User.prototype.isAdministrator = function () {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
 };
 
-User.prototype.isAgreementHolder = function () {
+User.prototype.isReadOnly = function() {
+  return this.roles && this.roles.includes(SSO_ROLE_MAP.READ_ONLY);
+};
+
+User.prototype.isAgreementHolder = function() {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
 };
 

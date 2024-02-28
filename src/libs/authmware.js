@@ -29,6 +29,7 @@ import jwksRsa from 'jwks-rsa';
 import config from '../config';
 import DataManager from './db2';
 import { SSO_ROLE_MAP } from '../constants';
+import UserPermissions from './db2/model/userPermissions';
 
 const dm = new DataManager(config);
 const { db, User } = dm;
@@ -174,6 +175,19 @@ export default async function initPassport(app) {
         } else {
           user.roles = basicRoles;
         }
+
+        //Add new permissions based on roles
+        let permissions = [];
+        if (user.roleId) {
+          //Get permissions
+          permissions = await UserPermissions.getRolePermissions(db, user);
+        } else {
+          //set role id based on jwt
+        }
+
+        //Set permissions
+        user.permissions = permissions;
+
 
         if (!user.isActive()) {
           return done(
