@@ -1,22 +1,22 @@
 {
-    "items": [
-        {
-            "forest_file_id": "RAN000001",
-            "client_number": "00076818",
-            "client_locn_code": "00",
-            "client_name": "BLANABBA, FREWT",
-            "forest_file_client_type_code": "A",
-            "licensee_start_date": null,
-            "licensee_end_date": null
-        },
-        {
-            "forest_file_id": "RAN000002",
-            "client_number": "00076818",
-            "client_locn_code": "00",
-            "client_name": "BLANABBA, FREWT",
-            "forest_file_client_type_code": "A",
-            "licensee_start_date": null,
-            "licensee_end_date": null
-        }
-      ]
+  "items": [
+    {
+      "forest_file_id": "RAN000001",
+      "client_number": "00076818",
+      "client_locn_code": "00",
+      "client_name": "BLANABBA, FREWT",
+      "forest_file_client_type_code": "A",
+      "licensee_start_date": null,
+      "licensee_end_date": null
+    },
+    {
+      "forest_file_id": "RAN000002",
+      "client_number": "00076818",
+      "client_locn_code": "00",
+      "client_name": "BLANABBA, FREWT",
+      "forest_file_client_type_code": "A",
+      "licensee_start_date": null,
+      "licensee_end_date": null
+    }
+  ]
 }

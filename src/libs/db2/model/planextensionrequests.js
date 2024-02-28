@@ -31,7 +31,7 @@ export default class PlanExtensionRequests extends Model {
       'requested_extension',
       'created_at',
       'updated_at',
-    ].map(field => `${this.table}.${field}`);
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -91,17 +91,14 @@ export default class PlanExtensionRequests extends Model {
 
   static async findWithExclusion(db, where, order = null, exclude) {
     try {
-      const q = db
-        .table(PlanExtensionRequests.table)
-        .select('id')
-        .where(where);
+      const q = db.table(PlanExtensionRequests.table).select('id').where(where);
 
       if (exclude) {
         q.andWhereNot(...exclude);
       }
 
       const results = await q;
-      const planExtensionRequestIds = results.map(obj => obj.id);
+      const planExtensionRequestIds = results.map((obj) => obj.id);
 
       const res = await db.raw(
         `

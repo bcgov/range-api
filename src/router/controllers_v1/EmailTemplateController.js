@@ -1,6 +1,6 @@
-import { errorWithCode } from "@bcgov/nodejs-common-utils";
-import DataManager from "../../libs/db2";
-import config from "../../config";
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import DataManager from '../../libs/db2';
+import config from '../../config';
 
 const dm = new DataManager(config);
 const { db, EmailTemplate } = dm;
@@ -14,21 +14,21 @@ export class EmailTemplateController {
 
       if (user && user.isAgreementHolder()) {
         throw errorWithCode(
-          "You do not have the permission as an agreement holder",
+          'You do not have the permission as an agreement holder',
           403,
         );
       }
 
       let order = [];
       if (orderCId) {
-        order = ["id", orderCId];
+        order = ['id', orderCId];
       }
 
       let exclude;
       if (eBy && e) {
-        exclude = [eBy, "ilike", `%${e}%`];
+        exclude = [eBy, 'ilike', `%${e}%`];
       }
-      console.log(exclude + " " + order);
+      console.log(exclude + ' ' + order);
       const emailTemplates = await EmailTemplate.findWithExclusion(
         db,
         {},
@@ -52,7 +52,7 @@ export class EmailTemplateController {
 
       if (user && user.isAgreementHolder()) {
         throw errorWithCode(
-          "You do not have the permission as an agreement holder",
+          'You do not have the permission as an agreement holder',
           403,
         );
       }

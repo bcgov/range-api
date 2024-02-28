@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,7 +24,7 @@
 
 const table = 'invasive_plant_checklist';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
@@ -37,8 +36,12 @@ exports.up = async knex =>
     t.boolean('undercarriges_inspected').defaultTo(false);
     t.boolean('revegetate').defaultTo(false);
     t.text('other');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -48,5 +51,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,7 +24,7 @@
 
 const table = 'grazing_schedule';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
@@ -34,8 +33,12 @@ exports.up = async knex =>
 
     t.smallint('year').notNull().index();
     t.text('narative');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     // const query = `
     // ALTER TABLE ${table} ALTER COLUMN ${column} TYPE smallint USING
@@ -49,5 +52,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

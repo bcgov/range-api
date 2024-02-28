@@ -1,4 +1,3 @@
-
 //
 // MYRA
 //
@@ -33,58 +32,64 @@ import { ENVIRONMENTS, API_URL } from '../../constants';
 
 const router = new Router();
 const dm = new DataManager(config);
-const {
-  db,
-  Version,
-} = dm;
+const { db, Version } = dm;
 
 // Get versions of the ios app and api
-router.get('/', asyncMiddleware(async (req, res) => {
-  try {
-    const version = await Version.findOne(db, {});
+router.get(
+  '/',
+  asyncMiddleware(async (req, res) => {
+    try {
+      const version = await Version.findOne(db, {});
 
-    res.status(200).json(version).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+      res.status(200).json(version).end();
+    } catch (error) {
+      throw error;
+    }
+  }),
+);
 
 router.use(passport.authenticate('jwt', { session: false }));
-router.put('/', asyncMiddleware(async (req, res) => {
-  try {
-    const { user, body } = req;
-    const {
-      idpHint,
-      api,
-      ios,
-    } = body;
+router.put(
+  '/',
+  asyncMiddleware(async (req, res) => {
+    try {
+      const { user, body } = req;
+      const { idpHint, api, ios } = body;
 
-    if (user && !user.isAdministrator()) {
-      throw errorWithCode('Only Admin have the permission for this request', 403);
+      if (user && !user.isAdministrator()) {
+        throw errorWithCode(
+          'Only Admin have the permission for this request',
+          403,
+        );
+      }
+
+      const updated = await Version.update(
+        db,
+        {},
+        {
+          idpHint,
+          api,
+          ios,
+        },
+      );
+
+      // update test and dev environments as well
+      if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
+        const opt = {
+          url: `${API_URL.DEV}/v1/version`,
+          method: 'PUT',
+          json: { idpHint, api, ios },
+        };
+        await request(opt);
+        opt.url = `${API_URL.TEST}/v1/version`;
+        await request(opt);
+      }
+
+      res.status(200).json(updated).end();
+    } catch (error) {
+      throw error;
     }
-
-    const updated = await Version.update(db, { }, {
-      idpHint,
-      api,
-      ios,
-    });
-
-    // update test and dev environments as well
-    if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
-      const opt = {
-        url: `${API_URL.DEV}/v1/version`,
-        method: 'PUT',
-        json: { idpHint, api, ios },
-      };
-      await request(opt);
-      opt.url = `${API_URL.TEST}/v1/version`;
-      await request(opt);
-    }
-
-    res.status(200).json(updated).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+  }),
+);
 
 module.exports = router;

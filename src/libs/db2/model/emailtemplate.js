@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-import Model from "./model";
+import Model from './model';
 
 export default class EmailTemplate extends Model {
   constructor(data, db = undefined) {
@@ -19,22 +19,18 @@ export default class EmailTemplate extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return [
-      "id",
-      "name",
-      "from_email",
-      "subject",
-      "body",
-    ].map(field => `${this.table}.${field}`);
+    return ['id', 'name', 'from_email', 'subject', 'body'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
-    return "email_template";
+    return 'email_template';
   }
 
   static async update(db, where, values) {
     const obj = {};
-    Object.keys(values).forEach(key => {
+    Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
@@ -48,14 +44,14 @@ export default class EmailTemplate extends Model {
         const [{ id }] = await db
           .table(EmailTemplate.table)
           .where(where)
-          .returning("id");
+          .returning('id');
 
         const res = await db.raw(
           `
           SELECT email_template.* FROM email_template
           WHERE email_template.id = ?;
         `,
-          [id]
+          [id],
         );
         return res.rows.map(EmailTemplate.mapRow)[0];
       }
@@ -68,14 +64,14 @@ export default class EmailTemplate extends Model {
 
   static async create(db, values) {
     const obj = {};
-    Object.keys(values).forEach(key => {
+    Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
     try {
       const results = await db
         .table(EmailTemplate.table)
-        .returning("id")
+        .returning('id')
         .insert(obj);
 
       return await EmailTemplate.findOne(db, { id: results.pop() });
@@ -86,17 +82,14 @@ export default class EmailTemplate extends Model {
 
   static async findWithExclusion(db, where, order = null, exclude) {
     try {
-      const q = db
-        .table(EmailTemplate.table)
-        .select("id")
-        .where(where);
+      const q = db.table(EmailTemplate.table).select('id').where(where);
 
       if (exclude) {
         q.andWhereNot(...exclude);
       }
 
       const results = await q;
-      const emailTemplateIds = results.map(obj => obj.id);
+      const emailTemplateIds = results.map((obj) => obj.id);
 
       const res = await db.raw(
         `

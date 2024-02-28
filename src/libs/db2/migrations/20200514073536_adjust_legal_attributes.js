@@ -1,4 +1,3 @@
-
 exports.up = async (knex) => {
   await knex.raw(`
 drop view if exists plan_snapshot_summary;
@@ -428,10 +427,8 @@ FROM
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
 order by all_snapshots.version desc
-);`)
-  
+);`);
 };
-
 
 exports.down = async (knex) => {
   await knex.raw(`
@@ -861,6 +858,5 @@ FROM
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
 order by version desc
-);`)
-  
+);`);
 };

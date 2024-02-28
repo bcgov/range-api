@@ -18,25 +18,25 @@
 // Created by Jason Leach on 2018-05-04.
 //
 
-"use strict";
+'use strict';
 
 /* eslint-disable max-len */
 
-import { flatten } from "lodash";
-import AgreementExemptionStatus from "./agreementexemptionstatus";
-import AgreementType from "./agreementtype";
-import Client from "./client";
-import District from "./district";
-import LivestockIdentifier from "./livestockidentifier";
-import Model from "./model";
-import Plan from "./plan";
-import Usage from "./usage";
-import User from "./user";
-import Zone from "./zone";
-import { PLAN_STATUS } from "../../../constants";
-import PlanStatus from "./planstatus";
-import PlanExtension from "./planextension";
-import PlanExtensionRequests from "./planextensionrequests";
+import { flatten } from 'lodash';
+import AgreementExemptionStatus from './agreementexemptionstatus';
+import AgreementType from './agreementtype';
+import Client from './client';
+import District from './district';
+import LivestockIdentifier from './livestockidentifier';
+import Model from './model';
+import Plan from './plan';
+import Usage from './usage';
+import User from './user';
+import Zone from './zone';
+import { PLAN_STATUS } from '../../../constants';
+import PlanStatus from './planstatus';
+import PlanExtension from './planextension';
+import PlanExtensionRequests from './planextensionrequests';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -67,17 +67,17 @@ export default class Agreement extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      "forest_file_id",
-      "agreement_start_date",
-      "agreement_end_date",
-      "zone_id",
-      "agreement_exemption_status_id",
-      "agreement_type_id",
+      'forest_file_id',
+      'agreement_start_date',
+      'agreement_end_date',
+      'zone_id',
+      'agreement_exemption_status_id',
+      'agreement_type_id',
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
   static get table() {
-    return "agreement";
+    return 'agreement';
   }
 
   static async findWithAllRelations(...args) {
@@ -90,8 +90,8 @@ export default class Agreement extends Model {
       latestPlan = false,
       sendFullPlan = false,
       staffDraft = false,
-      orderBy = "agreement.forest_file_id",
-      order = "asc",
+      orderBy = 'agreement.forest_file_id',
+      order = 'asc',
     ] = args;
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
@@ -125,8 +125,8 @@ export default class Agreement extends Model {
     where,
     page = undefined,
     limit = undefined,
-    orderBy = "plan.agreement_id",
-    order = "asc",
+    orderBy = 'plan.agreement_id',
+    order = 'asc',
   ) {
     if (!db || !where) {
       return [];
@@ -134,17 +134,17 @@ export default class Agreement extends Model {
 
     const myFields = [
       ...Agreement.fields,
-      ...Zone.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...District.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...AgreementType.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...Zone.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...District.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...AgreementType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       // ...AgreementExemptionStatus.fields.map(
       //   (f) => `${f} AS ${f.replace(".", "_")}`,
       // ),
-      ...User.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...Plan.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...Plan.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...PlanExtensionRequests.fields.map(
-        (f) => `${f} AS ${f.replace(".", "_")}`,
+        (f) => `${f} AS ${f.replace('.', '_')}`,
       ),
     ];
 
@@ -152,40 +152,40 @@ export default class Agreement extends Model {
     const q = db
       .select(myFields)
       .from(Agreement.table)
-      .leftJoin("plan", {
-        "agreement.forest_file_id": "plan.agreement_id",
+      .leftJoin('plan', {
+        'agreement.forest_file_id': 'plan.agreement_id',
       })
-      .leftJoin("ref_plan_status", {
-        "plan.status_id": "ref_plan_status.id",
+      .leftJoin('ref_plan_status', {
+        'plan.status_id': 'ref_plan_status.id',
       })
-      .leftJoin("ref_zone", { "agreement.zone_id": "ref_zone.id" })
-      .leftJoin("ref_district", { "ref_zone.district_id": "ref_district.id" })
-      .leftJoin("user_account", { "ref_zone.user_id": "user_account.id" })
+      .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
+      .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+      .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
 
-      .leftJoin("user_account as plan_creator", {
-        "plan.creator_id": "plan_creator.id",
+      .leftJoin('user_account as plan_creator', {
+        'plan.creator_id': 'plan_creator.id',
       })
 
-      .leftJoin("client_agreement", {
-        "agreement.forest_file_id": "client_agreement.agreement_id",
-        "client_agreement.client_type_id": 1,
+      .leftJoin('client_agreement', {
+        'agreement.forest_file_id': 'client_agreement.agreement_id',
+        'client_agreement.client_type_id': 1,
       })
-      .leftJoin("ref_client as agreement_holder", {
-        "agreement_holder.client_number": "client_agreement.client_id",
+      .leftJoin('ref_client as agreement_holder', {
+        'agreement_holder.client_number': 'client_agreement.client_id',
       })
-      .leftJoin("ref_agreement_type", {
-        "agreement.agreement_type_id": "ref_agreement_type.id",
+      .leftJoin('ref_agreement_type', {
+        'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
-      .leftJoin("plan_extension_requests", {
-        "plan.id": "plan_extension_requests.plan_id",
-        "user_account.id": "plan_extension_requests.user_id",
+      .leftJoin('plan_extension_requests', {
+        'plan.id': 'plan_extension_requests.plan_id',
+        'user_account.id': 'plan_extension_requests.user_id',
       })
       // .leftJoin("ref_agreement_exemption_status", {
       //   "agreement.agreement_exemption_status_id":
       //     "ref_agreement_exemption_status.id",
       // })
       .orderByRaw(
-        `${orderBy} ${order === "asc" ? "asc nulls last" : "desc nulls first"}`,
+        `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
     if (
       Object.keys(where).length === 1 &&
@@ -212,8 +212,8 @@ export default class Agreement extends Model {
     }
 
     const results = await db
-      .select("agreement_id")
-      .from("client_agreement")
+      .select('agreement_id')
+      .from('client_agreement')
       .where({ client_id: clientId });
 
     return flatten(results.map((result) => Object.values(result)));
@@ -225,7 +225,7 @@ export default class Agreement extends Model {
     }
 
     const results = await db
-      .select("forest_file_id")
+      .select('forest_file_id')
       .from(Agreement.table)
       .where({ zone_id: zoneId });
 
@@ -241,8 +241,8 @@ export default class Agreement extends Model {
       const results = await db
         .select(Agreement.primaryKey)
         .from(Agreement.table)
-        .where({ "agreement.forest_file_id": term })
-        .orWhere("agreement.forest_file_id", "ilike", `%${term}%`);
+        .where({ 'agreement.forest_file_id': term })
+        .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
 
       // return an array of `forest_file_id`
       return flatten(results.map((result) => Object.values(result)));
@@ -254,7 +254,7 @@ export default class Agreement extends Model {
   static async update(db, where, values) {
     const obj = {};
     Agreement.fields.forEach((field) => {
-      const aKey = field.replace(Agreement.table, "").slice(1);
+      const aKey = field.replace(Agreement.table, '').slice(1);
       if (values[Model.toCamelCase(aKey)]) {
         obj[aKey] = values[Model.toCamelCase(aKey)];
       }
@@ -285,7 +285,7 @@ export default class Agreement extends Model {
   }
 
   async fetchUsage() {
-    const order = ["year", "asc"];
+    const order = ['year', 'asc'];
     const where = { agreement_id: this.forestFileId };
     const usage = await Usage.find(this.db, where, order);
     this.usage = usage;
@@ -306,7 +306,7 @@ export default class Agreement extends Model {
       return;
     }
 
-    Object.defineProperty(this, "id", {
+    Object.defineProperty(this, 'id', {
       enumerable: true,
       value: this.forestFileId,
       writable: false,

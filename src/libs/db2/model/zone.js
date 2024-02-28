@@ -45,8 +45,9 @@ export default class Zone extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description', 'district_id', 'user_id']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'code', 'description', 'district_id', 'user_id'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
@@ -62,17 +63,19 @@ export default class Zone extends Model {
       .select(`${Zone.table}.${Zone.primaryKey}`)
       .from(Zone.table)
       .join('user_account', { 'ref_zone.user_id': 'user_account.id' })
-      .whereRaw(`user_account.given_name || ' ' || user_account.family_name ILIKE '%${term}%'`);
+      .whereRaw(
+        `user_account.given_name || ' ' || user_account.family_name ILIKE '%${term}%'`,
+      );
 
     // return an array of `zone_id`
-    return flatten(results.map(result => Object.values(result)));
+    return flatten(results.map((result) => Object.values(result)));
   }
 
   static async findWithDistrictUser(db, where) {
     const myFields = [
       ...Zone.fields,
-      ...District.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...District.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
@@ -84,7 +87,7 @@ export default class Zone extends Model {
         .where(where)
         .orderBy('ref_zone.user_id', 'desc');
 
-      return results.map(row => new Zone(row, db));
+      return results.map((row) => new Zone(row, db));
     } catch (err) {
       throw err;
     }

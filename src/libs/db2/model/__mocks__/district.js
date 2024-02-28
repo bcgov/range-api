@@ -7,6 +7,6 @@ export default class District extends Model {
     if (passport.aUser.failDistrict) {
       throw Error('District:fail');
     }
-    return (fixtures.districts);
+    return fixtures.districts;
   }
 }

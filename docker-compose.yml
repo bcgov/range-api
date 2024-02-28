@@ -1,4 +1,4 @@
-version: "3.5"
+version: '3.5'
 
 services:
   range_api:
@@ -35,16 +35,16 @@ services:
     image: ${PROJECT}-${ENVIRONMENT}-postgress-img
     container_name: ${PROJECT}-${ENVIRONMENT}-db
     build:
-     context: ./services/db
-     dockerfile: Dockerfile
-     args:
-      - PORT:${POSTGRESQL_PORT}
+      context: ./services/db
+      dockerfile: Dockerfile
+      args:
+        - PORT:${POSTGRESQL_PORT}
     ports:
-     - ${POSTGRESQL_PORT}:${POSTGRESQL_PORT}
+      - ${POSTGRESQL_PORT}:${POSTGRESQL_PORT}
     environment:
-     - POSTGRES_USER=${POSTGRESQL_USER}
-     - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
-     - POSTGRES_DB=${POSTGRESQL_DATABASE}
+      - POSTGRES_USER=${POSTGRESQL_USER}
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRES_DB=${POSTGRESQL_DATABASE}
     networks:
       - local
     volumes:
@@ -58,10 +58,10 @@ services:
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: secretminiokey123
-      MINIO_DOMAIN: localhost 
-    command: server /data/minio 
+      MINIO_DOMAIN: localhost
+    command: server /data/minio
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
       interval: 30s
       timeout: 20s
       retries: 3

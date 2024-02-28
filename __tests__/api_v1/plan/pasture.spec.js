@@ -1,4 +1,4 @@
-import { default as request } from "supertest"; // eslint-disable-line
+import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -23,7 +23,7 @@ const dm = new DataManager(config);
 jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/pasture';
 const pastureBody = {
   name: "Roop's Pasture",
@@ -31,7 +31,7 @@ const pastureBody = {
   graceDays: 7,
   pldPercent: 0.3,
   notes: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const plantCommunityBody = {
@@ -48,7 +48,7 @@ const plantCommunityBody = {
   rangeReadinessNote:
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   approved: false,
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const plantCommunityActionBody = {
@@ -59,7 +59,7 @@ const plantCommunityActionBody = {
   noGrazeStartMonth: 1,
   noGrazeEndDay: 2,
   noGrazeEndMonth: 5,
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const indicatorPlantBody = {
@@ -67,7 +67,7 @@ const indicatorPlantBody = {
   criteria: 'shrubuse',
   value: 2,
   name: 'Shrub use',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const monitoringAreaBody = {
@@ -79,7 +79,7 @@ const monitoringAreaBody = {
   latitude: -114.965,
   transectAzimuth: 10,
   location: 'Here',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -284,18 +284,14 @@ describe('Test Pasture routes', () => {
 
   test('Deleting a plant community', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1/plant-community/1`)
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1/plant-community/1`).expect(204);
 
     expect(await dm.db('plant_community')).toHaveLength(0);
   });
 
   test('Deleting a nonexistant plant community throws a 400 error', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1/plant-community/2`)
-      .expect(400);
+    await request(app).delete(`${baseUrl}/1/plant-community/2`).expect(400);
 
     expect(await dm.db('plant_community')).toHaveLength(1);
   });
@@ -553,7 +549,9 @@ describe('Test Pasture routes', () => {
         expect(res.body.name).toEqual(name);
         expect(res.body.purposes).toHaveLength(2);
         expect(res.body.purposes[0].id).toEqual(purposes[0].id);
-        expect(res.body.purposes[0].purposeTypeId).toEqual(existingPurposeTypeId);
+        expect(res.body.purposes[0].purposeTypeId).toEqual(
+          existingPurposeTypeId,
+        );
         expect(res.body.purposes[1].id).not.toEqual(purposes[0].id);
         expect(res.body.purposes[1].purposeTypeId).toEqual(newPurposeTypeId);
       });

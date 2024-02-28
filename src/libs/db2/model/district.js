@@ -25,8 +25,9 @@ import Model from './model';
 export default class District extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description', 'user_id']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'code', 'description', 'user_id'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {

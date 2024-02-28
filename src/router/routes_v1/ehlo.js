@@ -27,6 +27,9 @@ import { Router } from 'express';
 
 const router = new Router();
 
-router.get('/', asyncMiddleware(async (req, res) => res.status(200).end()));
+router.get(
+  '/',
+  asyncMiddleware(async (req, res) => res.status(200).end()),
+);
 
 module.exports = router;

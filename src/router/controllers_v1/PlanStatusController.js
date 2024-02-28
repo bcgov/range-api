@@ -1,20 +1,20 @@
-import { errorWithCode, logger } from "@bcgov/nodejs-common-utils";
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import {
   isNumeric,
   checkRequiredFields,
   substituteFields,
-} from "../../libs/utils";
-import DataManager from "../../libs/db2";
-import config from "../../config";
-import { PLAN_STATUS } from "../../constants";
-import { PlanRouteHelper } from "../helpers";
-import PlanSnapshot from "../../libs/db2/model/plansnapshot";
-import { Mailer } from "../../libs/mailer";
-import Client from "../../libs/db2/model/client";
-import User from "../../libs/db2/model/user";
-import EmailTemplate from "../../libs/db2/model/emailtemplate";
-import Zone from "../../libs/db2/model/zone";
-import PlanController from "./PlanController";
+} from '../../libs/utils';
+import DataManager from '../../libs/db2';
+import config from '../../config';
+import { PLAN_STATUS } from '../../constants';
+import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
+import { Mailer } from '../../libs/mailer';
+import Client from '../../libs/db2/model/client';
+import User from '../../libs/db2/model/user';
+import EmailTemplate from '../../libs/db2/model/emailtemplate';
+import Zone from '../../libs/db2/model/zone';
+import PlanController from './PlanController';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } =
@@ -176,11 +176,11 @@ export default class PlanStatusController {
     const { statusId, note } = body;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
-    checkRequiredFields(["statusId"], "body", req);
+    checkRequiredFields(['planId'], 'params', req);
+    checkRequiredFields(['statusId'], 'body', req);
 
     if (!isNumeric(statusId)) {
-      throw errorWithCode("statusId must be numeric", 400);
+      throw errorWithCode('statusId must be numeric', 400);
     }
 
     try {
@@ -199,7 +199,7 @@ export default class PlanStatusController {
       // make sure the status exists.
       const status = planStatuses.find((s) => s.id === statusId);
       if (!status) {
-        throw errorWithCode("You must supply a valid status ID", 403);
+        throw errorWithCode('You must supply a valid status ID', 403);
       }
       const plan = await Plan.findById(db, planId);
       const zone = await Zone.findById(db, zoneId);
@@ -208,7 +208,7 @@ export default class PlanStatusController {
       await PlanStatusHistory.create(db, {
         fromPlanStatusId: prevStatusId,
         toPlanStatusId: statusId,
-        note: note || " ",
+        note: note || ' ',
         planId,
         userId: user.id,
       });
@@ -226,15 +226,15 @@ export default class PlanStatusController {
       const toStatus = await PlanStatus.findById(db, statusId);
       const fromStatus = await PlanStatus.findById(db, prevStatusId);
       const templates = await EmailTemplate.findWithExclusion(db, {
-        name: "Plan Status Change",
+        name: 'Plan Status Change',
       });
       const template = templates[0];
       const emailFields = {
-        "{agreementId}": agreementId,
-        "{fromStatus}": fromStatus.name,
-        "{toStatus}": toStatus.name,
-        "{rangeOfficerName}": `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
-        "{rangeOfficerEmail}": rangeOfficer.email,
+        '{agreementId}': agreementId,
+        '{fromStatus}': fromStatus.name,
+        '{toStatus}': toStatus.name,
+        '{rangeOfficerName}': `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
+        '{rangeOfficerEmail}': rangeOfficer.email,
       };
       const mailer = new Mailer();
       mailer.sendEmail(
@@ -242,7 +242,7 @@ export default class PlanStatusController {
         template.fromEmail,
         substituteFields(template.subject, emailFields),
         substituteFields(template.body, emailFields),
-        "html",
+        'html',
       );
       return res.status(200).json(status).end();
     } catch (err) {
@@ -267,7 +267,7 @@ export default class PlanStatusController {
     } = req;
     const { planId, confirmationId } = params;
 
-    checkRequiredFields(["planId", "confirmationId"], "params", req);
+    checkRequiredFields(['planId', 'confirmationId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
@@ -300,14 +300,14 @@ export default class PlanStatusController {
       if (allConfirmed) {
         const planStatuses = await PlanStatus.find(db, { active: true });
         const statusCode =
-          isMinorAmendment === "true"
+          isMinorAmendment === 'true'
             ? PLAN_STATUS.STANDS_NOT_REVIEWED
             : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find((s) => s.code === statusCode);
         await PlanStatusHistory.create(db, {
           fromPlanStatusId: plan.status.id,
           toPlanStatusId: status.id,
-          note: " ",
+          note: ' ',
           planId,
           userId: user.id,
         });
@@ -338,10 +338,10 @@ export default class PlanStatusController {
     const { params, body, user } = req;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
     checkRequiredFields(
-      ["fromPlanStatusId", "toPlanStatusId", "note"],
-      "body",
+      ['fromPlanStatusId', 'toPlanStatusId', 'note'],
+      'body',
       req,
     );
 
@@ -360,7 +360,7 @@ export default class PlanStatusController {
         userId: user.id,
       });
       const [planStatusHistory] = await PlanStatusHistory.findWithUser(db, {
-        "plan_status_history.id": historyId,
+        'plan_status_history.id': historyId,
       });
       return res.status(200).json(planStatusHistory).end();
     } catch (err) {

@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -23,7 +22,7 @@
 
 const table = 'user_account';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
     t.text('username').notNull().unique();
@@ -35,8 +34,12 @@ exports.up = async knex =>
     t.boolean('active').notNull().defaultTo(true);
     t.string('client_id', 8).references('client_number').inTable('ref_client');
     t.dateTime('last_login_at');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -46,5 +49,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

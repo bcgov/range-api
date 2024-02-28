@@ -18,10 +18,10 @@
 // Created by Jason Leach on 2018-05-08.
 //
 
-"use strict";
+'use strict';
 
-import { SSO_ROLE_MAP } from "../../../constants";
-import Model from "./model";
+import { SSO_ROLE_MAP } from '../../../constants';
+import Model from './model';
 import UserClientLink from './userclientlink';
 
 export default class User extends Model {
@@ -50,34 +50,31 @@ export default class User extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      "id",
-      "username",
-      "given_name",
-      "family_name",
-      "email",
-      "phone_number",
-      "active",
-      "pia_seen",
-      "last_login_at",
-      "sso_id"
-    ].map(field => `${this.table}.${field}`);
+      'id',
+      'username',
+      'given_name',
+      'family_name',
+      'email',
+      'phone_number',
+      'active',
+      'pia_seen',
+      'last_login_at',
+      'sso_id',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
-    return "user_account";
+    return 'user_account';
   }
 
   static async update(db, where, values) {
     const obj = {};
-    Object.keys(values).forEach(key => {
+    Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
     try {
-      const count = await db
-        .table(User.table)
-        .where(where)
-        .update(obj);
+      const count = await db.table(User.table).where(where).update(obj);
 
       if (count > 0) {
         //   const res = await db.raw(`
@@ -90,7 +87,7 @@ export default class User extends Model {
         const [{ id }] = await db
           .table(User.table)
           .where(where)
-          .returning("id");
+          .returning('id');
 
         const res = await db.raw(
           `
@@ -99,7 +96,7 @@ export default class User extends Model {
           LEFT JOIN ref_client ON ref_client.client_number = user_client_link.client_id
           WHERE user_account.id = ?;
         `,
-          [id]
+          [id],
         );
         return res.rows.map(User.mapRow)[0];
       }
@@ -112,15 +109,12 @@ export default class User extends Model {
 
   static async create(db, values) {
     const obj = {};
-    Object.keys(values).forEach(key => {
+    Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
     try {
-      const results = await db
-        .table(User.table)
-        .returning("id")
-        .insert(obj);
+      const results = await db.table(User.table).returning('id').insert(obj);
 
       return await User.findOne(db, { id: results.pop() });
     } catch (err) {
@@ -130,17 +124,14 @@ export default class User extends Model {
 
   static async findWithExclusion(db, where, order, exclude) {
     try {
-      const q = db
-        .table(User.table)
-        .select("id")
-        .where(where);
+      const q = db.table(User.table).select('id').where(where);
 
       if (exclude) {
         q.andWhereNot(...exclude);
       }
 
       const results = await q;
-      const userIds = results.map(obj => obj.id);
+      const userIds = results.map((obj) => obj.id);
 
       const res = await db.raw(
         `
@@ -166,13 +157,15 @@ export default class User extends Model {
       type: 'owner',
     });
 
-    return clientLinks.map(clientLink => clientLink.clientId);
+    return clientLinks.map((clientLink) => clientLink.clientId);
   }
 
   static async fromClientId(db, clientId) {
     const [result] = await db
       .table('user_account')
-      .join('user_client_link', { 'user_client_link.user_id': 'user_account.id' })
+      .join('user_client_link', {
+        'user_client_link.user_id': 'user_account.id',
+      })
       .where({
         'user_client_link.client_id': clientId,
       });
@@ -186,10 +179,10 @@ export default class User extends Model {
 
 /* eslint-disable func-names, arrow-body-style */
 
-User.prototype.isActive = function() {
+User.prototype.isActive = function () {
   if (
     this.active &&
-    Object.values(SSO_ROLE_MAP).some(item => this.roles.includes(item))
+    Object.values(SSO_ROLE_MAP).some((item) => this.roles.includes(item))
   ) {
     return true;
   }
@@ -197,7 +190,7 @@ User.prototype.isActive = function() {
   return false;
 };
 
-User.prototype.canAccessAgreement = async function(db, agreement) {
+User.prototype.canAccessAgreement = async function (db, agreement) {
   if (!db || !agreement) {
     return false;
   }
@@ -231,7 +224,7 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
       })
       .count();
     const { count } = result || {};
-    return count !== "0";
+    return count !== '0';
   }
 
   if (this.isDecisionMaker()) {
@@ -251,18 +244,18 @@ User.prototype.canAccessAgreement = async function(db, agreement) {
   return false;
 };
 
-User.prototype.isAdministrator = function() {
+User.prototype.isAdministrator = function () {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
 };
 
-User.prototype.isAgreementHolder = function() {
+User.prototype.isAgreementHolder = function () {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
 };
 
-User.prototype.isRangeOfficer = function() {
+User.prototype.isRangeOfficer = function () {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
 };
 
-User.prototype.isDecisionMaker = function() {
+User.prototype.isDecisionMaker = function () {
   return this.roles && this.roles.includes(SSO_ROLE_MAP.DECISION_MAKER);
 };

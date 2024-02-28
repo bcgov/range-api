@@ -64,14 +64,16 @@ nconf.overrides({
 });
 
 // load other properties from file.
-nconf.argv()
+nconf
+  .argv()
   .env()
   .file({ file: path.join(__dirname, `${env}.json`) });
 
 // if nothing else is set, use defaults. This will be set if
 // they do not exist in overrides or the config file.
 nconf.defaults({
-  appUrl: process.env.APP_URL || `http://${process.env.HOST}:${process.env.PORT}`,
+  appUrl:
+    process.env.APP_URL || `http://${process.env.HOST}:${process.env.PORT}`,
 });
 
 export default nconf;

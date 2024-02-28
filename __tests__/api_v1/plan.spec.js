@@ -31,7 +31,7 @@ const dm = new DataManager(config);
 jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan';
 const body = {
   rangeName: 'Create Admin Test',
@@ -145,18 +145,13 @@ describe('Test Plan routes', () => {
   // GET /plan/:planId where planId does not exist
   test('Fetching a non-existent plan should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app)
-      .get(`${baseUrl}/3`)
-      .expect(404);
+    await request(app).get(`${baseUrl}/3`).expect(404);
   });
 
   // POST /plan
   test('Create a new plan', async () => {
     const app = await createApp();
-    await request(app)
-      .post(baseUrl)
-      .send(body)
-      .expect(200);
+    await request(app).post(baseUrl).send(body).expect(200);
   });
 
   // POST /plan - creating a plan for a bad :agreementId should throw a 404 error
@@ -166,7 +161,9 @@ describe('Test Plan routes', () => {
       .post(baseUrl)
       .send({ ...body, agreementId: 'bad' })
       .expect(500)
-      .expect(res => expect(res.body.error).toBe('Unable to find the related agreement'));
+      .expect((res) =>
+        expect(res.body.error).toBe('Unable to find the related agreement'),
+      );
   });
 
   // POST /plan - attempting to create a plan with an existing :planId should throw a 409 error
@@ -205,7 +202,7 @@ describe('Test Plan routes', () => {
       .put(`${baseUrl}/1/status`)
       .send(status)
       .expect(200)
-      .expect(res => expect(res.body.id).toEqual(12));
+      .expect((res) => expect(res.body.id).toEqual(12));
 
     await request(app)
       .get(`${baseUrl}/1`)
@@ -224,10 +221,7 @@ describe('Test Plan routes', () => {
 
     const status = { statusId: 'word' };
 
-    await request(app)
-      .put(`${baseUrl}/1/status`)
-      .send(status)
-      .expect(400);
+    await request(app).put(`${baseUrl}/1/status`).send(status).expect(400);
   });
   // PUT /plan/:planId/status - if :statusId is not valid it should throw a 403 error
   test('Updating a plan with an invalid statusId should throw a 403 error', async () => {
@@ -235,12 +229,8 @@ describe('Test Plan routes', () => {
 
     const status = { statusId: 100 };
 
-    await request(app)
-      .put(`${baseUrl}/1/status`)
-      .send(status)
-      .expect(403);
+    await request(app).put(`${baseUrl}/1/status`).send(status).expect(403);
   });
-
 
   // PUT /plan/:planId/confirmation/:confirmationId - update existing amendment confirmation
   test('Updating an existing amendment confirmation', async () => {
@@ -255,7 +245,7 @@ describe('Test Plan routes', () => {
       .put(`${baseUrl}/1/confirmation/1`)
       .send(confirmation)
       .expect(200)
-      .expect(res => expect(res.body.updatedAt).toBeDefined);
+      .expect((res) => expect(res.body.updatedAt).toBeDefined);
 
     const results = await dm.db('plan').where('id', 1);
     expect(results).toHaveLength(1);

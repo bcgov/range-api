@@ -1,48 +1,45 @@
 name: Node CI
 on:
-
   pull_request:
     branches:
-    - dev
-    - master
-
+      - dev
+      - master
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [10.x] 
+        node-version: [10.x]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
-      env:
-        POSTGRESQL_DATABASE: myra
-        POSTGRESQL_DATABASE_TEST: myra_test
-        POSTGRESQL_HOST: db
-        POSTGRESQL_PORT: 5432
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install, build, and test
+        env:
+          POSTGRESQL_DATABASE: myra
+          POSTGRESQL_DATABASE_TEST: myra_test
+          POSTGRESQL_HOST: db
+          POSTGRESQL_PORT: 5432
 
-        PROJECT: myra_range
-        ENVIRONMENT: development
-        API_PORT: 8080
-        BUILD_TARGET: base
+          PROJECT: myra_range
+          ENVIRONMENT: development
+          API_PORT: 8080
+          BUILD_TARGET: base
 
-        POSTGRESQL_PASSWORD: banana
-        POSTGRESQL_USER: app_dv_myra
-      
-        SSO_URL: https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
+          POSTGRESQL_PASSWORD: banana
+          POSTGRESQL_USER: app_dv_myra
 
-        CI: true
-      run: |
-        echo "$(printenv)" > .env
-        npm ci
-        make local-test-setup
-        make run-db-test
-        make local-test
+          SSO_URL: https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-connect
+
+          CI: true
+        run: |
+          echo "$(printenv)" > .env
+          npm ci
+          make local-test-setup
+          make run-db-test
+          make local-test

@@ -1,4 +1,4 @@
 {
-	"temporaryUploadPath": "uploads",
-	"archiveFileBaseName": "IMG_"
+  "temporaryUploadPath": "uploads",
+  "archiveFileBaseName": "IMG_"
 }

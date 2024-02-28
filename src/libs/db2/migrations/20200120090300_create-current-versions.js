@@ -5,12 +5,15 @@ exports.up = async (knex) => {
   `);
 
   const versionsP = plans.map(async (plan) => {
-    const { rows } = await knex.raw(`
+    const { rows } = await knex.raw(
+      `
       INSERT INTO plan_version (version, canonical_id, plan_id)
       VALUES (-1, ?, ?)
       ON CONFLICT DO NOTHING
       RETURNING *;
-    `, [plan.canonical_id, plan.id]);
+    `,
+      [plan.canonical_id, plan.id],
+    );
 
     return rows;
   });

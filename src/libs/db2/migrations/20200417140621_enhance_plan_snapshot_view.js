@@ -1,4 +1,3 @@
-
 exports.up = async (knex) => {
   await knex.raw(`
     create view plan_snapshot_summary as (
@@ -88,11 +87,9 @@ from
   and all_snapshots.version = (last_snapshot.version + 1) 
   join plan p on p.id = all_snapshots.plan_id
 
-)`)
-  
+)`);
 };
 
 exports.down = async (knex) => {
-    knex.raw('drop view plan_snapshot_summary;')
-  
+  knex.raw('drop view plan_snapshot_summary;');
 };

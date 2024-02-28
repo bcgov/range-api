@@ -1,21 +1,21 @@
-import { errorWithCode } from "@bcgov/nodejs-common-utils";
-import config from "../../config";
-import DataManager from "../../libs/db2";
-import PlanFile from "../../libs/db2/model/PlanFile";
-import AdditionalRequirement from "../../libs/db2/model/additionalrequirement";
-import GrazingSchedule from "../../libs/db2/model/grazingschedule";
-import GrazingScheduleEntry from "../../libs/db2/model/grazingscheduleentry";
-import InvasivePlantChecklist from "../../libs/db2/model/invasiveplantchecklist";
-import ManagementConsideration from "../../libs/db2/model/managementconsideration";
-import MinisterIssue from "../../libs/db2/model/ministerissue";
-import MinisterIssueAction from "../../libs/db2/model/ministerissueaction";
-import MinisterIssuePasture from "../../libs/db2/model/ministerissuepasture";
-import Pasture from "../../libs/db2/model/pasture";
-import PlanStatusHistory from "../../libs/db2/model/planstatushistory";
-import { checkRequiredFields, substituteFields } from "../../libs/utils";
-import { Mailer } from "../../libs/mailer";
-import Agreement from "../../libs/db2/model/agreement";
-import EmailTemplate from "../../libs/db2/model/emailtemplate";
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import config from '../../config';
+import DataManager from '../../libs/db2';
+import PlanFile from '../../libs/db2/model/PlanFile';
+import AdditionalRequirement from '../../libs/db2/model/additionalrequirement';
+import GrazingSchedule from '../../libs/db2/model/grazingschedule';
+import GrazingScheduleEntry from '../../libs/db2/model/grazingscheduleentry';
+import InvasivePlantChecklist from '../../libs/db2/model/invasiveplantchecklist';
+import ManagementConsideration from '../../libs/db2/model/managementconsideration';
+import MinisterIssue from '../../libs/db2/model/ministerissue';
+import MinisterIssueAction from '../../libs/db2/model/ministerissueaction';
+import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture';
+import Pasture from '../../libs/db2/model/pasture';
+import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
+import { checkRequiredFields, substituteFields } from '../../libs/utils';
+import { Mailer } from '../../libs/mailer';
+import Agreement from '../../libs/db2/model/agreement';
+import EmailTemplate from '../../libs/db2/model/emailtemplate';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -29,7 +29,7 @@ export default class PlanExtensionController {
   static async approveExtension(req, res) {
     const { params, user } = req;
     const { planId } = params;
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
     const trx = await db.transaction();
     try {
       const extensionRequest = await PlanExtensionRequests.findOne(trx, {
@@ -39,15 +39,15 @@ export default class PlanExtensionController {
       if (!extensionRequest)
         throw errorWithCode("Extension request doesn't exist", 400);
       const planEntry = (
-        await Plan.findWithStatusExtension(trx, { "plan.id": planId }, [
-          "id",
-          "desc",
+        await Plan.findWithStatusExtension(trx, { 'plan.id': planId }, [
+          'id',
+          'desc',
         ])
       )[0];
       if (
         planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
       ) {
-        throw errorWithCode("All requests already received", 400);
+        throw errorWithCode('All requests already received', 400);
       }
       await PlanExtensionRequests.update(
         trx,
@@ -68,11 +68,11 @@ export default class PlanExtensionController {
         trx,
         [agreement.zone.user.email],
         {
-          "{agreementId}": planEntry.agreementId,
+          '{agreementId}': planEntry.agreementId,
         },
       );
       trx.commit();
-      console.log("Returning....");
+      console.log('Returning....');
       return res.status(200).end();
     } catch (error) {
       console.error(error.stack);
@@ -90,7 +90,7 @@ export default class PlanExtensionController {
     const { params, user } = req;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
 
     const extensionRequest = await PlanExtensionRequests.findOne(db, {
       plan_id: planId,
@@ -100,7 +100,7 @@ export default class PlanExtensionController {
       throw errorWithCode("Extension request doesn't exist", 400);
     const planEntry = await Plan.findOne(db, { id: planId });
     if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
-      throw errorWithCode("All requests already accepted", 400);
+      throw errorWithCode('All requests already accepted', 400);
     }
     await PlanExtensionRequests.update(
       db,
@@ -254,17 +254,17 @@ export default class PlanExtensionController {
     const { params, user } = req;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
 
     const planRow = await Plan.findOne(db, { id: planId });
     if (!(user.isRangeOfficer() && user.isAdministrator())) {
-      throw errorWithCode("Unauthorized", 401);
+      throw errorWithCode('Unauthorized', 401);
     }
     if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
-      throw errorWithCode("Need positive votes from all AH", 400);
+      throw errorWithCode('Need positive votes from all AH', 400);
     }
     if (planRow.extensionOf !== null) {
-      throw errorWithCode("Cannot extend extension plan", 400);
+      throw errorWithCode('Cannot extend extension plan', 400);
     }
     const trx = await db.transaction();
     try {
@@ -276,7 +276,7 @@ export default class PlanExtensionController {
       await PlanStatusHistory.create(trx, {
         fromPlanStatusId: planRow.statusId,
         toPlanStatusId: 6,
-        note: " ",
+        note: ' ',
         planId: planId,
         userId: user.id,
       });
@@ -296,7 +296,7 @@ export default class PlanExtensionController {
       await PlanStatusHistory.create(trx, {
         fromPlanStatusId: 6,
         toPlanStatusId: 12,
-        note: " ",
+        note: ' ',
         planId: newPlan.id,
         userId: user.id,
       });
@@ -316,7 +316,7 @@ export default class PlanExtensionController {
 
   static async sendPlanReadyForExtensionEmail(db, emails, parameters) {
     const template = await EmailTemplate.findOne(db, {
-      name: "Request Plan Extension Votes",
+      name: 'Request Plan Extension Votes',
     });
     const mailer = new Mailer();
     await mailer.sendEmail(
@@ -324,7 +324,7 @@ export default class PlanExtensionController {
       template.fromEmail,
       substituteFields(template.subject, parameters),
       substituteFields(template.body, parameters),
-      "html",
+      'html',
     );
   }
 }

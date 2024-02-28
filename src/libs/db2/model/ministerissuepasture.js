@@ -27,8 +27,9 @@ import Model from './model';
 export default class MinisterIssuePasture extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'minister_issue_id', 'pasture_id', 'canonical_id']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'minister_issue_id', 'pasture_id', 'canonical_id'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {

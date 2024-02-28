@@ -35,7 +35,8 @@ describe('Test user routes happy path', () => {
     const app = await createApp();
     await request(app)
       .get('/api/v1/user')
-      .expect(200).expect((res) => {
+      .expect(200)
+      .expect((res) => {
         const results = res.body;
         expect(typeof results).toBe('object');
         expect(results.length).toBeGreaterThan(0);
@@ -56,7 +57,8 @@ describe('Test user routes happy path', () => {
     const app = await createApp();
     await request(app)
       .get('/api/v1/user/me')
-      .expect(200).expect((res) => {
+      .expect(200)
+      .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
         expect(result.id).toEqual(1);
@@ -90,7 +92,7 @@ describe('Test user routes happy path', () => {
 
   test('Creating a user client link', async (done) => {
     const app = await createApp();
-  
+
     const clientId = 1;
 
     await request(app)
@@ -108,7 +110,7 @@ describe('Test user routes happy path', () => {
 
   test('Creating an already existing link should return 400', async () => {
     const app = await createApp();
-    
+
     const clientId = 3;
 
     await request(app)
@@ -121,8 +123,7 @@ describe('Test user routes happy path', () => {
 });
 
 describe('Test user routes failure', () => {
-  beforeAll(() => {
-  });
+  beforeAll(() => {});
 
   beforeEach(() => {
     passport.aUser.isAgreementHolder = () => false;
@@ -162,9 +163,7 @@ describe('Test user routes failure', () => {
   // Update client id fail case: no client id in param
   test('Creating a client link should fail if no client ID is provided', async (done) => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/user/1/client/')
-      .expect(500);
+    await request(app).post('/api/v1/user/1/client/').expect(500);
     done();
   });
 

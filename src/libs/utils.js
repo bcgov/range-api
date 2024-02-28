@@ -29,7 +29,7 @@ import _ from 'lodash';
  * @param {String} str The string to be validated
  * @returns true if the string is valid, false otherwise
  */
-export const isValid = str => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
+export const isValid = (str) => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
 
 /**
  * Check if a string consits of [0-9].
@@ -37,7 +37,7 @@ export const isValid = str => str && /^[0-9A-Za-z\s\-_%]+$/.test(str);
  * @param {String} str The string to be validated
  * @returns true if the string is a number, false otherwise
  */
-export const isNumeric = str => str && /^\d+$/.test(str);
+export const isNumeric = (str) => str && /^\d+$/.test(str);
 
 /**
  * Check required fields in the object
@@ -63,19 +63,29 @@ export const checkRequiredFields = (fields = [], prop, req) => {
     switch (length) {
       case 1:
       case 2:
-        throw errorWithCode(`There are missing fields in the ${name}. `
-          + `Required field(s): ${missingFields.join(' and ')}`);
+        throw errorWithCode(
+          `There are missing fields in the ${name}. ` +
+            `Required field(s): ${missingFields.join(' and ')}`,
+        );
       default:
-        throw errorWithCode(`There are missing fields in the ${name}. `
-          + `Required field(s): ${`${missingFields.slice(0, length - 1).join(', ')}, `
-          + `and ${missingFields[length - 1]}`}`);
+        throw errorWithCode(
+          `There are missing fields in the ${name}. ` +
+            `Required field(s): ${
+              `${missingFields.slice(0, length - 1).join(', ')}, ` +
+              `and ${missingFields[length - 1]}`
+            }`,
+        );
     }
   }
   return undefined;
 };
 
 export const deepMapKeys = (originalObject, callback) => {
-  if (typeof originalObject !== 'object' || originalObject === null || originalObject instanceof Date) {
+  if (
+    typeof originalObject !== 'object' ||
+    originalObject === null ||
+    originalObject instanceof Date
+  ) {
     return originalObject;
   }
 
@@ -84,7 +94,7 @@ export const deepMapKeys = (originalObject, callback) => {
     const originalValue = originalObject[key];
     let newValue = originalValue;
     if (Array.isArray(originalValue)) {
-      newValue = originalValue.map(item => deepMapKeys(item, callback));
+      newValue = originalValue.map((item) => deepMapKeys(item, callback));
     } else if (typeof originalValue === 'object') {
       newValue = deepMapKeys(originalValue, callback);
     }
@@ -95,27 +105,21 @@ export const deepMapKeys = (originalObject, callback) => {
   }, {});
 };
 
-export const objPathToCamelCase = path =>
+export const objPathToCamelCase = (path) =>
   _.join(
-    _.map(
-      _.split(path, '.'),
-      w => _.camelCase(w),
-    ),
+    _.map(_.split(path, '.'), (w) => _.camelCase(w)),
     '.',
   );
 
-export const objPathToSnakeCase = path =>
+export const objPathToSnakeCase = (path) =>
   _.join(
-    _.map(
-      _.split(path, '.'),
-      w => _.snakeCase(w),
-    ),
+    _.map(_.split(path, '.'), (w) => _.snakeCase(w)),
     '.',
   );
 
-  export const substituteFields = (str, fields) => {
-    for (const key of Object.keys(fields)) {
-      str = str.replace(new RegExp(key, 'g'), fields[key]);
-    }
-    return str
+export const substituteFields = (str, fields) => {
+  for (const key of Object.keys(fields)) {
+    str = str.replace(new RegExp(key, 'g'), fields[key]);
   }
+  return str;
+};

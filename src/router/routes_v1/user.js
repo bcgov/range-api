@@ -1,4 +1,3 @@
-
 //
 // MYRA
 //
@@ -42,7 +41,10 @@ router.get('/:userId', asyncMiddleware(UserController.show));
 
 // Assign a client id to user
 router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
-router.delete('/:userId?/client/:clientNumber?', asyncMiddleware(UserController.removeClientLink));
+router.delete(
+  '/:userId?/client/:clientNumber?',
+  asyncMiddleware(UserController.removeClientLink),
+);
 
 router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
 module.exports = router;

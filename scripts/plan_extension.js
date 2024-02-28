@@ -1,8 +1,8 @@
-import config from "../src/config";
-import DataManager from "../src/libs/db2";
-import EmailTemplate from "../src/libs/db2/model/emailtemplate";
-import { Mailer } from "../src/libs/mailer";
-import { substituteFields } from "../src/libs/utils";
+import config from '../src/config';
+import DataManager from '../src/libs/db2';
+import EmailTemplate from '../src/libs/db2/model/emailtemplate';
+import { Mailer } from '../src/libs/mailer';
+import { substituteFields } from '../src/libs/utils';
 
 const dm = new DataManager(config);
 
@@ -10,19 +10,19 @@ const { db, Plan, PlanExtensionRequests } = dm;
 
 const sendEmailToAgreementHolders = async (db, expiringPlan) => {
   const template = await EmailTemplate.findOne(db, {
-    name: "Request Plan Extension Votes",
+    name: 'Request Plan Extension Votes',
   });
   const mailer = new Mailer();
   await mailer.sendEmail(
     [expiringPlan.email],
     template.fromEmail,
     substituteFields(template.subject, {
-      "{agreementId}": expiringPlan.agreementId,
+      '{agreementId}': expiringPlan.agreementId,
     }),
     substituteFields(template.body, {
-      "{agreementId}": expiringPlan.agreementId,
+      '{agreementId}': expiringPlan.agreementId,
     }),
-    "html",
+    'html',
   );
 };
 
@@ -36,7 +36,7 @@ const main = async () => {
       trx,
       currentDate,
       sixMonthsLater,
-      "plan.id",
+      'plan.id',
     );
     const requiredVotes = {};
     for (const expiringPlan of expiringPlans) {

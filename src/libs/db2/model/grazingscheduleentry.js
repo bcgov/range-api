@@ -20,7 +20,13 @@
 
 'use strict';
 
-import { calcDateDiff, calcPldAUMs, calcCrownAUMs, calcTotalAUMs, roundToSingleDecimalPlace } from '../../../router/helpers/PDFHelper';
+import {
+  calcDateDiff,
+  calcPldAUMs,
+  calcCrownAUMs,
+  calcTotalAUMs,
+  roundToSingleDecimalPlace,
+} from '../../../router/helpers/PDFHelper';
 import LivestockType from './livestocktype';
 import Model from './model';
 import Pasture from './pasture';
@@ -28,12 +34,15 @@ import Pasture from './pasture';
 export default class GrazingScheduleEntry extends Model {
   constructor(data, db = undefined) {
     const obj = {};
-    Object.keys(data)
-      .forEach((key) => {
-        if (GrazingScheduleEntry.fields.indexOf(`${GrazingScheduleEntry.table}.${key}`) > -1) {
-          obj[key] = data[key];
-        }
-      });
+    Object.keys(data).forEach((key) => {
+      if (
+        GrazingScheduleEntry.fields.indexOf(
+          `${GrazingScheduleEntry.table}.${key}`,
+        ) > -1
+      ) {
+        obj[key] = data[key];
+      }
+    });
 
     super(obj, db);
 
@@ -42,28 +51,45 @@ export default class GrazingScheduleEntry extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'grace_days', 'livestock_count', 'date_in', 'date_out',
-      'pasture_id', 'livestock_type_id', 'grazing_schedule_id', 'canonical_id', 'created_at']
-      .map(field => `${this.table}.${field}`);
+    return [
+      'id',
+      'grace_days',
+      'livestock_count',
+      'date_in',
+      'date_out',
+      'pasture_id',
+      'livestock_type_id',
+      'grazing_schedule_id',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
     return 'grazing_schedule_entry';
   }
 
-  static async findWithLivestockType(db, where, order, orderRaw,
-    page = undefined, limit = undefined) {
+  static async findWithLivestockType(
+    db,
+    where,
+    order,
+    orderRaw,
+    page = undefined,
+    limit = undefined,
+  ) {
     const myFields = [
       ...GrazingScheduleEntry.fields,
-      ...LivestockType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...Pasture.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...LivestockType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...Pasture.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
     try {
       let results = [];
       const q = db
         .select(myFields)
         .from(GrazingScheduleEntry.table)
-        .join('ref_livestock', { 'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id' })
+        .join('ref_livestock', {
+          'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id',
+        })
         .join('pasture', { 'grazing_schedule_entry.pasture_id': 'pasture.id' })
         .where(where);
 
@@ -75,9 +101,7 @@ export default class GrazingScheduleEntry extends Model {
 
       if (page && limit) {
         const offset = limit * (page - 1);
-        results = await q
-          .offset(offset)
-          .limit(limit);
+        results = await q.offset(offset).limit(limit);
       } else {
         results = await q;
       }

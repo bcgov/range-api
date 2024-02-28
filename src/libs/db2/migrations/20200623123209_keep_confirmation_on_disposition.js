@@ -20,8 +20,8 @@
 
 'use strict';
 
-exports.up = async function(knex) {
-    const create_plan_conf_records = `
+exports.up = async function (knex) {
+  const create_plan_conf_records = `
     drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;
     CREATE FUNCTION update_plan_conf_to_reflect_client_agreement() 
     RETURNS trigger as  $$
@@ -104,29 +104,29 @@ exports.up = async function(knex) {
         
     END;
     $$ LANGUAGE plpgsql
-    `
+    `;
 
-    await knex.schema.raw(create_plan_conf_records);
+  await knex.schema.raw(create_plan_conf_records);
 
-    const insert_trigger = `
+  const insert_trigger = `
     CREATE TRIGGER update_plan_conf_with_new_client_agreement AFTER INSERT 
     ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
     update_plan_conf_to_reflect_client_agreement()
     `;
 
-    await knex.schema.raw(insert_trigger);
-  
-    const delete_trigger = `
+  await knex.schema.raw(insert_trigger);
+
+  const delete_trigger = `
     CREATE TRIGGER update_plan_conf_with_old_client_agreement AFTER DELETE 
     ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
     update_plan_conf_to_reflect_client_agreement()
     `;
 
-    await knex.schema.raw(delete_trigger);
+  await knex.schema.raw(delete_trigger);
 };
 
-exports.down = async function(knex) {
-    const create_plan_conf_records = `
+exports.down = async function (knex) {
+  const create_plan_conf_records = `
     drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;
     CREATE FUNCTION update_plan_conf_to_reflect_client_agreement() 
     RETURNS trigger as  $$
@@ -168,23 +168,23 @@ exports.down = async function(knex) {
         
     END;
     $$ LANGUAGE plpgsql
-    `
+    `;
 
-    await knex.schema.raw(create_plan_conf_records);
+  await knex.schema.raw(create_plan_conf_records);
 
-    const insert_trigger = `
+  const insert_trigger = `
     CREATE TRIGGER update_plan_conf_with_new_client_agreement AFTER INSERT 
     ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
     update_plan_conf_to_reflect_client_agreement()
     `;
 
-    await knex.schema.raw(insert_trigger);
-  
-    const delete_trigger = `
+  await knex.schema.raw(insert_trigger);
+
+  const delete_trigger = `
     CREATE TRIGGER update_plan_conf_with_old_client_agreement AFTER DELETE 
     ON client_agreement FOR EACH ROW EXECUTE PROCEDURE
     update_plan_conf_to_reflect_client_agreement()
     `;
 
-    await knex.schema.raw(delete_trigger);
+  await knex.schema.raw(delete_trigger);
 };

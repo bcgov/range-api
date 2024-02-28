@@ -1,13 +1,13 @@
-import { errorWithCode, logger } from "@bcgov/nodejs-common-utils";
-import { checkRequiredFields } from "../../libs/utils";
-import DataManager from "../../libs/db2";
-import config from "../../config";
-import { PlanRouteHelper } from "../helpers";
-import PlanSnapshot from "../../libs/db2/model/plansnapshot";
-import { generatePDFResponse } from "./PDFGeneration";
-import PlanStatusHistory from "../../libs/db2/model/planstatushistory";
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
+import { checkRequiredFields } from '../../libs/utils';
+import DataManager from '../../libs/db2';
+import config from '../../config';
+import { PlanRouteHelper } from '../helpers';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
+import { generatePDFResponse } from './PDFGeneration';
+import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
 
-const fs = require("fs");
+const fs = require('fs');
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement } = dm;
@@ -17,12 +17,12 @@ export default class PlanVersionController {
     const { user, params } = req;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
 
     try {
       const plan = await Plan.findById(db, planId);
       if (!plan) {
-        throw errorWithCode("Could not find plan", 404);
+        throw errorWithCode('Could not find plan', 404);
       }
 
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
@@ -46,12 +46,12 @@ export default class PlanVersionController {
     const { user, params } = req;
     const { planId } = params;
 
-    checkRequiredFields(["planId"], "params", req);
+    checkRequiredFields(['planId'], 'params', req);
 
     try {
       const plan = await Plan.findById(db, planId);
       if (!plan) {
-        throw errorWithCode("Could not find plan", 404);
+        throw errorWithCode('Could not find plan', 404);
       }
 
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
@@ -65,7 +65,7 @@ export default class PlanVersionController {
       const versions = await PlanSnapshot.findSummary(
         db,
         { plan_id: planId },
-        "effective_legal_start",
+        'effective_legal_start',
       );
 
       await Promise.all(
@@ -89,7 +89,7 @@ export default class PlanVersionController {
     const { user, params } = req;
     const { planId, version } = params;
 
-    checkRequiredFields(["planId", "version"], "params", req);
+    checkRequiredFields(['planId', 'version'], 'params', req);
 
     try {
       const versionData = await PlanSnapshot.findOne(db, {
@@ -98,7 +98,7 @@ export default class PlanVersionController {
       });
 
       if (!versionData) {
-        throw errorWithCode("Could not find version for plan", 404);
+        throw errorWithCode('Could not find version for plan', 404);
       }
 
       const agreementId = await Plan.agreementIdForPlanId(
@@ -128,7 +128,7 @@ export default class PlanVersionController {
     try {
       const plan = await Plan.findById(db, planId);
       if (!plan) {
-        throw errorWithCode("Could not find plan", 404);
+        throw errorWithCode('Could not find plan', 404);
       }
 
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
@@ -151,11 +151,11 @@ export default class PlanVersionController {
   static async download(req, res) {
     const { user, params } = req;
     const { planId, version } = params;
-    checkRequiredFields(["planId", "version"], "params", req);
+    checkRequiredFields(['planId', 'version'], 'params', req);
     const [plan] = await Plan.findWithStatusExtension(
       db,
-      { "plan.id": planId },
-      ["id", "desc"],
+      { 'plan.id': planId },
+      ['id', 'desc'],
     );
     if (!plan) {
       throw errorWithCode("Plan doesn't exist", 404);
@@ -173,12 +173,12 @@ export default class PlanVersionController {
         version,
       });
       if (!versionData)
-        throw errorWithCode("Could not find version for plan", 404);
+        throw errorWithCode('Could not find version for plan', 404);
       res.setHeader(
-        "Content-disposition",
+        'Content-disposition',
         `attachment; filename=${agreementId}.pdf`,
       );
-      res.setHeader("Content-type", "application/pdf");
+      res.setHeader('Content-type', 'application/pdf');
       if (!versionData.pdfFile) {
         versionData.snapshot.originalApproval =
           await PlanStatusHistory.fetchOriginalApproval(db, planId);

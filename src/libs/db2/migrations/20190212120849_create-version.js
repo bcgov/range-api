@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,7 +24,7 @@
 
 const table = 'version';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.raw(
     `CREATE TABLE ${table}(
       Lock char(1) not null DEFAULT 'X',
@@ -37,5 +36,4 @@ exports.up = async knex =>
     )`,
   );
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

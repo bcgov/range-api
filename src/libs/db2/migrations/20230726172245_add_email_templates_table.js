@@ -1,4 +1,4 @@
-exports.up = async function(knex) {
+exports.up = async function (knex) {
   await knex.raw(`
     create table email_template (
       id serial2 NOT NULL,
@@ -12,10 +12,9 @@ exports.up = async function(knex) {
     (name, from_email, subject, body)
     VALUES('Plan Status Change', 'myrange@bc.gov.ca', 'Plan status changed - {agreementId}', 'Plan status changed from {fromStatus} to {toStatus} for the agreement {agreementId}');
 `);
-
 };
 
-exports.down = async function(knex) {
+exports.down = async function (knex) {
   await knex.raw(`
     drop table email_template;
 `);

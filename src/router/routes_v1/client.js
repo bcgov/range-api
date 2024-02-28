@@ -18,14 +18,14 @@
 // Created by Jason Leach on 2018-01-18.
 //
 
-"use strict";
+'use strict';
 
-import { asyncMiddleware, errorWithCode } from "@bcgov/nodejs-common-utils";
-import { Router } from "express";
-import config from "../../config";
-import DataManager from "../../libs/db2";
-import Plan from "../../libs/db2/model/plan";
-import { PlanRouteHelper } from "../helpers";
+import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
+import { Router } from 'express';
+import config from '../../config';
+import DataManager from '../../libs/db2';
+import Plan from '../../libs/db2/model/plan';
+import { PlanRouteHelper } from '../helpers';
 
 const dm = new DataManager(config);
 const { db, Client, ClientAgreement, Agreement, User } = dm;
@@ -34,11 +34,11 @@ const router = new Router();
 
 // Get all clients
 router.get(
-  "/",
+  '/',
   asyncMiddleware(async (req, res) => {
     try {
       if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode("Unauthorized", 401);
+        throw errorWithCode('Unauthorized', 401);
       }
 
       const results = await Client.find(db, {});
@@ -51,9 +51,9 @@ router.get(
 
 // Search clients
 router.get(
-  "/search",
+  '/search',
   asyncMiddleware(async (req, res) => {
-    const { term = "" } = req.query;
+    const { term = '' } = req.query;
     const results = await Client.searchByNameWithAllFields(db, term);
     res.status(200).json(results).end();
   }),
@@ -61,18 +61,18 @@ router.get(
 
 // Get by client number
 router.get(
-  "/:clientNumber",
+  '/:clientNumber',
   asyncMiddleware(async (req, res) => {
     const { clientNumber } = req.params;
 
     try {
       if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode("Unauthorized", 401);
+        throw errorWithCode('Unauthorized', 401);
       }
 
       const results = await Client.find(db, { client_number: clientNumber });
       if (results.length === 0) {
-        res.status(404).json({ error: "Not found" }).end();
+        res.status(404).json({ error: 'Not found' }).end();
       }
 
       res.status(200).json(results.pop()).end();
@@ -83,12 +83,12 @@ router.get(
 );
 
 router.get(
-  "/agreements/:planId",
+  '/agreements/:planId',
   asyncMiddleware(async (req, res) => {
     const { planId } = req.params;
 
     if (!req.user) {
-      throw errorWithCode("Unauthorized", 401);
+      throw errorWithCode('Unauthorized', 401);
     }
 
     const { agreementId } = await Plan.findOne(db, { id: planId });
@@ -127,13 +127,13 @@ router.get(
 );
 
 router.put(
-  "/agreements/:planId/:clientAgreementId",
+  '/agreements/:planId/:clientAgreementId',
   asyncMiddleware(async (req, res) => {
     const { planId, clientAgreementId } = req.params;
     const { user, body } = req;
 
     if (!user || user.isAgreementHolder()) {
-      throw errorWithCode("Unauthorized", 401);
+      throw errorWithCode('Unauthorized', 401);
     }
 
     const { agreementId } = await Plan.findOne(db, { id: planId });
@@ -157,13 +157,13 @@ router.put(
 
 // Get all client records with a given client number
 router.get(
-  "/all/:clientNumber",
+  '/all/:clientNumber',
   asyncMiddleware(async (req, res) => {
     const { clientNumber } = req.params;
 
     try {
       if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode("Unauthorized", 401);
+        throw errorWithCode('Unauthorized', 401);
       }
 
       const clients = await Client.find(db, { client_number: clientNumber });

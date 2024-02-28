@@ -24,17 +24,18 @@ import assert from 'assert';
 
 const passport = jest.requireActual('passport');
 
-
 const user = {
   id: 1,
   roles: [],
   isAgreementHolder: () => false,
 };
 
-const canAccessAgreement = (async (db, agreement) => {
+const canAccessAgreement = async (db, agreement) => {
   assert(db);
   assert(agreement);
-  const clients = agreement.clients.filter(client => client.id === user.clientId);
+  const clients = agreement.clients.filter(
+    (client) => client.id === user.clientId,
+  );
   if (user.isAdministrator()) {
     return true;
   }
@@ -46,16 +47,20 @@ const canAccessAgreement = (async (db, agreement) => {
     return val;
   }
   return false;
-});
+};
 
 passport.aUser = user;
 passport.aUser.canAccessAgreement = canAccessAgreement.bind(user);
-passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(() => [3, 4, 5]);
+passport.aUser.getLinkedClientNumbers = jest
+  .fn()
+  .mockReturnValue(() => [3, 4, 5]);
 passport.global = {};
 passport.setGlobal = (key, value) => {
   passport.global[key] = value;
 };
-passport.clearGlobal = (key) => { delete passport.global[key]; };
+passport.clearGlobal = (key) => {
+  delete passport.global[key];
+};
 
 function authenticate(strategy, options) {
   'use strict';

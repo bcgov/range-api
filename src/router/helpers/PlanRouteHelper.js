@@ -6,7 +6,9 @@ class PlanRouteHelper {
       throw errorWithCode('Unable to find a plan');
     }
 
-    const [agreement] = await Agreement.find(db, { forest_file_id: agreementId });
+    const [agreement] = await Agreement.find(db, {
+      forest_file_id: agreementId,
+    });
     if (!agreement) {
       throw errorWithCode('Unable to find the related agreement');
     }

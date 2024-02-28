@@ -25,7 +25,9 @@ export default class PlanConfirmation extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (PlanConfirmation.fields.indexOf(`${PlanConfirmation.table}.${key}`) > -1) {
+      if (
+        PlanConfirmation.fields.indexOf(`${PlanConfirmation.table}.${key}`) > -1
+      ) {
         obj[key] = data[key];
       }
     });
@@ -34,7 +36,17 @@ export default class PlanConfirmation extends Model {
   }
 
   static get fields() {
-    return ['id', 'plan_id', 'client_id', 'confirmed', 'created_at', 'updated_at', 'user_id', 'is_own_signature', 'is_manual_confirmation'];
+    return [
+      'id',
+      'plan_id',
+      'client_id',
+      'confirmed',
+      'created_at',
+      'updated_at',
+      'user_id',
+      'is_own_signature',
+      'is_manual_confirmation',
+    ];
   }
 
   static get table() {
@@ -42,24 +54,24 @@ export default class PlanConfirmation extends Model {
   }
 
   static async createConfirmations(db, agreementId, planId) {
-    const agreement = await Agreement.findOne(db, { forest_file_id: agreementId });
+    const agreement = await Agreement.findOne(db, {
+      forest_file_id: agreementId,
+    });
     await agreement.fetchClients();
 
-    const promises = agreement.clients.map(client => (
+    const promises = agreement.clients.map((client) =>
       PlanConfirmation.create(db, {
         plan_id: planId,
         client_id: client.clientNumber,
         confirmed: false,
-      })
-    ));
+      }),
+    );
     const records = await Promise.all(promises);
     return records;
   }
 
   static async refreshConfirmations(db, planId, user) {
-    const confirmations = await PlanConfirmation.find(
-      db, { plan_id: planId },
-    );
+    const confirmations = await PlanConfirmation.find(db, { plan_id: planId });
 
     // refresh all confirmations within the plan except the one who's requesting
     const promises = confirmations.map((c) => {

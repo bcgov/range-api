@@ -31,10 +31,7 @@ import DataManager from './db2';
 import { SSO_ROLE_MAP } from '../constants';
 
 const dm = new DataManager(config);
-const {
-  db,
-  User,
-} = dm;
+const { db, User } = dm;
 
 export default async function initPassport(app) {
   app.use(passport.initialize());
@@ -82,10 +79,11 @@ export default async function initPassport(app) {
           // try falling back by guessing what previous OIDC preferred username would have been
           let computedUsername = null;
 
-
           if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
             computedUsername = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-          } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
+          } else if (
+            jwtPayload?.identity_provider.toLowerCase().includes('bceid')
+          ) {
             computedUsername = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
           }
 
@@ -94,14 +92,22 @@ export default async function initPassport(app) {
               username: computedUsername,
             });
             if (user == null) {
-              console.log(`user ${computedUsername} not found in database, not migrating`);
+              console.log(
+                `user ${computedUsername} not found in database, not migrating`,
+              );
             } else {
-              console.log(`migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`);
-              await User.update(db, {
-                username: computedUsername,
-              }, {
-                username: jwtPayload.preferred_username,
-              });
+              console.log(
+                `migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`,
+              );
+              await User.update(
+                db,
+                {
+                  username: computedUsername,
+                },
+                {
+                  username: jwtPayload.preferred_username,
+                },
+              );
             }
           }
         }
@@ -116,14 +122,20 @@ export default async function initPassport(app) {
         let ssoId = null;
         if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
           ssoId = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
+        } else if (
+          jwtPayload?.identity_provider.toLowerCase().includes('bceid')
+        ) {
           ssoId = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
         }
-        await User.update(db, {
-          id: user.id,
-        }, {
-          ssoId: ssoId,
-        });
+        await User.update(
+          db,
+          {
+            id: user.id,
+          },
+          {
+            ssoId: ssoId,
+          },
+        );
         // User roles are assigned in SSO and extracted from the JWT.
         // See the User object for additional functionality.
 
@@ -139,8 +151,9 @@ export default async function initPassport(app) {
           if (needsRO) {
             basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
           }
-        } else if (jwtPayload?.identity_provider.toLowerCase()
-          .includes('bceid')) {
+        } else if (
+          jwtPayload?.identity_provider.toLowerCase().includes('bceid')
+        ) {
           let needsClientRole = true;
 
           if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
@@ -155,21 +168,33 @@ export default async function initPassport(app) {
 
         if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
           // dedup roles
-          user.roles = basicRoles.concat(jwtPayload.client_roles.filter(r => basicRoles.indexOf(r) < 0));
+          user.roles = basicRoles.concat(
+            jwtPayload.client_roles.filter((r) => basicRoles.indexOf(r) < 0),
+          );
         } else {
           user.roles = basicRoles;
         }
 
         if (!user.isActive()) {
-          return done(errorWithCode('This account is not active yet. Please contact the administrator(MyRangeBC@gov.bc.ca).', 403), false); // Forbidden
+          return done(
+            errorWithCode(
+              'This account is not active yet. Please contact the administrator(MyRangeBC@gov.bc.ca).',
+              403,
+            ),
+            false,
+          ); // Forbidden
         }
 
         // Update the last-login time of this user.
-        await User.update(db, {
-          username: jwtPayload.preferred_username,
-        }, {
-          lastLoginAt: new Date(),
-        });
+        await User.update(
+          db,
+          {
+            username: jwtPayload.preferred_username,
+          },
+          {
+            lastLoginAt: new Date(),
+          },
+        );
 
         return done(null, user); // OK
       } catch (error) {

@@ -29,69 +29,69 @@ import DataManager from '../../libs/db2';
 import { isNumeric, checkRequiredFields } from '../../libs/utils';
 
 const dm = new DataManager(config);
-const {
-  db,
-  Zone,
-  User,
-} = dm;
+const { db, Zone, User } = dm;
 
 const router = new Router();
 
 // Get the Zones for a given District.
-router.get('/', asyncMiddleware(async (req, res) => {
-  const {
-    districtId,
-  } = req.query;
+router.get(
+  '/',
+  asyncMiddleware(async (req, res) => {
+    const { districtId } = req.query;
 
-  // `District` is publically available information. If we choose it
-  // can be served without access control.
+    // `District` is publically available information. If we choose it
+    // can be served without access control.
 
-  try {
-    let where = {};
-    if (districtId) {
-      where = { district_id: districtId };
+    try {
+      let where = {};
+      if (districtId) {
+        where = { district_id: districtId };
+      }
+      const zones = await Zone.findWithDistrictUser(db, where);
+
+      res.status(200).json(zones).end();
+    } catch (error) {
+      throw error;
     }
-    const zones = await Zone.findWithDistrictUser(db, where);
-
-    res.status(200).json(zones).end();
-  } catch (error) {
-    throw error;
-  }
-}));
+  }),
+);
 
 // Get the user associated with a specific zone.
-router.put('/:zoneId/user', asyncMiddleware(async (req, res) => {
-  const { body, params } = req;
-  const { zoneId } = params;
-  const { userId } = body;
+router.put(
+  '/:zoneId/user',
+  asyncMiddleware(async (req, res) => {
+    const { body, params } = req;
+    const { zoneId } = params;
+    const { userId } = body;
 
-  checkRequiredFields(
-    ['userId'], 'body', req,
-  );
+    checkRequiredFields(['userId'], 'body', req);
 
-  checkRequiredFields(
-    ['zoneId'], 'params', req,
-  );
+    checkRequiredFields(['zoneId'], 'params', req);
 
-  if (!isNumeric(zoneId) || !isNumeric(userId)) {
-    throw errorWithCode('The zone and user ID must be numeric', 400);
-  }
-
-  try {
-    const zone = await Zone.findById(db, zoneId);
-    if (!zone) {
-      throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
+    if (!isNumeric(zoneId) || !isNumeric(userId)) {
+      throw errorWithCode('The zone and user ID must be numeric', 400);
     }
 
-    await Zone.update(db, { id: parseInt(zoneId, 10) }, { user_id: userId });
-    const user = await User.update(db, { id: userId }, {
-      active: true,
-    });
+    try {
+      const zone = await Zone.findById(db, zoneId);
+      if (!zone) {
+        throw errorWithCode(`No Zone with ID ${zoneId} exists`, 404);
+      }
 
-    res.status(200).json(user).end();
-  } catch (err) {
-    throw err;
-  }
-}));
+      await Zone.update(db, { id: parseInt(zoneId, 10) }, { user_id: userId });
+      const user = await User.update(
+        db,
+        { id: userId },
+        {
+          active: true,
+        },
+      );
+
+      res.status(200).json(user).end();
+    } catch (err) {
+      throw err;
+    }
+  }),
+);
 
 module.exports = router;

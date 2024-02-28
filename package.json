@@ -70,6 +70,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "jest": "^24.5.0",
     "nodemon": "^1.18.3",
+    "prettier": "^3.2.5",
     "supertest": "^3.4.2"
   },
   "scripts": {

@@ -47,7 +47,6 @@ exports.up = async (knex) => {
       client_number;
   `);
 
-
   // Change type of client_id columns
 
   await knex.raw(`
@@ -77,25 +76,34 @@ exports.up = async (knex) => {
     } = client;
 
     if (pcIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE plan_confirmation
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.client_number, pcIds]);
+      `,
+        [client.client_number, pcIds],
+      );
     }
     if (caIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE client_agreement
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.client_number, caIds]);
+      `,
+        [client.client_number, caIds],
+      );
     }
     if (linkIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE user_client_link
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.client_number, linkIds]);
+      `,
+        [client.client_number, linkIds],
+      );
     }
   });
 

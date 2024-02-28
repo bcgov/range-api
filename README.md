@@ -1,4 +1,5 @@
 [![img](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+
 # About My Range Application (MyRA) API
 
 The Range Mobile Pathfinder project is developing a suite of applications to support the sustainable management of rangelands in British Columbia. [Learn more about the Range Program](https://www.for.gov.bc.ca/hra/)
@@ -20,6 +21,7 @@ The goal is to move important crown land management documents from paper to digi
 ### Environment variables
 
 Before being able to run the API and/or tests, you need to setup some environment variables. Copy and paste this into a `.env` file:
+
 ```
 POSTGRESQL_DATABASE=myra
 POSTGRESQL_DATABASE_TEST=myra_test
@@ -43,7 +45,7 @@ SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/openid-c
 
 #### Windows
 
-If you find yourself on a Windows machine and can't get docker to play nice with WSL or otherwise need to get it rolling on Windows, throw this in .env.ps1, and after installing Make for Windows the below commands will still work, just make sure to run `powershell .env.ps1` first.  If you don't have a policy set yet to run powershell scripts (it is disabled by default) first run `Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser` or just set one for the process, that is up to you.
+If you find yourself on a Windows machine and can't get docker to play nice with WSL or otherwise need to get it rolling on Windows, throw this in .env.ps1, and after installing Make for Windows the below commands will still work, just make sure to run `powershell .env.ps1` first. If you don't have a policy set yet to run powershell scripts (it is disabled by default) first run `Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser` or just set one for the process, that is up to you.
 
 ```
 $env:POSTGRESQL_DATABASE = "myra"
@@ -65,14 +67,16 @@ $env:SSO_URL=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/range/protocol/ope
 ### Running the API locally
 
 1. Build containers and seed database:
-    ```
-    make local-setup
-    ```
+
+   ```
+   make local-setup
+   ```
 
 2. Run API:
-    ```
-    make run-local
-    ```
+
+   ```
+   make run-local
+   ```
 
 3. API will be available at http://localhost:8080/api
 
@@ -104,12 +108,12 @@ Agreement holder's are a little bit more complicated. You have to create a `user
 INSERT INTO user_client_link (client_id, user_id, active)
 SELECT ref_client.id, <your-user-id>, true
 FROM ref_client
-WHERE ref_client.name = 'Tom Haverford'; 
+WHERE ref_client.name = 'Tom Haverford';
 ```
 
-> There are a few pre-seeded client records named after various P&R characters. The only differences between them is that some are setup with multi-AH agreements, while others are single.  For example, Ann Perkins shares agreements with Ron Swanson, while April Ludgate is the only agreement holder on her RANs.
+> There are a few pre-seeded client records named after various P&R characters. The only differences between them is that some are setup with multi-AH agreements, while others are single. For example, Ann Perkins shares agreements with Ron Swanson, while April Ludgate is the only agreement holder on her RANs.
 > To see all client names:
-> 
+>
 > ```sql
 > SELECT name FROM ref_client;
 > ```
@@ -130,32 +134,34 @@ In general, there are two separate docker-compose projects that allow for isolat
 
 #### How to run tests:
 
-1. Setup the test environment (ie. building images and seeding the database. This step doesn't have to be run every time): 
-    ```
-    make local-test-setup
-    ```
+1. Setup the test environment (ie. building images and seeding the database. This step doesn't have to be run every time):
+
+   ```
+   make local-test-setup
+   ```
 
 2. Make sure test database is running (This step only has to be run if the test database is not already running):
-    ```
-    docker-compose -f test.docker-compose.yml -p myra-test up -d db
-    ```
 
-3. Run tests: 
-    ```
-    docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
-    ```
-    (or `npm run test:watch`)
+   ```
+   docker-compose -f test.docker-compose.yml -p myra-test up -d db
+   ```
+
+3. Run tests:
+   ```
+   docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
+   ```
+   (or `npm run test:watch`)
 
 This way, tests run inside of a docker container, allowing for reproducability, but also still let you interact with Jest's watch mode.
 
 ## How to Contribute
 
-*If you are including a Code of Conduct, make sure that you have a [CODE_OF_CONDUCT.md](SAMPLE-CODE_OF_CONDUCT.md) file, and include the following text in here in the README:*
+_If you are including a Code of Conduct, make sure that you have a [CODE_OF_CONDUCT.md](SAMPLE-CODE_OF_CONDUCT.md) file, and include the following text in here in the README:_
 "Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms."
 
 ## License
 
-Detailed guidance around licenses is available 
+Detailed guidance around licenses is available
 [here](/BC-Open-Source-Development-Employee-Guide/Licenses.md)
 
 Attach the appropriate LICENSE file directly into your repository before you do anything else!
@@ -168,7 +174,7 @@ Here is the boiler-plate you should put into the comments header of every source
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at 
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
@@ -177,7 +183,7 @@ Here is the boiler-plate you should put into the comments header of every source
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-   
+
 For repos that are made up of docs, wikis and non-code stuff it's Creative Commons Attribution 4.0 International, and should look like this at the bottom of your README.md:
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/80x15.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">YOUR REPO NAME HERE</span> by <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">the Province of Britich Columbia</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.

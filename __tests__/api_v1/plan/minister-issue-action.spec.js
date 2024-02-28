@@ -19,9 +19,8 @@ const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
 
-
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/issue/1/action';
 const body = {
   detail: 'This is an action!',
@@ -31,7 +30,7 @@ const body = {
   noGrazeStartDay: 12,
   noGrazeEndMonth: 4,
   noGrazeEndDay: 23,
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -187,9 +186,7 @@ describe('Test Minister Issue Action routes', () => {
 
   test('Deleting a minister issue action', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1`)
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1`).expect(204);
 
     const results = await dm.db('minister_issue_action');
     expect(results).toHaveLength(0);
@@ -197,9 +194,7 @@ describe('Test Minister Issue Action routes', () => {
 
   test('Deleting a non-existant minister issue action does nothing', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/10`)
-      .expect(204);
+    await request(app).delete(`${baseUrl}/10`).expect(204);
 
     const results = await dm.db('minister_issue_action');
     expect(results).toHaveLength(1);

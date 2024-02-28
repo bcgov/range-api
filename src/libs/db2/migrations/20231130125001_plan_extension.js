@@ -49,10 +49,10 @@ exports.up = async (knex) => {
 };
 
 exports.down = async (knex) => {
-  await knex.raw("DROP TABLE plan_extension_requests");
-  await knex.raw("ALTER TABLE plan DROP COLUMN extension_status");
-  await knex.raw("ALTER TABLE plan DROP COLUMN extension_required_votes");
-  await knex.raw("ALTER TABLE plan DROP COLUMN extension_received_votes");
+  await knex.raw('DROP TABLE plan_extension_requests');
+  await knex.raw('ALTER TABLE plan DROP COLUMN extension_status');
+  await knex.raw('ALTER TABLE plan DROP COLUMN extension_required_votes');
+  await knex.raw('ALTER TABLE plan DROP COLUMN extension_received_votes');
   await knex.raw(
     "DELETE FROM email_template where name = 'Request Plan Extension Votes'",
   );

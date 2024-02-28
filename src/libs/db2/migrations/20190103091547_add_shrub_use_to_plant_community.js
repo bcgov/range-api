@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,12 +24,12 @@
 
 const table = 'plant_community';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.table(table, async (t) => {
     t.float('shrub_use');
   });
 
-exports.down = knex =>
+exports.down = (knex) =>
   knex.schema.table(table, async (t) => {
     t.dropColumn('shrub_use');
   });

@@ -28,21 +28,21 @@ import config from '../../config';
 import DataManager from '../../libs/db2';
 
 const dm = new DataManager(config);
-const {
-  db,
-  District,
-} = dm;
+const { db, District } = dm;
 
 const router = new Router();
 
 // Get all
-router.get('/', asyncMiddleware(async (req, res) => {
-  try {
-    const results = await District.find(db, { });
-    res.status(200).json(results).end();
-  } catch (err) {
-    res.status(500).json({ error: err }).end();
-  }
-}));
+router.get(
+  '/',
+  asyncMiddleware(async (req, res) => {
+    try {
+      const results = await District.find(db, {});
+      res.status(200).json(results).end();
+    } catch (err) {
+      res.status(500).json({ error: err }).end();
+    }
+  }),
+);
 
 module.exports = router;

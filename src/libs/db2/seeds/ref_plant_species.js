@@ -22,7 +22,7 @@ exports.seed = async (knex) => {
       stubble_height: 8,
     },
     {
-      name: 'Bluegrass, Cusick\'s',
+      name: "Bluegrass, Cusick's",
       leaf_stage: 2.5,
       stubble_height: 8,
     },
@@ -119,7 +119,7 @@ exports.seed = async (knex) => {
       stubble_height: 12,
     },
     {
-      name: 'Needlegrass, Richardson\'s',
+      name: "Needlegrass, Richardson's",
       stubble_height: 12,
     },
     {
@@ -128,7 +128,7 @@ exports.seed = async (knex) => {
       stubble_height: 12,
     },
     {
-      name: 'Nuttal\'s alkaligrass',
+      name: "Nuttal's alkaligrass",
     },
     {
       name: 'Orchard grass',

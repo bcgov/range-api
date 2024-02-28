@@ -25,8 +25,9 @@ import Model from './model';
 export default class PlanExtension extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'request_date', 'end_date', 'notes']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'request_date', 'end_date', 'notes'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {

@@ -21,19 +21,19 @@
 /* eslint-env es6 */
 /* eslint-disable function-paren-newline */
 
-"use strict";
+'use strict';
 
 import {
   asyncMiddleware,
   errorWithCode,
   logger,
-} from "@bcgov/nodejs-common-utils";
-import { Router } from "express";
-import { flatten } from "lodash";
-import config from "../../config";
-import DataManager from "../../libs/db2";
-import { isNumeric } from "../../libs/utils";
-import District from "../../libs/db2/model/district";
+} from '@bcgov/nodejs-common-utils';
+import { Router } from 'express';
+import { flatten } from 'lodash';
+import config from '../../config';
+import DataManager from '../../libs/db2';
+import { isNumeric } from '../../libs/utils';
+import District from '../../libs/db2/model/district';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -98,7 +98,7 @@ const agreementCountForUser = async (user) => {
     count = ids.length;
   } else if (user.isRangeOfficer()) {
     const zones = await Zone.findWithDistrictUser(db, {
-      "ref_zone.user_id": user.id,
+      'ref_zone.user_id': user.id,
     });
     const zids = zones.map((zone) => zone.id);
     const ids = await Agreement.find(db, { zone_id: zids });
@@ -115,7 +115,7 @@ const agreementCountForUser = async (user) => {
     });
     count = agreements.length;
   } else {
-    throw errorWithCode("Unable to determine user roll", 500);
+    throw errorWithCode('Unable to determine user roll', 500);
   }
 
   return count;
@@ -130,8 +130,8 @@ const agreementCountForZones = async (zones = []) => {
 const getAgreeementsForAH = async ({
   page = undefined,
   limit = undefined,
-  orderBy = "agreement.forest_file_id",
-  order = "asc",
+  orderBy = 'agreement.forest_file_id',
+  order = 'asc',
   user,
   latestPlan = true,
   sendFullPlan = false,
@@ -172,8 +172,8 @@ const getAgreeementsForAH = async ({
 const getAgreeementsForDM = async ({
   page = undefined,
   limit = undefined,
-  orderBy = "agreement.forest_file_id",
-  order = "asc",
+  orderBy = 'agreement.forest_file_id',
+  order = 'asc',
   user,
   latestPlan = true,
   sendFullPlan = false,
@@ -202,8 +202,8 @@ const getAgreeementsForDM = async ({
 const getAgreementsForZones = async ({
   page = undefined,
   limit = undefined,
-  orderBy = "agreement.forest_file_id",
-  order = "asc",
+  orderBy = 'agreement.forest_file_id',
+  order = 'asc',
   selectedZoneIds,
   latestPlan = false,
   sendFullPlan = true,
@@ -227,15 +227,15 @@ const getAgreementsForZones = async ({
 const getAgreementsForRangeOfficer = async ({
   page = undefined,
   limit = undefined,
-  orderBy = "agreement.forest_file_id",
-  order = "asc",
+  orderBy = 'agreement.forest_file_id',
+  order = 'asc',
   user,
   latestPlan = false,
   sendFullPlan = true,
   staffDraft = true,
 }) => {
   const zones = await Zone.findWithDistrictUser(db, {
-    "ref_zone.user_id": user.id,
+    'ref_zone.user_id': user.id,
   });
   const ids = zones.map((zone) => zone.id);
   const agreements = await Agreement.findWithAllRelations(
@@ -256,8 +256,8 @@ const getAgreementsForRangeOfficer = async ({
 const getAgreementsForAdmin = async ({
   page = undefined,
   limit = undefined,
-  orderBy = "agreement.forest_file_id",
-  order = "asc",
+  orderBy = 'agreement.forest_file_id',
+  order = 'asc',
   latestPlan = true,
   sendFullPlan = false,
   staffDraft = true,
@@ -282,7 +282,7 @@ const getAgreementsForAdmin = async ({
 
 // Get all agreements based on the user type. This is only used by IOS
 router.get(
-  "/",
+  '/',
   asyncMiddleware(async (req, res) => {
     try {
       const { user } = req;
@@ -294,12 +294,12 @@ router.get(
         results = await getAgreementsForRangeOfficer({ user });
       } else if (user.isAdministrator()) {
         throw errorWithCode(
-          "This endpoint is forbidden for the admin user",
+          'This endpoint is forbidden for the admin user',
           401,
         );
         // results = await getAgreementsForAdmin({});
       } else {
-        throw errorWithCode("Unable to determine user roll", 500);
+        throw errorWithCode('Unable to determine user roll', 500);
       }
 
       if (results.length > 0) {
@@ -314,17 +314,17 @@ router.get(
 
 // Search agreements by RAN, contact name, and client name. This is only used by Web
 router.get(
-  "/search",
+  '/search',
   asyncMiddleware(async (req, res) => {
     const { user, query } = req;
     const {
-      term = "",
-      orderBy = "agreement.forest_file_id",
-      order = "asc",
-      selectedZones = "",
+      term = '',
+      orderBy = 'agreement.forest_file_id',
+      order = 'asc',
+      selectedZones = '',
     } = query;
 
-    const zones = selectedZones !== "" ? selectedZones.split(",") : [];
+    const zones = selectedZones !== '' ? selectedZones.split(',') : [];
 
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 10);
@@ -437,7 +437,7 @@ router.get(
         const endIndex = startIndex + limit;
         agreements = agreements.slice(startIndex, endIndex);
       } else {
-        throw errorWithCode("Unable to determine user roll", 500);
+        throw errorWithCode('Unable to determine user roll', 500);
       }
     }
 
@@ -460,7 +460,7 @@ router.get(
 
 // Get a single agreement by id. This is only used for Web
 router.get(
-  "/:id",
+  '/:id',
   asyncMiddleware(async (req, res) => {
     const { user, params, query } = req;
     const { id } = params;
@@ -485,7 +485,7 @@ router.get(
       const agreement = results.pop();
 
       if (!(await req.user.canAccessAgreement(db, agreement))) {
-        throw errorWithCode("You do not access to this agreement", 403);
+        throw errorWithCode('You do not access to this agreement', 403);
       }
       agreement.transformToV1();
       res.status(200).json(agreement).end();
@@ -499,7 +499,7 @@ router.get(
 // can probably be removed nothing in the Agreement should be updated directly. Expose
 // new endpoint for exemtpin status (check with list).
 router.put(
-  "/:id",
+  '/:id',
   asyncMiddleware(async (req, res) => {
     const { id } = req.params;
     const { user, body } = req;
@@ -518,12 +518,12 @@ router.put(
       const agreement = results.pop();
 
       if (!(await user.canAccessAgreement(db, agreement))) {
-        throw errorWithCode("You do not access to this agreement", 403);
+        throw errorWithCode('You do not access to this agreement', 403);
       }
 
       const pkeys = await Agreement.update(db, { forest_file_id: id }, body);
       if (pkeys.length === 0) {
-        throw errorWithCode("There was a problem updating the record", 400);
+        throw errorWithCode('There was a problem updating the record', 400);
       }
 
       const agreements = pkeys.map((pkey) =>
@@ -549,33 +549,33 @@ router.put(
 
 // Update the zone of an agreement
 router.put(
-  "/:agreementId?/zone",
+  '/:agreementId?/zone',
   asyncMiddleware(async (req, res) => {
     const { agreementId } = req.params;
     const { user, body } = req;
 
     if (!body.zoneId || !isNumeric(body.zoneId)) {
       throw errorWithCode(
-        "zoneId must be provided in body and be numeric",
+        'zoneId must be provided in body and be numeric',
         400,
       );
     }
 
     if (!agreementId) {
-      throw errorWithCode("agreementId must be provided in path", 400);
+      throw errorWithCode('agreementId must be provided in path', 400);
     }
 
     try {
       const results = await Agreement.find(db, { forest_file_id: agreementId });
 
       if (results.length === 0) {
-        throw errorWithCode("Unable to find agreement", 404);
+        throw errorWithCode('Unable to find agreement', 404);
       }
 
       const agreement = results.pop();
 
       if (!(await user.canAccessAgreement(db, agreement))) {
-        throw errorWithCode("You do not access to this agreement", 403);
+        throw errorWithCode('You do not access to this agreement', 403);
       }
 
       const pkeys = await Agreement.update(
@@ -585,7 +585,7 @@ router.put(
       );
 
       if (pkeys.length === 0) {
-        throw errorWithCode("There was a problem updating the record", 400);
+        throw errorWithCode('There was a problem updating the record', 400);
       }
 
       const agreements = pkeys.map((pkey) =>

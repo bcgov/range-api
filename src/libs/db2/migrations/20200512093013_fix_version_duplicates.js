@@ -286,8 +286,7 @@ FROM
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
 order by version desc
-);`)
-  
+);`);
 };
 
 exports.down = async (knex) => {
@@ -488,6 +487,5 @@ FROM
   AND all_snapshots.version = (last_snapshot.version + 1) 
   LEFT JOIN privacy_versions ON privacy_versions.id = all_snapshots.id 
   JOIN PLAN p ON p.id = all_snapshots.plan_id
-);`)
-  
+);`);
 };

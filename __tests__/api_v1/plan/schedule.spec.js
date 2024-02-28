@@ -1,4 +1,4 @@
-import { default as request } from "supertest"; // eslint-disable-line
+import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -19,7 +19,7 @@ const dm = new DataManager(config);
 jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/schedule';
 const body = {
   year: 2021,
@@ -27,13 +27,13 @@ const body = {
   grazingScheduleEntries: [],
   sortBy: 'livestockCount',
   sortOrder: 'asc',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 const entryBody = {
   livestockCount: 10,
   dateIn: '2019-03-15T16:52:37.658Z',
   dateOut: '2019-08-17T16:52:37.658Z',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
   pastureId: 1,
   livestockTypeId: 2,
   graceDays: 4,
@@ -108,10 +108,7 @@ describe('Test Schedule routes', () => {
 
   test('Creating a schedule with for a nonexistant plan throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/plan/3/schedule')
-      .send(body)
-      .expect(500);
+    await request(app).post('/api/v1/plan/3/schedule').send(body).expect(500);
   });
 
   test('Updating an existing schedule', async () => {
@@ -136,26 +133,17 @@ describe('Test Schedule routes', () => {
 
   test('Updating a nonexistant schedule throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .put(`${baseUrl}/100`)
-      .send(body)
-      .expect(500);
+    await request(app).put(`${baseUrl}/100`).send(body).expect(500);
   });
 
   test('Deleting an existing schedule', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1`)
-      .send()
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1`).send().expect(204);
   });
 
   test('Deleting a nonexistant schedule throws a 400 error', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/10`)
-      .send()
-      .expect(400);
+    await request(app).delete(`${baseUrl}/10`).send().expect(400);
   });
 
   test('Creating a schedule entry', async () => {
@@ -176,10 +164,7 @@ describe('Test Schedule routes', () => {
 
   test('Creating an entry on a nonexistant schedule throws a 400 error', async () => {
     const app = await createApp();
-    await request(app)
-      .post(`${baseUrl}/20/entry`)
-      .send(entryBody)
-      .expect(400);
+    await request(app).post(`${baseUrl}/20/entry`).send(entryBody).expect(400);
   });
 
   test('Deleting an existing schedule entry', async () => {
@@ -197,10 +182,7 @@ describe('Test Schedule routes', () => {
         });
       });
 
-    await request(app)
-      .delete(`${baseUrl}/1/entry/1`)
-      .send()
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1/entry/1`).send().expect(204);
   });
 
   test('Creating an entry by updating the schedule', async () => {

@@ -1,4 +1,4 @@
-version: "3.5"
+version: '3.5'
 
 services:
   range_api:
@@ -28,16 +28,16 @@ services:
     image: ${PROJECT}-${ENVIRONMENT}-postgress-e2e-img
     container_name: ${PROJECT}-${ENVIRONMENT}-e2e-db
     build:
-     context: ./services/db
-     dockerfile: Dockerfile
-     args:
-      - PORT:${POSTGRESQL_PORT}
+      context: ./services/db
+      dockerfile: Dockerfile
+      args:
+        - PORT:${POSTGRESQL_PORT}
     ports:
       - 5433:5432
     environment:
-     - POSTGRES_USER=${POSTGRESQL_USER}
-     - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
-     - POSTGRES_DB=${POSTGRESQL_DATABASE}
+      - POSTGRES_USER=${POSTGRESQL_USER}
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRES_DB=${POSTGRESQL_DATABASE}
     networks:
       - local
 

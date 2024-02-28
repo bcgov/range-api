@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,16 +24,26 @@
 
 const table = 'agreement';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.string('forest_file_id', 9).index().primary();
     t.dateTime('agreement_start_date').notNull();
     t.dateTime('agreement_end_date').notNull();
-    t.integer('agreement_exemption_status_id').notNull().references('id').inTable('ref_agreement_exemption_status');
-    t.integer('agreement_type_id').notNull().references('id').inTable('ref_agreement_type');
+    t.integer('agreement_exemption_status_id')
+      .notNull()
+      .references('id')
+      .inTable('ref_agreement_exemption_status');
+    t.integer('agreement_type_id')
+      .notNull()
+      .references('id')
+      .inTable('ref_agreement_type');
     t.integer('zone_id').notNull().references('id').inTable('ref_zone');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -44,5 +53,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

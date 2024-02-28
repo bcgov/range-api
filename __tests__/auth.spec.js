@@ -33,7 +33,5 @@ describe('archive functions', () => {
     // nothig to do
   });
 
-  test.skip('check Auth returns a verify result when a valid access token is passed', async () => {
-
-  });
+  test.skip('check Auth returns a verify result when a valid access token is passed', async () => {});
 });

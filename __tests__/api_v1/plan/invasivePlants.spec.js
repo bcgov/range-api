@@ -1,4 +1,4 @@
-import { default as request } from "supertest"; // eslint-disable-line
+import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -17,7 +17,7 @@ const dm = new DataManager(config);
 jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/invasive-plant-checklist';
 const body = {
   equipmentAndVehiclesParking: true,
@@ -25,7 +25,7 @@ const body = {
   undercarrigesInspected: true,
   revegetate: false,
   other: 'Another action to be done',
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -93,10 +93,7 @@ describe('Test Invasive Plant routes', () => {
         expect(res.body).toEqual({ ...body, id: 1, planId: 1, canonicalId: 1 });
       });
 
-    await request(app)
-      .post(baseUrl)
-      .send(body)
-      .expect(500);
+    await request(app).post(baseUrl).send(body).expect(500);
   });
 
   test('Creating an invasive plant checklist for a nonexistant plan throws a 500 error', async () => {
@@ -134,9 +131,6 @@ describe('Test Invasive Plant routes', () => {
 
   test('Updating a nonexistant invasive plant checklist throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .put(`${baseUrl}/1`)
-      .send(body)
-      .expect(500);
+    await request(app).put(`${baseUrl}/1`).send(body).expect(500);
   });
 });

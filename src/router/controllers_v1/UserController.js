@@ -1,7 +1,7 @@
-import { errorWithCode, logger } from "@bcgov/nodejs-common-utils";
-import { checkRequiredFields } from "../../libs/utils";
-import DataManager from "../../libs/db2";
-import config from "../../config";
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
+import { checkRequiredFields } from '../../libs/utils';
+import DataManager from '../../libs/db2';
+import config from '../../config';
 
 const dm = new DataManager(config);
 const {
@@ -28,12 +28,12 @@ export class UserController {
 
       let order = [];
       if (orderCId) {
-        order = ["client_id", orderCId];
+        order = ['client_id', orderCId];
       }
 
       let exclude;
       if (eBy && e) {
-        exclude = [eBy, "ilike", `%${e}%`];
+        exclude = [eBy, 'ilike', `%${e}%`];
       }
 
       const users = await User.findWithExclusion(db, {}, order, exclude);
@@ -94,19 +94,19 @@ export class UserController {
     const { user, params, body } = req;
     const { userId } = params;
     const sourceAccountIds = body.accountIds;
-    checkRequiredFields(["userId"], "params", req);
+    checkRequiredFields(['userId'], 'params', req);
 
-    checkRequiredFields(["accountIds"], "body", req);
+    checkRequiredFields(['accountIds'], 'body', req);
 
     const userRequest = await User.findOne(db, { id: userId });
     if (!userRequest) {
-      throw errorWithCode("User does not exist", 400);
+      throw errorWithCode('User does not exist', 400);
     }
 
     for (const id of sourceAccountIds) {
       const account = await User.findOne(db, { id: id });
       if (!account) {
-        throw errorWithCode("Invalid accountId supplied", 400);
+        throw errorWithCode('Invalid accountId supplied', 400);
       }
     }
     for (const sourceUserId of sourceAccountIds) {
@@ -140,13 +140,13 @@ export class UserController {
     const { userId } = params;
     const { clientId } = body;
 
-    checkRequiredFields(["userId"], "params", req);
+    checkRequiredFields(['userId'], 'params', req);
 
-    checkRequiredFields(["clientId"], "body", req);
+    checkRequiredFields(['clientId'], 'body', req);
 
     const client = await Client.findOne(db, { client_number: clientId });
     if (!client) {
-      throw errorWithCode("Client does not exist", 400);
+      throw errorWithCode('Client does not exist', 400);
     }
 
     const currentLink = await UserClientLink.findOne(db, {
@@ -158,14 +158,14 @@ export class UserController {
         `Link between user ${userId} and client ${clientId} already exists.`,
       );
       throw errorWithCode(
-        "This user is already linked to the selected client",
+        'This user is already linked to the selected client',
         400,
       );
     }
 
     const currentOwner = await UserClientLink.findOne(db, {
       client_id: clientId,
-      type: "owner",
+      type: 'owner',
     });
     if (currentOwner) {
       const currentOwnerUser = await User.findById(db, currentOwner.userId);
@@ -217,7 +217,7 @@ export class UserController {
       client_id: clientId,
       user_id: userId,
       active: true,
-      type: "owner",
+      type: 'owner',
     });
 
     res.status(200).json(result).end();
@@ -227,7 +227,7 @@ export class UserController {
     const { user, params } = req;
     const { clientNumber, userId } = params;
 
-    checkRequiredFields(["clientNumber", "userId"], "params", req);
+    checkRequiredFields(['clientNumber', 'userId'], 'params', req);
 
     const result = await UserClientLink.remove(db, {
       client_id: clientNumber,

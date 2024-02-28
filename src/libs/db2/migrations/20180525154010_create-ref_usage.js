@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -23,7 +22,7 @@
 
 const table = 'ref_usage';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
     t.smallint('year', 4).index();
@@ -31,9 +30,16 @@ exports.up = async knex =>
     t.integer('temporary_increase').defaultTo(0);
     t.integer('total_non_use').defaultTo(0);
     t.integer('total_annual_use').defaultTo(0);
-    t.string('agreement_id', 9).notNull().references('forest_file_id').inTable('agreement');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.string('agreement_id', 9)
+      .notNull()
+      .references('forest_file_id')
+      .inTable('agreement');
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -43,5 +49,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

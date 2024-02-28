@@ -7,13 +7,8 @@ import { PlanRouteHelper } from '../helpers';
 import MinisterIssue from '../../libs/db2/model/ministerissue';
 
 const dm = new DataManager(config);
-const {
-  db,
-  Agreement,
-  Plan,
-  MinisterIssueActionType,
-  MinisterIssueAction,
-} = dm;
+const { db, Agreement, Plan, MinisterIssueActionType, MinisterIssueAction } =
+  dm;
 
 export default class PlanMinisterIssueActionController {
   /**
@@ -35,17 +30,18 @@ export default class PlanMinisterIssueActionController {
       createdAt,
     } = body;
 
-    checkRequiredFields(
-      ['planId', 'issueId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'issueId'], 'params', req);
 
-    checkRequiredFields(
-      ['actionTypeId'], 'body', req,
-    );
+    checkRequiredFields(['actionTypeId'], 'body', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       const issue = await MinisterIssue.findById(db, issueId);
       if (!issue) {
@@ -64,8 +60,10 @@ export default class PlanMinisterIssueActionController {
         no_graze_end_month: null,
       };
 
-      const actionTypes = await MinisterIssueActionType.find(db, { active: true });
-      const actionType = actionTypes.find(at => at.id === actionTypeId);
+      const actionTypes = await MinisterIssueActionType.find(db, {
+        active: true,
+      });
+      const actionType = actionTypes.find((at) => at.id === actionTypeId);
       if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.OTHER) {
         data.other = other;
       }
@@ -77,13 +75,12 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const action = await MinisterIssueAction.create(
-        db,
-        data,
-      );
+      const action = await MinisterIssueAction.create(db, data);
       return res.status(200).json(action).end();
     } catch (error) {
-      logger.error(`PlanMinisterIssueActionController: store: fail with error: ${error.message}`);
+      logger.error(
+        `PlanMinisterIssueActionController: store: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -107,17 +104,18 @@ export default class PlanMinisterIssueActionController {
       createdAt,
     } = body;
 
-    checkRequiredFields(
-      ['planId', 'issueId', 'actionId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'issueId', 'actionId'], 'params', req);
 
-    checkRequiredFields(
-      ['actionTypeId'], 'body', req,
-    );
+    checkRequiredFields(['actionTypeId'], 'body', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       const data = {
         detail,
@@ -130,8 +128,10 @@ export default class PlanMinisterIssueActionController {
         no_graze_end_month: null,
       };
 
-      const actionTypes = await MinisterIssueActionType.find(db, { active: true });
-      const actionType = actionTypes.find(at => at.id === actionTypeId);
+      const actionTypes = await MinisterIssueActionType.find(db, {
+        active: true,
+      });
+      const actionType = actionTypes.find((at) => at.id === actionTypeId);
       if (actionType && actionType.name === MINISTER_ISSUE_ACTION_TYPE.OTHER) {
         data.other = other;
       }
@@ -150,7 +150,9 @@ export default class PlanMinisterIssueActionController {
 
       return res.status(200).json(action).end();
     } catch (error) {
-      logger.error(`PlanMinisterIssueActionController: update: fail with error: ${error.message}`);
+      logger.error(
+        `PlanMinisterIssueActionController: update: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -164,24 +166,28 @@ export default class PlanMinisterIssueActionController {
     const { params, user } = req;
     const { planId, actionId } = params;
 
-    checkRequiredFields(
-      ['planId', 'issueId', 'actionId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'issueId', 'actionId'], 'params', req);
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
-
-      const results = await MinisterIssueAction.removeById(
+      await PlanRouteHelper.canUserAccessThisAgreement(
         db,
-        actionId,
+        Agreement,
+        user,
+        agreementId,
       );
 
-      return res.status(204).json({
-        success: (results.length > 0),
-      }).end();
+      const results = await MinisterIssueAction.removeById(db, actionId);
+
+      return res
+        .status(204)
+        .json({
+          success: results.length > 0,
+        })
+        .end();
     } catch (error) {
-      logger.error(`PlanMinisterIssueActionController: destroy: fail with error: ${error.message}`);
+      logger.error(
+        `PlanMinisterIssueActionController: destroy: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }

@@ -30,5 +30,4 @@ exports.up = (knex) => {
   return knex.schema.raw(query);
 };
 
-exports.down = (knex) => {
-};
+exports.down = (knex) => {};

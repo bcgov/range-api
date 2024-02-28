@@ -1,40 +1,40 @@
 {
-    "items": [
-        {
-            "forest_file_id": "RAN000001",
-            "file_status_st": "A",
-            "file_type_code": "E01",
-            "file_type_desc": "Grazing Licence",
-            "org_unit_code": "DSE",
-            "rollup_region_code": "RKB",
-            "district_admin_zone": "ALL",
-            "zone_description": null,
-            "contact": "Dave Banana",
-            "contact_phone_number": "2509999999",
-            "contact_email_address": "dave.banana.gov.bc.ca",
-            "legal_effective_dt": "1995-01-01T08:00:00Z",
-            "initial_expiry_dt": "2024-12-31T08:00:00Z",
-            "current_expiry_dt": null,
-            "licensee_start_date": null,
-            "licensee_end_date": null
-        },
-        {
-            "forest_file_id": "RAN000002",
-            "file_status_st": "A",
-            "file_type_code": "E01",
-            "file_type_desc": "Grazing Licence",
-            "org_unit_code": "DSE",
-            "rollup_region_code": "RKB",
-            "district_admin_zone": "ALL",
-            "zone_description": null,
-            "contact": "Dave Banana",
-            "contact_phone_number": "2509999999",
-            "contact_email_address": "dale.banana.gov.bc.ca",
-            "legal_effective_dt": "1995-01-01T08:00:00Z",
-            "initial_expiry_dt": "2024-12-31T08:00:00Z",
-            "current_expiry_dt": null,
-            "licensee_start_date": null,
-            "licensee_end_date": null
-        }
-    ]
+  "items": [
+    {
+      "forest_file_id": "RAN000001",
+      "file_status_st": "A",
+      "file_type_code": "E01",
+      "file_type_desc": "Grazing Licence",
+      "org_unit_code": "DSE",
+      "rollup_region_code": "RKB",
+      "district_admin_zone": "ALL",
+      "zone_description": null,
+      "contact": "Dave Banana",
+      "contact_phone_number": "2509999999",
+      "contact_email_address": "dave.banana.gov.bc.ca",
+      "legal_effective_dt": "1995-01-01T08:00:00Z",
+      "initial_expiry_dt": "2024-12-31T08:00:00Z",
+      "current_expiry_dt": null,
+      "licensee_start_date": null,
+      "licensee_end_date": null
+    },
+    {
+      "forest_file_id": "RAN000002",
+      "file_status_st": "A",
+      "file_type_code": "E01",
+      "file_type_desc": "Grazing Licence",
+      "org_unit_code": "DSE",
+      "rollup_region_code": "RKB",
+      "district_admin_zone": "ALL",
+      "zone_description": null,
+      "contact": "Dave Banana",
+      "contact_phone_number": "2509999999",
+      "contact_email_address": "dale.banana.gov.bc.ca",
+      "legal_effective_dt": "1995-01-01T08:00:00Z",
+      "initial_expiry_dt": "2024-12-31T08:00:00Z",
+      "current_expiry_dt": null,
+      "licensee_start_date": null,
+      "licensee_end_date": null
+    }
+  ]
 }

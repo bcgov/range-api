@@ -47,8 +47,13 @@ export default class Client extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['client_number', 'location_codes', 'name', 'licensee_start_date', 'licensee_end_date']
-      .map(field => `${this.table}.${field}`);
+    return [
+      'client_number',
+      'location_codes',
+      'name',
+      'licensee_start_date',
+      'licensee_end_date',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -62,17 +67,21 @@ export default class Client extends Model {
 
     const myFields = [
       ...Client.fields,
-      ...ClientType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...ClientType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     const results = await db
       .select(myFields)
       .from(Client.table)
-      .join('client_agreement', { 'client_agreement.client_id': 'ref_client.client_number' })
-      .join('ref_client_type', { 'client_agreement.client_type_id': 'ref_client_type.id' })
+      .join('client_agreement', {
+        'client_agreement.client_id': 'ref_client.client_number',
+      })
+      .join('ref_client_type', {
+        'client_agreement.client_type_id': 'ref_client_type.id',
+      })
       .where({ 'client_agreement.agreement_id': agreement.forestFileId });
 
-    const clients = results.map(row => new Client(row));
+    const clients = results.map((row) => new Client(row));
 
     return clients;
   }
@@ -88,7 +97,7 @@ export default class Client extends Model {
       .whereRaw(`name ILIKE '%${term}%'`);
 
     // return an array of `client_number`
-    return flatten(results.map(result => Object.values(result)));
+    return flatten(results.map((result) => Object.values(result)));
   }
 
   static async searchByNameWithAllFields(db, term) {
@@ -101,7 +110,7 @@ export default class Client extends Model {
       .from(Client.table)
       .where('name', 'ilike', `%${term}%`);
 
-    const clients = results.map(row => new Client(row));
+    const clients = results.map((row) => new Client(row));
 
     return clients;
   }

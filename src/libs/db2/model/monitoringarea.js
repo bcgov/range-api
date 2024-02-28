@@ -8,7 +8,9 @@ export default class MonitoringArea extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (MonitoringArea.fields.indexOf(`${MonitoringArea.table}.${key}`) > -1) {
+      if (
+        MonitoringArea.fields.indexOf(`${MonitoringArea.table}.${key}`) > -1
+      ) {
         obj[key] = data[key];
       }
     });
@@ -23,9 +25,18 @@ export default class MonitoringArea extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'rangeland_health_id', 'plant_community_id', 'name', 'other_purpose',
-      'location', 'transect_azimuth', 'latitude', 'longitude', 'canonical_id', 'created_at',
-    ].map(field => `${this.table}.${field}`);
+      'id',
+      'rangeland_health_id',
+      'plant_community_id',
+      'name',
+      'other_purpose',
+      'location',
+      'transect_azimuth',
+      'latitude',
+      'longitude',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -35,26 +46,34 @@ export default class MonitoringArea extends Model {
   static async findWithHealth(db, where) {
     const myFields = [
       ...MonitoringArea.fields,
-      ...MonitoringAreaHealth.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...MonitoringAreaHealth.fields.map(
+        (f) => `${f} AS ${f.replace('.', '_')}`,
+      ),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(MonitoringArea.table)
-        .leftJoin('ref_monitoring_area_health', { 'monitoring_area.rangeland_health_id': 'ref_monitoring_area_health.id' })
+        .leftJoin('ref_monitoring_area_health', {
+          'monitoring_area.rangeland_health_id':
+            'ref_monitoring_area_health.id',
+        })
         .where(where)
         .orderBy('monitoring_area.created_at', 'asc');
 
-      return results.map(row => new MonitoringArea(row, db));
+      return results.map((row) => new MonitoringArea(row, db));
     } catch (error) {
       throw error;
     }
   }
 
   async fetchMonitoringAreaPurposes(db, where) {
-    const monitoringAreaPurposes = await MonitoringAreaPurpose.findWithType(db, where);
+    const monitoringAreaPurposes = await MonitoringAreaPurpose.findWithType(
+      db,
+      where,
+    );
     this.purposes = monitoringAreaPurposes || [];
-    this.purposeTypeIds = this.purposes.map(p => p.purposeTypeId);
+    this.purposeTypeIds = this.purposes.map((p) => p.purposeTypeId);
   }
 }

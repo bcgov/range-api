@@ -30,7 +30,11 @@ export default class MinisterIssueAction extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (MinisterIssueAction.fields.indexOf(`${MinisterIssueAction.table}.${key}`) > -1) {
+      if (
+        MinisterIssueAction.fields.indexOf(
+          `${MinisterIssueAction.table}.${key}`,
+        ) > -1
+      ) {
         obj[key] = data[key];
       }
     });
@@ -45,10 +49,18 @@ export default class MinisterIssueAction extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      'id', 'detail', 'action_type_id', 'issue_id', 'other',
-      'no_graze_start_day', 'no_graze_start_month', 'no_graze_end_day', 'no_graze_end_month',
-      'canonical_id', 'created_at',
-    ].map(field => `${this.table}.${field}`);
+      'id',
+      'detail',
+      'action_type_id',
+      'issue_id',
+      'other',
+      'no_graze_start_day',
+      'no_graze_start_month',
+      'no_graze_end_day',
+      'no_graze_end_month',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -58,18 +70,23 @@ export default class MinisterIssueAction extends Model {
   static async findWithType(db, where) {
     const myFields = [
       ...MinisterIssueAction.fields,
-      ...MinisterIssueActionType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...MinisterIssueActionType.fields.map(
+        (f) => `${f} AS ${f.replace('.', '_')}`,
+      ),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(MinisterIssueAction.table)
-        .join('ref_minister_issue_action_type', { 'minister_issue_action.action_type_id': 'ref_minister_issue_action_type.id' })
+        .join('ref_minister_issue_action_type', {
+          'minister_issue_action.action_type_id':
+            'ref_minister_issue_action_type.id',
+        })
         .where(where)
         .orderBy('minister_issue_action.created_at', 'asc');
 
-      return results.map(row => new MinisterIssueAction(row, db));
+      return results.map((row) => new MinisterIssueAction(row, db));
     } catch (err) {
       throw err;
     }

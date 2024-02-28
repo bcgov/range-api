@@ -28,21 +28,30 @@ export default class LivestockIdentifier extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (LivestockIdentifier.fields.indexOf(`${LivestockIdentifier.table}.${key}`) > -1) {
+      if (
+        LivestockIdentifier.fields.indexOf(
+          `${LivestockIdentifier.table}.${key}`,
+        ) > -1
+      ) {
         obj[key] = data[key];
       }
     });
 
     super(obj, db);
 
-    this.location = new LivestockIdentifierLocation(LivestockIdentifierLocation.extract(data));
-    this.identifierType = new LivestockIdentifierType(LivestockIdentifierType.extract(data));
+    this.location = new LivestockIdentifierLocation(
+      LivestockIdentifierLocation.extract(data),
+    );
+    this.identifierType = new LivestockIdentifierType(
+      LivestockIdentifierType.extract(data),
+    );
   }
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'image_ref', 'description', 'accepted']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'image_ref', 'description', 'accepted'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
@@ -52,19 +61,29 @@ export default class LivestockIdentifier extends Model {
   static async findWithTypeLocation(db, where) {
     const myFields = [
       ...LivestockIdentifier.fields,
-      ...LivestockIdentifierType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
-      ...LivestockIdentifierLocation.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...LivestockIdentifierType.fields.map(
+        (f) => `${f} AS ${f.replace('.', '_')}`,
+      ),
+      ...LivestockIdentifierLocation.fields.map(
+        (f) => `${f} AS ${f.replace('.', '_')}`,
+      ),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(LivestockIdentifier.table)
-        .join('ref_livestock_identifier_location', { 'livestock_identifier.livestock_identifier_location_id': 'ref_livestock_identifier_location.id' })
-        .join('ref_livestock_identifier_type', { 'livestock_identifier.livestock_identifier_type_id': 'ref_livestock_identifier_type.id' })
+        .join('ref_livestock_identifier_location', {
+          'livestock_identifier.livestock_identifier_location_id':
+            'ref_livestock_identifier_location.id',
+        })
+        .join('ref_livestock_identifier_type', {
+          'livestock_identifier.livestock_identifier_type_id':
+            'ref_livestock_identifier_type.id',
+        })
         .where(where);
 
-      return results.map(row => new LivestockIdentifier(row, db));
+      return results.map((row) => new LivestockIdentifier(row, db));
     } catch (err) {
       throw err;
     }

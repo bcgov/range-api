@@ -34,4 +34,3 @@ exports.down = async (knex) => {
 
   await Promise.all(promises);
 };
-

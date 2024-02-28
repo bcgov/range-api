@@ -21,8 +21,6 @@ import createApp from '../../src';
 describe('Test monitoring routes', () => {
   test('The readiness probe should respond with 200 ', async () => {
     const app = await createApp();
-    await request(app)
-      .get('/api/v1/ehlo')
-      .expect(200);
+    await request(app).get('/api/v1/ehlo').expect(200);
   });
 });

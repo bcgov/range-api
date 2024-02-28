@@ -1,14 +1,6 @@
 {
-    "editor.tabSize": 2,
-    "editor.wordWrap": "on",
-    "cSpell.words": [
-        "all",
-        "eagerload",
-        "except",
-        "many",
-        "one",
-        "plan",
-        "to"
-    ],
-    "editor.formatOnSave": false
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "cSpell.words": ["all", "eagerload", "except", "many", "one", "plan", "to"],
+  "editor.formatOnSave": false
 }

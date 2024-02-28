@@ -12,7 +12,10 @@ export default class UserClientLink extends Model {
       assert(db);
       assert(values);
 
-      if ((values.user_id === 1 || values.user_id === '1') && values.client_id) {
+      if (
+        (values.user_id === 1 || values.user_id === '1') &&
+        values.client_id
+      ) {
         return { ...values, id: 1, clientId: values.client_id };
       }
       throw Error('Wrong user');
@@ -27,26 +30,26 @@ export default class UserClientLink extends Model {
     const fixture = this.findWithExclusion();
 
     if (where.client_id && where.user_id) {
-      return fixture.find(link => link.client_id === where.client_id)
+      return fixture.find((link) => link.client_id === where.client_id)
         ? this.transformToCamelCase(
-          fixture.find(link => link.client_id === where.client_id),
-        )
+            fixture.find((link) => link.client_id === where.client_id),
+          )
         : undefined;
     }
 
     if (where.client_id) {
-      return fixture.find(link => link.client_id === where.client_id)
+      return fixture.find((link) => link.client_id === where.client_id)
         ? this.transformToCamelCase(
-          fixture.find(link => link.client_id === where.client_id),
-        )
+            fixture.find((link) => link.client_id === where.client_id),
+          )
         : undefined;
     }
 
     if (where.user_id) {
-      return fixture.find(link => link.user_id === where.user_id)
+      return fixture.find((link) => link.user_id === where.user_id)
         ? this.transformToCamelCase(
-          fixture.find(link => link.user_id === where.user_id),
-        )
+            fixture.find((link) => link.user_id === where.user_id),
+          )
         : undefined;
     }
 

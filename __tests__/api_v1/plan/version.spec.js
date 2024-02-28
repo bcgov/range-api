@@ -33,9 +33,8 @@ const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
 
-
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/version';
 
 const truncateTables = async () => {
@@ -127,9 +126,7 @@ describe('Test Plan routes', () => {
     const app = await createApp();
 
     const planId = 1;
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
     const snapshots = await dm.db('plan_snapshot').where('id', planId);
     expect(snapshots).toHaveLength(1);
@@ -137,26 +134,27 @@ describe('Test Plan routes', () => {
 
   test('Throws a 404 error if the plan does not exist with that ID', async () => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/plan/10/version')
-      .expect(404);
+    await request(app).post('/api/v1/plan/10/version').expect(404);
   });
 
   test('Creates an identical snapshot of the plan and stores it as JSON', async () => {
     const app = await createApp();
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
     const planId = 1;
 
     const [{ snapshot }] = await dm.db('plan_snapshot').where('id', planId);
 
-    const [plan] = await Plan.findWithStatusExtension(dm.db, { 'plan.id': planId }, ['id', 'desc']);
+    const [plan] = await Plan.findWithStatusExtension(
+      dm.db,
+      { 'plan.id': planId },
+      ['id', 'desc'],
+    );
     const { agreementId } = plan;
 
     const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-      dm.db, { forest_file_id: agreementId },
+      dm.db,
+      { forest_file_id: agreementId },
     );
     await agreement.eagerloadAllOneToManyExceptPlan();
     agreement.transformToV1();
@@ -169,18 +167,13 @@ describe('Test Plan routes', () => {
     expect(snapshot).toEqual(JSON.parse(JSON.stringify(plan)));
   });
 
-
   test('Getting each version of a plan', async () => {
     const app = await createApp();
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
-    const versions = (await dm.db('plan_snapshot_summary').where('plan_id', 1));
+    const versions = await dm.db('plan_snapshot_summary').where('plan_id', 1);
 
     await request(app)
       .get(`${baseUrl}`)
@@ -188,36 +181,33 @@ describe('Test Plan routes', () => {
       .expect((res) => {
         expect(res.body.versions).toHaveLength(versions.length);
         expect(res.body.versions).toEqual(
-          versions
-            .map(Model.transformToCamelCase)
-            .map(v => ({
-              ...v,
-              createdAt: v.createdAt.toISOString(),
-              status: {
-                active: true,
-                code: 'C',
-                id: 1,
-                name: 'Created',
-              },
-            })),
+          versions.map(Model.transformToCamelCase).map((v) => ({
+            ...v,
+            createdAt: v.createdAt.toISOString(),
+            status: {
+              active: true,
+              code: 'C',
+              id: 1,
+              name: 'Created',
+            },
+          })),
         );
       });
   });
 
   test('Getting the versions of a nonexistant plan throws a 404 error', async () => {
     const app = await createApp();
-    await request(app)
-      .get('/api/v1/plan/3/version')
-      .expect(404);
+    await request(app).get('/api/v1/plan/3/version').expect(404);
   });
 
   test('Getting a specific version of a plan', async () => {
     const app = await createApp();
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
-    const [version] = await dm.db('plan_snapshot').where('plan_id', 1).where('version', 1);
+    const [version] = await dm
+      .db('plan_snapshot')
+      .where('plan_id', 1)
+      .where('version', 1);
     const [plan] = await dm.db('plan').where('id', version.plan_id);
 
     await request(app)
@@ -231,35 +221,32 @@ describe('Test Plan routes', () => {
 
   test('Getting a nonexistant version of a plan throws a 404 error', async () => {
     const app = await createApp();
-    await request(app)
-      .get(`${baseUrl}/10`)
-      .expect(404);
+    await request(app).get(`${baseUrl}/10`).expect(404);
   });
 
   test('Restoring a snapshot of a plan', async () => {
     const app = await createApp();
-    await request(app)
-      .post(baseUrl)
-      .expect(200);
+    await request(app).post(baseUrl).expect(200);
 
     const newName = 'A different name';
-    const originalName = (await dm.db('plan').where('id', 1).first()).range_name;
-    
+    const originalName = (await dm.db('plan').where('id', 1).first())
+      .range_name;
+
     await dm.db.raw('UPDATE plan SET range_name=? WHERE id=1', [newName]);
 
-    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(newName);
+    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(
+      newName,
+    );
 
-    await request(app)
-      .post(`${baseUrl}/1/restore`)
-      .expect(200);
+    await request(app).post(`${baseUrl}/1/restore`).expect(200);
 
-    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(originalName);
+    expect((await dm.db('plan').where('id', 1).first()).range_name).toEqual(
+      originalName,
+    );
   });
 
   test('Restoring a nonexistant snapshot of a plan throws a 404 error', async () => {
     const app = await createApp();
-    await request(app)
-      .post(`${baseUrl}/1/restore`)
-      .expect(404);
+    await request(app).post(`${baseUrl}/1/restore`).expect(404);
   });
 });

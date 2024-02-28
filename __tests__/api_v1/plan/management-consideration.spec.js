@@ -17,15 +17,15 @@ const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
 
-
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/management-consideration';
 const body = {
-  detail: 'This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration.',
+  detail:
+    'This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration. This is the detail for a consideration.',
   url: 'www.google.com',
   considerationTypeId: 1,
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -134,25 +134,16 @@ describe('Test Management Consideration routes', () => {
 
   test('Updating a nonexistant management consideration throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .put(`${baseUrl}/200`)
-      .send(body)
-      .expect(500);
+    await request(app).put(`${baseUrl}/200`).send(body).expect(500);
   });
 
   test('Deleting an existing management consideration', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1`)
-      .send()
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1`).send().expect(204);
   });
 
   test('Deleting a nonexistant management consideration throws a 400 error', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/100`)
-      .send()
-      .expect(400);
+    await request(app).delete(`${baseUrl}/100`).send().expect(400);
   });
 });

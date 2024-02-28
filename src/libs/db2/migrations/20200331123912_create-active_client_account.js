@@ -1,4 +1,3 @@
-
 exports.up = async (knex) => {
   await knex.raw(`
     CREATE TYPE client_account_type AS ENUM ('owner', 'agent');

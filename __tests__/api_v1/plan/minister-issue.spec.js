@@ -18,9 +18,8 @@ const dm = new DataManager(config);
 
 jest.mock('request-promise-native');
 
-
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/issue';
 const body = {
   detail: 'This is a pretty big issue',
@@ -28,7 +27,7 @@ const body = {
   identified: true,
   issueTypeId: 2,
   pastures: [1],
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -99,10 +98,7 @@ describe('Test Minister Issue routes', () => {
 
   test('Creating a minister issue on a nonexistant plan should throw a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/plan/2/issue')
-      .send(body)
-      .expect(500);
+    await request(app).post('/api/v1/plan/2/issue').send(body).expect(500);
   });
 
   test('Updating an existing minister issue', async () => {
@@ -123,17 +119,12 @@ describe('Test Minister Issue routes', () => {
 
   test('Updating a nonexistant minister issue throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .put(`${baseUrl}/100`)
-      .send(body)
-      .expect(500);
+    await request(app).put(`${baseUrl}/100`).send(body).expect(500);
   });
 
   test('Deleting an existing minister issue', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1`)
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1`).expect(204);
 
     const results = await dm.db('minister_issue');
     expect(results).toHaveLength(0);

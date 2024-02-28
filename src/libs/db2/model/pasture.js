@@ -38,9 +38,17 @@ export default class Pasture extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'name', 'allowable_aum', 'grace_days', 'pld_percent',
-      'notes', 'plan_id', 'canonical_id', 'created_at']
-      .map(field => `${this.table}.${field}`);
+    return [
+      'id',
+      'name',
+      'allowable_aum',
+      'grace_days',
+      'pld_percent',
+      'notes',
+      'plan_id',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -48,14 +56,16 @@ export default class Pasture extends Model {
   }
 
   async fetchPlantCommunities(db, where) {
-    const plantCommunities = await PlantCommunity.findWithElevationAndType(db, where);
+    const plantCommunities = await PlantCommunity.findWithElevationAndType(
+      db,
+      where,
+    );
 
-    const promises = plantCommunities.map(p =>
-      [
-        p.fetchIndicatorPlants(this.db, { plant_community_id: p.id }),
-        p.fetchMonitoringAreas(this.db, { plant_community_id: p.id }),
-        p.fetchPlantCommunityActions(this.db, { plant_community_id: p.id }),
-      ]);
+    const promises = plantCommunities.map((p) => [
+      p.fetchIndicatorPlants(this.db, { plant_community_id: p.id }),
+      p.fetchMonitoringAreas(this.db, { plant_community_id: p.id }),
+      p.fetchPlantCommunityActions(this.db, { plant_community_id: p.id }),
+    ]);
 
     await Promise.all(flatten(promises));
 

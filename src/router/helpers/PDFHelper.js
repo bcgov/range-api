@@ -1,8 +1,8 @@
-import moment from "moment";
-import { DAYS_ON_THE_AVERAGE, NOT_PROVIDED } from "../../constants";
+import moment from 'moment';
+import { DAYS_ON_THE_AVERAGE, NOT_PROVIDED } from '../../constants';
 
 const shift = (number, precision) => {
-  const numArray = `${number}`.split("e");
+  const numArray = `${number}`.split('e');
   return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
 };
 
@@ -37,9 +37,9 @@ export const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) =>
  */
 export const calcDateDiff = (first, second, isUserFriendly) => {
   if (first && second) {
-    return moment(first).diff(moment(second), "days") + 1;
+    return moment(first).diff(moment(second), 'days') + 1;
   }
-  return isUserFriendly ? "N/P" : 0;
+  return isUserFriendly ? 'N/P' : 0;
 };
 
 /**
@@ -85,9 +85,9 @@ export class AdditionalDetailsGenerator {
       const confirmation = plan.confirmations.find(
         (item) => item.clientId === client.id,
       );
-      client.confirmationStatus = "Not Confirmed";
+      client.confirmationStatus = 'Not Confirmed';
       if (confirmation && confirmation.confirmed === true) {
-        client.confirmationStatus = "Confirmed";
+        client.confirmationStatus = 'Confirmed';
       }
     }
   }
@@ -110,32 +110,32 @@ export class AdditionalDetailsGenerator {
               plantCommunity.rangeReadinessDay
             ) {
               plantCommunity.rangeReadinessDate = moment()
-                .set("month", plantCommunity.rangeReadinessMonth - 1)
-                .set("date", plantCommunity.rangeReadinessDay)
-                .format("MMMM D");
+                .set('month', plantCommunity.rangeReadinessMonth - 1)
+                .set('date', plantCommunity.rangeReadinessDay)
+                .format('MMMM D');
             }
             if (plantCommunity.plantCommunityActions) {
               for (const action of plantCommunity.plantCommunityActions) {
                 if (action) {
                   action.name =
-                    action.actionType.name === "Other"
+                    action.actionType.name === 'Other'
                       ? `${action.name} (Other)`
                       : action.actionType.name;
-                  if (action.actionType.name === "Timing") {
+                  if (action.actionType.name === 'Timing') {
                     action.NoGrazeStartDate =
                       action.noGrazeStartMonth && action.noGrazeStartDay
                         ? moment()
-                            .set("month", action.noGrazeStartMonth - 1)
-                            .set("date", action.noGrazeStartDay)
-                            .format("MMMM Do")
-                        : "Not Provided";
+                            .set('month', action.noGrazeStartMonth - 1)
+                            .set('date', action.noGrazeStartDay)
+                            .format('MMMM Do')
+                        : 'Not Provided';
                     action.NoGrazeEndDate =
                       action.noGrazeEndMonth && action.noGrazeEndDay
                         ? moment()
-                            .set("month", action.noGrazeEndMonth - 1)
-                            .set("date", action.noGrazeEndDay)
-                            .format("MMMM Do")
-                        : "Not Provided";
+                            .set('month', action.noGrazeEndMonth - 1)
+                            .set('date', action.noGrazeEndDay)
+                            .format('MMMM Do')
+                        : 'Not Provided';
                   }
                 }
               }
@@ -153,7 +153,7 @@ export class AdditionalDetailsGenerator {
           if (plantCommunity) {
             for (const indicatorPlant of plantCommunity.indicatorPlants) {
               indicatorPlant.name =
-                indicatorPlant.plantSpecies.name === "Other"
+                indicatorPlant.plantSpecies.name === 'Other'
                   ? `${indicatorPlant.name} (Other)`
                   : indicatorPlant.plantSpecies.name;
             }
@@ -172,7 +172,7 @@ export class AdditionalDetailsGenerator {
             const pasture = plan.pastures.find(
               (item) => item.id === entry.pastureId,
             );
-            entry.pasture = "N/A";
+            entry.pasture = 'N/A';
             if (pasture) {
               entry.pasture = pasture.name;
               entry.graceDays = entry.graceDays || pasture.graceDays;
@@ -252,43 +252,43 @@ export class AdditionalDetailsGenerator {
       (plan.status.id === 13 && plan.amendmentTypeId === null) ||
       (plan.status.id === 18 && plan.amendmentTypeId === null)
     ) {
-      plan.status.text = "Draft";
+      plan.status.text = 'Draft';
     } else if (plan.status.id === 7) {
-      plan.status.text = "Not Approved - Amendment without effect";
+      plan.status.text = 'Not Approved - Amendment without effect';
     } else if (plan.status.id === 8) {
-      plan.status.text = "Approved - Amendment wrongly made but it stands";
+      plan.status.text = 'Approved - Amendment wrongly made but it stands';
     } else if (plan.status.id === 9) {
-      plan.status.text = "Approved - Amendment in effect";
+      plan.status.text = 'Approved - Amendment in effect';
     } else if (plan.status.id === 10) {
-      plan.status.text = "Not approved - further work required";
+      plan.status.text = 'Not approved - further work required';
     } else if (plan.status.id === 11 && plan.amendmentTypeId === null) {
-      plan.status.text = "Not approved draft";
+      plan.status.text = 'Not approved draft';
     } else if (plan.status.id === 11) {
-      plan.status.text = "Not approved amendment";
+      plan.status.text = 'Not approved amendment';
     } else if (plan.status.id === 12) {
-      plan.status.text = "Approved";
+      plan.status.text = 'Approved';
     } else if (
       (plan.status.id === 13 || plan.status.id === 18) &&
       plan.amendmentTypeId === 2
     ) {
-      plan.status.text = "Approved - mandatory amendment submitted for review";
+      plan.status.text = 'Approved - mandatory amendment submitted for review';
     } else if (
       (plan.status.id === 13 || plan.status.id === 18) &&
       plan.amendmentTypeId === 1
     ) {
-      plan.status.text = "Approved - minor amendment submitted for review";
+      plan.status.text = 'Approved - minor amendment submitted for review';
     } else if (plan.status.id === 19) {
-      plan.status.text = "Approved - Amendment in effect";
+      plan.status.text = 'Approved - Amendment in effect';
     } else if (plan.status.id === 20) {
-      plan.status.text = "Approved - Amendment in effect";
+      plan.status.text = 'Approved - Amendment in effect';
     } else if (plan.status.id === 21) {
-      plan.status.text = "Approved - Amendment not reviewed";
+      plan.status.text = 'Approved - Amendment not reviewed';
     } else if (plan.status.id === 22) {
-      plan.status.text = "Mandatory amendment required";
+      plan.status.text = 'Mandatory amendment required';
     } else if (plan.status.id === 23) {
-      plan.status.text = "Amendment in progress";
+      plan.status.text = 'Amendment in progress';
     } else if (plan.status.id === 24) {
-      plan.status.text = "Mandatory amendment submitted";
+      plan.status.text = 'Mandatory amendment submitted';
     }
   }
 }

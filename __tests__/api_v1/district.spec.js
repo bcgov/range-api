@@ -25,8 +25,9 @@ describe('Test district route', () => {
     const app = await createApp();
     await request(app)
       .get('/api/v1/district')
-      .expect(200).expect((res) => {
-        const result = (res.body);
+      .expect(200)
+      .expect((res) => {
+        const result = res.body;
         expect(typeof result).toBe('object');
         done();
       });
@@ -38,8 +39,9 @@ describe('Test district route', () => {
     passport.aUser.failDistrict = true;
     await request(app)
       .get('/api/v1/district')
-      .expect(500).expect((res) => {
-        const result = (res.body);
+      .expect(500)
+      .expect((res) => {
+        const result = res.body;
         expect(typeof result).toBe('object');
         delete passport.aUser.failDistrict;
         done();

@@ -38,13 +38,23 @@ export default class MinisterIssue extends Model {
 
     super(obj, db);
 
-    this.ministerIssueType = new MinisterIssueType(MinisterIssueType.extract(data));
+    this.ministerIssueType = new MinisterIssueType(
+      MinisterIssueType.extract(data),
+    );
   }
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'objective', 'identified', 'issue_type_id', 'plan_id', 'canonical_id', 'created_at']
-      .map(field => `${this.table}.${field}`);
+    return [
+      'id',
+      'detail',
+      'objective',
+      'identified',
+      'issue_type_id',
+      'plan_id',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -54,25 +64,30 @@ export default class MinisterIssue extends Model {
   static async findWithType(db, where) {
     const myFields = [
       ...MinisterIssue.fields,
-      ...MinisterIssueType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...MinisterIssueType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(MinisterIssue.table)
-        .join('ref_minister_issue_type', { 'minister_issue.issue_type_id': 'ref_minister_issue_type.id' })
+        .join('ref_minister_issue_type', {
+          'minister_issue.issue_type_id': 'ref_minister_issue_type.id',
+        })
         .where(where)
         .orderBy('minister_issue.created_at', 'asc');
 
-      return results.map(row => new MinisterIssue(row, db));
+      return results.map((row) => new MinisterIssue(row, db));
     } catch (err) {
       throw err;
     }
   }
 
   async fetchMinisterIssueActions(db, where) {
-    const ministerIssueActions = await MinisterIssueAction.findWithType(db, where);
+    const ministerIssueActions = await MinisterIssueAction.findWithType(
+      db,
+      where,
+    );
     this.ministerIssueActions = ministerIssueActions || [];
   }
 
@@ -83,7 +98,7 @@ export default class MinisterIssue extends Model {
       .where(where);
 
     // create an array of pasture ids
-    const pastureIds = pastures.map(p => p.pasture_id);
+    const pastureIds = pastures.map((p) => p.pasture_id);
     this.pastures = pastureIds || [];
   }
 }

@@ -5,13 +5,7 @@ import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
 
 const dm = new DataManager(config);
-const {
-  db,
-  Agreement,
-  Plan,
-  GrazingSchedule,
-  GrazingScheduleEntry,
-} = dm;
+const { db, Agreement, Plan, GrazingSchedule, GrazingScheduleEntry } = dm;
 
 export default class PlanScheduleController {
   /**
@@ -24,12 +18,8 @@ export default class PlanScheduleController {
     const { planId } = params;
     const { grazingScheduleEntries } = body;
 
-    checkRequiredFields(
-      ['planId'], 'params', req,
-    );
-    checkRequiredFields(
-      ['grazingScheduleEntries'], 'body', req,
-    );
+    checkRequiredFields(['planId'], 'params', req);
+    checkRequiredFields(['grazingScheduleEntries'], 'body', req);
 
     grazingScheduleEntries.forEach((entry) => {
       if (!entry.livestockTypeId) {
@@ -39,7 +29,12 @@ export default class PlanScheduleController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       // Use the planId from the URL so that we know exactly what plan
       // is being updated and to ensure its not reassigned.
@@ -68,7 +63,9 @@ export default class PlanScheduleController {
 
       return res.status(200).json(schedule).end();
     } catch (error) {
-      logger.error(`PlanScheduleController: store: fail with error: ${error.message}`);
+      logger.error(
+        `PlanScheduleController: store: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -83,12 +80,8 @@ export default class PlanScheduleController {
     const { grazingScheduleEntries } = body;
     const { planId, scheduleId } = params;
 
-    checkRequiredFields(
-      ['planId', 'scheduleId'], 'params', req,
-    );
-    checkRequiredFields(
-      ['grazingScheduleEntries'], 'body', req,
-    );
+    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
+    checkRequiredFields(['grazingScheduleEntries'], 'body', req);
 
     grazingScheduleEntries.forEach((entry) => {
       if (!entry.livestockTypeId) {
@@ -98,7 +91,12 @@ export default class PlanScheduleController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       // Use the planId from the URL so that we know exactly what plan
       // is being updated and to ensure its not reassigned.
@@ -136,15 +134,12 @@ export default class PlanScheduleController {
           );
         }
 
-        return GrazingScheduleEntry.create(
-          db,
-          {
-            ...entry,
-            grazing_schedule_id: schedule.id,
-            pasture_id: entry.pastureId,
-            livestock_count: entry.livestockCount.toString(),
-          },
-        );
+        return GrazingScheduleEntry.create(db, {
+          ...entry,
+          grazing_schedule_id: schedule.id,
+          pasture_id: entry.pastureId,
+          livestock_count: entry.livestockCount.toString(),
+        });
       });
 
       await Promise.all(promises);
@@ -152,7 +147,9 @@ export default class PlanScheduleController {
 
       return res.status(200).json(schedule).end();
     } catch (error) {
-      logger.error(`PlanScheduleController: update: fail with error: ${error.message}`);
+      logger.error(
+        `PlanScheduleController: update: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -166,13 +163,16 @@ export default class PlanScheduleController {
     const { user, params } = req;
     const { planId, scheduleId } = params;
 
-    checkRequiredFields(
-      ['planId', 'scheduleId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
@@ -198,17 +198,18 @@ export default class PlanScheduleController {
     const { body, params, user } = req;
     const { planId, scheduleId } = params;
 
-    checkRequiredFields(
-      ['planId', 'scheduleId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
 
-    checkRequiredFields(
-      ['livestockTypeId'], 'body', req,
-    );
+    checkRequiredFields(['livestockTypeId'], 'body', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
       // Use the planId from the URL so that we know exactly what plan
       // is being updated and to ensure its not reassigned.
       delete body.planId;
@@ -228,7 +229,9 @@ export default class PlanScheduleController {
 
       return res.status(200).json(entry).end();
     } catch (error) {
-      logger.error(`PlanScheduleController: storeScheduleEntry: fail with error: ${error.message}`);
+      logger.error(
+        `PlanScheduleController: storeScheduleEntry: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -243,15 +246,25 @@ export default class PlanScheduleController {
     const { planId, grazingScheduleEntryId } = params;
 
     checkRequiredFields(
-      ['planId', 'scheduleId', 'grazingScheduleEntryId'], 'params', req,
+      ['planId', 'scheduleId', 'grazingScheduleEntryId'],
+      'params',
+      req,
     );
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
-      const result = await GrazingScheduleEntry.removeById(db, grazingScheduleEntryId);
+      const result = await GrazingScheduleEntry.removeById(
+        db,
+        grazingScheduleEntryId,
+      );
       if (result === 0) {
         throw errorWithCode('No such grazing schedule entry exists', 400);
       }
@@ -273,9 +286,16 @@ export default class PlanScheduleController {
     checkRequiredFields(['planId', 'scheduleId'], 'params', req);
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
       if (sortBy) {
-        sortBy = objPathToSnakeCase(sortBy.replace('livestockType', 'ref_livestock')).replace('.', '_');
+        sortBy = objPathToSnakeCase(
+          sortBy.replace('livestockType', 'ref_livestock'),
+        ).replace('.', '_');
       }
       const result = await db.raw(
         `

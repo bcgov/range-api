@@ -1,16 +1,16 @@
-"use strict";
+'use strict';
 
-import csv from "csv";
-import fs from "fs";
-import request from "request-promise-native";
-import config from "../src/config";
-import DataManager from "../src/libs/db2";
-import * as mockData from "./mockData";
+import csv from 'csv';
+import fs from 'fs';
+import request from 'request-promise-native';
+import config from '../src/config';
+import DataManager from '../src/libs/db2';
+import * as mockData from './mockData';
 
-const USAGE = "scripts/fta/FTA_RANGE_USAGE.csv";
-const LICENSEE = "scripts/fta/FTA_RANGE_LICENSEE.csv";
-const CLIENT = "scripts/fta/FTA_RANGE_CLIENT.csv";
-const USER = "scripts/fta/ZONE_USER.csv";
+const USAGE = 'scripts/fta/FTA_RANGE_USAGE.csv';
+const LICENSEE = 'scripts/fta/FTA_RANGE_LICENSEE.csv';
+const CLIENT = 'scripts/fta/FTA_RANGE_CLIENT.csv';
+const USER = 'scripts/fta/ZONE_USER.csv';
 const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
 const USAGE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeUsages`;
 const CLIENT_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeClients`;
@@ -43,10 +43,10 @@ const isValidRecord = (record) => {
   return true;
 };
 
-const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, "/"));
+const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
 
 const skipping = (action, agreementId, index) => {
-  if (agreementId.indexOf("RB") >= 0 || agreementId.indexOf("DL") >= 0) return;
+  if (agreementId.indexOf('RB') >= 0 || agreementId.indexOf('DL') >= 0) return;
   console.log(
     `Skipping Record with aId: ${agreementId}, row: ${
       index + 2
@@ -56,13 +56,13 @@ const skipping = (action, agreementId, index) => {
 
 const updateDistrict = async (data) => {
   let created = 0;
-  console.log("Start updating District");
+  console.log('Start updating District');
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const { forest_file_id: agreementId, org_unit_code: districtCode } = record;
 
     if (!isValidRecord(record) || !districtCode) {
-      skipping("Updating district", agreementId, index);
+      skipping('Updating district', agreementId, index);
       continue;
     }
 
@@ -73,7 +73,7 @@ const updateDistrict = async (data) => {
       console.log(`Adding District with Code ${districtCode}`);
       await District.create(db, {
         code: districtCode,
-        description: "No description available",
+        description: 'No description available',
       });
       created += 1;
     } catch (error) {
@@ -96,7 +96,7 @@ const updateZone = async (data) => {
     districtCodesMap[d.code] = d;
   });
   let created = 0;
-  console.log("Start updating Zones");
+  console.log('Start updating Zones');
 
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -108,7 +108,7 @@ const updateZone = async (data) => {
       contact_email_address,
     } = record;
     if (!isValidRecord(record) || !zoneCode) {
-      skipping("Updating Zone", agreementId, index);
+      skipping('Updating Zone', agreementId, index);
       continue;
     }
 
@@ -135,14 +135,14 @@ const updateZone = async (data) => {
         );
         await Zone.create(db, {
           code: zoneCode,
-          description: zoneDescription || "No description available",
+          description: zoneDescription || 'No description available',
           district_id: district.id,
           user_id: staff && staff.id,
         });
         created += 1;
       } else {
         const data = {
-          description: zoneDescription || "No description available",
+          description: zoneDescription || 'No description available',
         };
         if (staff) data.user_id = staff.id;
 
@@ -172,20 +172,20 @@ const updateUser = async (data) => {
   let created = 0;
   let updated = 0;
 
-  console.log("Start updating Users");
-  console.log("records to process:  " + data.length);
+  console.log('Start updating Users');
+  console.log('records to process:  ' + data.length);
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const { contact_phone_number, contact_email_address } = record;
 
     const email =
       contact_email_address === null
-        ? ""
+        ? ''
         : contact_email_address.toLowerCase().trim();
     const phoneNumber =
-      contact_phone_number === null ? "" : contact_phone_number.trim();
+      contact_phone_number === null ? '' : contact_phone_number.trim();
 
-    if (email !== "" && phoneNumber !== "") {
+    if (email !== '' && phoneNumber !== '') {
       try {
         let user = await User.findOne(db, {
           email,
@@ -211,8 +211,8 @@ const updateUser = async (data) => {
 };
 
 const updateAgreement = async (data) => {
-  console.log("Start updating Agreements");
-  console.log("records to process:  " + data.length);
+  console.log('Start updating Agreements');
+  console.log('records to process:  ' + data.length);
   const districts = await District.find(db, {});
   const districtCodesMap = {};
   districts.map((d) => {
@@ -224,7 +224,7 @@ const updateAgreement = async (data) => {
   agreementTypes.map((at) => {
     agreementTypesMap[at.code] = at;
   });
-  const exemption = await AgreementExemptionStatus.findOne(db, { code: "N" }); // Not Exempt
+  const exemption = await AgreementExemptionStatus.findOne(db, { code: 'N' }); // Not Exempt
 
   let created = 0;
   let updated = 0;
@@ -245,7 +245,7 @@ const updateAgreement = async (data) => {
       !zoneCode ||
       !districtCode
     ) {
-      skipping("Updating Agreement", agreementId, index);
+      skipping('Updating Agreement', agreementId, index);
       continue;
     }
     const district = districtCodesMap[districtCode];
@@ -304,7 +304,7 @@ const updateAgreement = async (data) => {
 const updateUsage = async (data) => {
   let created = 0;
   let updated = 0;
-  console.log("Start updating Usage");
+  console.log('Start updating Usage');
 
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -318,7 +318,7 @@ const updateUsage = async (data) => {
       total_annual_use,
     } = record;
     if (!isValidRecord(record) || !calendar_year) {
-      skipping("Updating Usage", agreementId, index);
+      skipping('Updating Usage', agreementId, index);
       continue;
     }
 
@@ -377,13 +377,13 @@ const updateUsage = async (data) => {
 };
 
 const updateClient = async (data) => {
-  console.log("records to process:  " + data.length);
+  console.log('records to process:  ' + data.length);
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
   let deleted = 0;
 
-  console.log("Start updating Clients");
+  console.log('Start updating Clients');
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -397,7 +397,7 @@ const updateClient = async (data) => {
     } = record;
 
     if (!isValidRecord(record) || !clientLocationCode) {
-      skipping("Updating Client", agreementId, index);
+      skipping('Updating Client', agreementId, index);
       continue;
     }
     const clientType = clientTypes.find((ct) => ct.code === clientTypeCode);
@@ -408,7 +408,7 @@ const updateClient = async (data) => {
       });
 
       if (client) {
-        if (clientTypeCode === "P" || clientTypeCode === "C") {
+        if (clientTypeCode === 'P' || clientTypeCode === 'C') {
           const plans = await Plan.find(db, { agreement_id: agreementId });
           plans.forEach(async (plan) => {
             await PlanConfirmation.remove(db, {
@@ -425,7 +425,7 @@ const updateClient = async (data) => {
           db,
           { client_number: clientNumber },
           {
-            name: clientName || "Unknown Name",
+            name: clientName || 'Unknown Name',
             locationCodes: Array.from(
               new Set(client.locationCodes.concat(clientLocationCode)),
             ),
@@ -437,7 +437,7 @@ const updateClient = async (data) => {
       } else {
         client = await Client.create(db, {
           clientNumber: clientNumber,
-          name: clientName || "Unknown Name",
+          name: clientName || 'Unknown Name',
           locationCodes: [clientLocationCode],
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
         });
@@ -511,24 +511,24 @@ const prepareTestSetup = async () => {
     await updateClient(mockData.mockClients);
 
     // assign zones
-    const lisa = await User.findOne(db, { username: "idir\\lmoore" });
-    await Zone.update(db, { code: "TEST1" }, { user_id: lisa.id });
-    await Zone.update(db, { code: "TEST5" }, { user_id: lisa.id });
-    const katie = await User.findOne(db, { username: "idir\\kmenke" });
-    await Zone.update(db, { code: "TEST2" }, { user_id: katie.id });
-    await Zone.update(db, { code: "TEST4" }, { user_id: katie.id });
+    const lisa = await User.findOne(db, { username: 'idir\\lmoore' });
+    await Zone.update(db, { code: 'TEST1' }, { user_id: lisa.id });
+    await Zone.update(db, { code: 'TEST5' }, { user_id: lisa.id });
+    const katie = await User.findOne(db, { username: 'idir\\kmenke' });
+    await Zone.update(db, { code: 'TEST2' }, { user_id: katie.id });
+    await Zone.update(db, { code: 'TEST4' }, { user_id: katie.id });
     const githubrangeofficer = await User.findOne(db, {
-      username: "githubrangeofficer",
+      username: 'githubrangeofficer',
     });
     await Zone.update(
       db,
-      { code: "TEST3" },
+      { code: 'TEST3' },
       { user_id: githubrangeofficer.id },
     );
     const rangeAppTester = await User.findOne(db, {
-      username: "bceid\\rangeapptester",
+      username: 'bceid\\rangeapptester',
     });
-    await Zone.update(db, { code: "TEST6" }, { user_id: rangeAppTester.id });
+    await Zone.update(db, { code: 'TEST6' }, { user_id: rangeAppTester.id });
 
     // assign clients
     const clientsP = Object.values(mockData.users).map(async (user) => {
@@ -541,13 +541,13 @@ const prepareTestSetup = async () => {
         user_id: id,
         client_id: client.clientNumber,
         active: true,
-        type: "owner",
+        type: 'owner',
       });
     });
 
     await Promise.all(clientsP);
 
-    console.log("Done preparing for test accounts");
+    console.log('Done preparing for test accounts');
   } catch (error) {
     console.log(`Error with message = ${error.message}`);
     throw error;
@@ -555,7 +555,7 @@ const prepareTestSetup = async () => {
 };
 
 const pruneConfirmations = async () => {
-  console.log("Pruning confirmations...");
+  console.log('Pruning confirmations...');
   const res = await db.raw(`
     WITH extra_confirmations AS (
       SELECT plan_confirmation.id FROM plan_confirmation
@@ -577,7 +577,7 @@ const pruneConfirmations = async () => {
 const loadFile = (name) =>
   new Promise((resolve, reject) => {
     const records = [];
-    fs.readFile(name, "utf8", (err, contents) => {
+    fs.readFile(name, 'utf8', (err, contents) => {
       const parser = csv.parse(contents, (err, data) => {
         if (err) reject(err);
 
@@ -585,7 +585,7 @@ const loadFile = (name) =>
         data.forEach((line) => {
           const record = {};
           fields.forEach((value, i) => {
-            const key = value.replace(/ /g, "_").toLowerCase();
+            const key = value.replace(/ /g, '_').toLowerCase();
             if (i > 1) {
               record[key] = line[i];
               return;
@@ -601,8 +601,8 @@ const loadFile = (name) =>
 
 const loadDataFromUrl = async (token, url) => {
   const options = {
-    headers: { "content-type": "application/json", Authorization: token },
-    method: "GET",
+    headers: { 'content-type': 'application/json', Authorization: token },
+    method: 'GET',
     uri: url,
     json: true,
   };
@@ -614,8 +614,8 @@ const loadDataFromUrl = async (token, url) => {
 
 const getFTAToken = async (url) => {
   const options = {
-    headers: { "content-type": "application/json" },
-    method: "POST",
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
     url,
     json: true,
     auth: {
@@ -630,16 +630,16 @@ const getFTAToken = async (url) => {
 };
 
 const updateFTAData = async (licensee, client, usage) => {
-  let msg = "";
-  msg = msg + (await updateDistrict(licensee)) + "\n";
-  msg = msg + (await updateUser(licensee)) + "\n";
-  msg = msg + (await updateAgreement(licensee)) + "\n";
+  let msg = '';
+  msg = msg + (await updateDistrict(licensee)) + '\n';
+  msg = msg + (await updateUser(licensee)) + '\n';
+  msg = msg + (await updateAgreement(licensee)) + '\n';
 
   const filteredClientsAB = client.filter((item) =>
-    ["A", "B"].includes(item.forest_file_client_type_code),
+    ['A', 'B'].includes(item.forest_file_client_type_code),
   );
   const filteredClientsPC = client
-    .filter((item) => ["P", "C"].includes(item.forest_file_client_type_code))
+    .filter((item) => ['P', 'C'].includes(item.forest_file_client_type_code))
     .filter((itemPC) => {
       const foundAB = filteredClientsAB.find(
         (itemAB) =>
@@ -649,9 +649,9 @@ const updateFTAData = async (licensee, client, usage) => {
       return !foundAB;
     });
   //create where missing, dispositions with signed plans will get client_id updated in plan_conf
-  msg = msg + (await updateClient(filteredClientsAB)) + "\n";
-  msg = msg + (await updateClient(filteredClientsPC)) + "\n";
-  msg = msg + (await updateZone(licensee)) + "\n";
+  msg = msg + (await updateClient(filteredClientsAB)) + '\n';
+  msg = msg + (await updateClient(filteredClientsPC)) + '\n';
+  msg = msg + (await updateZone(licensee)) + '\n';
   msg = msg + (await updateUsage(usage));
 
   console.log(msg);
@@ -673,7 +673,7 @@ const loadStaffDataFromCSV = async () => {
 };
 
 const loadFTADataFromAPI = async () => {
-  console.log("trying to get api token " + TOKEN_URL);
+  console.log('trying to get api token ' + TOKEN_URL);
   const res = await getFTAToken(TOKEN_URL);
   const {
     access_token,
@@ -692,15 +692,15 @@ const loadFTADataFromAPI = async () => {
 const main = async () => {
   try {
     var args = process.argv.slice(2);
-    var isInitializing = args[0] === "true";
+    var isInitializing = args[0] === 'true';
     if (isInitializing) {
       /* DROP DATABASE MYRA first, and have ZONE_USER.csv */
-      console.log("Loading FTA data from API...");
+      console.log('Loading FTA data from API...');
       //await loadFTADataFromAPI();
       await loadFTADataFromCSV();
       // console.log('Loading Staff data from File...');
       // await loadStaffDataFromCSV();
-      console.log("Preparing test setup");
+      console.log('Preparing test setup');
       await prepareTestSetup();
       //await pruneConfirmations();
     } else {

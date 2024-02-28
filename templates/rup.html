@@ -1,238 +1,269 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Range Use Plan</title>
-  	<meta content="ie=edge" http-equiv="x-ua-compatible">
-  	<meta content="width=device-width, initial-scale=1" name="viewport">
-<style>
-  @page {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-  }
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    padding: 25px;
-    font-family: arial, sans-serif;
-  }
-  table {
-      font-family: arial, sans-serif;
-      border-collapse: collapse;
-      width: 100%;
-  }
-  td, th {
-      border: 1px solid #eeeeee ;
-      text-align: left;
-      padding: 8px;
-  }
-  tr:nth-child(even) {
-      background-color: #fafafa;
-  }
-  h2 {
-    margin: 15px 0 5px 0;
-  }
-  .pasture,
-  .grazing-schedule,
-  .minister-issue {
-    page-break-inside: avoid;
-    margin-bottom: 10px;
-  }
-  .header__logo {
-    height: 100px;
-  }
-  .header__left {
-    width: 40%;
-    float: left;
-  }
-  .header__right {
-    float: right;
-    width: 59%;
-    text-align: end;
-    line-height: 160%;
-  }
-  .header__title {
-    font-weight: bold;
-    font-size: 1.4rem;
-  }
-  .header__divider {
-    clear: both;
-    border-top: 1px solid #aaaaaa;
-  }
-  .divider {
-    margin-bottom: 10px;
-    border-top: 2px solid #003366;
-  }
-  .sub-divider {
-    border-top: 1px solid #003366;
-    margin: 10px 0;
-  }
-  .section-title {
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-  }
-  .textfield {
-    page-break-inside: avoid;
-    margin: 5px 0;
-  }
-  .textfield__title {
-    color: gray;
-    font-size: 1.1rem;
-  }
-  .cell-6 {
-    width: 49%;
-    display: inline-block;
-  }
-  .cell-4 {
-    width: 32%;
-    display: inline-block;
-  }
-  .bold {
-    font-weight: bold;
-  }
-  .minister-action {
-    margin: 0 10px 10px 10px;
-  }
-  /* .minister-action__note {
+    <meta content="ie=edge" http-equiv="x-ua-compatible" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <style>
+      @page {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        padding: 25px;
+        font-family: arial, sans-serif;
+      }
+      table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td,
+      th {
+        border: 1px solid #eeeeee;
+        text-align: left;
+        padding: 8px;
+      }
+      tr:nth-child(even) {
+        background-color: #fafafa;
+      }
+      h2 {
+        margin: 15px 0 5px 0;
+      }
+      .pasture,
+      .grazing-schedule,
+      .minister-issue {
+        page-break-inside: avoid;
+        margin-bottom: 10px;
+      }
+      .header__logo {
+        height: 100px;
+      }
+      .header__left {
+        width: 40%;
+        float: left;
+      }
+      .header__right {
+        float: right;
+        width: 59%;
+        text-align: end;
+        line-height: 160%;
+      }
+      .header__title {
+        font-weight: bold;
+        font-size: 1.4rem;
+      }
+      .header__divider {
+        clear: both;
+        border-top: 1px solid #aaaaaa;
+      }
+      .divider {
+        margin-bottom: 10px;
+        border-top: 2px solid #003366;
+      }
+      .sub-divider {
+        border-top: 1px solid #003366;
+        margin: 10px 0;
+      }
+      .section-title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+      }
+      .textfield {
+        page-break-inside: avoid;
+        margin: 5px 0;
+      }
+      .textfield__title {
+        color: gray;
+        font-size: 1.1rem;
+      }
+      .cell-6 {
+        width: 49%;
+        display: inline-block;
+      }
+      .cell-4 {
+        width: 32%;
+        display: inline-block;
+      }
+      .bold {
+        font-weight: bold;
+      }
+      .minister-action {
+        margin: 0 10px 10px 10px;
+      }
+      /* .minister-action__note {
     margin: 2px 0 10px 0;
   } */
-  .text-right {
-    text-align: right;
-  }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div class="header__left">
-      <img class="header__logo" src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1" alt="">
+      .text-right {
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header__left">
+        <img
+          class="header__logo"
+          src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fbest.bc.ca%2Fwp-content%2Fuploads%2F2014%2F03%2FBC-government-logo-NEW.png&f=1"
+          alt=""
+        />
+      </div>
+      <div class="header__right">
+        <div class="header__title">Range Use Plan</div>
+        <div>
+          {{agreement.id}} | {{getPrimaryContactName agreement.clients}}
+        </div>
+        <div>
+          {{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat
+          plan.planEndDate}}
+        </div>
+      </div>
     </div>
-    <div class="header__right">
-      <div class="header__title">Range Use Plan</div>
-      <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
-      <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>    
+    <div class="header__divider"></div>
+    <h2>Basic Information</h2>
+    <div class="divider"></div>
+    <div class="cell-6">
+      <div class="section-title">Agreement Information</div>
+      <div class="textfield">
+        <div class="textfield__title">Range Number</div>
+        <div class="textfield__content">{{handleNullValue agreement.id}}</div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Agreement Type</div>
+        <div class="textfield__content">
+          {{getAgreementType agreement.agreementType}}
+        </div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Agreement Date</div>
+        <div class="textfield__content">
+          {{getStandardDateFormat agreement.agreementStartDate}} -
+          {{getStandardDateFormat agreement.agreementEndDate}}
+        </div>
+      </div>
+
+      <div class="textfield">
+        <div class="textfield__title">Range Name</div>
+        <div class="textfield__content">{{handleNullValue plan.rangeName}}</div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Alternative Business Name</div>
+        <div class="textfield__content">
+          {{handleNullValue plan.altBusinessName}}
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="header__divider"></div>  
-  <h2>Basic Information</h2>
-  <div class="divider"></div>
-  <div class="cell-6">
-    <div class="section-title">Agreement Information</div>
-    <div class="textfield">
-      <div class="textfield__title">Range Number</div>
-      <div class="textfield__content">{{handleNullValue agreement.id}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Agreement Type</div>
-      <div class="textfield__content">{{getAgreementType agreement.agreementType}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Agreement Date</div>
-      <div class="textfield__content">{{getStandardDateFormat agreement.agreementStartDate}} - {{getStandardDateFormat agreement.agreementEndDate}}</div>
+    <div class="cell-6">
+      <div class="section-title">Contact Information</div>
+      <div class="textfield">
+        <div class="textfield__title">District (Responsible)</div>
+        <div class="textfield__content">{{getDistrict zone}}</div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Zone</div>
+        <div class="textfield__content">{{handleNullValue zone.code}}</div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Contact Name</div>
+        <div class="textfield__content">{{handleNullValue user.name}}</div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Contact Phone</div>
+        <div class="textfield__content">
+          {{handleNullValue user.contactPhoneNumber}}
+        </div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Contact Email</div>
+        <div class="textfield__content">{{handleNullValue user.email}}</div>
+      </div>
     </div>
 
-    <div class="textfield">
-      <div class="textfield__title">Range Name</div>
-      <div class="textfield__content">{{handleNullValue plan.rangeName}}</div>
+    <div class="sub-divider"></div>
+    <div class="section-title">Plan Information</div>
+    <div class="cell-6">
+      <div class="textfield">
+        <div class="textfield__title">Plan Start Date</div>
+        <div class="textfield__content">
+          {{getStandardDateFormat plan.planStartDate}}
+        </div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Extended</div>
+        <div class="textfield__content">{{handleNullValue plan.extension}}</div>
+      </div>
     </div>
-    <div class="textfield">
-      <div class="textfield__title">Alternative Business Name</div>
-      <div class="textfield__content">{{handleNullValue plan.altBusinessName}}</div>
+    <div class="cell-6">
+      <div class="textfield">
+        <div class="textfield__title">Plan End Date</div>
+        <div class="textfield__content">
+          {{getStandardDateFormat plan.planEndDate}}
+        </div>
+      </div>
+      <div class="textfield">
+        <div class="textfield__title">Exemption Status</div>
+        <div class="textfield__content">
+          {{handleNullValue agreement.agreementExemptionStatus.description}}
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="cell-6">
-    <div class="section-title">Contact Information</div>
-    <div class="textfield">
-      <div class="textfield__title">District (Responsible)</div>
-      <div class="textfield__content">{{getDistrict zone}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Zone</div>
-      <div class="textfield__content">{{handleNullValue zone.code}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Contact Name</div>
-      <div class="textfield__content">{{handleNullValue user.name}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Contact Phone</div>
-      <div class="textfield__content">{{handleNullValue user.contactPhoneNumber}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Contact Email</div>
-      <div class="textfield__content">{{handleNullValue user.email}}</div>
-    </div>
-  </div>
-  
-  <div class="sub-divider"></div>
-  <div class="section-title">Plan Information</div>
-  <div class="cell-6">
-    <div class="textfield">
-      <div class="textfield__title">Plan Start Date</div>
-      <div class="textfield__content">{{getStandardDateFormat plan.planStartDate}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Extended</div>
-      <div class="textfield__content">{{handleNullValue plan.extension}}</div>
-    </div>
-  </div>
-  <div class="cell-6">
-    <div class="textfield">
-      <div class="textfield__title">Plan End Date</div>
-      <div class="textfield__content">{{getStandardDateFormat plan.planEndDate}}</div>
-    </div>
-    <div class="textfield">
-      <div class="textfield__title">Exemption Status</div>
-      <div class="textfield__content">{{handleNullValue agreement.agreementExemptionStatus.description}}</div>
-    </div>
-  </div>
-  
-  <div class="sub-divider"></div>
-  <div class="section-title">Agreement Holders</div>
-  <div class="cell-6">
+
+    <div class="sub-divider"></div>
+    <div class="section-title">Agreement Holders</div>
+    <div class="cell-6">
       <div class="textfield__title">Name</div>
     </div>
     <div class="cell-6">
       <div class="textfield__title">Type</div>
-  </div>
-  {{#each agreement.clients}}
-    <div class="cell-6">
-        <div class="textfield__content">{{getContactFullName this}}</div>
-      </div>
-      <div class="cell-6">
-        <div class="textfield__content">{{getContactRole this}}</div>
     </div>
-  {{/each}}
-  
-  <h2>Pastures</h2>
-  <div class="divider"></div>
-  
-  {{#each pastures}}
+    {{#each agreement.clients}}
+    <div class="cell-6">
+      <div class="textfield__content">{{getContactFullName this}}</div>
+    </div>
+    <div class="cell-6">
+      <div class="textfield__content">{{getContactRole this}}</div>
+    </div>
+    {{/each}}
+
+    <h2>Pastures</h2>
+    <div class="divider"></div>
+
+    {{#each pastures}}
     <div class="pasture">
       <div class="section-title">Pasture: {{this.name}}</div>
       <div class="cell-4">
         <div class="textfield__title">Allowable AUMs</div>
-        <div class="textfield__content">{{handleNullValue this.allowableAum "N/P"}}</div>
+        <div class="textfield__content">
+          {{handleNullValue this.allowableAum "N/P"}}
+        </div>
       </div>
       <div class="cell-4">
         <div class="textfield__title">Private Land Deduction</div>
-        <div class="textfield__content">{{handleNullValue this.pldPercent "N/P"}}</div>
+        <div class="textfield__content">
+          {{handleNullValue this.pldPercent "N/P"}}
+        </div>
       </div>
       <div class="cell-4">
         <div class="textfield__title">Grace Days</div>
-        <div class="textfield__content">{{handleNullValue this.graceDays "N/P"}}</div>
+        <div class="textfield__content">
+          {{handleNullValue this.graceDays "N/P"}}
+        </div>
       </div>
       <div class="textfield__title">Pasture Notes (non legal content)</div>
       <div class="textfield__content">{{handleNullValue this.notes}}</div>
     </div>
-  {{else}}
+    {{else}}
     <div class="not-provided">Not provided</div>
-  {{/each}}
-  
-  <h2>Schedule</h2>
-  <div class="divider"></div>
-  {{#each grazingSchedules}}
+    {{/each}}
+
+    <h2>Schedule</h2>
+    <div class="divider"></div>
+    {{#each grazingSchedules}}
     <div class="grazing-schedule">
       <div class="section-title">{{this.year}} Grazing Schedule</div>
       <table>
@@ -248,40 +279,39 @@
           <th>Crown AUMs</th>
         </tr>
         {{#each this.grazingScheduleEntries}}
-          <tr>
-            <td>{{handleNullValue this.pasture.name "N/P"}}</td>
-            <td>{{handleNullValue this.livestockType.name "N/P"}}</td>
-            <td>{{handleNullValue this.livestockCount "N/P"}}</td>
-            <td>{{getStandardDateFormat this.dateIn false "N/P"}}</td>
-            <td>{{getStandardDateFormat this.dateOut false "N/P"}}</td>
-            <td>{{handleNullValue this.days "N/P"}}</td>
-            <td>{{handleNullValue this.graceDays "N/P"}}</td>
-            <td>{{handleNullValue this.pldAUMs "N/P"}}</td>
-            <td>{{handleNullValue this.crownAUMs "N/P"}}</td>
-          </tr>
+        <tr>
+          <td>{{handleNullValue this.pasture.name "N/P"}}</td>
+          <td>{{handleNullValue this.livestockType.name "N/P"}}</td>
+          <td>{{handleNullValue this.livestockCount "N/P"}}</td>
+          <td>{{getStandardDateFormat this.dateIn false "N/P"}}</td>
+          <td>{{getStandardDateFormat this.dateOut false "N/P"}}</td>
+          <td>{{handleNullValue this.days "N/P"}}</td>
+          <td>{{handleNullValue this.graceDays "N/P"}}</td>
+          <td>{{handleNullValue this.pldAUMs "N/P"}}</td>
+          <td>{{handleNullValue this.crownAUMs "N/P"}}</td>
+        </tr>
         {{else}}
-          <div class="not-provided">Not provided</div>
+        <div class="not-provided">Not provided</div>
         {{/each}}
       </table>
       <p class="text-right">
-        <span class="bold">Authorized AUMs:</span> {{this.authorizedAUMs}} &nbsp; <span class="bold">Total AUMs:</span> {{this.crownTotalAUMs}}
+        <span class="bold">Authorized AUMs:</span> {{this.authorizedAUMs}}
+        &nbsp; <span class="bold">Total AUMs:</span> {{this.crownTotalAUMs}}
       </p>
       <div class="bold">Schedule Description</div>
       <div>{{handleNullValue this.narative}}</div>
     </div>
-  {{else}}
+    {{else}}
     <div class="not-provided">Not provided</div>
-  {{/each}}
+    {{/each}}
 
-  <h2>Minister&apos;s Issues and Actions</h2>
-  <div class="divider"></div>
+    <h2>Minister&apos;s Issues and Actions</h2>
+    <div class="divider"></div>
 
-  {{#each this.ministerIssues}}
+    {{#each this.ministerIssues}}
     <div class="minister-issue">
       <div class="section-title">
-        <div class="cell-6">
-          Issue Type: {{this.ministerIssueType.name}}
-        </div>
+        <div class="cell-6">Issue Type: {{this.ministerIssueType.name}}</div>
         <div class="cell-6 text-right">
           Identified: {{getYesOrNo this.identified }}
         </div>
@@ -296,7 +326,9 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Pastures</div>
-        <div class="textfield__content">{{handleNullValue this.pastureNames}}</div>
+        <div class="textfield__content">
+          {{handleNullValue this.pastureNames}}
+        </div>
       </div>
       <div class="textfield__title">Actions</div>
       <!-- {{#if this.actionsExist}}
@@ -305,17 +337,16 @@
         </div>
       {{/if}} -->
       {{#each this.ministerIssueActions}}
-        <div class="minister-action">
-          <b>{{this.ministerIssueActionType.name}}</b>
-          <div>{{this.detail}}</div>
-        </div>
+      <div class="minister-action">
+        <b>{{this.ministerIssueActionType.name}}</b>
+        <div>{{this.detail}}</div>
+      </div>
       {{else}}
-        <div class="not-provided">Not provided</div>
-      {{/each}}  
+      <div class="not-provided">Not provided</div>
+      {{/each}}
     </div>
     {{else}}
     <div class="not-provided">Not provided</div>
-  {{/each}}
-
-</body>
+    {{/each}}
+  </body>
 </html>

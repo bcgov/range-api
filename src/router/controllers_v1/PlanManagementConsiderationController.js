@@ -5,12 +5,7 @@ import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
 
 const dm = new DataManager(config);
-const {
-  db,
-  Agreement,
-  Plan,
-  ManagementConsideration,
-} = dm;
+const { db, Agreement, Plan, ManagementConsideration } = dm;
 
 export default class PlanManagementConsiderationController {
   /**
@@ -22,19 +17,27 @@ export default class PlanManagementConsiderationController {
     const { body, params, user } = req;
     const { planId } = params;
 
-    checkRequiredFields(
-      ['planId'], 'params', req,
-    );
+    checkRequiredFields(['planId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
-      const consideration = await ManagementConsideration.create(db, { ...body, plan_id: planId });
+      const consideration = await ManagementConsideration.create(db, {
+        ...body,
+        plan_id: planId,
+      });
 
       return res.status(200).json(consideration).end();
     } catch (error) {
-      logger.error(`PlanManagementConsiderationController: store: fail with error: ${error.message}`);
+      logger.error(
+        `PlanManagementConsiderationController: store: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -48,13 +51,16 @@ export default class PlanManagementConsiderationController {
     const { body, params, user } = req;
     const { planId, considerationId } = params;
 
-    checkRequiredFields(
-      ['planId', 'considerationId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'considerationId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
       const consideration = await ManagementConsideration.update(
         db,
@@ -64,7 +70,9 @@ export default class PlanManagementConsiderationController {
 
       return res.status(200).json(consideration).end();
     } catch (error) {
-      logger.error(`PlanManagementConsiderationController: update: fail with error: ${error.message}`);
+      logger.error(
+        `PlanManagementConsiderationController: update: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -78,22 +86,30 @@ export default class PlanManagementConsiderationController {
     const { params, user } = req;
     const { planId, considerationId } = params;
 
-    checkRequiredFields(
-      ['planId', 'considerationId'], 'params', req,
-    );
+    checkRequiredFields(['planId', 'considerationId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      await PlanRouteHelper.canUserAccessThisAgreement(
+        db,
+        Agreement,
+        user,
+        agreementId,
+      );
 
-      const result = await ManagementConsideration.removeById(db, considerationId);
+      const result = await ManagementConsideration.removeById(
+        db,
+        considerationId,
+      );
       if (result === 0) {
         throw errorWithCode('No such management consideration exists', 400);
       }
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(`PlanManagementConsiderationController: destroy: fail with error: ${error.message}`);
+      logger.error(
+        `PlanManagementConsiderationController: destroy: fail with error: ${error.message}`,
+      );
       throw error;
     }
   }

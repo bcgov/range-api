@@ -1,10 +1,10 @@
-import { errorWithCode } from "@bcgov/nodejs-common-utils";
-import Model from "./model";
-import User from "./user";
-import PlanStatus from "./planstatus";
-import { generatePDFResponse } from "../../../router/controllers_v1/PDFGeneration";
-import Plan from "./plan";
-import PlanStatusHistory from "./planstatushistory";
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import Model from './model';
+import User from './user';
+import PlanStatus from './planstatus';
+import { generatePDFResponse } from '../../../router/controllers_v1/PDFGeneration';
+import Plan from './plan';
+import PlanStatusHistory from './planstatushistory';
 
 export default class PlanSnapshot extends Model {
   constructor(data, db = undefined) {
@@ -23,20 +23,20 @@ export default class PlanSnapshot extends Model {
   static get fields() {
     // primary key *must* be first!
     return [
-      "id",
-      "snapshot",
-      "plan_id",
-      "created_at",
-      "version",
-      "status_id",
-      "user_id",
-      "is_discarded",
-      "pdf_file",
+      'id',
+      'snapshot',
+      'plan_id',
+      'created_at',
+      'version',
+      'status_id',
+      'user_id',
+      'is_discarded',
+      'pdf_file',
     ].map((f) => `${PlanSnapshot.table}.${f}`);
   }
 
   static get table() {
-    return "plan_snapshot";
+    return 'plan_snapshot';
   }
 
   static async findSummary(
@@ -46,7 +46,7 @@ export default class PlanSnapshot extends Model {
     order = undefined,
   ) {
     let results = [];
-    const q = db.table("plan_snapshot_summary").select("*");
+    const q = db.table('plan_snapshot_summary').select('*');
     if (
       Object.keys(where).length === 1 &&
       where[Object.keys(where)[0]].constructor === Array

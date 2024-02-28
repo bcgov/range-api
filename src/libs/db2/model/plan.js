@@ -18,33 +18,33 @@
 // Created by Jason Leach on 2018-05-10.
 //
 
-"use strict";
+'use strict';
 
-import { flatten } from "lodash";
-import { errorWithCode } from "@bcgov/nodejs-common-utils";
-import GrazingSchedule from "./grazingschedule";
-import Model from "./model";
-import Pasture from "./pasture";
-import PlanExtension from "./planextension";
-import PlanStatus from "./planstatus";
-import MinisterIssue from "./ministerissue";
-import PlanStatusHistory from "./planstatushistory";
-import PlanConfirmation from "./planconfirmation";
-import User from "./user";
-import InvasivePlantChecklist from "./invasiveplantchecklist";
-import AdditionalRequirement from "./additionalrequirement";
-import ManagementConsideration from "./managementconsideration";
-import PlantCommunity from "./plantcommunity";
-import IndicatorPlant from "./indicatorplant";
-import MonitoringArea from "./monitoringarea";
-import MonitoringAreaPurpose from "./monitoringareapurpose";
-import PlantCommunityAction from "./plantcommunityaction";
-import GrazingScheduleEntry from "./grazingscheduleentry";
-import MinisterIssueAction from "./ministerissueaction";
-import MinisterIssuePasture from "./ministerissuepasture";
-import PlanSnapshot from "./plansnapshot";
-import Agreement from "./agreement";
-import PlanFile from "./PlanFile";
+import { flatten } from 'lodash';
+import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import GrazingSchedule from './grazingschedule';
+import Model from './model';
+import Pasture from './pasture';
+import PlanExtension from './planextension';
+import PlanStatus from './planstatus';
+import MinisterIssue from './ministerissue';
+import PlanStatusHistory from './planstatushistory';
+import PlanConfirmation from './planconfirmation';
+import User from './user';
+import InvasivePlantChecklist from './invasiveplantchecklist';
+import AdditionalRequirement from './additionalrequirement';
+import ManagementConsideration from './managementconsideration';
+import PlantCommunity from './plantcommunity';
+import IndicatorPlant from './indicatorplant';
+import MonitoringArea from './monitoringarea';
+import MonitoringAreaPurpose from './monitoringareapurpose';
+import PlantCommunityAction from './plantcommunityaction';
+import GrazingScheduleEntry from './grazingscheduleentry';
+import MinisterIssueAction from './ministerissueaction';
+import MinisterIssuePasture from './ministerissuepasture';
+import PlanSnapshot from './plansnapshot';
+import Agreement from './agreement';
+import PlanFile from './PlanFile';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -75,34 +75,34 @@ export default class Plan extends Model {
 
     // primary key *must* be first!
     return [
-      "id",
-      "range_name",
-      "plan_start_date",
-      "plan_end_date",
-      "notes",
-      "alt_business_name",
-      "agreement_id",
-      "status_id",
-      "uploaded",
-      "amendment_type_id",
-      "created_at",
-      "updated_at",
-      "effective_at",
-      "submitted_at",
-      "creator_id",
-      "canonical_id",
-      "is_restored",
-      "conditions",
-      "proposed_conditions",
-      "extension_status",
-      "extension_required_votes",
-      "extension_received_votes",
-      "extension_of",
+      'id',
+      'range_name',
+      'plan_start_date',
+      'plan_end_date',
+      'notes',
+      'alt_business_name',
+      'agreement_id',
+      'status_id',
+      'uploaded',
+      'amendment_type_id',
+      'created_at',
+      'updated_at',
+      'effective_at',
+      'submitted_at',
+      'creator_id',
+      'canonical_id',
+      'is_restored',
+      'conditions',
+      'proposed_conditions',
+      'extension_status',
+      'extension_required_votes',
+      'extension_received_votes',
+      'extension_of',
     ].map((f) => `${Plan.table}.${f}`);
   }
 
   static get table() {
-    return "plan";
+    return 'plan';
   }
 
   static async findCurrentVersion(db, canonicalId) {
@@ -134,18 +134,18 @@ export default class Plan extends Model {
   ) {
     const myFields = [
       ...Plan.fields,
-      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...PlanExtension.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
-      ...User.fields.map((f) => `${f} AS ${f.replace(".", "_")}`),
+      ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...PlanExtension.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
     let results = [];
     const q = db
       .select(myFields)
       .from(Plan.table)
-      .join("ref_plan_status", { "plan.status_id": "ref_plan_status.id" })
+      .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
       // left join otherwise if extension is NULL we don't get any results
-      .leftJoin("extension", { "plan.extension_id": "extension.id" })
-      .join("user_account", { "plan.creator_id": "user_account.id" })
+      .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
+      .join('user_account', { 'plan.creator_id': 'user_account.id' })
       .where({ ...where, uploaded: true })
       .orderBy(...order);
 
@@ -169,7 +169,7 @@ export default class Plan extends Model {
     }
 
     const results = await db
-      .select("agreement_id")
+      .select('agreement_id')
       .from(Plan.table)
       .where({ id: planId });
 
@@ -186,10 +186,10 @@ export default class Plan extends Model {
     }
 
     const results = await db
-      .select("*")
+      .select('*')
       .from(Plan.table)
       .join(Agreement.table, {
-        "plan.agreement_id": "agreement.forest_file_id",
+        'plan.agreement_id': 'agreement.forest_file_id',
       })
       .where({ id: planId });
 
@@ -202,8 +202,8 @@ export default class Plan extends Model {
   static async createSnapshot(db, planId, user) {
     const [plan] = await Plan.findWithStatusExtension(
       db,
-      { "plan.id": planId },
-      ["id", "desc"],
+      { 'plan.id': planId },
+      ['id', 'desc'],
     );
     if (!plan) {
       throw errorWithCode("Plan doesn't exist", 404);
@@ -516,7 +516,7 @@ export default class Plan extends Model {
     });
 
     try {
-      db.raw("BEGIN");
+      db.raw('BEGIN');
 
       const pasturePromises = plan.pastures.map(
         async ({ id: pastureId, ...pasture }) => {
@@ -762,7 +762,7 @@ export default class Plan extends Model {
 
       await Promise.all(newStatusHistoryPromises);
 
-      db.raw("COMMIT");
+      db.raw('COMMIT');
 
       return {
         ...newPlan,
@@ -775,7 +775,7 @@ export default class Plan extends Model {
         confirmations: newConfirmations,
       };
     } catch (e) {
-      db.raw("ROLLBACK");
+      db.raw('ROLLBACK');
       throw e;
     }
   }
@@ -815,7 +815,7 @@ export default class Plan extends Model {
 
   async fetchPastures() {
     const where = { plan_id: this.id };
-    const pastures = await Pasture.find(this.db, where, ["created_at"]);
+    const pastures = await Pasture.find(this.db, where, ['created_at']);
 
     const promises = pastures.map((p) => [
       p.fetchPlantCommunities(this.db, { pasture_id: p.id }),
@@ -827,7 +827,7 @@ export default class Plan extends Model {
   }
 
   async fetchGrazingSchedules() {
-    const order = ["year", "asc"];
+    const order = ['year', 'asc'];
     const where = { plan_id: this.id };
     const schedules = await GrazingSchedule.find(this.db, where, order);
     // egar load grazing schedule entries.
@@ -907,26 +907,26 @@ export default class Plan extends Model {
   static async fetchExpiringPlanIds(db, endDateStart, endDateEnd, orderBy) {
     const q = db
       .select([
-        "plan.id as planId",
-        "client_agreement.id as clientAgreementId",
-        "client_agreement.agreement_id as agreementId",
-        "client_agreement.client_id as clientId",
-        "user_account.email as email",
-        "user_account.id as userId",
+        'plan.id as planId',
+        'client_agreement.id as clientAgreementId',
+        'client_agreement.agreement_id as agreementId',
+        'client_agreement.client_id as clientId',
+        'user_account.email as email',
+        'user_account.id as userId',
       ])
       .from(Plan.table)
-      .leftJoin("client_agreement", {
-        "plan.agreement_id": "client_agreement.agreement_id",
+      .leftJoin('client_agreement', {
+        'plan.agreement_id': 'client_agreement.agreement_id',
       })
-      .leftJoin("user_client_link", {
-        "user_client_link.client_id": "client_agreement.client_id",
+      .leftJoin('user_client_link', {
+        'user_client_link.client_id': 'client_agreement.client_id',
       })
-      .leftJoin("user_account", {
-        "user_account.id": "user_client_link.user_id",
+      .leftJoin('user_account', {
+        'user_account.id': 'user_client_link.user_id',
       })
-      .where("plan_end_date", ">=", endDateStart)
-      .andWhere("plan_end_date", "<=", endDateEnd)
-      .whereNull("extension_status")
+      .where('plan_end_date', '>=', endDateStart)
+      .andWhere('plan_end_date', '<=', endDateEnd)
+      .whereNull('extension_status')
       .orderBy(orderBy);
     const results = await q;
     return results;

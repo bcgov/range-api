@@ -23,10 +23,7 @@ export default class Agreement extends Model {
   }
 
   static async findWithAllRelations(...args) {
-    const [
-      db,
-      where,
-    ] = args;
+    const [db, where] = args;
 
     assert(db);
     assert(where);
@@ -77,11 +74,13 @@ export default class Agreement extends Model {
     assert(where, 'agreement:update: No where');
     assert(Object.keys(where).length > 0, 'agreement:update: empty where');
     assert(updateObj, 'agreement:update: No update obj');
-    assert(Object.keys(updateObj).length > 0, 'agreement:update: empty update obj');
+    assert(
+      Object.keys(updateObj).length > 0,
+      'agreement:update: empty update obj',
+    );
 
     return ['RAN076843', 'RAN076844', 'RAN076845'];
   }
-
 
   transformToV1() {
     assert(this);

@@ -10,9 +10,7 @@
     "dist",
     "templates",
     "import",
-    "openshift",
+    "openshift"
   ],
-  "include": [
-    "server/**/*"
-  ]
+  "include": ["server/**/*"]
 }

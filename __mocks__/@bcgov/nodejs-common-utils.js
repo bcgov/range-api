@@ -44,7 +44,7 @@ const token = {
 };
 
 /* eslint-disable-next-line no-unused-vars */
-ncu.getJwtCertificate = ssoCertificateUrl =>
+ncu.getJwtCertificate = (ssoCertificateUrl) =>
   Promise.resolve({
     certificate: pem,
     algorithm: 'RS256',

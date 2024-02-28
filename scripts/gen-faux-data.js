@@ -78,7 +78,7 @@ const createClient = async () => {
     });
 
     const client = await Client.create({
-      id: `00465${Math.floor(Math.random()*(999-100+1)+100)}`,
+      id: `00465${Math.floor(Math.random() * (999 - 100 + 1) + 100)}`,
       name: faker.name.findName(),
       location: 'XX',
       client_type_id: ctype.id,
@@ -144,16 +144,16 @@ const createPlan = async (agreementId) => {
     const status = await PlanStatus.findOne({
       where: {
         code: 'S',
-      }
+      },
     });
 
     const plan = await Plan.create({
       rangeName: faker.company.companyName(),
       planStartDate: new Date(),
-      planEndDate: (new Date()).setDate((new Date()).getDate() + 5*365),
+      planEndDate: new Date().setDate(new Date().getDate() + 5 * 365),
       statusId: status.id,
       agreementId: ag.id,
-    })
+    });
 
     console.log(`Created Plan with ID = ${plan.id}`);
 
@@ -161,30 +161,36 @@ const createPlan = async (agreementId) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const createPasture = async (planId) => {
   try {
     // Just testing transactions here. Its not required.
     const t = await dm.sequelize.transaction();
 
-    const plan = await Plan.findById(planId, {transaction: t});
+    const plan = await Plan.findById(planId, { transaction: t });
 
-    const p1 = await Pasture.create({
-      name: faker.address.streetName(),
-      allowableAum: 400,
-      graceDays: 10,
-      pdlPercent: 0.10,
-      planId: plan.id,
-    }, {transaction: t});
+    const p1 = await Pasture.create(
+      {
+        name: faker.address.streetName(),
+        allowableAum: 400,
+        graceDays: 10,
+        pdlPercent: 0.1,
+        planId: plan.id,
+      },
+      { transaction: t },
+    );
 
-    const p2 = await Pasture.create({
-      name: faker.address.streetName(),
-      allowableAum: 400,
-      graceDays: 10,
-      pdlPercent: 0.10,
-      planId: plan.id,
-    }, {transaction: t});
+    const p2 = await Pasture.create(
+      {
+        name: faker.address.streetName(),
+        allowableAum: 400,
+        graceDays: 10,
+        pdlPercent: 0.1,
+        planId: plan.id,
+      },
+      { transaction: t },
+    );
 
     // await ag.addPasture(p1, {transaction: t});
     // await ag.addPasture(ag, {transaction: t});
@@ -200,12 +206,11 @@ const createPasture = async (planId) => {
   } catch (err) {
     console.log(err);
   }
-}
+};
 
 const createGrazingSchedule = async (agreementId, pastureIds) => {
   try {
-
-    const [ pid1, pid2 ] = pastureIds;
+    const [pid1, pid2] = pastureIds;
     const lty1 = await LivestockType.findById(1); // Alpaca
     const lty2 = await LivestockType.findById(2); // Alpaca
 
@@ -216,10 +221,10 @@ const createGrazingSchedule = async (agreementId, pastureIds) => {
 
     const gse1 = await GrazingScheduleEntry.create({
       startDate: new Date(),
-      endDate: (new Date()).setDate((new Date()).getDate() + 1*365),
+      endDate: new Date().setDate(new Date().getDate() + 1 * 365),
       livestockCount: 100,
       dateIn: new Date(),
-      dateOut: (new Date()).setDate((new Date()).getDate() + 30),
+      dateOut: new Date().setDate(new Date().getDate() + 30),
       livestock_type_id: lty1.id,
       grazing_schedule_id: gs.id,
       pasture_id: pid1,
@@ -227,15 +232,15 @@ const createGrazingSchedule = async (agreementId, pastureIds) => {
 
     const gse2 = await GrazingScheduleEntry.create({
       startDate: new Date(),
-      endDate: (new Date()).setDate((new Date()).getDate() + 1*365),
+      endDate: new Date().setDate(new Date().getDate() + 1 * 365),
       livestockCount: 200,
       dateIn: new Date(),
-      dateOut: (new Date()).setDate((new Date()).getDate() + 30),
+      dateOut: new Date().setDate(new Date().getDate() + 30),
       livestock_type_id: lty2.id,
       grazing_schedule_id: gs.id,
       pasture_id: pid2,
     });
-    
+
     const agreement = await Agreement.findById(agreementId);
 
     await agreement.addGrazingSchedule(gs);
@@ -263,7 +268,7 @@ const createLivestockIdentifier = async (agreementId) => {
     const li2 = await LivestockIdentifier.create({
       livestock_identifier_location_id: lil1.id,
       livestock_identifier_type_id: lit2.id,
-      agreement_id: agreementId
+      agreement_id: agreementId,
     });
 
     return [li1.id, li2.id];
@@ -277,7 +282,7 @@ const createPlantCommunity = async (pastureId) => {
     const aspect = await PlantCommunityAspect.findById(1);
     const elevation = await PlantCommunityElevation.findById(1);
     // const actiontype = await PlantCommunityActionType.findById(1);
-  
+
     const pc = await PlantCommunity.create({
       name: faker.address.streetName(),
       aspectId: aspect.id,
@@ -314,85 +319,102 @@ const createPlantCommunityAction = async (plantCommunityId) => {
 const test = async (agreementId) => {
   try {
     const agreement = await Agreement.findById(agreementId, {
-      include: [{
-            model: Zone,
-            include: [District],
-            attributes: {
-              exclude: ['district_id'],
-            },
+      include: [
+        {
+          model: Zone,
+          include: [District],
+          attributes: {
+            exclude: ['district_id'],
           },
-          {
-            model: LivestockIdentifier,
-            include: [LivestockIdentifierLocation, LivestockIdentifierType],
-            attributes: {
-              exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
-            },
+        },
+        {
+          model: LivestockIdentifier,
+          include: [LivestockIdentifierLocation, LivestockIdentifierType],
+          attributes: {
+            exclude: [
+              'livestock_identifier_type_id',
+              'livestock_identifier_location_id',
+            ],
           },
-          {
-            model: Plan,
-            include: [{
-                model: Pasture,
-                // include: [{
-                //   model: PlantCommunity,
-                //   attributes: {
-                //     exclude: ['aspect_id', 'elevation_id', 'pasture_id'],
-                //   },
-                //   include: [{
-                //       model: PlantCommunityAspect,
-                //       as: 'aspect'
-                //     }, {
-                //       model: PlantCommunityElevation,
-                //       as: 'elevation'
-                //     },
-                //     {
-                //       model: PlantCommunityAction,
-                //       as: 'actions',
-                //       attributes: {
-                //         exclude: ['plant_community_id'],
-                //       },
-                //       include: [{
-                //         model: PlantCommunityActionPurpose,
-                //         as: 'actionPurpose'
-                //       },
-                //       {
-                //         model: PlantCommunityActionType,
-                //         as: 'actionType'
-                //       }],
-                //     }
-                //   ],
-                // }],
-              },
-              {
-                model: GrazingSchedule,
-                include: [{
+        },
+        {
+          model: Plan,
+          include: [
+            {
+              model: Pasture,
+              // include: [{
+              //   model: PlantCommunity,
+              //   attributes: {
+              //     exclude: ['aspect_id', 'elevation_id', 'pasture_id'],
+              //   },
+              //   include: [{
+              //       model: PlantCommunityAspect,
+              //       as: 'aspect'
+              //     }, {
+              //       model: PlantCommunityElevation,
+              //       as: 'elevation'
+              //     },
+              //     {
+              //       model: PlantCommunityAction,
+              //       as: 'actions',
+              //       attributes: {
+              //         exclude: ['plant_community_id'],
+              //       },
+              //       include: [{
+              //         model: PlantCommunityActionPurpose,
+              //         as: 'actionPurpose'
+              //       },
+              //       {
+              //         model: PlantCommunityActionType,
+              //         as: 'actionType'
+              //       }],
+              //     }
+              //   ],
+              // }],
+            },
+            {
+              model: GrazingSchedule,
+              include: [
+                {
                   model: GrazingScheduleEntry,
                   include: [LivestockType, Pasture],
                   attributes: {
-                    exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
+                    exclude: [
+                      'grazing_schedule_id',
+                      'livestock_type_id',
+                      'plan_grazing_schedule',
+                    ],
                   },
-                }],
-              },
-            ]
-          },
-          {
-            model: Client,
-            as: 'primaryAgreementHolder',
-            attributes: {
-              exclude: ['client_type_id'],
-            }
-          },
-          {
-            model: Usage,
-            as: 'usage',
-            attributes: {
-              exclude: ['agreement_id'],
+                },
+              ],
             },
-          }
-        ],
-        attributes: {
-          exclude: ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id', 'extension_id', 'status_id'],
+          ],
         },
-      });
+        {
+          model: Client,
+          as: 'primaryAgreementHolder',
+          attributes: {
+            exclude: ['client_type_id'],
+          },
+        },
+        {
+          model: Usage,
+          as: 'usage',
+          attributes: {
+            exclude: ['agreement_id'],
+          },
+        },
+      ],
+      attributes: {
+        exclude: [
+          'primary_agreement_holder_id',
+          'agreement_type_id',
+          'zone_id',
+          'extension_id',
+          'status_id',
+        ],
+      },
+    });
 
     // const ag = agreement.get({plain: true});
     // console.log(ag);
@@ -435,7 +457,7 @@ const main = async () => {
   });
 
   try {
-    for (let i = 0; i < agreements.length; i++ ) {
+    for (let i = 0; i < agreements.length; i++) {
       const agreement = agreements[i];
       const agreementId = agreement.id;
 
@@ -448,21 +470,21 @@ const main = async () => {
       await test(agreementId);
     }
 
-  // const agreementId = await createAgreement(clientId);
-  // const pastureIds = await createPasture(agreementId);
-  // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
-  // const usageId = await createUsage(agreementId);
-  // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
-  // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
-  // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
+    // const agreementId = await createAgreement(clientId);
+    // const pastureIds = await createPasture(agreementId);
+    // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
+    // const usageId = await createUsage(agreementId);
+    // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
+    // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
+    // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
 
-  // const agreementId = await createAgreement(clientId);
-  // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
-  // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
-  // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
-  // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
+    // const agreementId = await createAgreement(clientId);
+    // const grazingScheduleId = await createGrazingSchedule(agreementId, pastureIds);
+    // const livestockIdenfifierIds = await createLivestockIdentifier(agreementId);
+    // const plantCommunityId = await createPlantCommunity(pastureIds[0]);
+    // const plantCommunityActionIds = await createPlantCommunityAction(plantCommunityId);
   } catch (error) {
-    console.log(`Error = ${error.message}`)
+    console.log(`Error = ${error.message}`);
   }
   process.exit(0);
 };

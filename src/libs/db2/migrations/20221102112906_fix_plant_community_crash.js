@@ -36,9 +36,6 @@ CREATE TRIGGER plant_community_action_name  BEFORE  insert OR update
     ON plant_community_action
     EXECUTE FUNCTION plant_community_action_no_null_name();
 `);
-
 };
 
-exports.down = async function (knex) {
-
-};
+exports.down = async function (knex) {};

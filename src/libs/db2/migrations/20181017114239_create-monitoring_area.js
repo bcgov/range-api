@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,13 +24,17 @@
 
 const table = 'monitoring_area';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('rangeland_health_id').references('ref_monitoring_area_health.id');
+    t.integer('rangeland_health_id').references(
+      'ref_monitoring_area_health.id',
+    );
     t.integer('plant_community_id').notNull();
-    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
+    t.foreign('plant_community_id')
+      .onDelete('CASCADE')
+      .references('plant_community.id');
 
     t.text('name').notNull();
     t.text('other_purpose');
@@ -39,8 +42,12 @@ exports.up = async knex =>
     t.float('transect_azimuth');
     t.float('latitude');
     t.float('longitude');
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -50,5 +57,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

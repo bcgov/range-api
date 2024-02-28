@@ -1,7 +1,7 @@
 [
   {
     "canonical_id": 1,
-    "detail":"This is an action!",
+    "detail": "This is an action!",
     "issue_id": 1,
     "action_type_id": 4,
     "no_graze_start_month": 6,

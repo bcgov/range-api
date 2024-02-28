@@ -20,7 +20,10 @@
 
 'use strict';
 
-import { capitalizeFirstLetter, primaryContactFullName } from '../src/libs/template';
+import {
+  capitalizeFirstLetter,
+  primaryContactFullName,
+} from '../src/libs/template';
 
 const contacts = [
   {
@@ -66,7 +69,10 @@ describe('template functions', () => {
 
   test('capitalizeFirstLetter() only effects the first letter of a string', async () => {
     const string = 'hello';
-    expect(capitalizeFirstLetter(string).charAt(0) === string.charAt(0).toUpperCase()).toBe(true);
+    expect(
+      capitalizeFirstLetter(string).charAt(0) ===
+        string.charAt(0).toUpperCase(),
+    ).toBe(true);
     expect(capitalizeFirstLetter(string).split(1) === string.split(1));
   });
 

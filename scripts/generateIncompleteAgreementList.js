@@ -9,7 +9,7 @@ dotenv.config();
 const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
 const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/oauth/token?grant_type=client_credentials`;
 
-const getFTAToken = async (url) => {  
+const getFTAToken = async (url) => {
   const options = {
     headers: { 'content-type': 'application/json' },
     method: 'POST',
@@ -18,7 +18,7 @@ const getFTAToken = async (url) => {
     auth: {
       username: process.env.FTA_API_STORE_USERNAME,
       password: process.env.FTA_API_STORE_PASSWORD,
-    }
+    },
   };
 
   const response = await request(options);
@@ -28,7 +28,7 @@ const getFTAToken = async (url) => {
 
 const loadDataFromUrl = async (token, url) => {
   const options = {
-    headers: { 'content-type': 'application/json', 'Authorization': token },
+    headers: { 'content-type': 'application/json', Authorization: token },
     method: 'GET',
     uri: url,
     json: true,
@@ -41,10 +41,10 @@ const loadDataFromUrl = async (token, url) => {
 
 const isValidRecord = (record) => {
   if (!/^RAN\d{6}$/.test(record.forest_file_id)) {
-    return false
+    return false;
   }
 
-  return true
+  return true;
 };
 
 const countAgreements = (data) => {
@@ -53,7 +53,7 @@ const countAgreements = (data) => {
   // a map whose property is 'district code' and value is 'array of agreement ids'
   let map = {};
 
-  data.forEach(record => {
+  data.forEach((record) => {
     const {
       forest_file_id: agreementId,
       district_admin_zone: zoneCode,
@@ -75,13 +75,13 @@ const countAgreements = (data) => {
             ...map,
             // create an initial array for this particular district
             [districtCode]: [agreementId],
-          }
+          };
         } else {
           map = {
             ...map,
             // keep adding new element in the existing array
             [districtCode]: [...map[districtCode], agreementId],
-          }
+          };
         }
       }
     } catch (error) {
@@ -91,13 +91,18 @@ const countAgreements = (data) => {
 
   // console.log(map);
   console.log(`The number of agreements without the contact email: ${number}`);
-  fs.writeFile('./scripts/agreementsMissingContactEmail.json', JSON.stringify(map), 'utf8', (err) => {
-    if (err) {
-      return console.log(err);
-    }
+  fs.writeFile(
+    './scripts/agreementsMissingContactEmail.json',
+    JSON.stringify(map),
+    'utf8',
+    (err) => {
+      if (err) {
+        return console.log(err);
+      }
 
-    console.log("The file was saved!");
-  });
+      console.log('The file was saved!');
+    },
+  );
 };
 
 const main = async () => {
@@ -106,7 +111,7 @@ const main = async () => {
     const { access_token, token_type } = res;
     const token = `${token_type} ${access_token}`;
     const licensee = await loadDataFromUrl(token, LICENSEE_URL);
-  
+
     countAgreements(licensee);
   } catch (err) {
     console.log(`Error occur!, message = ${err.message}`);

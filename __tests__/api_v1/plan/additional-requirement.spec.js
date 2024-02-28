@@ -1,4 +1,4 @@
-import { default as request } from "supertest"; // eslint-disable-line
+import { default as request } from 'supertest'; // eslint-disable-line
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -18,13 +18,13 @@ const dm = new DataManager(config);
 jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
-const truncate = table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
+const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 const baseUrl = '/api/v1/plan/1/additional-requirement';
 const body = {
   url: 'https://example.com',
   detail: 'Details for my additional requirement',
   categoryId: 4,
-  createdAt: (new Date()).toISOString(),
+  createdAt: new Date().toISOString(),
 };
 
 const truncateTables = async () => {
@@ -85,7 +85,9 @@ describe('Test Additional Requirement routes', () => {
     const requirements = await dm.db('additional_requirement');
 
     expect(requirements).toHaveLength(2);
-    expect(requirements[0].canonical_id).not.toEqual(requirements[1].canonical_id);
+    expect(requirements[0].canonical_id).not.toEqual(
+      requirements[1].canonical_id,
+    );
   });
 
   test('Updating an additional requirement', async () => {
@@ -98,7 +100,13 @@ describe('Test Additional Requirement routes', () => {
       .send({ ...body, detail })
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({ ...body, detail, id: 1, planId: 1, canonicalId: null });
+        expect(res.body).toEqual({
+          ...body,
+          detail,
+          id: 1,
+          planId: 1,
+          canonicalId: null,
+        });
       });
 
     const requirements = await dm.db('additional_requirement');
@@ -109,16 +117,12 @@ describe('Test Additional Requirement routes', () => {
 
   test('Updating a nonexistant additional requirement throws a 404 error', async () => {
     const app = await createApp();
-    await request(app)
-      .put(`${baseUrl}/2`)
-      .expect(404);
+    await request(app).put(`${baseUrl}/2`).expect(404);
   });
 
   test('Deleting an additional requirement', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/1`)
-      .expect(204);
+    await request(app).delete(`${baseUrl}/1`).expect(204);
 
     const requirements = await dm.db('additional_requirement');
 
@@ -127,9 +131,7 @@ describe('Test Additional Requirement routes', () => {
 
   test('Deleting a nonexistant additional requirement throws a 400 error', async () => {
     const app = await createApp();
-    await request(app)
-      .delete(`${baseUrl}/5`)
-      .expect(400);
+    await request(app).delete(`${baseUrl}/5`).expect(400);
 
     const requirements = await dm.db('additional_requirement');
 

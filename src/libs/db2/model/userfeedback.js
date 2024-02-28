@@ -19,8 +19,9 @@ export default class UserFeedback extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'user_id', 'feedback', 'section']
-      .map(field => `${this.table}.${field}`);
+    return ['id', 'user_id', 'feedback', 'section'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
@@ -30,17 +31,19 @@ export default class UserFeedback extends Model {
   static async findWithUser(db, where) {
     const myFields = [
       ...UserFeedback.fields,
-      ...User.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(UserFeedback.table)
-        .leftJoin('user_account', { 'user_feedback.user_id': 'user_account.id' })
+        .leftJoin('user_account', {
+          'user_feedback.user_id': 'user_account.id',
+        })
         .where(where);
 
-      return results.map(row => new UserFeedback(row, db));
+      return results.map((row) => new UserFeedback(row, db));
     } catch (err) {
       throw err;
     }

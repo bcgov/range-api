@@ -90,12 +90,12 @@ export const MINISTER_ISSUE_ACTION_TYPE = {
   TIMING: 'Timing',
 };
 
-export const PURPOSE_OF_ACTION = [
-  'establish', 'maintain', 'none',
-];
+export const PURPOSE_OF_ACTION = ['establish', 'maintain', 'none'];
 
 export const PLANT_COMMUNITY_CRITERIA = [
-  'rangereadiness', 'stubbleheight', 'shrubuse',
+  'rangereadiness',
+  'stubbleheight',
+  'shrubuse',
 ];
 
 export const AMENDMENT_TYPE = {

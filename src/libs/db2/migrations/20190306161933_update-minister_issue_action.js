@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -25,7 +24,7 @@
 
 const table = 'minister_issue_action';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.table(table, async (t) => {
     t.integer('no_graze_start_day');
     t.integer('no_graze_start_month');
@@ -33,7 +32,7 @@ exports.up = async knex =>
     t.integer('no_graze_end_month');
   });
 
-exports.down = knex =>
+exports.down = (knex) =>
   knex.schema.table(table, async (t) => {
     t.dropColumn('no_graze_start_day');
     t.dropColumn('no_graze_start_month');

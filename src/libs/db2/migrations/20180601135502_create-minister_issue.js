@@ -1,4 +1,3 @@
-
 //
 // MyRA
 //
@@ -23,19 +22,25 @@
 
 const table = 'minister_issue';
 
-exports.up = async knex =>
+exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
     t.integer('plan_id').notNull();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
-    t.integer('issue_type_id').notNull().references('ref_minister_issue_type.id');
+    t.integer('issue_type_id')
+      .notNull()
+      .references('ref_minister_issue_type.id');
 
     t.text('detail');
     t.text('objective');
     t.boolean('identified').notNull().defaultTo(false);
-    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at')
+      .notNull()
+      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
@@ -45,5 +50,4 @@ exports.up = async knex =>
     await knex.schema.raw(query);
   });
 
-exports.down = knex =>
-  knex.schema.dropTable(table);
+exports.down = (knex) => knex.schema.dropTable(table);

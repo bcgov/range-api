@@ -53,7 +53,7 @@ exports.seed = async (knex) => {
       active: true,
     },
     {
-      name: 'Nuttall\'s salt grass',
+      name: "Nuttall's salt grass",
       active: true,
     },
     {

@@ -1,4 +1,3 @@
-
 exports.up = async (knex) => {
   await knex.raw(`
   drop view if exists plan_snapshot_summary; 
@@ -108,12 +107,11 @@ from
   left join privacy_versions on privacy_versions.id = all_snapshots.id
   join plan p on p.id = all_snapshots.plan_id
 
-);`)
-  
+);`);
 };
 
 exports.down = async (knex) => {
-await knex.raw(`
+  await knex.raw(`
   drop view if exists plan_snapshot_summary; 
   create view plan_snapshot_summary as (
 with all_snapshots as (
@@ -203,6 +201,5 @@ from
   join plan p on p.id = all_snapshots.plan_id
   );
 
-`)
-  
+`);
 };

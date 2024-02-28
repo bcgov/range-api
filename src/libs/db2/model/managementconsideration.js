@@ -7,7 +7,11 @@ export default class ManagementConsideration extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (ManagementConsideration.fields.indexOf(`${ManagementConsideration.table}.${key}`) > -1) {
+      if (
+        ManagementConsideration.fields.indexOf(
+          `${ManagementConsideration.table}.${key}`,
+        ) > -1
+      ) {
         obj[key] = data[key];
       }
     });
@@ -15,14 +19,23 @@ export default class ManagementConsideration extends Model {
     super(obj, db);
 
     this.considerationType = data.consideration_type_id
-      ? new ManagementConsiderationType(ManagementConsiderationType.extract(data))
+      ? new ManagementConsiderationType(
+          ManagementConsiderationType.extract(data),
+        )
       : null;
   }
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'detail', 'url', 'consideration_type_id', 'plan_id', 'canonical_id', 'created_at']
-      .map(field => `${this.table}.${field}`);
+    return [
+      'id',
+      'detail',
+      'url',
+      'consideration_type_id',
+      'plan_id',
+      'canonical_id',
+      'created_at',
+    ].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -32,18 +45,23 @@ export default class ManagementConsideration extends Model {
   static async findWithType(db, where) {
     const myFields = [
       ...ManagementConsideration.fields,
-      ...ManagementConsiderationType.fields.map(f => `${f} AS ${f.replace('.', '_')}`),
+      ...ManagementConsiderationType.fields.map(
+        (f) => `${f} AS ${f.replace('.', '_')}`,
+      ),
     ];
 
     try {
       const results = await db
         .select(myFields)
         .from(ManagementConsideration.table)
-        .leftJoin('ref_management_consideration_type', { 'management_consideration.consideration_type_id': 'ref_management_consideration_type.id' })
+        .leftJoin('ref_management_consideration_type', {
+          'management_consideration.consideration_type_id':
+            'ref_management_consideration_type.id',
+        })
         .where(where)
         .orderBy('management_consideration.created_at', 'asc');
 
-      return results.map(row => new ManagementConsideration(row, db));
+      return results.map((row) => new ManagementConsideration(row, db));
     } catch (error) {
       throw error;
     }

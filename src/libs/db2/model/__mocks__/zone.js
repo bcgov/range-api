@@ -27,7 +27,10 @@ import Model from '../model';
 
 export default class Zone extends Model {
   static async findWithDistrictUser(db, where) {
-    return [{ id: 1, data: 'Lao is here' }, { id: 2, data: 'Lao is good' }];
+    return [
+      { id: 1, data: 'Lao is here' },
+      { id: 2, data: 'Lao is good' },
+    ];
   }
 
   static async searchForTerm(db, term) {
@@ -41,6 +44,9 @@ export default class Zone extends Model {
     assert(where);
     assert(Object.keys(where).length > 0);
 
-    return [{ id: 1, data: 'Lao is here' }, { id: 2, data: 'Lao is good' }];
+    return [
+      { id: 1, data: 'Lao is here' },
+      { id: 2, data: 'Lao is good' },
+    ];
   }
 }

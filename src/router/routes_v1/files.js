@@ -10,10 +10,7 @@ const cleanProductionURL = (publicUrl) => {
 };
 
 const dm = new DataManager();
-const {
-  db,
-  PlanFile,
-} = dm;
+const { db, PlanFile } = dm;
 
 const endPoint = process.env.MINIO_ENDPOINT;
 const publicEndPoint = process.env.MINIO_PUBLIC_ENDPOINT;
@@ -53,64 +50,85 @@ const client = new Minio.Client({
 
 const router = new Router();
 
-router.get('/upload-url', asyncMiddleware(async (req, res) => {
-  if (!req.query.name) {
-    throw errorWithCode('You must provide a filename via the `name` parameter', 400);
-  }
+router.get(
+  '/upload-url',
+  asyncMiddleware(async (req, res) => {
+    if (!req.query.name) {
+      throw errorWithCode(
+        'You must provide a filename via the `name` parameter',
+        400,
+      );
+    }
 
-  const url = await client.presignedPutObject(bucket, req.query.name);
+    const url = await client.presignedPutObject(bucket, req.query.name);
 
-  const publicUrl = publicEndPoint
-    ? url.replace(endPoint, publicEndPoint)
-    : url;
+    const publicUrl = publicEndPoint
+      ? url.replace(endPoint, publicEndPoint)
+      : url;
 
-  res.json({
-    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
-  });
-}));
+    res.json({
+      url:
+        process.env.NODE_ENV === 'production'
+          ? cleanProductionURL(publicUrl)
+          : publicUrl,
+    });
+  }),
+);
 
-router.get('/download-url', asyncMiddleware(async (req, res) => {
-  const { user } = req;
+router.get(
+  '/download-url',
+  asyncMiddleware(async (req, res) => {
+    const { user } = req;
 
-  if (!req.query.id) {
-    throw errorWithCode('You must provide the file id via the `id` parameter', 400);
-  }
+    if (!req.query.id) {
+      throw errorWithCode(
+        'You must provide the file id via the `id` parameter',
+        400,
+      );
+    }
 
-  const planFile = await PlanFile.findById(db, Number(req.query.id));
+    const planFile = await PlanFile.findById(db, Number(req.query.id));
 
+    if (!planFile) {
+      throw errorWithCode('File does not exist', 404);
+    }
 
-  if (!planFile) {
-    throw errorWithCode('File does not exist', 404);
-  }
+    const { access } = planFile;
 
-  const { access } = planFile;
-
-  switch (access) {
-    case 'staff_only':
-      if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
+    switch (access) {
+      case 'staff_only':
+        if (
+          !user.isRangeOfficer() &&
+          !user.isAdministrator() &&
+          !user.isDecisionMaker()
+        ) {
+          throw errorWithCode('Unauthorized', 403);
+        }
+        break;
+      case 'user_only':
+        if (user.id !== planFile.userId) {
+          throw errorWithCode('Unauthorized', 403);
+        }
+        break;
+      case 'everyone':
+        break;
+      default:
         throw errorWithCode('Unauthorized', 403);
-      }
-      break;
-    case 'user_only':
-      if (user.id !== planFile.userId) {
-        throw errorWithCode('Unauthorized', 403);
-      }
-      break;
-    case 'everyone':
-      break;
-    default:
-      throw errorWithCode('Unauthorized', 403);
-  }
+    }
 
-  const url = await client.presignedGetObject(bucket, planFile.name);
+    const url = await client.presignedGetObject(bucket, planFile.name);
 
-  const publicUrl = publicEndPoint
-    ? url.replace(endPoint, publicEndPoint)
-    : url;
+    const publicUrl = publicEndPoint
+      ? url.replace(endPoint, publicEndPoint)
+      : url;
 
-  res.json({
-    url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
-  });
-}));
+    res.json({
+      url:
+        process.env.NODE_ENV === 'production'
+          ? cleanProductionURL(publicUrl)
+          : publicUrl,
+    });
+  }),
+);
 
 export default router;

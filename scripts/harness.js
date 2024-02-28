@@ -81,37 +81,40 @@ const applicationZones = async () => {
     const type = await AgreementType.findOne({
       where: {
         code: 'E02',
-      }
+      },
     });
 
     const status = await AgreementStatus.findOne({
       where: {
         code: 'N',
-      }
+      },
     });
 
-    const ag1 = await Agreement.build({
-      agreementId: 'RAN123475',
-      rangeName: 'Big Fat Range',
-      agreementStartDate: new Date(),
-      agreementEndDate: (new Date()).setDate((new Date()).getDate() + 25*365),
-      zone_id: zone.id,
-      // zone,
-      // agreementType: type,
-      agreement_type_id: type.id,
-      status_id: status.id,
-    }, {
-      // include: [{
-      //   association: Zone,
-      // }]
-    });
+    const ag1 = await Agreement.build(
+      {
+        agreementId: 'RAN123475',
+        rangeName: 'Big Fat Range',
+        agreementStartDate: new Date(),
+        agreementEndDate: new Date().setDate(new Date().getDate() + 25 * 365),
+        zone_id: zone.id,
+        // zone,
+        // agreementType: type,
+        agreement_type_id: type.id,
+        status_id: status.id,
+      },
+      {
+        // include: [{
+        //   association: Zone,
+        // }]
+      },
+    );
 
     // await ag1.setZone(zone);
     // await ag1.setAgreementType(type);
     // await ag1.setStatus(status);
 
     await ag1.save();
-    
+
     // return;
     // await zone.addAgreement(ag1);
     // await zone.save();
@@ -120,12 +123,18 @@ const applicationZones = async () => {
       where: {
         id: ag1.id,
       },
-      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
+      include: [
+        { model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] } },
+      ],
     });
 
     console.log('applicationZones Report');
-    console.log(`Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`);
-    console.log(`Created Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`);
+    console.log(
+      `Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`,
+    );
+    console.log(
+      `Created Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`,
+    );
     console.log(`Fetched Agreement ID = ${ag2.id}, zone = ${ag2.zone.code}`);
   } catch (err) {
     console.log(err);
@@ -145,21 +154,29 @@ const changeApplicationZones = async () => {
       where: {
         id: 1,
       },
-      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
+      include: [
+        { model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] } },
+      ],
     });
 
     console.log('applicationZones Report');
-    console.log(`Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`);
-    console.log(`Fetched Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`);
+    console.log(
+      `Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`,
+    );
+    console.log(
+      `Fetched Agreement ID = ${ag1.id}, zone = ${typeof ag1.zone === 'undefined' ? 'NONE' : ag1.zone.code}`,
+    );
 
     await ag1.setZone(zone);
     await ag1.save();
-    
+
     const ag2 = await Agreement.findOne({
       where: {
         id: ag1.id,
       },
-      include: [{ model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] }}],
+      include: [
+        { model: Zone, attributes: { exclude: ['zone_id', 'extension_id'] } },
+      ],
     });
 
     console.log(`Updated Agreement ID = ${ag2.id}, zone = ${ag2.zone.code}`);
@@ -177,7 +194,6 @@ const districtZone = async () => {
       include: [District],
     });
 
-
     const district = await District.findOne({
       where: {
         code: zone.district.code,
@@ -186,8 +202,12 @@ const districtZone = async () => {
     });
 
     console.log('districtZone Report');
-    console.log(`Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`);
-    console.log(`Fetched District code = ${district.code}, zone count = ${district.zones.length}`);
+    console.log(
+      `Fetched Zone code = ${zone.code}, district code = ${zone.district.code}`,
+    );
+    console.log(
+      `Fetched District code = ${district.code}, zone count = ${district.zones.length}`,
+    );
   } catch (error) {
     console.log(error);
   }
@@ -224,13 +244,14 @@ const agreementLivestockIdentifier1 = async () => {
     });
 
     console.log('agreementLivestockIdentifier1 Report');
-    console.log(`Agreement ID = ${ag2.id}, Livestock Identifiers count = ${ag2.livestockIdentifiers.length}`);
+    console.log(
+      `Agreement ID = ${ag2.id}, Livestock Identifiers count = ${ag2.livestockIdentifiers.length}`,
+    );
     console.log('Done');
   } catch (error) {
     console.log(error);
   }
 };
-
 
 // not working.
 const agreementLivestockIdentifier2 = async () => {
@@ -243,17 +264,22 @@ const agreementLivestockIdentifier2 = async () => {
 
     await lid1.save();
 
-    const ag1 = await Agreement.create({
-      ran: 'RAN888',
-      type: 'E02',
-      name: 'My Amazing Other Farm',
-      identifier: lid1,
-    }, {
-      include: [{
-        model: Identifier,
-        as: 'livestockIdentifiers',
-      }],
-    });
+    const ag1 = await Agreement.create(
+      {
+        ran: 'RAN888',
+        type: 'E02',
+        name: 'My Amazing Other Farm',
+        identifier: lid1,
+      },
+      {
+        include: [
+          {
+            model: Identifier,
+            as: 'livestockIdentifiers',
+          },
+        ],
+      },
+    );
 
     await ag1.save();
 
@@ -261,14 +287,18 @@ const agreementLivestockIdentifier2 = async () => {
       where: {
         id: ag1.id,
       },
-      include: [{
-        model: Identifier,
-        as: 'livestockIdentifiers',
-      }],
+      include: [
+        {
+          model: Identifier,
+          as: 'livestockIdentifiers',
+        },
+      ],
     });
 
     console.log('agreementLivestockIdentifier2 Report');
-    console.log(`Agreement ID = ${ag2.id}, Livestock Identifiers count = ${ag2.livestockIdentifiers.length}`);
+    console.log(
+      `Agreement ID = ${ag2.id}, Livestock Identifiers count = ${ag2.livestockIdentifiers.length}`,
+    );
     console.log('Done');
   } catch (error) {
     console.log(error);
@@ -309,7 +339,7 @@ const agreementUsage = async () => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const agreementExtension = async () => {
   try {
@@ -335,12 +365,14 @@ const agreementExtension = async () => {
     });
 
     console.log('agreementExtension Report');
-    console.log(`Agreement ID = ${ag2.id}, has extension = ${ag2.extension ? 'YES' : 'NO'}`);
+    console.log(
+      `Agreement ID = ${ag2.id}, has extension = ${ag2.extension ? 'YES' : 'NO'}`,
+    );
     console.log('Done');
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 // allowableAmu: {
 //   field: 'allowable_amu',
@@ -372,25 +404,31 @@ const pastureScheduel = async () => {
       pdlPercent: 0.12,
     });
 
-    const ps1 = await PastureSchedule.create({
-      year: '2018',
-      description: 'Foo Bar',
-      pastureScheduleEntries: [{
-        startDate: new Date(),
-        endDate,
-        graceDays: 5,
-        livestockCount: 100,
-        livestockType: LIVESTOCK_TYPE.GOAT,
-      }, {
-        startDate: new Date(),
-        endDate,
-        graceDays: 10,
-        livestockCount: 10,
-        livestockType: LIVESTOCK_TYPE.COW,
-      }],
-    }, {
-      include: [PastureScheduleEntry]
-    });
+    const ps1 = await PastureSchedule.create(
+      {
+        year: '2018',
+        description: 'Foo Bar',
+        pastureScheduleEntries: [
+          {
+            startDate: new Date(),
+            endDate,
+            graceDays: 5,
+            livestockCount: 100,
+            livestockType: LIVESTOCK_TYPE.GOAT,
+          },
+          {
+            startDate: new Date(),
+            endDate,
+            graceDays: 10,
+            livestockCount: 10,
+            livestockType: LIVESTOCK_TYPE.COW,
+          },
+        ],
+      },
+      {
+        include: [PastureScheduleEntry],
+      },
+    );
 
     await p1.addPastureSchedule(ps1);
     await p1.save();
@@ -399,20 +437,26 @@ const pastureScheduel = async () => {
       where: {
         id: p1.id,
       },
-      include: [{
-        model: PastureSchedule,
-        include: [PastureScheduleEntry]
-      }],
+      include: [
+        {
+          model: PastureSchedule,
+          include: [PastureScheduleEntry],
+        },
+      ],
     });
 
     console.log('pastureScheduel Report');
-    console.log(`Pasture ID = ${p2.id}, Schedule count = ${p2.pastureSchedules.length}`);
-    console.log(`Schedule entry count = ${p2.pastureSchedules[0].pastureScheduleEntries.length}`);
+    console.log(
+      `Pasture ID = ${p2.id}, Schedule count = ${p2.pastureSchedules.length}`,
+    );
+    console.log(
+      `Schedule entry count = ${p2.pastureSchedules[0].pastureScheduleEntries.length}`,
+    );
     console.log('Done');
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const getZonesByDistrictId = async () => {
   try {
@@ -420,105 +464,101 @@ const getZonesByDistrictId = async () => {
     const zones = await Zone.findAll({
       raw: true,
       where: {
-        district_id: districtId
-      }
+        district_id: districtId,
+      },
     });
     console.log(zones);
-
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const getAllAgreements = async () => {
   try {
     const agreements = await Agreement.findAll({
-      raw: true
+      raw: true,
     });
     console.log(agreements);
-
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const getAllDistricts = async () => {
   try {
     const districts = await District.findAll({
-      raw: true
+      raw: true,
     });
     console.log(districts);
-
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const checkAllTablesForColumnErrors = async () => {
   try {
     const agreements = await Agreement.findAll();
-    console.log("Agreement passed");
+    console.log('Agreement passed');
 
     const districts = await District.findAll();
-    console.log("District passed");
+    console.log('District passed');
 
     const extensions = await Extension.findAll();
-    console.log("Extension passed");
-    
+    console.log('Extension passed');
+
     const livestockIdentifiers = await LivestockIdentifier.findAll();
-    console.log("LivestockIdentifier passed");
-    
+    console.log('LivestockIdentifier passed');
+
     const monitoringCriteria = await MonitoringCriteria.findAll();
-    console.log("MonitoringCriteria passed");
-    
+    console.log('MonitoringCriteria passed');
+
     const monitoringSites = await MonitoringSite.findAll();
-    console.log("MonitoringSite passed");
-    
+    console.log('MonitoringSite passed');
+
     const pastures = await Pasture.findAll();
-    console.log("Pasture passed");
-    
+    console.log('Pasture passed');
+
     const pastureSchedules = await PastureSchedule.findAll();
-    console.log("PastureSchedule passed");
-    
+    console.log('PastureSchedule passed');
+
     const pastureScheduleEntries = await PastureScheduleEntry.findAll();
-    console.log("PastureScheduleEntry passed");
-    
+    console.log('PastureScheduleEntry passed');
+
     const plantCommunities = await PlantCommunity.findAll();
-    console.log("PlantCommunity passed");
-    
+    console.log('PlantCommunity passed');
+
     const plantCommunityActions = await PlantCommunityAction.findAll();
-    console.log("PlantCommunityAction passed");
-    
+    console.log('PlantCommunityAction passed');
+
     const rangeReadinessCritera = await RangeReadinessCriteria.findAll();
-    console.log("RangeReadinessCriteria passed");
-    
+    console.log('RangeReadinessCriteria passed');
+
     const readiness = await Readiness.findAll();
-    console.log("Readiness passed");
-    
+    console.log('Readiness passed');
+
     const reference = await Reference.findAll();
-    console.log("Reference passed");
-    
+    console.log('Reference passed');
+
     const shrubUseCriteria = await ShrubUseCriteria.findAll();
-    console.log("ShrubUseCriteria passed");
-    
+    console.log('ShrubUseCriteria passed');
+
     const species = await SpeciesReference.findAll();
-    console.log("Species passed");
-    
+    console.log('Species passed');
+
     const stubbleHeightCriteria = await StubbleHeightCriteria.findAll();
-    console.log("StubbleHeightCriteria passed");
-    
+    console.log('StubbleHeightCriteria passed');
+
     const usage = await Usage.findAll();
-    console.log("Usage passed");
-    
+    console.log('Usage passed');
+
     const zone = await Zone.findAll();
-    console.log("Zone passed");
+    console.log('Zone passed');
 
-    console.log("All tables passed");
-
+    console.log('All tables passed');
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 //
 // MAIN
@@ -527,13 +567,13 @@ const checkAllTablesForColumnErrors = async () => {
 const main = async () => {
   // await sync(false)
   // getAgreementWithZone();
-  
+
   // checkAllTablesForColumnErrors();
-  
+
   // getZonesByDistrictId();
   // getAllAgreements()
   // getAllDistricts()
-  
+
   // districtZone();
   // await applicationZones();
   await changeApplicationZones();
@@ -541,7 +581,7 @@ const main = async () => {
   // agreementUsage();
   // agreementExtension();
   // pastureScheduel();
-  
+
   // agreementLivestockIdentifier2(); // not working
 
   process.exit(0);

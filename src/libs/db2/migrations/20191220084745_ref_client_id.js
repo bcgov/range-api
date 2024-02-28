@@ -1,4 +1,3 @@
-
 exports.up = async (knex) => {
   await knex.raw(`
     ALTER TABLE ref_client ADD COLUMN id SERIAL;
@@ -66,25 +65,34 @@ exports.up = async (knex) => {
     } = client;
 
     if (pcIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE plan_confirmation
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.id, pcIds]);
+      `,
+        [client.id, pcIds],
+      );
     }
     if (caIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE client_agreement
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.id, caIds]);
+      `,
+        [client.id, caIds],
+      );
     }
     if (uaIds) {
-      await knex.raw(`
+      await knex.raw(
+        `
         UPDATE user_account
         SET client_id = ? 
         WHERE id = ANY (?);
-      `, [client.id, uaIds]);
+      `,
+        [client.id, uaIds],
+      );
     }
   });
 
