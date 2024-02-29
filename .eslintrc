@@ -8,7 +8,7 @@
   },
   "plugins": [],
   "parser": "babel-eslint",
-"extends": [
+  "extends": [
     "eslint:recommended",
     "prettier",
     "plugin:import/recommended"

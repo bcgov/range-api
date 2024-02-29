@@ -66,7 +66,9 @@
     "gulp-babel": "^8.0.0",
     "gulp-clean": "^0.4.0",
     "gulp-sourcemaps": "^2.6.5",
+    "husky": "^9.0.11",
     "jest": "^24.5.0",
+    "lint-staged": "^15.2.2",
     "nodemon": "^1.18.3",
     "prettier": "^3.2.5",
     "supertest": "^3.4.2"
@@ -85,7 +87,8 @@
     "import": "node build/scripts/import.js",
     "plan_extension": "node build/scripts/plan_extension.js",
     "initialize_docker": "npm run build && ./node_modules/.bin/knex migrate:latest && ./node_modules/.bin/knex seed:run && ./node_modules/.bin/babel-node scripts/import.js true",
-    "initialize": "npm rum build && npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true"
+    "initialize": "npm rum build && npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -121,5 +124,9 @@
   },
   "author": "Jason C. Leach <jason.leach@fullboar.ca>",
   "license": "Apache-2.0",
-  "homepage": "https://github.com:bcgov/range-api#readme"
+  "homepage": "https://github.com:bcgov/range-api#readme",
+  "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "*.{js,css,md}": "prettier --write"
+  }
 }
