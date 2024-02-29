@@ -8,11 +8,9 @@
   },
   "plugins": [],
   "parser": "babel-eslint",
-  "extends": "airbnb-base",
-  "rules": {
-    "strict": 0,
-    "linebreak-style": 0,
-    "implicit-arrow-linebreak": 0,
-    "object-curly-newline": 0
-  }
+"extends": [
+    "eslint:recommended",
+    "prettier",
+    "plugin:import/recommended"
+  ]
 }
