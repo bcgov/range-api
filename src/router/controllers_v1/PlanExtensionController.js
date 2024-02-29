@@ -11,7 +11,6 @@ import MinisterIssue from '../../libs/db2/model/ministerissue';
 import MinisterIssueAction from '../../libs/db2/model/ministerissueaction';
 import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture';
 import Pasture from '../../libs/db2/model/pasture';
-import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
 import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import { Mailer } from '../../libs/mailer';
 import Agreement from '../../libs/db2/model/agreement';
@@ -36,14 +35,13 @@ export default class PlanExtensionController {
         plan_id: planId,
         user_id: user.id,
       });
-      if (!extensionRequest)
+      if (!extensionRequest) {
         throw errorWithCode("Extension request doesn't exist", 400);
-      const planEntry = (
-        await Plan.findWithStatusExtension(trx, { 'plan.id': planId }, [
-          'id',
-          'desc',
-        ])
-      )[0];
+      }
+      const planEntry = await PlanExtensionController.getValidPlanEntry(
+        trx,
+        planId,
+      );
       if (
         planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
       ) {
@@ -64,13 +62,18 @@ export default class PlanExtensionController {
           forest_file_id: planEntry.agreementId,
         })
       )[0];
-      await PlanExtensionController.sendPlanReadyForExtensionEmail(
-        trx,
-        [agreement.zone.user.email],
-        {
-          '{agreementId}': planEntry.agreementId,
-        },
-      );
+      if (
+        planEntry.extensionReceivedVotes ===
+        planEntry.extensionRequiredVotes + 1
+      ) {
+        await PlanExtensionController.sendPlanPendingExtensionEmail(
+          trx,
+          [agreement.zone.user.email],
+          {
+            '{agreementId}': planEntry.agreementId,
+          },
+        );
+      }
       trx.commit();
       console.log('Returning....');
       return res.status(200).end();
@@ -96,26 +99,57 @@ export default class PlanExtensionController {
       plan_id: planId,
       user_id: user.id,
     });
-    if (!extensionRequest)
+    if (!extensionRequest) {
       throw errorWithCode("Extension request doesn't exist", 400);
-    const planEntry = await Plan.findOne(db, { id: planId });
-    if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
-      throw errorWithCode('All requests already accepted', 400);
     }
-    await PlanExtensionRequests.update(
-      db,
-      { plan_id: planId, user_id: user.id },
-      { requestedExtension: false },
-    );
-    await Plan.update(
-      db,
-      { id: planId },
-      {
-        extension_received_votes: planEntry.extensionReceivedVotes + 1,
-        extnesion_status: 2,
-      },
-    );
-    return res.status(200).end();
+    const trx = await db.transaction();
+    try {
+      const planEntry = await PlanExtensionController.getValidPlanEntry(
+        trx,
+        planId,
+      );
+      if (
+        planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
+      ) {
+        throw errorWithCode('All requests already accepted', 400);
+      }
+      await PlanExtensionRequests.update(
+        db,
+        { plan_id: planId, user_id: user.id },
+        { requestedExtension: false },
+      );
+      await Plan.update(
+        db,
+        { id: planId },
+        {
+          extension_received_votes: planEntry.extensionReceivedVotes + 1,
+          extension_status: 2,
+        },
+      );
+      trx.commit();
+      return res.status(200).end();
+    } catch (error) {
+      trx.rollback();
+      console.log(error.stack);
+      throw errorWithCode(error, 500);
+    }
+  }
+
+  static async getValidPlanEntry(trx, planId) {
+    const planEntry = (
+      await Plan.findWithStatusExtension(
+        trx,
+        { 'plan.id': planId, extension_status: 1 },
+        ['id', 'desc'],
+      )
+    )[0];
+    if (!planEntry || planEntry.extensionStatus != 1) {
+      throw errorWithCode(
+        'Invalid request. Plan may be already extended.',
+        400,
+      );
+    }
+    return planEntry;
   }
 
   static removeCommonFields(row) {
@@ -154,7 +188,7 @@ export default class PlanExtensionController {
       });
       newAndOldPastureIds.push({
         newPastureId: newPasture.id,
-        oldPastureId: oldPastureId,
+        oldPastureId,
       });
     }
     const grazingSchedules = await GrazingSchedule.find(trx, {
@@ -192,7 +226,7 @@ export default class PlanExtensionController {
       });
       newAndOldMinisterIssueIds.push({
         newMinisterIssueId: newMinisterIssue.id,
-        oldMinisterIssueId: oldMinisterIssueId,
+        oldMinisterIssueId,
       });
       const ministerIssueActions = await MinisterIssueAction.find(trx, {
         issue_id: ministerIssue.id,
@@ -246,6 +280,40 @@ export default class PlanExtensionController {
   }
 
   /**
+   * request extension
+   * @param {*} req : express req object
+   * @param {*} res : express resp object
+   */
+  static async requestExtension(req, res) {
+    const { params, user } = req;
+    const { planId } = params;
+
+    checkRequiredFields(['planId'], 'params', req);
+    if (!user.isRangeOfficer() && !user.isAdministrator()) {
+      throw errorWithCode('Unauthorized', 401);
+    }
+    const planRow = await Plan.findOne(db, { id: planId, extension_status: 1 });
+    if (!planRow) {
+      throw errorWithCode('Invalid request. Could not find the plan.', 400);
+    }
+    if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
+      throw errorWithCode('Need positive votes from all AH', 400);
+    }
+    if (planRow.extensionOf !== null) {
+      throw errorWithCode('Plan is an extension', 400);
+    }
+    const trx = await db.transaction();
+    try {
+      await Plan.update(trx, { id: planId }, { extensionStatus: 3 });
+      trx.commit();
+      return res.status(200).end();
+    } catch (error) {
+      trx.rollback();
+      throw errorWithCode(error, 500);
+    }
+  }
+
+  /**
    * extend plan
    * @param {*} req : express req object
    * @param {*} res : express resp object
@@ -253,12 +321,17 @@ export default class PlanExtensionController {
   static async extendPlan(req, res) {
     const { params, user } = req;
     const { planId } = params;
-
+    const { endDate = '' } = req.query;
+    if (Number.isNaN(Date.parse(endDate))) {
+      throw errorWithCode('Invalid end date', 400);
+    }
     checkRequiredFields(['planId'], 'params', req);
-
-    const planRow = await Plan.findOne(db, { id: planId });
-    if (!(user.isRangeOfficer() && user.isAdministrator())) {
+    if (!user.isDecisionMaker() && !user.isAdministrator()) {
       throw errorWithCode('Unauthorized', 401);
+    }
+    const planRow = await Plan.findOne(db, { id: planId, extension_status: 3 });
+    if (!planRow) {
+      throw errorWithCode('Invalid request. Could not find the plan.', 400);
     }
     if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
       throw errorWithCode('Need positive votes from all AH', 400);
@@ -266,47 +339,21 @@ export default class PlanExtensionController {
     if (planRow.extensionOf !== null) {
       throw errorWithCode('Cannot extend extension plan', 400);
     }
+    if (planRow.planEndDate.getTime() >= Date.parse(endDate)) {
+      throw errorWithCode(
+        'End date must be in future of current end date',
+        400,
+      );
+    }
     const trx = await db.transaction();
     try {
       await Plan.update(
         trx,
         { id: planId },
-        { extensionStatus: 3, statusId: 6 },
+        { extensionStatus: 4, statusId: 6, planEndDate: endDate },
       );
-      await PlanStatusHistory.create(trx, {
-        fromPlanStatusId: planRow.statusId,
-        toPlanStatusId: 6,
-        note: ' ',
-        planId: planId,
-        userId: user.id,
-      });
-      const futuredate = planRow.planEndDate;
-      futuredate.setFullYear(futuredate.getFullYear() + 5);
-      const newPlan = await PlanExtensionController.duplicatePlan(
-        trx,
-        planRow,
-        {
-          statusId: 6,
-          amendmentTypeId: null,
-          extensionStatus: 4,
-          planEndDate: futuredate,
-        },
-      );
-      await Plan.update(trx, { id: newPlan.id }, { statusId: 12 });
-      await PlanStatusHistory.create(trx, {
-        fromPlanStatusId: 6,
-        toPlanStatusId: 12,
-        note: ' ',
-        planId: newPlan.id,
-        userId: user.id,
-      });
-      await Plan.createSnapshot(trx, newPlan.id, user);
-      // sendPlanExtendedEmail(trx, {
-      //   agreementId: newPlan.agreementId,
-      //   planEndDate: newPlan.planEndDate,
-      // });
       trx.commit();
-      return res.status(200).json({ newPlanId: newPlan.id }).end();
+      return res.status(200).json({ planId }).end();
     } catch (error) {
       trx.rollback();
       console.log(error.stack);
@@ -314,9 +361,9 @@ export default class PlanExtensionController {
     }
   }
 
-  static async sendPlanReadyForExtensionEmail(db, emails, parameters) {
+  static async sendPlanPendingExtensionEmail(db, emails, parameters) {
     const template = await EmailTemplate.findOne(db, {
-      name: 'Request Plan Extension Votes',
+      name: 'Plan Pending Extension',
     });
     const mailer = new Mailer();
     await mailer.sendEmail(
