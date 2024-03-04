@@ -14,9 +14,9 @@ exports.up = async (knex) => {
   INSERT INTO roles (description)
   VALUES
     ('Admin'),
-    ('Staff Range Plan Editor'),
+    ('Staff Decision Maker'),
     ('Staff Agrologist'),
-    ('Client Agreement Holder'),
+    ('Range Agreement Holder'),
     ('External Auditor');
   `);
   await knex.raw(`
@@ -49,8 +49,7 @@ exports.up = async (knex) => {
   );`);
   await knex.raw(`
   INSERT INTO role_permissions (role_id, permission_id)
-  VALUES
-    (1, 1),
+  VALUES (1, 1),
     (1, 4),
     (1, 8),
     (1, 9),
@@ -58,7 +57,6 @@ exports.up = async (knex) => {
     (2, 10),
     (3, 2),
     (3, 5),
-    (4, 2),
     (4, 7),
     (5, 1);
   `);

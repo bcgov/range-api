@@ -23,12 +23,12 @@ export default class UserPermissions extends Model {
     return 'role_permissions';
   }
 
-  static async getRolePermissions(db, user) {
+  static async getRolePermissions(db, roleId) {
     const [...result] = await db
     .table('role_permissions')
     .join('permissions', { 'permissions.id': 'role_permissions.permission_id'})
     .where({
-      'role_permissions.role_id': user.roleId,
+      'role_permissions.role_id': roleId,
     });
     
     return result.map(permission => {
