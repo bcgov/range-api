@@ -75,30 +75,31 @@ export default class Plan extends Model {
 
     // primary key *must* be first!
     return [
-      "id",
-      "range_name",
-      "plan_start_date",
-      "plan_end_date",
-      "notes",
-      "alt_business_name",
-      "agreement_id",
-      "status_id",
-      "uploaded",
-      "amendment_type_id",
-      "created_at",
-      "updated_at",
-      "effective_at",
-      "submitted_at",
-      "creator_id",
-      "canonical_id",
-      "is_restored",
-      "conditions",
-      "proposed_conditions",
-      "extension_status",
-      "extension_required_votes",
-      "extension_received_votes",
-      "extension_of",
-      "extension_date",
+      'id',
+      'range_name',
+      'plan_start_date',
+      'plan_end_date',
+      'notes',
+      'alt_business_name',
+      'agreement_id',
+      'status_id',
+      'uploaded',
+      'amendment_type_id',
+      'created_at',
+      'updated_at',
+      'effective_at',
+      'submitted_at',
+      'creator_id',
+      'canonical_id',
+      'is_restored',
+      'conditions',
+      'proposed_conditions',
+      'extension_status',
+      'extension_required_votes',
+      'extension_received_votes',
+      'extension_of',
+      'extension_date',
+      'extension_rejected_by',
     ].map((f) => `${Plan.table}.${f}`);
   }
 
@@ -334,7 +335,7 @@ export default class Plan extends Model {
           });
 
           const actionPromises = plantCommunity.plantCommunityActions.map(
-            async ({ id: actionId, ...action }) => {
+            async ({ ...action }) => {
               const newAction = await PlantCommunityAction.create(db, {
                 ...action,
               });
@@ -483,7 +484,7 @@ export default class Plan extends Model {
     await PlanStatusHistory.remove(db, { plan_id: planId });
 
     const newStatusHistoryPromises = snapshot.planStatusHistory.map(
-      async ({ id: historyId, ...history }) => {
+      async ({ ...history }) => {
         const newHistory = await PlanStatusHistory.create(db, {
           ...history,
         });
@@ -511,7 +512,7 @@ export default class Plan extends Model {
 
     await plan.eagerloadAllOneToMany();
 
-    const { id: oldPlanId, ...planData } = planRow;
+    const { ...planData } = planRow;
     const newPlan = await Plan.create(db, {
       ...planData,
     });
@@ -527,14 +528,14 @@ export default class Plan extends Model {
           });
 
           const plantCommunityPromises = pasture.plantCommunities.map(
-            async ({ id: plantCommunityId, ...plantCommunity }) => {
+            async ({ ...plantCommunity }) => {
               const newPlantCommunity = await PlantCommunity.create(db, {
                 ...plantCommunity,
                 pasture_id: newPasture.id,
               });
 
               const indicatorPlantPromises = plantCommunity.indicatorPlants.map(
-                async ({ id: indicatorPlantId, ...indicatorPlant }) => {
+                async ({ ...indicatorPlant }) => {
                   const newIndicatorPlant = await IndicatorPlant.create(db, {
                     ...indicatorPlant,
                     plant_community_id: newPlantCommunity.id,
@@ -549,14 +550,14 @@ export default class Plan extends Model {
               );
 
               const monitoringAreaPromises = plantCommunity.monitoringAreas.map(
-                async ({ id: monitoringAreaId, ...monitoringArea }) => {
+                async ({ ...monitoringArea }) => {
                   const newMonitoringArea = await MonitoringArea.create(db, {
                     ...monitoringArea,
                     plant_community_id: newPlantCommunity.id,
                   });
 
                   const purposePromises = monitoringArea.purposes.map(
-                    async ({ id: purposeId, ...purpose }) => {
+                    async ({ ...purpose }) => {
                       const newPurpose = await MonitoringAreaPurpose.create(
                         db,
                         {
@@ -583,7 +584,7 @@ export default class Plan extends Model {
               );
 
               const actionPromises = plantCommunity.plantCommunityActions.map(
-                async ({ id: actionId, ...action }) => {
+                async ({ ...action }) => {
                   const newAction = await PlantCommunityAction.create(db, {
                     ...action,
                     plant_community_id: newPlantCommunity.id,
@@ -617,14 +618,14 @@ export default class Plan extends Model {
       const newPastures = await Promise.all(pasturePromises);
 
       const schedulePromises = plan.grazingSchedules.map(
-        async ({ id: scheduleId, ...schedule }) => {
+        async ({ ...schedule }) => {
           const newSchedule = await GrazingSchedule.create(db, {
             ...schedule,
             plan_id: newPlan.id,
           });
 
           const entryPromises = schedule.grazingScheduleEntries.map(
-            async ({ id: entryId, ...entry }) => {
+            async ({ ...entry }) => {
               const pasture = newPastures.find(
                 (p) => p.original.id === entry.pastureId,
               );
@@ -650,7 +651,7 @@ export default class Plan extends Model {
       const newGrazingSchedules = await Promise.all(schedulePromises);
 
       const additionalRequirementPromises = plan.additionalRequirements.map(
-        async ({ id: requirementId, ...requirement }) => {
+        async ({ ...requirement }) => {
           const newRequirement = await AdditionalRequirement.create(db, {
             ...requirement,
             plan_id: newPlan.id,
@@ -665,14 +666,14 @@ export default class Plan extends Model {
       );
 
       const ministerIssuePromises = plan.ministerIssues.map(
-        async ({ id: issueId, ...issue }) => {
+        async ({ ...issue }) => {
           const newIssue = await MinisterIssue.create(db, {
             ...issue,
             plan_id: newPlan.id,
           });
 
           const actionPromises = issue.ministerIssueActions.map(
-            async ({ id: actionId, ...action }) => {
+            async ({ ...action }) => {
               const newAction = await MinisterIssueAction.create(db, {
                 ...action,
                 issue_id: newIssue.id,
@@ -713,7 +714,7 @@ export default class Plan extends Model {
       const newMinisterIssues = await Promise.all(ministerIssuePromises);
 
       const managementConsiderationPromises = plan.managementConsiderations.map(
-        async ({ id: considerationId, ...consideration }) => {
+        async ({ ...consideration }) => {
           const newConsideration = await ManagementConsideration.create(db, {
             ...consideration,
             plan_id: newPlan.id,
@@ -728,7 +729,7 @@ export default class Plan extends Model {
       );
 
       const confirmationPromises = plan.confirmations.map(
-        async ({ id: confirmationId, ...confirmation }) => {
+        async ({ ...confirmation }) => {
           const newConfirmation = await PlanConfirmation.create(db, {
             ...confirmation,
             plan_id: newPlan.id,
@@ -740,7 +741,7 @@ export default class Plan extends Model {
 
       const newConfirmations = await Promise.all(confirmationPromises);
 
-      const { id, ...invasivePlantChecklist } = plan.invasivePlantChecklist;
+      const { ...invasivePlantChecklist } = plan.invasivePlantChecklist;
 
       const newInvasivePlantChecklist = await InvasivePlantChecklist.create(
         db,
@@ -751,7 +752,7 @@ export default class Plan extends Model {
       );
 
       const newStatusHistoryPromises = plan.planStatusHistory.map(
-        async ({ id: historyId, ...history }) => {
+        async ({ ...history }) => {
           const newHistory = await PlanStatusHistory.create(db, {
             ...history,
             plan_id: newPlan.id,

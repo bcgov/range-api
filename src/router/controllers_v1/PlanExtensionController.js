@@ -75,10 +75,8 @@ export default class PlanExtensionController {
         );
       }
       trx.commit();
-      console.log('Returning....');
       return res.status(200).end();
     } catch (error) {
-      console.error(error.stack);
       trx.rollback();
       return res.status(500).end();
     }
@@ -118,19 +116,18 @@ export default class PlanExtensionController {
         { plan_id: planId, user_id: user.id },
         { requestedExtension: false },
       );
-      await Plan.update(
-        db,
-        { id: planId },
-        {
-          extension_received_votes: planEntry.extensionReceivedVotes + 1,
-          extension_status: 2,
-        },
-      );
+      const updatedValues = {
+        extension_status: 2,
+        extension_rejected_by: user.id,
+      };
+      if (user.isAgreementHolder())
+        updatedValues.extension_received_votes =
+          planEntry.extensionReceivedVotes + 1;
+      await Plan.update(db, { id: planId }, updatedValues);
       trx.commit();
       return res.status(200).end();
     } catch (error) {
       trx.rollback();
-      console.log(error.stack);
       throw errorWithCode(error, 500);
     }
   }
@@ -356,7 +353,6 @@ export default class PlanExtensionController {
       return res.status(200).json({ planId }).end();
     } catch (error) {
       trx.rollback();
-      console.log(error.stack);
       throw errorWithCode(error, 500);
     }
   }
