@@ -30,12 +30,12 @@ const main = async () => {
   const trx = await db.transaction();
   try {
     const currentDate = new Date();
-    const sixMonthsLater = new Date();
-    sixMonthsLater.setMonth(currentDate.getMonth() + 6);
+    const oneYearLater = new Date();
+    oneYearLater.setMonth(currentDate.getMonth() + 12);
     const expiringPlans = await Plan.fetchExpiringPlanIds(
       trx,
       currentDate,
-      sixMonthsLater,
+      oneYearLater,
       'plan.id',
     );
     const requiredVotes = {};
