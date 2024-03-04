@@ -133,15 +133,12 @@ export default class PlanController {
       privacyVersion.status_id = statusId;
 
       const filteredFiles = filterFiles(privacyVersion.files, user);
-      return res
-        .status(200)
-        .json({
-          ...privacyVersion,
-          files: filteredFiles,
-          status: plan.status,
-          statusId: plan.statusId,
-        })
-        .end();
+      return {
+        ...privacyVersion,
+        files: filteredFiles,
+        status: plan.status,
+        statusId: plan.statusId,
+      };
     } catch (error) {
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(
