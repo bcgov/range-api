@@ -204,6 +204,7 @@ export default async function initPassport(app) {
           }, {
             roleId: roleIdToAdd, //Defaults to client
           });
+          user.roleId = roleIdToAdd;
 
           permissions = await UserPermissions.getRolePermissions(db, roleIdToAdd);
         }
