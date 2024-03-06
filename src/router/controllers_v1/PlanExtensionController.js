@@ -15,6 +15,7 @@ import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import { Mailer } from '../../libs/mailer';
 import Agreement from '../../libs/db2/model/agreement';
 import EmailTemplate from '../../libs/db2/model/emailtemplate';
+import { PLAN_EXTENSION_STATUS } from '../../constants';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -38,10 +39,7 @@ export default class PlanExtensionController {
       if (!extensionRequest) {
         throw errorWithCode("Extension request doesn't exist", 400);
       }
-      const planEntry = await PlanExtensionController.getValidPlanEntry(
-        trx,
-        planId,
-      );
+      const planEntry = await PlanExtensionController.getPlanEntry(trx, planId);
       if (
         planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
       ) {
@@ -90,62 +88,96 @@ export default class PlanExtensionController {
   static async rejectExtension(req, res) {
     const { params, user } = req;
     const { planId } = params;
-
     checkRequiredFields(['planId'], 'params', req);
-
-    const extensionRequest = await PlanExtensionRequests.findOne(db, {
-      plan_id: planId,
-      user_id: user.id,
-    });
-    if (!extensionRequest) {
-      throw errorWithCode("Extension request doesn't exist", 400);
-    }
+    let updatedValues = {
+      extension_rejected_by: user.id,
+    };
     const trx = await db.transaction();
     try {
-      const planEntry = await PlanExtensionController.getValidPlanEntry(
-        trx,
-        planId,
-      );
-      if (
-        planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
-      ) {
-        throw errorWithCode('All requests already accepted', 400);
-      }
-      await PlanExtensionRequests.update(
-        db,
-        { plan_id: planId, user_id: user.id },
-        { requestedExtension: false },
-      );
-      const updatedValues = {
-        extension_status: 2,
-        extension_rejected_by: user.id,
-      };
-      if (user.isAgreementHolder())
+      const planEntry = await Plan.findOne(trx, { id: planId });
+      if (user.isAgreementHolder()) {
+        const extensionRequest = await PlanExtensionRequests.findOne(db, {
+          plan_id: planId,
+          user_id: user.id,
+        });
+        if (!extensionRequest) {
+          throw errorWithCode("Extension request doesn't exist", 400);
+        }
+        if (
+          !planEntry ||
+          planEntry.extensionStatus != PLAN_EXTENSION_STATUS.AWAITING_VOTES
+        ) {
+          throw errorWithCode(
+            'Invalid request. Plan may be already extended.',
+            400,
+          );
+        }
+        if (
+          planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
+        ) {
+          throw errorWithCode('All requests already accepted', 400);
+        }
+        await PlanExtensionRequests.update(
+          db,
+          { plan_id: planId, user_id: user.id },
+          { requestedExtension: false },
+        );
+        updatedValues.extension_status =
+          PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED;
         updatedValues.extension_received_votes =
           planEntry.extensionReceivedVotes + 1;
-      await Plan.update(db, { id: planId }, updatedValues);
+      }
+      if (
+        (user.isRangeOfficer() ||
+          user.isAdministrator() ||
+          user.isDecisionMaker()) &&
+        planEntry.extensionReceivedVotes !== planEntry.extensionRequiredVotes
+      ) {
+        throw errorWithCode('Pending votes from Agreement Holders', 400);
+      }
+      if (user.isRangeOfficer() || user.isAdministrator()) {
+        if (
+          planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES
+        ) {
+          throw errorWithCode(
+            `Invalid plan status ${planEntry.extensionStatus}`,
+            400,
+          );
+        }
+        updatedValues.extension_status = PLAN_EXTENSION_STATUS.STAFF_REJECTED;
+      }
+      if (user.isDecisionMaker()) {
+        if (
+          planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_EXTENSION
+        ) {
+          throw errorWithCode(
+            `Invalid plan status ${planEntry.extensionStatus}`,
+            400,
+          );
+        }
+        updatedValues.extension_status =
+          PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED;
+      }
+      const response = await Plan.update(db, { id: planId }, updatedValues);
       trx.commit();
-      return res.status(200).end();
+      return res
+        .status(200)
+        .json({ extensionStatus: response.extensionStatus })
+        .end();
     } catch (error) {
       trx.rollback();
       throw errorWithCode(error, 500);
     }
   }
 
-  static async getValidPlanEntry(trx, planId) {
+  static async getPlanEntry(trx, planId, extensionStatus) {
     const planEntry = (
       await Plan.findWithStatusExtension(
         trx,
-        { 'plan.id': planId, extension_status: 1 },
+        { 'plan.id': planId, extension_status: extensionStatus },
         ['id', 'desc'],
       )
     )[0];
-    if (!planEntry || planEntry.extensionStatus != 1) {
-      throw errorWithCode(
-        'Invalid request. Plan may be already extended.',
-        400,
-      );
-    }
     return planEntry;
   }
 
@@ -294,7 +326,10 @@ export default class PlanExtensionController {
       throw errorWithCode('Invalid request. Could not find the plan.', 400);
     }
     if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
-      throw errorWithCode('Need positive votes from all AH', 400);
+      throw errorWithCode(
+        'Need positive votes from all Agreement Holders',
+        400,
+      );
     }
     if (planRow.extensionOf !== null) {
       throw errorWithCode('Plan is an extension', 400);
