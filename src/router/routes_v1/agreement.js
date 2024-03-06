@@ -103,7 +103,7 @@ const agreementCountForUser = async (user) => {
     const zids = zones.map((zone) => zone.id);
     const ids = await Agreement.find(db, { zone_id: zids });
     count = ids.length;
-  } else if (user.isAdministrator()) {
+  } else if (user.isAdministrator() || user.canReadAll()) {
     count = await Agreement.count(db);
   } else if (user.isDecisionMaker()) {
     const districts = await District.find(db, { user_id: user.id });
@@ -374,7 +374,18 @@ router.get(
           ? await agreementCountForUser(req.user)
           : await agreementCountForZones(zones);
 
-      if (user.isAgreementHolder()) {
+      if (user.canReadAll()) {
+        agreements = await getAgreementsForAdmin({
+          undefined,
+          undefined,
+          orderBy,
+          order,
+        });
+        totalItems = agreements.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        agreements = agreements.slice(startIndex, endIndex);
+      } else if (user.isAgreementHolder()) {
         agreements = await getAgreeementsForAH({
           user,
           undefined,

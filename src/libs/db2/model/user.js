@@ -197,7 +197,7 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
     return false;
   }
 
-  if (this.isAdministrator()) {
+  if (this.isAdministrator() || this.canReadAll()) {
     return true;
   }
 
@@ -247,21 +247,33 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
 };
 
 User.prototype.isAdministrator = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
-};
-
-User.prototype.isReadOnly = function() {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.READ_ONLY);
-};
-
-User.prototype.isAgreementHolder = function() {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
-};
-
-User.prototype.isRangeOfficer = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
+  return this.roleId && this.roleId === 1;
 };
 
 User.prototype.isDecisionMaker = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.DECISION_MAKER);
+  return this.roleId && this.roleId === 2;
 };
+
+User.prototype.isRangeOfficer = function () {
+  return this.roleId && this.roleId === 3;
+};
+
+User.prototype.isAgreementHolder = function() {
+  return this.roleId && this.roleId === 4;
+};
+
+User.prototype.isReadOnly = function() {
+  return this.roleId && this.roleId === 5;
+};
+
+User.prototype.canReadAll = function() {
+  return this.permissions && this.permissions.find(p => p.id === 1);
+}
+
+User.prototype.canReadZone = function() {
+  return this.permissions && this.permissions.find(p => p.id === 2);
+}
+
+User.prototype.canReadDistrict = function() {
+  return this.permissions && this.permissions.find(p => p.id === 3);
+}
