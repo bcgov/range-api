@@ -1,4 +1,4 @@
-import { errorWithCode } from '@bcgov/nodejs-common-utils';
+import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import PlanFile from '../../libs/db2/model/PlanFile';
@@ -39,7 +39,7 @@ export default class PlanExtensionController {
       if (!extensionRequest) {
         throw errorWithCode("Extension request doesn't exist", 400);
       }
-      const planEntry = await PlanExtensionController.getPlanEntry(trx, planId);
+      const planEntry = await Plan.findOne(trx, { id: planId });
       if (
         planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
       ) {
@@ -75,6 +75,7 @@ export default class PlanExtensionController {
       trx.commit();
       return res.status(200).end();
     } catch (error) {
+      logger.error(error.stack);
       trx.rollback();
       return res.status(500).end();
     }
@@ -165,6 +166,7 @@ export default class PlanExtensionController {
         .json({ extensionStatus: response.extensionStatus })
         .end();
     } catch (error) {
+      logger.error(error.stack);
       trx.rollback();
       throw errorWithCode(error, 500);
     }
@@ -174,7 +176,7 @@ export default class PlanExtensionController {
     const planEntry = (
       await Plan.findWithStatusExtension(
         trx,
-        { 'plan.id': planId, extension_status: extensionStatus },
+        { 'plan.id': planId, 'plan.extension_status': extensionStatus },
         ['id', 'desc'],
       )
     )[0];
@@ -340,6 +342,7 @@ export default class PlanExtensionController {
       trx.commit();
       return res.status(200).end();
     } catch (error) {
+      logger.error(error.stack);
       trx.rollback();
       throw errorWithCode(error, 500);
     }
@@ -387,6 +390,7 @@ export default class PlanExtensionController {
       trx.commit();
       return res.status(200).json({ planId }).end();
     } catch (error) {
+      logger.error(error.stack);
       trx.rollback();
       throw errorWithCode(error, 500);
     }
