@@ -31,7 +31,8 @@ exports.up = async (knex) => {
     ('Write in my RUPS as client'),
     ('Manage clients as staff'),
     ('Manage email templates as staff'),
-    ('Decision maker as staff');
+    ('Decision maker as staff'),
+    ('Assign users a role');
   `);
   await knex.raw(`
   CREATE TABLE IF NOT EXISTS role_permissions (
@@ -54,6 +55,7 @@ exports.up = async (knex) => {
     (1, 8),
     (1, 9),
     (1, 10),
+    (1, 11),
     (2, 10),
     (3, 2),
     (3, 5),
