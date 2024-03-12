@@ -65,6 +65,7 @@ import UserClientLink from './model/userclientlink';
 import PlanFile from './model/PlanFile';
 import EmailTemplate from './model/emailtemplate';
 import PlanExtensionRequests from './model/planextensionrequests';
+import UserPermissions from './model/userPermissions';
 
 export const connection = knex({
   client: 'pg',
@@ -116,6 +117,7 @@ export default class DataManager {
     this.PlanExtensionRequests = PlanExtensionRequests;
     this.Pasture = Pasture;
     this.User = User;
+    this.Role = UserPermissions;
     this.Usage = Usage;
     this.Zone = Zone;
     this.AmendmentType = AmendmentType;

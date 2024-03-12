@@ -38,4 +38,16 @@ export default class UserPermissions extends Model {
       }
     });
   }
+
+  static async getRoles(db) {
+    const [...result] = await db
+    .table('roles');
+    
+    return result.map(role => {
+      return {
+        id: role.id,
+        description: role.description
+      }
+    });
+  }
 }

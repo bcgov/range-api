@@ -91,7 +91,7 @@ export class UserController {
   }
 
   static async mergeAccounts(req, res) {
-    const { user, params, body } = req;
+    const { params, body } = req;
     const { userId } = params;
     const sourceAccountIds = body.accountIds;
     checkRequiredFields(['userId'], 'params', req);
@@ -136,7 +136,7 @@ export class UserController {
   }
 
   static async addClientLink(req, res) {
-    const { user, params, body } = req;
+    const { params, body } = req;
     const { userId } = params;
     const { clientId } = body;
 
@@ -224,7 +224,7 @@ export class UserController {
   }
 
   static async removeClientLink(req, res) {
-    const { user, params } = req;
+    const { params } = req;
     const { clientNumber, userId } = params;
 
     checkRequiredFields(['clientNumber', 'userId'], 'params', req);
@@ -241,8 +241,28 @@ export class UserController {
     res.status(200).json(result).end();
   }
 
+  static async assignUserRole(req, res) {
+    try {
+      const { body, params } = req;
+      const { userId: userId } = params;
+      const roleId = body.roleId;
+
+      const updated = await User.update(
+        db,
+        { id: userId },
+        {
+          roleId,
+        },
+      );
+
+      res.status(200).json(updated).end();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async show(req, res) {
-    const { user, params } = req;
+    const { params } = req;
     const { userId } = params;
 
     const userToFind = await User.findById(db, userId);
