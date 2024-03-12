@@ -60,7 +60,7 @@
     "babel-preset-airbnb": "^3.0.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-import": "^2.29.1",
     "faker": "^4.1.0",
     "gulp": "^4.0.0",
     "gulp-babel": "^8.0.0",
