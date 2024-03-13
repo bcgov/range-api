@@ -1,34 +1,24 @@
-FROM node:12.16.2
+FROM node:20-alpine AS development
 
-RUN apt-get update
-RUN npm install -g npm
+ENV NODE_ENV development
 
-# Upgrad NPM
-# COPY scripts/update-docker-npm.sh  /home/scripts
-# RUN bash /home/scripts/update-docker-npm.sh
+# Add a work directory
+WORKDIR /app
 
-# Create a non-root user
-RUN groupadd -r nodejs \
-    && useradd -m -r -g nodejs nodejs
+RUN mkdir -p /home/node/app/.npm \
+&& chown -R node:node /home/node/app/.npm
 
-USER nodejs
+ENV npm_config_cache /home/node/app/.npm
+# Cache and Install dependencies
+COPY package.json .
 
-# Create a home for the application
-RUN mkdir -p /home/nodejs/app
-WORKDIR /home/nodejs/app
+RUN npm i
 
-# Install app dependencies
-COPY package.json /home/nodejs/app
-COPY package-lock.json /home/nodejs/app
-RUN npm install
+# Copy app files
+COPY . .
 
-# Bundle app source
-COPY ./ .
+# Expose port
+EXPOSE 8000
 
-# Environment
-COPY .env /home/nodejs/app
-ENV NODE_PATH /home/nodejs/app/src
-
-EXPOSE 8080 9229
-
-CMD ["npm", "run", "dev_docker"]
+# Start the app
+CMD [ "npm", "run", "dev" ]
