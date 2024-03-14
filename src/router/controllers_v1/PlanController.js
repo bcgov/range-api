@@ -157,47 +157,42 @@ export default class PlanController {
     const { agreementId } = body;
     checkRequiredFields(['statusId'], 'body', req);
 
-    try {
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      user,
+      agreementId,
+    );
 
-      const agreement = await Agreement.findById(db, agreementId);
-      if (!agreement) {
-        throw errorWithCode('agreement not found', 404);
-      }
-
-      if (body.id || body.planId) {
-        const plan = await Plan.findById(db, body.id || body.planId);
-        if (plan) {
-          throw errorWithCode('A plan with this ID exists. Use PUT.', 409);
-        }
-      }
-
-      // delete the old plan whose status is 'Staff Draft'
-      const staffDraftStatus = await PlanStatus.findOne(db, {
-        code: 'SD',
-      });
-      await Plan.remove(db, {
-        agreement_id: agreement.id,
-        status_id: staffDraftStatus.id,
-      });
-
-      const plan = await Plan.create(db, {
-        ...body,
-        creator_id: user.id,
-      });
-
-      // create unsiged confirmations for AHs
-      await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
-
-      return res.status(200).json(plan).end();
-    } catch (err) {
-      throw err;
+    const agreement = await Agreement.findById(db, agreementId);
+    if (!agreement) {
+      throw errorWithCode('agreement not found', 404);
     }
+
+    if (Number(body.id) || Number(body.planId)) {
+      const plan = await Plan.findById(db, body.id || body.planId);
+      if (plan) {
+        throw errorWithCode('A plan with this ID exists. Use PUT.', 409);
+      }
+    }
+
+    // delete the old plan whose status is 'Staff Draft'
+    const staffDraftStatus = await PlanStatus.findOne(db, {
+      code: 'SD',
+    });
+    await Plan.remove(db, {
+      agreement_id: agreement.id,
+      status_id: staffDraftStatus.id,
+    });
+    const plan = await Plan.create(db, {
+      ...body,
+      creator_id: user.id,
+    });
+
+    // create unsiged confirmations for AHs
+    await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
+
+    return res.status(200).json(plan).end();
   }
 
   /**
@@ -211,38 +206,33 @@ export default class PlanController {
 
     checkRequiredFields(['planId'], 'params', req);
 
-    try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      user,
+      agreementId,
+    );
 
-      // Don't allow the agreement relation to be updated.
-      delete body.agreementId;
+    // Don't allow the agreement relation to be updated.
+    delete body.agreementId;
 
-      await Plan.update(db, { id: planId }, body);
-      const [plan] = await Plan.findWithStatusExtension(
-        db,
-        { 'plan.id': planId },
-        ['id', 'desc'],
-      );
-      await plan.eagerloadAllOneToMany();
+    await Plan.update(db, { id: planId }, body);
+    const [plan] = await Plan.findWithStatusExtension(
+      db,
+      { 'plan.id': planId },
+      ['id', 'desc'],
+    );
+    await plan.eagerloadAllOneToMany();
 
-      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-        db,
-        { forest_file_id: agreementId },
-      );
-      await agreement.eagerloadAllOneToManyExceptPlan();
-      agreement.transformToV1();
-      plan.agreement = agreement;
+    const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(db, {
+      forest_file_id: agreementId,
+    });
+    await agreement.eagerloadAllOneToManyExceptPlan();
+    agreement.transformToV1();
+    plan.agreement = agreement;
 
-      return res.status(200).json(plan).end();
-    } catch (err) {
-      throw err;
-    }
+    return res.status(200).json(plan).end();
   }
 
   // --
@@ -262,22 +252,18 @@ export default class PlanController {
 
     checkRequiredFields(['planId'], 'params', req);
 
-    try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
-      const requirement = await AdditionalRequirement.create(db, {
-        ...body,
-        plan_id: planId,
-      });
-      return res.status(200).json(requirement).end();
-    } catch (error) {
-      throw error;
-    }
+    const agreementId = await Plan.agreementIdForPlanId(db, planId);
+    await PlanRouteHelper.canUserAccessThisAgreement(
+      db,
+      Agreement,
+      user,
+      agreementId,
+    );
+    const requirement = await AdditionalRequirement.create(db, {
+      ...body,
+      plan_id: planId,
+    });
+    return res.status(200).json(requirement).end();
   }
 
   static async updateAdditionalRequirement(req, res) {

@@ -36,16 +36,12 @@ const router = new Router();
 router.get(
   '/',
   asyncMiddleware(async (req, res) => {
-    try {
-      if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode('Unauthorized', 401);
-      }
-
-      const results = await Client.find(db, {});
-      res.status(200).json(results).end();
-    } catch (err) {
-      throw err;
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 401);
     }
+
+    const results = await Client.find(db, {});
+    res.status(200).json(results).end();
   }),
 );
 
@@ -65,20 +61,16 @@ router.get(
   asyncMiddleware(async (req, res) => {
     const { clientNumber } = req.params;
 
-    try {
-      if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode('Unauthorized', 401);
-      }
-
-      const results = await Client.find(db, { client_number: clientNumber });
-      if (results.length === 0) {
-        res.status(404).json({ error: 'Not found' }).end();
-      }
-
-      res.status(200).json(results.pop()).end();
-    } catch (err) {
-      throw err;
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 401);
     }
+
+    const results = await Client.find(db, { client_number: clientNumber });
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Not found' }).end();
+    }
+
+    res.status(200).json(results.pop()).end();
   }),
 );
 
@@ -90,7 +82,9 @@ router.get(
     if (!req.user) {
       throw errorWithCode('Unauthorized', 401);
     }
-
+    if (!Number(planId)) {
+      throw errorWithCode('Invalid planId', 400);
+    }
     const { agreementId } = await Plan.findOne(db, { id: planId });
 
     await PlanRouteHelper.canUserAccessThisAgreement(
@@ -161,17 +155,13 @@ router.get(
   asyncMiddleware(async (req, res) => {
     const { clientNumber } = req.params;
 
-    try {
-      if (req.user && req.user.isAgreementHolder()) {
-        throw errorWithCode('Unauthorized', 401);
-      }
-
-      const clients = await Client.find(db, { client_number: clientNumber });
-
-      res.status(200).json({ clients }).end();
-    } catch (err) {
-      throw err;
+    if (req.user && req.user.isAgreementHolder()) {
+      throw errorWithCode('Unauthorized', 401);
     }
+
+    const clients = await Client.find(db, { client_number: clientNumber });
+
+    res.status(200).json({ clients }).end();
   }),
 );
 

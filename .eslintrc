@@ -11,7 +11,7 @@
     "requireConfigFile": false
   },
   "plugins": [],
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "extends": [
     "eslint:recommended",
     "prettier",
