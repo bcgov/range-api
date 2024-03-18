@@ -56,6 +56,7 @@ exports.up = async (knex) => {
     (1, 9),
     (1, 10),
     (1, 11),
+    (2, 6),
     (2, 10),
     (3, 2),
     (3, 5),
@@ -72,8 +73,8 @@ exports.up = async (knex) => {
 };
 
 exports.down = async (knex) => {
-  await knex.raw("ALTER TABLE user_account DROP COLUMN role_id");
-  await knex.raw("DROP TABLE role_permissions");
-  await knex.raw("DROP TABLE roles");
-  await knex.raw("DROP TABLE permissions");
+  await knex.raw('ALTER TABLE user_account DROP COLUMN role_id');
+  await knex.raw('DROP TABLE role_permissions');
+  await knex.raw('DROP TABLE roles');
+  await knex.raw('DROP TABLE permissions');
 };
