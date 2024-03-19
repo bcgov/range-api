@@ -29,6 +29,7 @@ import jwksRsa from 'jwks-rsa';
 import config from '../config';
 import DataManager from './db2';
 import { SSO_ROLE_MAP } from '../constants';
+import UserPermissions from './db2/model/userPermissions';
 
 const dm = new DataManager(config);
 const { db, User } = dm;
@@ -174,6 +175,42 @@ export default async function initPassport(app) {
         } else {
           user.roles = basicRoles;
         }
+
+        //Add new permissions based on roles
+        let permissions = [];
+        let roleIdToAdd = 4; //Default Client/RUP agreement holder
+        if (user.roleId) {
+          //Get permissions if available
+          permissions = await UserPermissions.getRolePermissions(db, user.roleId);
+        } else {
+          //set role id based on jwt
+          if (jwtPayload.client_roles && 
+              jwtPayload.client_roles.length !== 0) {
+            if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.ADMINISTRATOR)) {
+              roleIdToAdd = 1; //Admin
+            } else if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.READ_ONLY)) {
+              roleIdToAdd = 5; //Read only external auditor
+            } else if (jwtPayload?.identity_provider === 'idir') {
+              if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.  DECISION_MAKER)) {
+                roleIdToAdd = 2; //Decision maker
+              } else {
+                roleIdToAdd = 3; //Agrologist
+              }
+            }
+          }
+
+          await User.update(db, {
+            id: user.id,
+          }, {
+            roleId: roleIdToAdd, //Defaults to client
+          });
+          user.roleId = roleIdToAdd;
+
+          permissions = await UserPermissions.getRolePermissions(db, roleIdToAdd);
+        }
+
+        //Set permissions
+        user.permissions = permissions;
 
         if (!user.isActive()) {
           return done(

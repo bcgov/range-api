@@ -70,7 +70,8 @@ export default class PlanController {
       const isStaff =
         user.isAdministrator() ||
         user.isRangeOfficer() ||
-        user.isDecisionMaker();
+        user.isDecisionMaker() ||
+        user.canReadAll();
 
       const [privacyVersionRaw] = await PlanSnapshot.findSummary(db, {
         plan_id: planId,

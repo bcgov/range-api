@@ -20,8 +20,8 @@
 
 'use strict';
 
-import { SSO_ROLE_MAP } from '../../../constants';
-import Model from './model';
+import { SSO_ROLE_MAP } from "../../../constants";
+import Model from "./model";
 import UserClientLink from './userclientlink';
 
 export default class User extends Model {
@@ -44,23 +44,25 @@ export default class User extends Model {
       clientNumber: row.client_number,
       phoneNumber: row.phone_number,
       ssoId: row.sso_id,
+      roleId: row.role_id
     };
   }
 
   static get fields() {
     // primary key *must* be first!
     return [
-      'id',
-      'username',
-      'given_name',
-      'family_name',
-      'email',
-      'phone_number',
-      'active',
-      'pia_seen',
-      'last_login_at',
-      'sso_id',
-    ].map((field) => `${this.table}.${field}`);
+      "id",
+      "username",
+      "given_name",
+      "family_name",
+      "email",
+      "phone_number",
+      "active",
+      "pia_seen",
+      "last_login_at",
+      "sso_id",
+      "role_id"
+    ].map(field => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -195,7 +197,7 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
     return false;
   }
 
-  if (this.isAdministrator()) {
+  if (this.isAdministrator() || this.canReadAll()) {
     return true;
   }
 
@@ -245,17 +247,33 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
 };
 
 User.prototype.isAdministrator = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.ADMINISTRATOR);
-};
-
-User.prototype.isAgreementHolder = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.AGREEMENT_HOLDER);
-};
-
-User.prototype.isRangeOfficer = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.RANGE_OFFICER);
+  return this.roleId && this.roleId === 1;
 };
 
 User.prototype.isDecisionMaker = function () {
-  return this.roles && this.roles.includes(SSO_ROLE_MAP.DECISION_MAKER);
+  return this.roleId && this.roleId === 2;
 };
+
+User.prototype.isRangeOfficer = function () {
+  return this.roleId && this.roleId === 3;
+};
+
+User.prototype.isAgreementHolder = function() {
+  return this.roleId && this.roleId === 4;
+};
+
+User.prototype.isReadOnly = function() {
+  return this.roleId && this.roleId === 5;
+};
+
+User.prototype.canReadAll = function() {
+  return this.permissions && this.permissions.find(p => p.id === 1);
+}
+
+User.prototype.canReadZone = function() {
+  return this.permissions && this.permissions.find(p => p.id === 2);
+}
+
+User.prototype.canReadDistrict = function() {
+  return this.permissions && this.permissions.find(p => p.id === 3);
+}

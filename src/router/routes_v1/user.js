@@ -47,4 +47,8 @@ router.delete(
 );
 
 router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
+
+// Assign role to user
+router.post('/:userId?/assignRole', asyncMiddleware(UserController.assignUserRole));
+
 module.exports = router;

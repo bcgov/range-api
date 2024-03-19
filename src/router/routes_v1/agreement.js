@@ -96,15 +96,13 @@ const agreementCountForUser = async (user) => {
   if (user.isAgreementHolder()) {
     const ids = await Agreement.agreementsForClientId(db, user.clientId);
     count = ids.length;
-  } else if (user.isRangeOfficer()) {
+  } else if (user.isRangeOfficer() || user.isAdministrator() || user.canReadAll()) {
     const zones = await Zone.findWithDistrictUser(db, {
       'ref_zone.user_id': user.id,
     });
     const zids = zones.map((zone) => zone.id);
     const ids = await Agreement.find(db, { zone_id: zids });
     count = ids.length;
-  } else if (user.isAdministrator()) {
-    count = await Agreement.count(db);
   } else if (user.isDecisionMaker()) {
     const districts = await District.find(db, { user_id: user.id });
     const zones = await Zone.find(db, {
@@ -115,7 +113,7 @@ const agreementCountForUser = async (user) => {
     });
     count = agreements.length;
   } else {
-    throw errorWithCode('Unable to determine user roll', 500);
+    throw errorWithCode('Unable to determine user role', 500);
   }
 
   return count;
@@ -386,7 +384,9 @@ router.get(
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         agreements = agreements.slice(startIndex, endIndex);
-      } else if (user.isRangeOfficer()) {
+      } else if (user.isAdministrator() || 
+                 user.canReadAll() || 
+                 user.isRangeOfficer()) {
         if (zones.length === 0) {
           agreements = await getAgreementsForRangeOfficer({
             user,
@@ -416,17 +416,6 @@ router.get(
       } else if (user.isDecisionMaker()) {
         agreements = await getAgreeementsForDM({
           user,
-          undefined,
-          undefined,
-          orderBy,
-          order,
-        });
-        totalItems = agreements.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        agreements = agreements.slice(startIndex, endIndex);
-      } else if (user.isAdministrator()) {
-        agreements = await getAgreementsForAdmin({
           undefined,
           undefined,
           orderBy,

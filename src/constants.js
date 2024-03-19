@@ -56,6 +56,7 @@ export const SSO_ROLE_MAP = {
   RANGE_OFFICER: 'myra_range_officer',
   AGREEMENT_HOLDER: 'myra_client',
   DECISION_MAKER: 'myra_decision_maker',
+  READ_ONLY: 'myra_read_only'
 };
 
 export const PLAN_STATUS = {
