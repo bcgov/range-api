@@ -26,6 +26,35 @@ const sendEmailToAgreementHolders = async (db, expiringPlan) => {
   );
 };
 
+const processExpiredPlans = async (trx) => {
+  const results = await trx
+    .select(['plan.id as planId'])
+    .from(Plan.table)
+    .where('plan_end_date', '<', new Date())
+    .whereNotNull('extension_status');
+  for (const result of results) {
+    try {
+      console.log(`Removing extension for expired planId: ${result.planId}`);
+      await PlanExtensionRequests.remove(trx, {
+        plan_id: result.planId,
+      });
+      await Plan.update(
+        trx,
+        { id: result.planId },
+        {
+          extension_status: null,
+          extension_required_votes: 0,
+          extension_received_votes: 0,
+          extension_date: null,
+          extension_rejected_by: null,
+        },
+      );
+    } catch (error) {
+      console.log(error.stack);
+    }
+  }
+};
+
 const main = async () => {
   const trx = await db.transaction();
   try {
@@ -66,6 +95,7 @@ const main = async () => {
         { extensionRequiredVotes: requiredVotes[planId], extensionStatus: 1 },
       );
     }
+    await processExpiredPlans(trx);
     trx.commit();
   } catch (err) {
     trx.rollback();

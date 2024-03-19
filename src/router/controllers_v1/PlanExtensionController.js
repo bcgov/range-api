@@ -385,7 +385,11 @@ export default class PlanExtensionController {
       await Plan.update(
         trx,
         { id: planId },
-        { extensionStatus: 4, statusId: 6, planEndDate: endDate },
+        {
+          extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,
+          statusId: 6,
+          planEndDate: endDate,
+        },
       );
       trx.commit();
       return res.status(200).json({ planId }).end();
