@@ -344,22 +344,27 @@ router.delete(
 // Create a management consideration
 router.get('/:planId?/PDF', asyncMiddleware(PlanController.downloadPDF));
 
-// plan extension request
+// plan extension approve vote
 router.put(
   '/:planId?/extension/approve',
   asyncMiddleware(PlanExtensionController.approveExtension),
 );
 
-// Plan extension refused
+// Plan extension reject vote
 router.put(
   '/:planId?/extension/reject',
   asyncMiddleware(PlanExtensionController.rejectExtension),
 );
 
-// plan extension request
+// extend plan
 router.put(
   '/:planId?/extension/extend',
   asyncMiddleware(PlanExtensionController.extendPlan),
+);
+// request extend plan
+router.put(
+  '/:planId?/extension/request',
+  asyncMiddleware(PlanExtensionController.requestExtension),
 );
 
 module.exports = router;
