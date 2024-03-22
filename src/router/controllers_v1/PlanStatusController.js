@@ -184,11 +184,8 @@ export default class PlanStatusController {
     }
 
     try {
-      const {
-        agreement_id: agreementId,
-        creator_id: creatorId,
-        zone_id: zoneId,
-      } = await Plan.agreementForPlanId(db, planId);
+      const { agreement_id: agreementId, zone_id: zoneId } =
+        await Plan.agreementForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(
         db,
         Agreement,
@@ -221,6 +218,13 @@ export default class PlanStatusController {
         const user = await User.fromClientId(db, client.clientNumber);
         if (user && user.email) {
           emails.push(user.email);
+        }
+      }
+      const agents = await User.getAgentsFromAgreementId(db, agreementId);
+      const agentEmails = [...new Set(agents.map((agent) => agent.email))];
+      for (const agentEmail of agentEmails) {
+        if (agentEmail && agentEmail.email) {
+          emails.push(agentEmail.email);
         }
       }
       const toStatus = await PlanStatus.findById(db, statusId);
