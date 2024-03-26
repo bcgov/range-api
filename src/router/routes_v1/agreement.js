@@ -199,6 +199,7 @@ const getAgreementsForRangeOfficer = async ({
   latestPlan = false,
   sendFullPlan = true,
   staffDraft = true,
+  filters
 }) => {
   const zones = await Zone.findWithDistrictUser(db, {
     'ref_zone.user_id': user.id,
@@ -214,6 +215,7 @@ const getAgreementsForRangeOfficer = async ({
     staffDraft,
     orderBy,
     order,
+    filters
   );
 
   return agreements;
@@ -258,6 +260,7 @@ router.get(
       orderBy = 'agreement.forest_file_id',
       order = 'asc',
       selectedZones = '',
+      filterString = {}
     } = query;
 
     const zones = selectedZones !== '' ? selectedZones.split(',') : [];
@@ -266,6 +269,8 @@ router.get(
     const limit = Number(query.limit || 10);
     let agreements = [];
     let totalItems = 0;
+
+    const filters = JSON.parse(filterString);
 
     if (term) {
       const clientIDs = await Client.searchForTerm(db, term);
@@ -326,6 +331,7 @@ router.get(
             sendFullPlan: false,
             orderBy,
             order,
+            filters
           });
           totalItems = agreements.length;
           const startIndex = (page - 1) * limit;
