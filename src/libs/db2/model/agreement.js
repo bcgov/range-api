@@ -191,7 +191,15 @@ export default class Agreement extends Model {
     // Filters
     if (Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
-        if (filters[filter] !== '') q.where(filter, 'ilike', `%${filters[filter]}%`);
+        if (filters[filter] !== '') {
+          console.log(filter);
+          console.log(filters[filter]);
+          if (filter === 'plan.status_id') {
+            q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
+          } else {
+            q.where(filter, 'ilike', `%${filters[filter]}%`);
+          }
+        }
       })
     }
     if (page && limit) {
