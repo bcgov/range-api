@@ -174,6 +174,7 @@ const getAgreementsForZones = async ({
   latestPlan = false,
   sendFullPlan = true,
   staffDraft = true,
+  filters
 }) => {
   const agreements = await Agreement.findWithAllRelations(
     db,
@@ -185,6 +186,7 @@ const getAgreementsForZones = async ({
     staffDraft,
     orderBy,
     order,
+    filters
   );
 
   return agreements;
@@ -342,6 +344,7 @@ router.get(
             selectedZoneIds: zones,
             orderBy,
             order,
+            filters
           });
           totalItems = agreements.length;
           const startIndex = (page - 1) * limit;

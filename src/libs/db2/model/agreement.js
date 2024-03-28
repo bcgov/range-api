@@ -189,12 +189,15 @@ export default class Agreement extends Model {
       q.where(where);
     }
     // Filters
-    if (Object.keys(filters).length > 0) {
+    if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
         if (filters[filter] !== '') {
           console.log(filter);
           console.log(filters[filter]);
-          if (filter === 'plan.status_id') {
+          if (filter === 'plan.plan_end_date') {
+            // Can't get entire string with letters and numbers for some reason
+            q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`);
+          } else if (filter === 'plan.status_id') {
             q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
