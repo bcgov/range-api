@@ -199,6 +199,8 @@ export default class Agreement extends Model {
             q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`);
           } else if (filter === 'plan.status_id') {
             q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
+          } else if (filter === 'plan.status') {
+            q.where("ref_plan_status.name", 'ilike', `%${filters[filter]}%`);
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
