@@ -23,20 +23,16 @@
 /* eslint-disable max-len */
 
 import { flatten } from 'lodash';
-import AgreementExemptionStatus from './agreementexemptionstatus';
 import AgreementType from './agreementtype';
 import Client from './client';
 import District from './district';
 import LivestockIdentifier from './livestockidentifier';
 import Model from './model';
 import Plan from './plan';
+import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
-import { PLAN_STATUS } from '../../../constants';
-import PlanStatus from './planstatus';
-import PlanExtension from './planextension';
-import PlanExtensionRequests from './planextensionrequests';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -47,13 +43,12 @@ export default class Agreement extends Model {
       }
     });
     super(obj, db);
-    this.zone = new Zone(Zone.extract(data));
-    this.zone.district = new District(District.extract(data));
-    this.zone.user = new User(User.extract(data));
-    this.agreementType = new AgreementType(AgreementType.extract(data));
+    this.zone = new Zone(Zone.extract(data), db);
+    this.zone.district = new District(District.extract(data), db);
+    this.zone.user = new User(User.extract(data), db);
+    this.agreementType = new AgreementType(AgreementType.extract(data), db);
     if (data.plan_id) {
-      this.plan = new Plan(Plan.extract(data));
-      this.plan.status = new PlanStatus(PlanStatus.extract(data));
+      this.plan = new Plan(Plan.extract(data), db);
     } else {
       this.plan = null;
     }
@@ -87,9 +82,7 @@ export default class Agreement extends Model {
       where,
       page = undefined,
       limit = undefined,
-      latestPlan = false,
       sendFullPlan = false,
-      staffDraft = false,
       orderBy = 'agreement.forest_file_id',
       order = 'asc',
     ] = args;
@@ -113,10 +106,11 @@ export default class Agreement extends Model {
     // fetch all data that is indirectly (nested) related to an agreement
     if (sendFullPlan) {
       myAgreements.forEach(async (agreement) => {
-        // await agreement.plan.eagerloadAllOneToMany();
+        await agreement.plan?.eagerloadAllOneToMany();
       });
       await Promise.all(promises);
     }
+
     return flatten(myAgreements);
   }
 
@@ -143,9 +137,6 @@ export default class Agreement extends Model {
       ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...Plan.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-      ...PlanExtensionRequests.fields.map(
-        (f) => `${f} AS ${f.replace('.', '_')}`,
-      ),
     ];
 
     let results = [];
@@ -175,10 +166,6 @@ export default class Agreement extends Model {
       })
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
-      })
-      .leftJoin('plan_extension_requests', {
-        'plan.id': 'plan_extension_requests.plan_id',
-        'user_account.id': 'plan_extension_requests.user_id',
       })
       // .leftJoin("ref_agreement_exemption_status", {
       //   "agreement.agreement_exemption_status_id":
@@ -237,18 +224,14 @@ export default class Agreement extends Model {
       return [];
     }
 
-    try {
-      const results = await db
-        .select(Agreement.primaryKey)
-        .from(Agreement.table)
-        .where({ 'agreement.forest_file_id': term })
-        .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
+    const results = await db
+      .select(Agreement.primaryKey)
+      .from(Agreement.table)
+      .where({ 'agreement.forest_file_id': term })
+      .orWhere('agreement.forest_file_id', 'ilike', `%${term}%`);
 
-      // return an array of `forest_file_id`
-      return flatten(results.map((result) => Object.values(result)));
-    } catch (err) {
-      throw err;
-    }
+    // return an array of `forest_file_id`
+    return flatten(results.map((result) => Object.values(result)));
   }
 
   static async update(db, where, values) {
@@ -260,23 +243,20 @@ export default class Agreement extends Model {
       }
     });
 
-    try {
-      const results = db
-        .table(Agreement.table)
-        .where(where)
-        .update(obj)
-        .returning(this.primaryKey);
+    const results = db
+      .table(Agreement.table)
+      .where(where)
+      .update(obj)
+      .returning(this.primaryKey);
 
-      return results;
-    } catch (err) {
-      throw err;
-    }
+    return results;
   }
 
   async eagerloadAllOneToManyExceptPlan() {
     await this.fetchClients();
     await this.fetchUsage();
     await this.fetchLivestockIdentifiers();
+    await this.plan?.fetchExtensionRequests();
   }
 
   async fetchClients() {

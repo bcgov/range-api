@@ -44,32 +44,28 @@ export default class PlanExtensionRequests extends Model {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
-    try {
-      const count = await db
+    const count = await db
+      .table(PlanExtensionRequests.table)
+      .where(where)
+      .update(obj);
+
+    if (count > 0) {
+      const [{ id }] = await db
         .table(PlanExtensionRequests.table)
         .where(where)
-        .update(obj);
+        .returning('id');
 
-      if (count > 0) {
-        const [{ id }] = await db
-          .table(PlanExtensionRequests.table)
-          .where(where)
-          .returning('id');
-
-        const res = await db.raw(
-          `
+      const res = await db.raw(
+        `
           SELECT plan_extension_requests.* FROM plan_extension_requests
           WHERE plan_extension_requests.id = ?;
         `,
-          [id],
-        );
-        return res.rows.map(PlanExtensionRequests.mapRow)[0];
-      }
-
-      return [];
-    } catch (err) {
-      throw err;
+        [id],
+      );
+      return res.rows.map(PlanExtensionRequests.mapRow)[0];
     }
+
+    return [];
   }
 
   static async create(db, values) {
@@ -77,40 +73,32 @@ export default class PlanExtensionRequests extends Model {
     Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
-    try {
-      const results = await db
-        .table(PlanExtensionRequests.table)
-        .returning('id')
-        .insert(obj);
+    const results = await db
+      .table(PlanExtensionRequests.table)
+      .returning('id')
+      .insert(obj);
 
-      return await PlanExtensionRequests.findOne(db, { id: results.pop() });
-    } catch (err) {
-      throw err;
-    }
+    return await PlanExtensionRequests.findOne(db, { id: results.pop() });
   }
 
-  static async findWithExclusion(db, where, order = null, exclude) {
-    try {
-      const q = db.table(PlanExtensionRequests.table).select('id').where(where);
-
-      if (exclude) {
-        q.andWhereNot(...exclude);
-      }
-
-      const results = await q;
-      const planExtensionRequestIds = results.map((obj) => obj.id);
-
-      const res = await db.raw(
-        `
-        SELECT DISTINCT ON (plan_extension_requests.id) id, plan_extension_requests.* FROM plan_extension_requests
-        WHERE plan_extension_requests.id = ANY (?) ORDER BY plan_extension_requests.id, ?;
-      `,
-        [planExtensionRequestIds, order],
-      );
-
-      return res.rows.map(PlanExtensionRequests.mapRow);
-    } catch (err) {
-      throw err;
+  static async findWithExclusion(db, where, exclude) {
+    const q = db.table(PlanExtensionRequests.table).where(where);
+    if (exclude) {
+      q.andWhereNot(...exclude);
     }
+    const results = await q;
+    return results.map(PlanExtensionRequests.mapRow);
+  }
+
+  static extract(data) {
+    const obj = {};
+    Object.keys(data).forEach((key) => {
+      const prefix = this.table;
+      if (key.startsWith(prefix)) {
+        const aKey = key.replace(prefix, '').slice(1);
+        obj[aKey] = data[key];
+      }
+    });
+    return obj;
   }
 }

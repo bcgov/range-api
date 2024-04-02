@@ -45,6 +45,7 @@ import MinisterIssuePasture from './ministerissuepasture';
 import PlanSnapshot from './plansnapshot';
 import Agreement from './agreement';
 import PlanFile from './PlanFile';
+import PlanExtensionRequests from './planextensionrequests';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -57,14 +58,18 @@ export default class Plan extends Model {
 
     super(obj, db);
 
-    this.status = new PlanStatus(PlanStatus.extract(data));
+    this.status = new PlanStatus(PlanStatus.extract(data), db);
     // The left join will return `null` values when no related record exists
     // so we manually exclude them.
     // const extension = new PlanExtension(PlanExtension.extract(data));
     // this.extension = extension.id === null ? null : extension;
     this.requestedExtension = data.extension_requests_requested_extension;
     this.requestedExtensionUserId = data.extension_requests_user_id;
-    this.creator = new User(User.extract(data));
+    this.creator = new User(User.extract(data), db);
+    this.planExtensionRequests = new PlanExtensionRequests(
+      PlanExtensionRequests.extract(data),
+      db,
+    );
   }
 
   static legalStatuses = [20, 8, 9, 12, 21];
@@ -800,6 +805,7 @@ export default class Plan extends Model {
     await this.fetchAdditionalRequirements();
     await this.fetchManagementConsiderations();
     await this.fetchFiles();
+    await this.fetchExtensionRequests();
   }
 
   async fetchPlanConfirmations() {
@@ -813,6 +819,15 @@ export default class Plan extends Model {
       }
     }
     this.confirmations = confirmations || [];
+  }
+
+  async fetchExtensionRequests() {
+    const where = { plan_id: this.id };
+    const planExtensionRequests = await PlanExtensionRequests.findWithExclusion(
+      this.db,
+      where,
+    );
+    this.planExtensionRequests = planExtensionRequests || [];
   }
 
   async fetchPastures() {
