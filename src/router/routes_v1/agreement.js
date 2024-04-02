@@ -91,40 +91,6 @@ const allowableIDsForUser = async (
   return okIDs;
 };
 
-const agreementCountForUser = async (user) => {
-  let count = 0;
-  if (user.isAgreementHolder()) {
-    const ids = await Agreement.agreementsForClientId(db, user.clientId);
-    count = ids.length;
-  } else if (user.isRangeOfficer() || user.isAdministrator() || user.canReadAll()) {
-    const zones = await Zone.findWithDistrictUser(db, {
-      'ref_zone.user_id': user.id,
-    });
-    const zids = zones.map((zone) => zone.id);
-    const ids = await Agreement.find(db, { zone_id: zids });
-    count = ids.length;
-  } else if (user.isDecisionMaker()) {
-    const districts = await District.find(db, { user_id: user.id });
-    const zones = await Zone.find(db, {
-      district_id: districts.map((d) => d.id),
-    });
-    const agreements = await Agreement.find(db, {
-      zone_id: zones.map((z) => z.id),
-    });
-    count = agreements.length;
-  } else {
-    throw errorWithCode('Unable to determine user role', 500);
-  }
-
-  return count;
-};
-
-const agreementCountForZones = async (zones = []) => {
-  const count = await Agreement.count(db, { zone_id: zones });
-
-  return count;
-};
-
 const getAgreeementsForAH = async ({
   page = undefined,
   limit = undefined,
@@ -149,7 +115,9 @@ const getAgreeementsForAH = async ({
 
   const agreements = await Agreement.findWithAllRelations(
     db,
-    { forest_file_id: agreementIds },
+    {
+      forest_file_id: agreementIds,
+    },
     page,
     limit,
     latestPlan,
@@ -251,29 +219,6 @@ const getAgreementsForRangeOfficer = async ({
   return agreements;
 };
 
-const getAgreementsForAdmin = async ({
-  page = undefined,
-  limit = undefined,
-  orderBy = 'agreement.forest_file_id',
-  order = 'asc',
-  latestPlan = true,
-  sendFullPlan = false,
-  staffDraft = true,
-}) => {
-  const agreements = await Agreement.findWithAllRelations(
-    db,
-    {},
-    page,
-    limit,
-    latestPlan,
-    sendFullPlan,
-    staffDraft,
-    orderBy,
-    order,
-  );
-  return agreements;
-};
-
 //
 // Routes
 //
@@ -282,31 +227,24 @@ const getAgreementsForAdmin = async ({
 router.get(
   '/',
   asyncMiddleware(async (req, res) => {
-    try {
-      const { user } = req;
-      let results = [];
+    const { user } = req;
+    let results = [];
 
-      if (user.isAgreementHolder()) {
-        results = await getAgreeementsForAH({ user });
-      } else if (user.isRangeOfficer()) {
-        results = await getAgreementsForRangeOfficer({ user });
-      } else if (user.isAdministrator()) {
-        throw errorWithCode(
-          'This endpoint is forbidden for the admin user',
-          401,
-        );
-        // results = await getAgreementsForAdmin({});
-      } else {
-        throw errorWithCode('Unable to determine user roll', 500);
-      }
-
-      if (results.length > 0) {
-        results.map((agreement) => agreement.transformToV1());
-      }
-      return res.status(200).json(results).end();
-    } catch (err) {
-      throw err;
+    if (user.isAgreementHolder()) {
+      results = await getAgreeementsForAH({ user });
+    } else if (user.isRangeOfficer()) {
+      results = await getAgreementsForRangeOfficer({ user });
+    } else if (user.isAdministrator()) {
+      throw errorWithCode('This endpoint is forbidden for the admin user', 401);
+      // results = await getAgreementsForAdmin({});
+    } else {
+      throw errorWithCode('Unable to determine user roll', 500);
     }
+
+    if (results.length > 0) {
+      results.map((agreement) => agreement.transformToV1());
+    }
+    return res.status(200).json(results).end();
   }),
 );
 
@@ -367,16 +305,9 @@ router.get(
       const endIndex = startIndex + limit;
       agreements = agreements.slice(startIndex, endIndex);
     } else {
-      const count =
-        zones.length === 0
-          ? await agreementCountForUser(req.user)
-          : await agreementCountForZones(zones);
-
       if (user.isAgreementHolder()) {
         agreements = await getAgreeementsForAH({
           user,
-          undefined,
-          undefined,
           orderBy,
           order,
         });
@@ -384,14 +315,14 @@ router.get(
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         agreements = agreements.slice(startIndex, endIndex);
-      } else if (user.isAdministrator() || 
-                 user.canReadAll() || 
-                 user.isRangeOfficer()) {
+      } else if (
+        user.isAdministrator() ||
+        user.canReadAll() ||
+        user.isRangeOfficer()
+      ) {
         if (zones.length === 0) {
           agreements = await getAgreementsForRangeOfficer({
             user,
-            undefined,
-            undefined,
             sendFullPlan: false,
             orderBy,
             order,
@@ -403,8 +334,6 @@ router.get(
         } else {
           agreements = await getAgreementsForZones({
             selectedZoneIds: zones,
-            undefined,
-            undefined,
             orderBy,
             order,
           });
@@ -416,8 +345,6 @@ router.get(
       } else if (user.isDecisionMaker()) {
         agreements = await getAgreeementsForDM({
           user,
-          undefined,
-          undefined,
           orderBy,
           order,
         });
@@ -455,32 +382,28 @@ router.get(
     const { id } = params;
     const { latestPlan = false, sendFullPlan = false } = query;
 
-    try {
-      // TODO:(jl) Confirm role(s) / access before proceeding with request.
-      const staffDraft = !user.isAgreementHolder();
-      const results = await Agreement.findWithAllRelations(
-        db,
-        { forest_file_id: id },
-        null,
-        null,
-        latestPlan,
-        sendFullPlan,
-        staffDraft,
-      );
-      if (results.length === 0) {
-        throw errorWithCode(`Unable to find agreement with ID ${id}`, 404);
-      }
-
-      const agreement = results.pop();
-
-      if (!(await req.user.canAccessAgreement(db, agreement))) {
-        throw errorWithCode('You do not access to this agreement', 403);
-      }
-      agreement.transformToV1();
-      res.status(200).json(agreement).end();
-    } catch (err) {
-      throw err;
+    // TODO:(jl) Confirm role(s) / access before proceeding with request.
+    const staffDraft = !user.isAgreementHolder();
+    const results = await Agreement.findWithAllRelations(
+      db,
+      { forest_file_id: id },
+      null,
+      null,
+      latestPlan,
+      sendFullPlan,
+      staffDraft,
+    );
+    if (results.length === 0) {
+      throw errorWithCode(`Unable to find agreement with ID ${id}`, 404);
     }
+
+    const agreement = results.pop();
+
+    if (!(await req.user.canAccessAgreement(db, agreement))) {
+      throw errorWithCode('You do not access to this agreement', 403);
+    }
+    agreement.transformToV1();
+    res.status(200).json(agreement).end();
   }),
 );
 
