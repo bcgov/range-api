@@ -10,13 +10,12 @@ RUN mkdir -p /home/node/app/.npm \
 
 ENV npm_config_cache /home/node/app/.npm
 # Cache and Install dependencies
-COPY package.json .
-
-RUN npm i
-
 # Copy app files
 COPY . .
 
+RUN npm i
+
+RUN npm run build
 # Expose port
 EXPOSE 8000
 
