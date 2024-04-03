@@ -69,6 +69,7 @@ export default class Agreement extends Model {
       'zone_id',
       'agreement_exemption_status_id',
       'agreement_type_id',
+      'retired'
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
@@ -199,6 +200,10 @@ export default class Agreement extends Model {
             q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`);
           } else if (filter === 'plan.status_id') {
             q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
+          } else if (filter === 'withPlan') {
+            q.whereNotNull("ref_plan_status.code");
+          } else if (filter === 'onlyActive') {
+            q.where("agreement.retired", "false");
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
