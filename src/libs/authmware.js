@@ -181,32 +181,49 @@ export default async function initPassport(app) {
         let roleIdToAdd = 4; //Default Client/RUP agreement holder
         if (user.roleId) {
           //Get permissions if available
-          permissions = await UserPermissions.getRolePermissions(db, user.roleId);
+          permissions = await UserPermissions.getRolePermissions(
+            db,
+            user.roleId,
+          );
         } else {
           //set role id based on jwt
-          if (jwtPayload.client_roles && 
-              jwtPayload.client_roles.length !== 0) {
+          if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
             if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.ADMINISTRATOR)) {
               roleIdToAdd = 1; //Admin
-            } else if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.READ_ONLY)) {
+            } else if (
+              jwtPayload.client_roles.includes(SSO_ROLE_MAP.READ_ONLY)
+            ) {
               roleIdToAdd = 5; //Read only external auditor
-            } else if (jwtPayload?.identity_provider === 'idir') {
-              if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.  DECISION_MAKER)) {
-                roleIdToAdd = 2; //Decision maker
-              } else {
-                roleIdToAdd = 3; //Agrologist
-              }
+            } else if (
+              jwtPayload.client_roles.includes(SSO_ROLE_MAP.DECISION_MAKER)
+            ) {
+              roleIdToAdd = 2; //Decision maker
+            } else if (
+              jwtPayload.client_roles.includes(SSO_ROLE_MAP.RANGE_OFFICER)
+            ) {
+              roleIdToAdd = 3; //Agrologist
+            }
+          } else {
+            if (jwtPayload?.identity_provider === 'idir') {
+              roleIdToAdd = 3; //Agrologist
             }
           }
 
-          await User.update(db, {
-            id: user.id,
-          }, {
-            roleId: roleIdToAdd, //Defaults to client
-          });
+          await User.update(
+            db,
+            {
+              id: user.id,
+            },
+            {
+              roleId: roleIdToAdd, //Defaults to client
+            },
+          );
           user.roleId = roleIdToAdd;
 
-          permissions = await UserPermissions.getRolePermissions(db, roleIdToAdd);
+          permissions = await UserPermissions.getRolePermissions(
+            db,
+            roleIdToAdd,
+          );
         }
 
         //Set permissions
