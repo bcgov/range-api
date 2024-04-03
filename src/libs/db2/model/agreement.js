@@ -49,6 +49,7 @@ export default class Agreement extends Model {
     this.agreementType = new AgreementType(AgreementType.extract(data), db);
     if (data.plan_id) {
       this.plan = new Plan(Plan.extract(data), db);
+      this.plan.status = new PlanStatus(PlanStatus.extract(data), db);
     } else {
       this.plan = null;
     }
