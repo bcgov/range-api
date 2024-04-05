@@ -2,6 +2,9 @@ version: '3.5'
 
 services:
   range_api:
+    depends_on:
+      - db
+      - minio
     image: ${PROJECT}-${ENVIRONMENT}-api-img
     container_name: ${PROJECT}-${ENVIRONMENT}-api
     build:
@@ -20,15 +23,17 @@ services:
       - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
       - POSTGRESQL_USER=${POSTGRESQL_USER}
       - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
-      - POSTGRESQL_HOST=${POSTGRESQL_HOST}
+      - POSTGRESQL_HOST=db
       - NODE_ENV=${ENVIRONMENT}
       - POSTGRESQL_PORT=${POSTGRESQL_PORT}
       - MINIO_ENDPOINT=minio
-      - MINIO_PUBLIC_ENDPOINT=localhost
+      - MINIO_PUBLIC_ENDPOINT=127.0.0.1
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=minio
       - MINIO_SECRET_KEY=secretminiokey123
       - MINIO_BUCKET=myra-dev
+      - NODE_ENV=production
+      - SSO_URL=https://dev.loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect
     networks:
       - local
   db:
@@ -40,7 +45,7 @@ services:
       args:
         - PORT:${POSTGRESQL_PORT}
     ports:
-      - ${POSTGRESQL_PORT}:${POSTGRESQL_PORT}
+      - 5431:5432
     environment:
       - POSTGRES_USER=${POSTGRESQL_USER}
       - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
@@ -54,12 +59,13 @@ services:
     volumes:
       - minio-data:/data/minio
     ports:
-      - 9000
+      - 9000:9000
+      - 9001:9001
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: secretminiokey123
       MINIO_DOMAIN: localhost
-    command: server /data/minio
+    command: server /data/minio --console-address ":9001"
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
       interval: 30s
@@ -67,16 +73,16 @@ services:
       retries: 3
     networks:
       - local
-  minio-nginx:
-    image: nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - 9000:9000
-    depends_on:
-      - minio
-    networks:
-      - local
+  # minio-nginx:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   ports:
+  #     - 9000:9000
+  #   depends_on:
+  #     - minio
+  #   networks:
+  #     - local
 
 networks:
   local:
