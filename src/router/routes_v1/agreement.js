@@ -174,7 +174,7 @@ const getAgreementsForZones = async ({
   latestPlan = false,
   sendFullPlan = true,
   staffDraft = true,
-  filters
+  filters = {}
 }) => {
   const agreements = await Agreement.findWithAllRelations(
     db,
@@ -201,7 +201,7 @@ const getAgreementsForRangeOfficer = async ({
   latestPlan = false,
   sendFullPlan = true,
   staffDraft = true,
-  filters
+  filters = {}
 }) => {
   const zones = await Zone.findWithDistrictUser(db, {
     'ref_zone.user_id': user.id,
@@ -306,6 +306,7 @@ router.get(
         staffDraft,
         orderBy,
         order,
+        filters
       );
       totalItems = agreements.length;
       const startIndex = (page - 1) * limit;
@@ -329,11 +330,11 @@ router.get(
       ) {
         if (zones.length === 0) {
           agreements = await getAgreementsForRangeOfficer({
-            user,
+            user: user,
             sendFullPlan: false,
-            orderBy,
-            order,
-            filters
+            orderBy: orderBy,
+            order: order,
+            filters: filters
           });
           totalItems = agreements.length;
           const startIndex = (page - 1) * limit;

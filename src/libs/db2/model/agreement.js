@@ -84,7 +84,9 @@ export default class Agreement extends Model {
       where,
       page = undefined,
       limit = undefined,
+      latestPlan = undefined,
       sendFullPlan = false,
+      staffDraft = undefined,
       orderBy = 'agreement.forest_file_id',
       order = 'asc',
       filters
