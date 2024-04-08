@@ -203,9 +203,9 @@ export default class Agreement extends Model {
           } else if (filter === 'plan.status_id') {
             q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
           } else if (filter === 'withPlan') {
-            q.whereNotNull("ref_plan_status.code");
+            if (filters[filter] === 'true') q.whereNotNull("ref_plan_status.code");
           } else if (filter === 'onlyActive') {
-            q.where("agreement.retired", "false");
+            if (filters[filter] === 'true') q.where("agreement.retired", "false");
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
