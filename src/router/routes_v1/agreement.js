@@ -100,6 +100,7 @@ const getAgreeementsForAH = async ({
   latestPlan = true,
   sendFullPlan = false,
   staffDraft = false,
+  filters = {}
 }) => {
   const clientIds = await user.getLinkedClientNumbers(db);
 
@@ -125,6 +126,7 @@ const getAgreeementsForAH = async ({
     staffDraft,
     orderBy,
     order,
+    filters
   );
   return agreements.map((a) => {
     const agreement = a;
@@ -144,6 +146,7 @@ const getAgreeementsForDM = async ({
   latestPlan = true,
   sendFullPlan = false,
   staffDraft = false,
+  filters = {}
 }) => {
   const districts = await District.find(db, { user_id: user.id });
 
@@ -161,6 +164,7 @@ const getAgreeementsForDM = async ({
     staffDraft,
     orderBy,
     order,
+    filters
   );
   return agreements;
 };
@@ -318,6 +322,7 @@ router.get(
           user,
           orderBy,
           order,
+          filters
         });
         totalItems = agreements.length;
         const startIndex = (page - 1) * limit;
@@ -357,6 +362,7 @@ router.get(
           user,
           orderBy,
           order,
+          filters
         });
         totalItems = agreements.length;
         const startIndex = (page - 1) * limit;
