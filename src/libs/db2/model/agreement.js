@@ -69,7 +69,7 @@ export default class Agreement extends Model {
       'zone_id',
       'agreement_exemption_status_id',
       'agreement_type_id',
-      'retired'
+      'retired',
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
@@ -84,12 +84,10 @@ export default class Agreement extends Model {
       where,
       page = undefined,
       limit = undefined,
-      latestPlan = undefined,
       sendFullPlan = false,
-      staffDraft = undefined,
       orderBy = 'agreement.forest_file_id',
       order = 'asc',
-      filters
+      filters,
     ] = args;
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
@@ -99,7 +97,7 @@ export default class Agreement extends Model {
       limit,
       orderBy,
       order,
-      filters
+      filters,
     );
     // fetch all data that is directly related to the agreement
     // `await` used here to allow the queries to start imediatly and
@@ -127,7 +125,7 @@ export default class Agreement extends Model {
     limit = undefined,
     orderBy = 'plan.agreement_id',
     order = 'asc',
-    filters
+    filters,
   ) {
     if (!db || !where) {
       return [];
@@ -196,21 +194,27 @@ export default class Agreement extends Model {
       Object.keys(filters).map((filter) => {
         if (filters[filter] !== '') {
           if (filter === 'plan_creator.given_name') {
-            q.whereRaw(`"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`);
+            q.whereRaw(
+              `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`,
+            );
           } else if (filter === 'plan.plan_end_date') {
             // Can't get entire string with letters and numbers for some reason
-            q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`);
+            q.whereRaw(
+              `TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`,
+            );
           } else if (filter === 'plan.status_id') {
-            q.where("ref_plan_status.code", 'ilike', `%${filters[filter]}%`);
+            q.where('ref_plan_status.code', 'ilike', `%${filters[filter]}%`);
           } else if (filter === 'withPlan') {
-            if (filters[filter] === 'true') q.whereNotNull("ref_plan_status.code");
+            if (filters[filter] === 'true')
+              q.whereNotNull('ref_plan_status.code');
           } else if (filter === 'onlyActive') {
-            if (filters[filter] === 'true') q.where("agreement.retired", "false");
+            if (filters[filter] === 'true')
+              q.where('agreement.retired', 'false');
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
         }
-      })
+      });
     }
     if (page && limit) {
       const offset = limit * (page - 1);
@@ -260,6 +264,15 @@ export default class Agreement extends Model {
 
     // return an array of `forest_file_id`
     return flatten(results.map((result) => Object.values(result)));
+  }
+
+  static async retireAgreements(db, activeFTAAgreementIds) {
+    const results = db
+      .table(Agreement.table)
+      .whereNotIn('forest_file_id', activeFTAAgreementIds)
+      .update({ retired: true })
+      .returning(this.primaryKey);
+    return results;
   }
 
   static async update(db, where, values) {

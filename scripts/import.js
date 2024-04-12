@@ -228,6 +228,7 @@ const updateAgreement = async (data) => {
 
   let created = 0;
   let updated = 0;
+  let activeFTAAgreementIds = [];
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const {
@@ -263,6 +264,7 @@ const updateAgreement = async (data) => {
       continue;
     }
     try {
+      activeFTAAgreementIds.push(agreementId);
       const agreement = await Agreement.findById(db, agreementId);
       if (agreement) {
         await Agreement.update(
@@ -297,7 +299,12 @@ const updateAgreement = async (data) => {
       throw error;
     }
   }
+  const retiredAgreementIds = await Agreement.retireAgreements(
+    db,
+    activeFTAAgreementIds,
+  );
 
+  console.log(`Retired Agreements: ${retiredAgreementIds}`);
   return `${created} agreements were created. ${updated} agreements were updated`;
 };
 
@@ -694,25 +701,18 @@ const main = async () => {
     var args = process.argv.slice(2);
     var isInitializing = args[0] === 'true';
     if (isInitializing) {
-      /* DROP DATABASE MYRA first, and have ZONE_USER.csv */
       console.log('Loading FTA data from API...');
-      //await loadFTADataFromAPI();
       await loadFTADataFromCSV();
-      // console.log('Loading Staff data from File...');
-      // await loadStaffDataFromCSV();
       console.log('Preparing test setup');
       await prepareTestSetup();
-      //await pruneConfirmations();
     } else {
       await loadFTADataFromAPI();
-      //await pruneConfirmations();
     }
   } catch (err) {
     console.log(`Error importing data, message = ${err.message}`);
 
     console.log(`${err.stack}`);
     process.exit(0);
-    throw err;
   }
   process.exit(0);
 };
