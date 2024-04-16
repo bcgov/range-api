@@ -77,18 +77,26 @@ export default class Agreement extends Model {
     return 'agreement';
   }
 
-  static async findWithAllRelations(...args) {
+  static async findWithAllRelations(
+    db,
+    where,
+    page,
+    limit,
+    latestPlan,
+    sendFullPlan,
+    staffDraft,
+    orderBy,
+    order,
+    filters,
+  ) {
     // Destructuring rest parameters(orders still matter when passing parameters!)
-    const [
-      db,
-      where,
-      page = undefined,
-      limit = undefined,
-      sendFullPlan = false,
-      orderBy = 'agreement.forest_file_id',
-      order = 'asc',
-      filters,
-    ] = args;
+    page = undefined;
+    limit = undefined;
+    latestPlan = false;
+    sendFullPlan = false;
+    staffDraft = false;
+    orderBy = 'agreement.forest_file_id';
+    order = 'asc';
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
       db,
@@ -130,7 +138,6 @@ export default class Agreement extends Model {
     if (!db || !where) {
       return [];
     }
-
     const myFields = [
       ...Agreement.fields,
       ...Zone.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
@@ -192,7 +199,7 @@ export default class Agreement extends Model {
     // Filters
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
-        if (filters[filter] !== '') {
+        if (filters[filter] && filters[filter] !== '') {
           if (filter === 'plan_creator.given_name') {
             q.whereRaw(
               `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`,
