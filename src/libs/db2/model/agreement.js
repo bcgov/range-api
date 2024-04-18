@@ -211,12 +211,36 @@ export default class Agreement extends Model {
             );
           } else if (filter === 'plan.status_id') {
             q.where('ref_plan_status.code', 'ilike', `%${filters[filter]}%`);
-          } else if (filter === 'withPlan') {
+          } else if (filter === 'planCheck') {
             if (filters[filter] === 'true')
               q.whereNotNull('ref_plan_status.code');
-          } else if (filter === 'onlyActive') {
+          } else if (filter === 'agreementCheck') {
             if (filters[filter] === 'true')
               q.where('agreement.retired', 'false');
+          } else if (filter === 'activeCheck') {
+            if (filters[filter] === 'true') {
+              q.whereRaw(
+                `(
+                  "ref_plan_status"."id"=8 OR
+                  "ref_plan_status"."id"=9 OR
+                  "ref_plan_status"."id"=12 OR
+                  "ref_plan_status"."id"=20 OR
+                  "ref_plan_status"."id"=21 OR
+                  "ref_plan_status"."id"=22 OR
+                  (
+                    EXISTS (
+                      SELECT id FROM "plan_snapshot" WHERE 
+                        "plan_id"="plan"."id" AND 
+                        "status_id"=12
+                    ) AND (
+                      "ref_plan_status"."id"=11 OR
+                      "ref_plan_status"."id"=13 OR
+                      "ref_plan_status"."id"=18
+                    )
+                  )
+                )`
+              );
+            }
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
