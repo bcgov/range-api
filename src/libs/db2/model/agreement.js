@@ -228,11 +228,8 @@ export default class Agreement extends Model {
                   "ref_plan_status"."id"=21 OR
                   "ref_plan_status"."id"=22 OR
                   (
-                    EXISTS (
-                      SELECT id FROM "plan_snapshot" WHERE 
-                        "plan_id"="plan"."id" AND 
-                        "status_id"=12
-                    ) AND (
+                    "plan"."amendment_type_id" IS NOT NULL
+                    AND (
                       "ref_plan_status"."id"=11 OR
                       "ref_plan_status"."id"=13 OR
                       "ref_plan_status"."id"=18
