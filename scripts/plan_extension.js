@@ -61,7 +61,7 @@ const main = async () => {
     const currentDate = new Date();
     const oneYearLater = new Date();
     oneYearLater.setMonth(currentDate.getMonth() + 12);
-    const expiringPlans = await Plan.fetchExpiringPlanIds(
+    const expiringPlans = await Plan.fetchExpiringPlans(
       trx,
       currentDate,
       oneYearLater,
@@ -85,7 +85,7 @@ const main = async () => {
         if (expiringPlan.email)
           await sendEmailToAgreementHolders(trx, expiringPlan);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
     for (const planId of Object.keys(requiredVotes)) {
