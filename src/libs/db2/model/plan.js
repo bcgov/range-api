@@ -921,10 +921,14 @@ export default class Plan extends Model {
     this.files = planFiles;
   }
 
-  static async fetchExpiringPlanIds(db, endDateStart, endDateEnd, orderBy) {
+  static async fetchExpiringPlans(db, endDateStart, endDateEnd, orderBy) {
     const q = db
       .select([
         'plan.id as planId',
+        'plan.status_id',
+        'plan.amendment_type_id',
+        'plan.extension_status',
+        'agreement.retired',
         'client_agreement.id as clientAgreementId',
         'client_agreement.agreement_id as agreementId',
         'client_agreement.client_id as clientId',
@@ -932,6 +936,9 @@ export default class Plan extends Model {
         'user_account.id as userId',
       ])
       .from(Plan.table)
+      .leftJoin('agreement', {
+        'plan.agreement_id': 'agreement.forest_file_id',
+      })
       .leftJoin('client_agreement', {
         'plan.agreement_id': 'client_agreement.agreement_id',
       })
@@ -941,11 +948,26 @@ export default class Plan extends Model {
       .leftJoin('user_account', {
         'user_account.id': 'user_client_link.user_id',
       })
-      .where('plan_end_date', '>=', endDateStart)
-      .andWhere('plan_end_date', '<=', endDateEnd)
-      .whereNull('extension_status')
+      .where(function () {
+        this.whereNot('agreement.retired', '=', true);
+        this.where('plan_end_date', '>=', endDateStart);
+        this.andWhere('plan_end_date', '<=', endDateEnd);
+        this.whereNull('extension_status');
+        this.whereIn('status_id', [8, 9, 12, 20, 21, 22]);
+      })
+      .orWhere(function () {
+        this.whereNot('agreement.retired', '=', true);
+        this.where('plan_end_date', '>=', endDateStart);
+        this.andWhere('plan_end_date', '<=', endDateEnd);
+        this.whereNull('extension_status');
+        this.whereIn('status_id', [11, 13, 18]);
+        this.whereNotNull('amendment_type_id');
+      })
       .orderBy(orderBy);
-    const results = await q;
-    return results;
+    try {
+      return await q;
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
