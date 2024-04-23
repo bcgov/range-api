@@ -333,17 +333,9 @@ router.get(
         user.isRangeOfficer()
       ) {
         if (zones.length === 0) {
-          agreements = await getAgreementsForRangeOfficer({
-            user: user,
-            sendFullPlan: false,
-            orderBy: orderBy,
-            order: order,
-            filters: filters,
-          });
-          totalItems = agreements.length;
-          const startIndex = (page - 1) * limit;
-          const endIndex = startIndex + limit;
-          agreements = agreements.slice(startIndex, endIndex);
+          console.log('Returning 0');
+          res.status(200).json([]).end();
+          return;
         } else {
           agreements = await getAgreementsForZones({
             selectedZoneIds: zones,
