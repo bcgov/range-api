@@ -333,7 +333,6 @@ router.get(
         user.isRangeOfficer()
       ) {
         if (zones.length === 0) {
-          console.log('Returning 0');
           res.status(200).json([]).end();
           return;
         } else {
