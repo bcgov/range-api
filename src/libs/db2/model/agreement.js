@@ -210,7 +210,10 @@ export default class Agreement extends Model {
               `TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`,
             );
           } else if (filter === 'plan.status_id') {
-            q.where('ref_plan_status.code', 'ilike', `%${filters[filter]}%`);
+            if (filters[filter] && filters[filter].length > 0) {
+              const filterArray = filters[filter].split(",");
+              q.whereIn('ref_plan_status.code', filterArray);
+            }
           } else if (filter === 'planCheck') {
             if (filters[filter] === 'true')
               q.whereNotNull('ref_plan_status.code');
