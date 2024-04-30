@@ -30,6 +30,16 @@ export default class District extends Model {
     );
   }
 
+  static async update(db, where, values) {
+    const obj = {};
+    Object.keys(values).forEach((key) => {
+      obj[Model.toSnakeCase(key)] = values[key];
+    });
+    const count = await db.table(this.table).where(where).update(obj);
+
+    return [];
+  }
+
   static get table() {
     return 'ref_district';
   }
