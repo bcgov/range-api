@@ -51,4 +51,7 @@ router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
 // Assign role to user
 router.post('/:userId?/assignRole', asyncMiddleware(UserController.assignUserRole));
 
+// Assign district to user
+router.post('/:userId?/assignDistrict', asyncMiddleware(UserController.assignUserDistrict));
+
 module.exports = router;
