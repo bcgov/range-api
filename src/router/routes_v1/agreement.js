@@ -37,59 +37,7 @@ import District from '../../libs/db2/model/district';
 
 const router = new Router();
 const dm2 = new DataManager(config);
-const { db, Agreement, Client, Zone, ClientAgreement } = dm2;
-
-const allowableIDsForUser = async (
-  user,
-  agreementIDs,
-  selectedZoneIds = [],
-) => {
-  let okIDs = [];
-  if (user.isAgreementHolder()) {
-    const clientIds = await user.getLinkedClientNumbers(db);
-
-    const clientAgreements = await ClientAgreement.find(db, {
-      client_id: clientIds,
-    });
-    const agentAgreements = await ClientAgreement.find(db, {
-      agent_id: user.id,
-    });
-    const allowableAgreementIds = [...agentAgreements, ...clientAgreements].map(
-      (clientAgreement) => clientAgreement.agreementId,
-    );
-
-    okIDs = agreementIDs.filter((id) => allowableAgreementIds.includes(id));
-  } else if (user.isRangeOfficer()) {
-    let zpromise;
-    if (selectedZoneIds.length === 0) {
-      const zones = await Zone.find(db, { user_id: user.id });
-      zpromise = zones.map((zone) =>
-        Agreement.agreementsForZoneId(db, zone.id),
-      );
-    } else {
-      zpromise = selectedZoneIds.map((zoneId) =>
-        Agreement.agreementsForZoneId(db, zoneId),
-      );
-    }
-    const myIDs = flatten(await Promise.all(zpromise));
-    okIDs = agreementIDs.filter((id) => myIDs.includes(id));
-  } else if (user.isDecisionMaker()) {
-    const districts = await District.find(db, { user_id: user.id });
-    const zones = await Zone.find(db, {
-      district_id: districts.map((d) => d.id),
-    });
-    const agreements = await Agreement.find(db, {
-      zone_id: zones.map((z) => z.id),
-    });
-    okIDs = agreementIDs.filter((id) =>
-      agreements.some((a) => a.forestFileId === id),
-    );
-  } else {
-    okIDs = agreementIDs;
-  }
-
-  return okIDs;
-};
+const { db, Agreement, Zone, ClientAgreement } = dm2;
 
 const getAgreeementsForAH = async ({
   page = undefined,
@@ -262,105 +210,60 @@ router.get(
   asyncMiddleware(async (req, res) => {
     const { user, query } = req;
     const {
-      term = '',
       orderBy = 'agreement.forest_file_id',
       order = 'asc',
       selectedZones = '',
       filterString = {},
     } = query;
-
     const zones = selectedZones !== '' ? selectedZones.split(',') : [];
-
+    if (zones.length === 0) {
+      res.status(200).json([]).end();
+      return;
+    }
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 10);
     let agreements = [];
     let totalItems = 0;
-
     const filters = JSON.parse(filterString);
-    if (term) {
-      const clientIDs = await Client.searchForTerm(db, term);
-      const cpromises = clientIDs.map((clientId) =>
-        Agreement.agreementsForClientId(db, clientId),
-      );
-      const zoneIDs = await Zone.searchForTerm(db, term);
-      const zpromises = zoneIDs.map((zoneId) =>
-        Agreement.agreementsForZoneId(db, zoneId),
-      );
-      const allIDs = flatten([
-        ...(await Agreement.searchForTerm(db, term)),
-        ...(await Promise.all(cpromises)),
-        ...(await Promise.all(zpromises)),
-      ]);
-      // remove duplicate ids
-      const nonDuplicateIDs = allIDs.filter((v, i) => allIDs.indexOf(v) === i);
-
-      const okIDs = await allowableIDsForUser(req.user, nonDuplicateIDs, zones);
-
-      const latestPlan = true;
-      const sendFullPlan = false;
-      const staffDraft = !user.isAgreementHolder();
-      agreements = await Agreement.findWithAllRelations(
-        db,
-        { forest_file_id: okIDs },
-        undefined,
-        undefined,
-        latestPlan,
-        sendFullPlan,
-        staffDraft,
+    if (user.isAgreementHolder()) {
+      agreements = await getAgreeementsForAH({
+        user,
         orderBy,
         order,
         filters,
-      );
+      });
+      totalItems = agreements.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      agreements = agreements.slice(startIndex, endIndex);
+    } else if (
+      user.isAdministrator() ||
+      user.canReadAll() ||
+      user.isRangeOfficer()
+    ) {
+      agreements = await getAgreementsForZones({
+        selectedZoneIds: zones,
+        orderBy,
+        order,
+        filters,
+      });
+      totalItems = agreements.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      agreements = agreements.slice(startIndex, endIndex);
+    } else if (user.isDecisionMaker()) {
+      agreements = await getAgreeementsForDM({
+        user,
+        orderBy,
+        order,
+        filters,
+      });
       totalItems = agreements.length;
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       agreements = agreements.slice(startIndex, endIndex);
     } else {
-      if (user.isAgreementHolder()) {
-        agreements = await getAgreeementsForAH({
-          user,
-          orderBy,
-          order,
-          filters,
-        });
-        totalItems = agreements.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        agreements = agreements.slice(startIndex, endIndex);
-      } else if (
-        user.isAdministrator() ||
-        user.canReadAll() ||
-        user.isRangeOfficer()
-      ) {
-        if (zones.length === 0) {
-          res.status(200).json([]).end();
-          return;
-        } else {
-          agreements = await getAgreementsForZones({
-            selectedZoneIds: zones,
-            orderBy,
-            order,
-            filters,
-          });
-          totalItems = agreements.length;
-          const startIndex = (page - 1) * limit;
-          const endIndex = startIndex + limit;
-          agreements = agreements.slice(startIndex, endIndex);
-        }
-      } else if (user.isDecisionMaker()) {
-        agreements = await getAgreeementsForDM({
-          user,
-          orderBy,
-          order,
-          filters,
-        });
-        totalItems = agreements.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        agreements = agreements.slice(startIndex, endIndex);
-      } else {
-        throw errorWithCode('Unable to determine user roll', 500);
-      }
+      throw errorWithCode('Unable to determine user roll', 500);
     }
 
     agreements.map((agreement) => agreement.transformToV1());
