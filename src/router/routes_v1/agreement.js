@@ -263,7 +263,7 @@ router.get(
       const endIndex = startIndex + limit;
       agreements = agreements.slice(startIndex, endIndex);
     } else {
-      throw errorWithCode('Unable to determine user roll', 500);
+      throw errorWithCode('Unable to determine user role', 500);
     }
 
     agreements.map((agreement) => agreement.transformToV1());
