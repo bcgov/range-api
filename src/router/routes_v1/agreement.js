@@ -215,11 +215,6 @@ router.get(
       selectedZones = '',
       filterString = {},
     } = query;
-    const zones = selectedZones !== '' ? selectedZones.split(',') : [];
-    if (zones.length === 0) {
-      res.status(200).json([]).end();
-      return;
-    }
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 10);
     let agreements = [];
@@ -241,6 +236,11 @@ router.get(
       user.canReadAll() ||
       user.isRangeOfficer()
     ) {
+      const zones = selectedZones !== '' ? selectedZones.split(',') : [];
+      if (zones.length === 0) {
+        res.status(200).json([]).end();
+        return;
+      }
       agreements = await getAgreementsForZones({
         selectedZoneIds: zones,
         orderBy,
