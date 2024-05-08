@@ -95,8 +95,8 @@ export default class Agreement extends Model {
     latestPlan = false;
     sendFullPlan = false;
     staffDraft = false;
-    orderBy = 'agreement.forest_file_id';
-    order = 'asc';
+    orderBy = orderBy || 'agreement.forest_file_id';
+    order = order || 'asc';
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
       db,
