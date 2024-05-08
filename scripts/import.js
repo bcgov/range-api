@@ -122,7 +122,9 @@ const updateZone = async (data) => {
       const staffEmail =
         contact_email_address && contact_email_address.toLowerCase().trim();
       const staff = staffEmail
-        ? await User.findOne(db, { email: staffEmail })
+        ? (
+            await User.find(db, { email: staffEmail }, ['last_login_at', 'asc'])
+          ).pop()
         : null;
       const zone = await Zone.findOne(db, {
         code: zoneCode,
