@@ -281,6 +281,26 @@ export class UserController {
     }
   }
 
+  static async assignUserDistricts(req, res) {
+    try {
+      const { body, params } = req;
+      const { userId: userId } = params;
+      const districtIds = body.districtIds;
+
+      const updated = await District.updateMultiple(
+        db,
+        { ids: districtIds },
+        {
+          userId,
+        },
+      );
+
+      res.status(200).json(updated).end();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async show(req, res) {
     const { params } = req;
     const { userId } = params;
