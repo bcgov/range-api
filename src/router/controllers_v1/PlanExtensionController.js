@@ -16,6 +16,7 @@ import { Mailer } from '../../libs/mailer';
 import Agreement from '../../libs/db2/model/agreement';
 import EmailTemplate from '../../libs/db2/model/emailtemplate';
 import { PLAN_EXTENSION_STATUS } from '../../constants';
+import PlanController from './PlanController';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -78,6 +79,81 @@ export default class PlanExtensionController {
       logger.error(error.stack);
       trx.rollback();
       return res.status(500).end();
+    }
+  }
+  /**
+   * Fetch extension Plan
+   * @param {*} req : express req object
+   * @param {*} res : express resp object
+   */
+  static async fetchExtensionPlan(req, res) {
+    const { user, params } = req;
+    const { planId } = params;
+    const extensionPlan = await Plan.findOne(db, { extension_of: planId });
+    checkRequiredFields(['planId'], 'params', req);
+    if (extensionPlan) {
+      const response = await PlanController.fetchPlan(extensionPlan.id, user);
+      return res.status(200).json([response]).end();
+    }
+    return res.status(200).json([]).end();
+  }
+  /**
+   * Create Extension Plan
+   * @param {*} req : express req object
+   * @param {*} res : express resp object
+   */
+  static async createExtensionPlan(req, res) {
+    const { params } = req;
+    const { planId } = params;
+    checkRequiredFields(['planId'], 'params', req);
+    const trx = await db.transaction();
+    try {
+      const plan = await Plan.findOne(trx, { id: planId });
+      if (!plan) {
+        throw errorWithCode(`Could not find plan ${planId}`, 400);
+      }
+      if (
+        ![
+          PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
+          PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
+          PLAN_EXTENSION_STATUS.STAFF_REJECTED,
+        ].includes(plan.extensionStatus)
+      ) {
+        throw errorWithCode(
+          `Invalid plan extension status: ${plan.extensionStatus}`,
+          400,
+        );
+      }
+      const newPlanStartDate = new Date(plan.planEndDate);
+      newPlanStartDate.setDate(newPlanStartDate.getDate() + 1);
+      const newPlanEndtDate = new Date(newPlanStartDate);
+      newPlanEndtDate.setFullYear(newPlanStartDate.getFullYear() + 1);
+      newPlanEndtDate.setDate(newPlanEndtDate.getDate() - 1);
+      const extensionPlan = await PlanExtensionController.duplicatePlan(
+        trx,
+        plan,
+        {
+          extensionOf: plan.id,
+          planStartDate: newPlanStartDate,
+          planEndDate: newPlanEndtDate,
+          statusId: 4,
+        },
+      );
+      await Plan.update(
+        trx,
+        { id: planId },
+        {
+          extensionPlanId: extensionPlan.id,
+
+          extensionDate: new Date(),
+        },
+      );
+      trx.commit();
+      return res.status(200).json({ extensionPlan }).end();
+    } catch (error) {
+      trx.rollback();
+      logger.error(error.stack);
+      throw errorWithCode(error, 500);
     }
   }
 
@@ -193,121 +269,127 @@ export default class PlanExtensionController {
   static async duplicatePlan(trx, planRow, newPlanProperties) {
     const planId = planRow.id;
     PlanExtensionController.removeCommonFields(planRow);
-    const newPlan = await Plan.create(trx, {
-      ...planRow,
-      ...newPlanProperties,
-      extensionOf: planId,
-    });
-    const additionalRequirements = await AdditionalRequirement.find(trx, {
-      plan_id: planId,
-    });
-    for (const additionalRequirement of additionalRequirements) {
-      PlanExtensionController.removeCommonFields(additionalRequirement);
-      await AdditionalRequirement.create(trx, {
-        ...additionalRequirement,
-        planId: newPlan.id,
+    try {
+      console.log(JSON.stringify(planRow));
+      const newPlan = await Plan.create(trx, {
+        ...planRow,
+        ...newPlanProperties,
+        extensionOf: planId,
       });
-    }
-    const newAndOldPastureIds = [];
-    const pastures = await Pasture.find(trx, { plan_id: planId });
-    for (const pasture of pastures) {
-      const oldPastureId = pasture.id;
-      PlanExtensionController.removeCommonFields(pasture);
-      const newPasture = await Pasture.create(trx, {
-        ...pasture,
-        planId: newPlan.id,
+      const additionalRequirements = await AdditionalRequirement.find(trx, {
+        plan_id: planId,
       });
-      newAndOldPastureIds.push({
-        newPastureId: newPasture.id,
-        oldPastureId,
-      });
-    }
-    const grazingSchedules = await GrazingSchedule.find(trx, {
-      plan_id: planId,
-    });
-    for (const grazingSchedule of grazingSchedules) {
-      const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
-        grazing_schedule_id: grazingSchedule.id,
-      });
-      PlanExtensionController.removeCommonFields(grazingSchedule);
-      const newGrazingSchedule = await GrazingSchedule.create(trx, {
-        ...grazingSchedule,
-        planId: newPlan.id,
-      });
-      for (const grazingScheduleEntry of grazingScheduleEntries) {
-        PlanExtensionController.removeCommonFields(grazingScheduleEntry);
-        await GrazingScheduleEntry.create(trx, {
-          ...grazingScheduleEntry,
-          grazingScheduleId: newGrazingSchedule.id,
-          pastureId: newAndOldPastureIds.find(
-            (element) =>
-              element.oldPastureId === grazingScheduleEntry.pastureId,
-          ).newPastureId,
+      for (const additionalRequirement of additionalRequirements) {
+        PlanExtensionController.removeCommonFields(additionalRequirement);
+        await AdditionalRequirement.create(trx, {
+          ...additionalRequirement,
+          planId: newPlan.id,
         });
       }
-    }
-    const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
-    const newAndOldMinisterIssueIds = [];
-    for (const ministerIssue of ministerIssues) {
-      const oldMinisterIssueId = ministerIssue.id;
-      PlanExtensionController.removeCommonFields(ministerIssue);
-      const newMinisterIssue = await MinisterIssue.create(trx, {
-        ...ministerIssue,
-        planId: newPlan.id,
-      });
-      newAndOldMinisterIssueIds.push({
-        newMinisterIssueId: newMinisterIssue.id,
-        oldMinisterIssueId,
-      });
-      const ministerIssueActions = await MinisterIssueAction.find(trx, {
-        issue_id: ministerIssue.id,
-      });
-      for (const ministerIssueAction of ministerIssueActions) {
-        PlanExtensionController.removeCommonFields(ministerIssueAction);
-        await MinisterIssueAction.create(trx, {
-          ...ministerIssueAction,
-          issueId: newMinisterIssue.id,
+      const newAndOldPastureIds = [];
+      const pastures = await Pasture.find(trx, { plan_id: planId });
+      for (const pasture of pastures) {
+        const oldPastureId = pasture.id;
+        PlanExtensionController.removeCommonFields(pasture);
+        const newPasture = await Pasture.create(trx, {
+          ...pasture,
+          planId: newPlan.id,
+        });
+        newAndOldPastureIds.push({
+          newPastureId: newPasture.id,
+          oldPastureId,
         });
       }
-      const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
-        issue_id: ministerIssue.id,
+      const grazingSchedules = await GrazingSchedule.find(trx, {
+        plan_id: planId,
       });
-      for (const ministerIssuePasture of ministerIssuePastures) {
-        PlanExtensionController.removeCommonFields(ministerIssuePasture);
-        await MinisterIssuePasture.create(trx, {
-          ...ministerIssuePasture,
-          ministerIssueId: newMinisterIssue.id,
-          pastureId: newAndOldPastureIds.find(
-            (element) =>
-              element.oldPastureId === ministerIssuePasture.pastureId,
-          ).newPastureId,
+      for (const grazingSchedule of grazingSchedules) {
+        const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
+          grazing_schedule_id: grazingSchedule.id,
+        });
+        PlanExtensionController.removeCommonFields(grazingSchedule);
+        const newGrazingSchedule = await GrazingSchedule.create(trx, {
+          ...grazingSchedule,
+          planId: newPlan.id,
+        });
+        for (const grazingScheduleEntry of grazingScheduleEntries) {
+          PlanExtensionController.removeCommonFields(grazingScheduleEntry);
+          await GrazingScheduleEntry.create(trx, {
+            ...grazingScheduleEntry,
+            grazingScheduleId: newGrazingSchedule.id,
+            pastureId: newAndOldPastureIds.find(
+              (element) =>
+                element.oldPastureId === grazingScheduleEntry.pastureId,
+            ).newPastureId,
+          });
+        }
+      }
+      const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
+      const newAndOldMinisterIssueIds = [];
+      for (const ministerIssue of ministerIssues) {
+        const oldMinisterIssueId = ministerIssue.id;
+        PlanExtensionController.removeCommonFields(ministerIssue);
+        const newMinisterIssue = await MinisterIssue.create(trx, {
+          ...ministerIssue,
+          planId: newPlan.id,
+        });
+        newAndOldMinisterIssueIds.push({
+          newMinisterIssueId: newMinisterIssue.id,
+          oldMinisterIssueId,
+        });
+        const ministerIssueActions = await MinisterIssueAction.find(trx, {
+          issue_id: ministerIssue.id,
+        });
+        for (const ministerIssueAction of ministerIssueActions) {
+          PlanExtensionController.removeCommonFields(ministerIssueAction);
+          await MinisterIssueAction.create(trx, {
+            ...ministerIssueAction,
+            issueId: newMinisterIssue.id,
+          });
+        }
+        const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
+          issue_id: ministerIssue.id,
+        });
+        for (const ministerIssuePasture of ministerIssuePastures) {
+          PlanExtensionController.removeCommonFields(ministerIssuePasture);
+          await MinisterIssuePasture.create(trx, {
+            ...ministerIssuePasture,
+            ministerIssueId: newMinisterIssue.id,
+            pastureId: newAndOldPastureIds.find(
+              (element) =>
+                element.oldPastureId === ministerIssuePasture.pastureId,
+            ).newPastureId,
+          });
+        }
+      }
+      const managementConsiderations = await ManagementConsideration.find(trx, {
+        plan_id: planId,
+      });
+      for (const managementConsideration of managementConsiderations) {
+        PlanExtensionController.removeCommonFields(managementConsideration);
+        await ManagementConsideration.create(trx, {
+          ...managementConsideration,
+          planId: newPlan.id,
         });
       }
-    }
-    const managementConsiderations = await ManagementConsideration.find(trx, {
-      plan_id: planId,
-    });
-    for (const managementConsideration of managementConsiderations) {
-      PlanExtensionController.removeCommonFields(managementConsideration);
-      await ManagementConsideration.create(trx, {
-        ...managementConsideration,
+      const planFiles = await PlanFile.find(trx, { plan_id: planId });
+      for (const planFile of planFiles) {
+        PlanExtensionController.removeCommonFields(planFile);
+        await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
+      }
+      const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
+        plan_id: planId,
+      });
+      PlanExtensionController.removeCommonFields(invasivePlantChecklist);
+      await InvasivePlantChecklist.create(trx, {
+        ...invasivePlantChecklist,
         planId: newPlan.id,
       });
+      return newPlan;
+    } catch (exception) {
+      logger.error(exception.stack);
+      return null;
     }
-    const planFiles = await PlanFile.find(trx, { plan_id: planId });
-    for (const planFile of planFiles) {
-      PlanExtensionController.removeCommonFields(planFile);
-      await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
-    }
-    const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
-      plan_id: planId,
-    });
-    PlanExtensionController.removeCommonFields(invasivePlantChecklist);
-    await InvasivePlantChecklist.create(trx, {
-      ...invasivePlantChecklist,
-      planId: newPlan.id,
-    });
-    return newPlan;
   }
 
   /**
@@ -388,7 +470,6 @@ export default class PlanExtensionController {
         {
           extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,
           statusId: 6,
-          planEndDate: endDate,
         },
       );
       trx.commit();

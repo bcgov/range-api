@@ -179,10 +179,7 @@ export default class Agreement extends Model {
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
-      // .leftJoin("ref_agreement_exemption_status", {
-      //   "agreement.agreement_exemption_status_id":
-      //     "ref_agreement_exemption_status.id",
-      // })
+      .whereNull('plan.extension_of')
       .orderByRaw(
         `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
@@ -211,7 +208,7 @@ export default class Agreement extends Model {
             );
           } else if (filter === 'plan.status_id') {
             if (filters[filter] && filters[filter].length > 0) {
-              const filterArray = filters[filter].split(",");
+              const filterArray = filters[filter].split(',');
               q.whereIn('ref_plan_status.code', filterArray);
             }
           } else if (filter === 'planCheck') {
@@ -238,7 +235,7 @@ export default class Agreement extends Model {
                       "ref_plan_status"."id"=18
                     )
                   )
-                )`
+                )`,
               );
             }
           } else {

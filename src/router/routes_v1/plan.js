@@ -361,6 +361,16 @@ router.put(
   '/:planId?/extension/extend',
   asyncMiddleware(PlanExtensionController.extendPlan),
 );
+// return extension plan
+router.get(
+  '/:planId?/extension',
+  asyncMiddleware(PlanExtensionController.fetchExtensionPlan),
+);
+// create extension plan
+router.put(
+  '/:planId?/extension/createExtensionPlan',
+  asyncMiddleware(PlanExtensionController.createExtensionPlan),
+);
 // request extend plan
 router.put(
   '/:planId?/extension/request',
