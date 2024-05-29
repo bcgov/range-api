@@ -45,4 +45,18 @@ router.get(
   }),
 );
 
+router.get(
+  '/:id',
+  asyncMiddleware(async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const results = await District.find(db, {user_id: id});
+      res.status(200).json(results).end();
+    } catch (err) {
+      res.status(500).json({ error: err }).end();
+    }
+  }),
+);
+
 module.exports = router;

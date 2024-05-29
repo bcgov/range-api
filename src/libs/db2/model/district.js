@@ -50,6 +50,15 @@ export default class District extends Model {
     return [];
   }
 
+  static async removeDistricts(db, where) {
+    const obj = {
+      user_id: null
+    };
+    const count = await db.table(this.table).where("user_id", where.user_id).update(obj);
+
+    return [];
+  }
+
   static get table() {
     return 'ref_district';
   }

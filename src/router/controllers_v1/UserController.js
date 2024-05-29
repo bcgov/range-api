@@ -287,6 +287,12 @@ export class UserController {
       const { userId: userId } = params;
       const districtIds = body.districtIds;
 
+      // empty districts
+      const deleted = await District.removeDistricts(
+        db,
+        {user_id: userId}
+      );
+
       const updated = await District.updateMultiple(
         db,
         { ids: districtIds },
