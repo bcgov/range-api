@@ -1,8 +1,11 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import config from '../../config';
+import { PLAN_EXTENSION_STATUS } from '../../constants';
 import DataManager from '../../libs/db2';
 import PlanFile from '../../libs/db2/model/PlanFile';
 import AdditionalRequirement from '../../libs/db2/model/additionalrequirement';
+import Agreement from '../../libs/db2/model/agreement';
+import EmailTemplate from '../../libs/db2/model/emailtemplate';
 import GrazingSchedule from '../../libs/db2/model/grazingschedule';
 import GrazingScheduleEntry from '../../libs/db2/model/grazingscheduleentry';
 import InvasivePlantChecklist from '../../libs/db2/model/invasiveplantchecklist';
@@ -11,11 +14,8 @@ import MinisterIssue from '../../libs/db2/model/ministerissue';
 import MinisterIssueAction from '../../libs/db2/model/ministerissueaction';
 import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture';
 import Pasture from '../../libs/db2/model/pasture';
-import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import { Mailer } from '../../libs/mailer';
-import Agreement from '../../libs/db2/model/agreement';
-import EmailTemplate from '../../libs/db2/model/emailtemplate';
-import { PLAN_EXTENSION_STATUS } from '../../constants';
+import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import PlanController from './PlanController';
 
 const dm = new DataManager(config);
@@ -82,27 +82,27 @@ export default class PlanExtensionController {
     }
   }
   /**
-   * Fetch extension Plan
+   * Fetch replacement plan
    * @param {*} req : express req object
    * @param {*} res : express resp object
    */
-  static async fetchExtensionPlan(req, res) {
+  static async fetchReplacementPlan(req, res) {
     const { user, params } = req;
     const { planId } = params;
-    const extensionPlan = await Plan.findOne(db, { extension_of: planId });
+    const replacementPlan = await Plan.findOne(db, { replacement_of: planId });
     checkRequiredFields(['planId'], 'params', req);
-    if (extensionPlan) {
-      const response = await PlanController.fetchPlan(extensionPlan.id, user);
+    if (replacementPlan) {
+      const response = await PlanController.fetchPlan(replacementPlan.id, user);
       return res.status(200).json([response]).end();
     }
     return res.status(200).json([]).end();
   }
   /**
-   * Create Extension Plan
+   * Create Replacement Plan
    * @param {*} req : express req object
    * @param {*} res : express resp object
    */
-  static async createExtensionPlan(req, res) {
+  static async createReplacementPlan(req, res) {
     const { params } = req;
     const { planId } = params;
     checkRequiredFields(['planId'], 'params', req);
@@ -129,27 +129,28 @@ export default class PlanExtensionController {
       const newPlanEndtDate = new Date(newPlanStartDate);
       newPlanEndtDate.setFullYear(newPlanStartDate.getFullYear() + 1);
       newPlanEndtDate.setDate(newPlanEndtDate.getDate() - 1);
-      const extensionPlan = await PlanExtensionController.duplicatePlan(
+      const replacementPlan = await PlanExtensionController.duplicatePlan(
         trx,
         plan,
         {
-          extensionOf: plan.id,
+          replacementOf: plan.id,
+          replacementPlanId: null,
           planStartDate: newPlanStartDate,
           planEndDate: newPlanEndtDate,
-          statusId: 4,
+          statusId: 6,
+          extensionStatus: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_INACTIVE,
         },
       );
       await Plan.update(
         trx,
         { id: planId },
         {
-          extensionPlanId: extensionPlan.id,
-
-          extensionDate: new Date(),
+          replacementPlanId: replacementPlan.id,
+          extensionStatus: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED,
         },
       );
       trx.commit();
-      return res.status(200).json({ extensionPlan }).end();
+      return res.status(200).json({ replacementPlan: replacementPlan }).end();
     } catch (error) {
       trx.rollback();
       logger.error(error.stack);
@@ -274,7 +275,6 @@ export default class PlanExtensionController {
       const newPlan = await Plan.create(trx, {
         ...planRow,
         ...newPlanProperties,
-        extensionOf: planId,
       });
       const additionalRequirements = await AdditionalRequirement.find(trx, {
         plan_id: planId,
@@ -415,7 +415,7 @@ export default class PlanExtensionController {
         400,
       );
     }
-    if (planRow.extensionOf !== null) {
+    if (planRow.replacementOf !== null) {
       throw errorWithCode('Plan is an extension', 400);
     }
     const trx = await db.transaction();
@@ -453,8 +453,8 @@ export default class PlanExtensionController {
     if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
       throw errorWithCode('Need positive votes from all AH', 400);
     }
-    if (planRow.extensionOf !== null) {
-      throw errorWithCode('Cannot extend extension plan', 400);
+    if (planRow.replacementOf !== null) {
+      throw errorWithCode('Cannot extend replacement plan', 400);
     }
     if (planRow.planEndDate.getTime() >= Date.parse(endDate)) {
       throw errorWithCode(

@@ -98,10 +98,10 @@ export default class Plan extends Model {
       'extension_status',
       'extension_required_votes',
       'extension_received_votes',
-      'extension_of',
+      'replacement_of',
       'extension_date',
       'extension_rejected_by',
-      'extension_plan_id',
+      'replacement_plan_id',
     ].map((f) => `${Plan.table}.${f}`);
   }
 

@@ -33,6 +33,7 @@ import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
+import { PLAN_EXTENSION_STATUS } from '../../../constants';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -179,7 +180,6 @@ export default class Agreement extends Model {
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
-      .whereNull('plan.extension_of')
       .orderByRaw(
         `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
@@ -193,6 +193,9 @@ export default class Agreement extends Model {
     } else {
       q.where(where);
     }
+    q.whereNot({
+      'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_INACTIVE,
+    });
     // Filters
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
