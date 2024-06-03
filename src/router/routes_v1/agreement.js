@@ -252,7 +252,7 @@ router.get(
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       agreements = agreements.slice(startIndex, endIndex);
-    } else if (user.isDecisionMaker()) {
+    } else if (user.isDecisionMaker() || user.canReadDistrict()) {
       agreements = await getAgreeementsForDM({
         user,
         orderBy,
