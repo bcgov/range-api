@@ -34,6 +34,7 @@ import config from '../../config';
 import DataManager from '../../libs/db2';
 import { isNumeric } from '../../libs/utils';
 import District from '../../libs/db2/model/district';
+import UserDistricts from '../../libs/db2/model/userDistricts';
 
 const router = new Router();
 const dm2 = new DataManager(config);
@@ -96,7 +97,7 @@ const getAgreeementsForDM = async ({
   staffDraft = false,
   filters = {},
 }) => {
-  const districts = await District.find(db, { user_id: user.id });
+  const districts = await UserDistricts.find(db, { user_id: user.id });
 
   const zones = await Zone.find(db, {
     district_id: districts.map((d) => d.id),

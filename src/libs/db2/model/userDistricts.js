@@ -38,7 +38,6 @@ export default class UserDistricts extends Model {
     districts.forEach((district) => {
       const obj = {};
       Object.keys(district).forEach((key) => {
-        if (key === 'id') return;
         obj[Model.toSnakeCase(key)] = district[key];
       });
       obj["user_id"] = id;

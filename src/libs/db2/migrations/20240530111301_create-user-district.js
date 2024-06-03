@@ -24,7 +24,8 @@ const table = 'user_districts';
 
 exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
-    t.increments('id').unsigned().index().primary();
+    t.increments('p_id').unsigned().index().primary();
+    t.integer('id');
     t.text('code').index().notNull();
     t.text('description').notNull();
     t.dateTime('created_at')
