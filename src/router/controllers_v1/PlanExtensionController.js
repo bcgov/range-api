@@ -138,6 +138,7 @@ export default class PlanExtensionController {
           planStartDate: newPlanStartDate,
           planEndDate: newPlanEndtDate,
           statusId: 6,
+          amendmentTypeId: null,
           extensionStatus: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
         },
       );
@@ -145,6 +146,10 @@ export default class PlanExtensionController {
         trx,
         replacementPlan,
       );
+      await PlanFile.remove(trx, {
+        plan_id: replacementPlan.id,
+        type: 'decisionAttachments',
+      });
       await Plan.update(
         trx,
         { id: planId },
@@ -170,7 +175,6 @@ export default class PlanExtensionController {
       },
       ['year', 'desc'],
     );
-    console.log(plan.planStartDate.getFullYear());
     for (const grazingScheduleToRemove of grazingSchedules.slice(1)) {
       await GrazingSchedule.removeById(trx, grazingScheduleToRemove.id);
     }
@@ -296,7 +300,6 @@ export default class PlanExtensionController {
     const planId = planRow.id;
     PlanExtensionController.removeCommonFields(planRow);
     try {
-      console.log(JSON.stringify(planRow));
       const newPlan = await Plan.create(trx, {
         ...planRow,
         ...newPlanProperties,
