@@ -138,7 +138,7 @@ export default class PlanExtensionController {
           planStartDate: newPlanStartDate,
           planEndDate: newPlanEndtDate,
           statusId: 6,
-          extensionStatus: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_INACTIVE,
+          extensionStatus: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
         },
       );
       await Plan.update(

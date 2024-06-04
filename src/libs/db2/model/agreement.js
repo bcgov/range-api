@@ -193,8 +193,11 @@ export default class Agreement extends Model {
     } else {
       q.where(where);
     }
-    q.whereNot({
-      'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_INACTIVE,
+    q.where(function () {
+      this.whereNull('plan.extension_status').orWhereNot({
+        'plan.extension_status':
+          PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+      });
     });
     // Filters
     if (filters && Object.keys(filters).length > 0) {
@@ -253,6 +256,7 @@ export default class Agreement extends Model {
     } else {
       results = await q;
     }
+    // console.debug(q.toSQL().toNative());
     return results.map((row) => new Agreement(row, db));
   }
 
