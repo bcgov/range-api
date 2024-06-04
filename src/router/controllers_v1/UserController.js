@@ -288,6 +288,8 @@ export class UserController {
       const { body, params } = req;
       const { userId: userId } = params;
       const districts = body.districts;
+      const userToFind = await User.findById(db, userId);
+      if (userToFind.roleId === 4 && districts.length > 0) throw('Cannot assign districts to Range Agreement Holders.');
 
       // empty districts
       const deleted = await UserDistricts.removeDistricts(
