@@ -2,6 +2,7 @@ import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
+import UserDistricts from '../../libs/db2/model/userDistricts';
 
 const dm = new DataManager(config);
 const {
@@ -14,6 +15,7 @@ const {
   PlanStatusHistory,
   PlanConfirmation,
   District,
+  Districts,
   Zone,
   Plan,
   PlanFile,
@@ -285,13 +287,18 @@ export class UserController {
     try {
       const { body, params } = req;
       const { userId: userId } = params;
-      const districtIds = body.districtIds;
+      const districts = body.districts;
 
-      const updated = await District.updateMultiple(
+      // empty districts
+      const deleted = await UserDistricts.removeDistricts(
         db,
-        { ids: districtIds },
+        {user_id: userId}
+      );
+      const updated = await UserDistricts.createOneOrMany(
+        db,
         {
-          userId,
+          user_id: userId,
+          districts: districts
         },
       );
 

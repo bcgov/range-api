@@ -66,6 +66,7 @@ import PlanFile from './model/PlanFile';
 import EmailTemplate from './model/emailtemplate';
 import PlanExtensionRequests from './model/planextensionrequests';
 import UserPermissions from './model/userPermissions';
+import UserDistricts from './model/userDistricts';
 
 export const connection = knex({
   client: 'pg',
@@ -99,6 +100,7 @@ export default class DataManager {
     this.ClientType = ClientType;
     this.ClientAgreement = ClientAgreement;
     this.District = District;
+    this.UserDistricts = UserDistricts;
     this.GrazingSchedule = GrazingSchedule;
     this.GrazingScheduleEntry = GrazingScheduleEntry;
     this.LivestockIdentifier = LivestockIdentifier;

@@ -22,7 +22,7 @@
 
 import Model from './model';
 
-export default class District extends Model {
+export default class UserDistricts extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'code', 'description', 'user_id'].map(
@@ -30,36 +30,32 @@ export default class District extends Model {
     );
   }
 
-  static async update(db, where, values) {
-    const obj = {};
-    Object.keys(values).forEach((key) => {
-      obj[Model.toSnakeCase(key)] = values[key];
-    });
-    const count = await db.table(this.table).where(where).update(obj);
+  static async createOneOrMany(db, values) {
+    const id = values.user_id;
+    const districts = values.districts;
+    const objs = [];
 
-    return [];
-  }
-
-  static async updateMultiple(db, where, values) {
-    const obj = {};
-    Object.keys(values).forEach((key) => {
-      obj[Model.toSnakeCase(key)] = values[key];
+    districts.forEach((district) => {
+      const obj = {};
+      Object.keys(district).forEach((key) => {
+        obj[Model.toSnakeCase(key)] = district[key];
+      });
+      obj["user_id"] = id;
+      objs.push(obj);
     });
-    const count = await db.table(this.table).whereIn("id", where.ids).update(obj);
+
+    const count = await db.table(this.table).insert(objs);
 
     return [];
   }
 
   static async removeDistricts(db, where) {
-    const obj = {
-      user_id: null
-    };
-    const count = await db.table(this.table).where("user_id", where.user_id).update(obj);
+    const count = await db.table(this.table).where("user_id", where.user_id).del();
 
     return [];
   }
 
   static get table() {
-    return 'ref_district';
+    return 'user_districts';
   }
 }

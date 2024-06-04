@@ -26,6 +26,7 @@ import { asyncMiddleware } from '@bcgov/nodejs-common-utils';
 import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
+import UserDistricts from '../../libs/db2/model/userDistricts';
 
 const dm = new DataManager(config);
 const { db, District } = dm;
@@ -38,6 +39,20 @@ router.get(
   asyncMiddleware(async (req, res) => {
     try {
       const results = await District.find(db, {});
+      res.status(200).json(results).end();
+    } catch (err) {
+      res.status(500).json({ error: err }).end();
+    }
+  }),
+);
+
+router.get(
+  '/:id',
+  asyncMiddleware(async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const results = await UserDistricts.find(db, {user_id: id});
       res.status(200).json(results).end();
     } catch (err) {
       res.status(500).json({ error: err }).end();
