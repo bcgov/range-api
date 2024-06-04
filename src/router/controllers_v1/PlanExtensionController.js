@@ -141,6 +141,10 @@ export default class PlanExtensionController {
           extensionStatus: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
         },
       );
+      await PlanExtensionController.setReplacementPlanGrazingSchedule(
+        trx,
+        replacementPlan,
+      );
       await Plan.update(
         trx,
         { id: planId },
@@ -155,6 +159,27 @@ export default class PlanExtensionController {
       trx.rollback();
       logger.error(error.stack);
       throw errorWithCode(error, 500);
+    }
+  }
+
+  static async setReplacementPlanGrazingSchedule(trx, plan) {
+    const grazingSchedules = await GrazingSchedule.find(
+      trx,
+      {
+        plan_id: plan.id,
+      },
+      ['year', 'desc'],
+    );
+    console.log(plan.planStartDate.getFullYear());
+    for (const grazingScheduleToRemove of grazingSchedules.slice(1)) {
+      await GrazingSchedule.removeById(trx, grazingScheduleToRemove.id);
+    }
+    if (grazingSchedules[0]) {
+      await GrazingSchedule.update(
+        trx,
+        { id: grazingSchedules[0].id },
+        { year: plan.planStartDate.getFullYear() },
+      );
     }
   }
 
