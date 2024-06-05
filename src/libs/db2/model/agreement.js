@@ -200,7 +200,7 @@ export default class Agreement extends Model {
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
         if (filters[filter] && filters[filter] !== '') {
-          if (filter === 'plan_creator.given_name') {
+          if (filter === 'user_account.family_name') {
             q.whereRaw(
               `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`,
             );
