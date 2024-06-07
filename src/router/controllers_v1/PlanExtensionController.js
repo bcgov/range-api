@@ -127,7 +127,7 @@ export default class PlanExtensionController {
       const newPlanStartDate = new Date(plan.planEndDate);
       newPlanStartDate.setDate(newPlanStartDate.getDate() + 1);
       const newPlanEndtDate = new Date(newPlanStartDate);
-      newPlanEndtDate.setFullYear(newPlanStartDate.getFullYear() + 1);
+      newPlanEndtDate.setFullYear(newPlanStartDate.getFullYear() + 5);
       newPlanEndtDate.setDate(newPlanEndtDate.getDate() - 1);
       const replacementPlan = await PlanExtensionController.duplicatePlan(
         trx,

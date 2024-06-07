@@ -199,7 +199,12 @@ export default class Agreement extends Model {
           PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
       });
     });
-    // Filters
+    q.where(function () {
+      this.whereNull('plan.extension_status').orWhereNot({
+        'plan.extension_status':
+          PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+      });
+    });
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
         if (filters[filter] && filters[filter] !== '') {
