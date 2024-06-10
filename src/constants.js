@@ -56,7 +56,7 @@ export const SSO_ROLE_MAP = {
   RANGE_OFFICER: 'myra_range_officer',
   AGREEMENT_HOLDER: 'myra_client',
   DECISION_MAKER: 'myra_decision_maker',
-  READ_ONLY: 'myra_read_only'
+  READ_ONLY: 'myra_read_only',
 };
 
 export const PLAN_STATUS = {
@@ -113,6 +113,10 @@ export const PLAN_EXTENSION_STATUS = {
   AWAITING_EXTENSION: 3,
   EXTENDED: 4,
   IS_EXTENSION: 5,
+  REPLACEMENT_PLAN_CREATED: 8,
+  INCACTIVE_REPLACEMENT_PLAN: 9,
+  ACTIVE_REPLACEMENT_PLAN: 10,
+  REPLACED_WITH_REPLACEMENT_PLAN: 11,
 };
 
 export const NOT_PROVIDED = 'Not provided';

@@ -1,4 +1,5 @@
 import config from '../src/config';
+import { PLAN_EXTENSION_STATUS } from '../src/constants';
 import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
 import { Mailer } from '../src/libs/mailer';
@@ -28,34 +29,79 @@ const sendEmailToAgreementHolders = async (db, expiringPlan) => {
 
 const processExpiredPlans = async (trx) => {
   const results = await trx
-    .select(['plan.id as planId'])
+    .select()
     .from(Plan.table)
     .where('plan_end_date', '<', new Date())
-    .whereNotNull('extension_status');
+    .whereNotNull('extension_status')
+    .whereNot({
+      extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+    })
+    .whereNot({
+      extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+    });
+  console.log(results);
   for (const result of results) {
-    try {
-      console.log(`Removing extension for expired planId: ${result.planId}`);
-      await PlanExtensionRequests.remove(trx, {
-        plan_id: result.planId,
-      });
-      await Plan.update(
-        trx,
-        { id: result.planId },
-        {
-          extension_status: null,
-          extension_required_votes: 0,
-          extension_received_votes: 0,
-          extension_date: null,
-          extension_rejected_by: null,
-        },
-      );
-    } catch (error) {
-      console.log(error.stack);
+    if (
+      result.extension_status === PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED
+    ) {
+      try {
+        console.log(
+          `Replacing planId: ${result.id} with the replacement plan ${result.replacement_plan_id}`,
+        );
+        await Plan.update(
+          trx,
+          { id: result.id },
+          {
+            extension_status:
+              PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+          },
+        );
+        await Plan.update(
+          trx,
+          { id: result.replacement_plan_id },
+          {
+            extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+          },
+        );
+        continue;
+      } catch (error) {
+        console.log(error.stack);
+      }
+    }
+    if (
+      [
+        PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+        PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
+        PLAN_EXTENSION_STATUS.STAFF_REJECTED,
+        PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
+        PLAN_EXTENSION_STATUS.AWAITING_EXTENSION,
+      ].includes(result.extension_status)
+    ) {
+      try {
+        console.log(`Removing extension for expired planId: ${result.planId}`);
+        await PlanExtensionRequests.remove(trx, {
+          plan_id: result.planId,
+        });
+        await Plan.update(
+          trx,
+          { id: result.planId },
+          {
+            extension_status: null,
+            extension_required_votes: 0,
+            extension_received_votes: 0,
+            extension_date: null,
+            extension_rejected_by: null,
+          },
+        );
+      } catch (error) {
+        console.log(error.stack);
+      }
     }
   }
 };
 
 const main = async () => {
+  console.log('Starting plan extension batch process..');
   const trx = await db.transaction();
   try {
     const currentDate = new Date();

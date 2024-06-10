@@ -141,18 +141,13 @@ export default class Model {
           obj[aKey] = values[aKey];
         }
       });
-
-    try {
-      const results = await db
-        .table(this.table)
-        .where(where)
-        .update(obj)
-        .returning(this.primaryKey);
-      if (results.length > 0) return await this.findById(db, results.pop());
-      return [];
-    } catch (err) {
-      throw err;
-    }
+    const results = await db
+      .table(this.table)
+      .where(where)
+      .update(obj)
+      .returning(this.primaryKey);
+    if (results.length > 0) return await this.findById(db, results.pop());
+    return [];
   }
 
   static async count(db, where = {}) {
@@ -209,22 +204,18 @@ export default class Model {
       }
     });
 
-    try {
-      const results = await db
-        .table(this.table)
-        .returning(this.primaryKey)
-        .insert(obj);
+    const results = await db
+      .table(this.table)
+      .returning(this.primaryKey)
+      .insert(obj);
 
-      if (
-        fields.includes('canonical_id') &&
-        !(values.canonicalId || values.canonical_id)
-      ) {
-        await this.setCanonicalId(db, results[0]);
-      }
-      return await this.findById(db, results.pop());
-    } catch (err) {
-      throw err;
+    if (
+      fields.includes('canonical_id') &&
+      !(values.canonicalId || values.canonical_id)
+    ) {
+      await this.setCanonicalId(db, results[0]);
     }
+    return await this.findById(db, results.pop());
   }
 
   static async removeById(db, id) {
