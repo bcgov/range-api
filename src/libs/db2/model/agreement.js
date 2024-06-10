@@ -306,24 +306,6 @@ export default class Agreement extends Model {
     return results;
   }
 
-  static async update(db, where, values) {
-    const obj = {};
-    Agreement.fields.forEach((field) => {
-      const aKey = field.replace(Agreement.table, '').slice(1);
-      if (values[Model.toCamelCase(aKey)]) {
-        obj[aKey] = values[Model.toCamelCase(aKey)];
-      }
-    });
-
-    const results = db
-      .table(Agreement.table)
-      .where(where)
-      .update(obj)
-      .returning(this.primaryKey);
-
-    return results;
-  }
-
   async eagerloadAllOneToManyExceptPlan() {
     await this.fetchClients();
     await this.fetchUsage();
