@@ -278,6 +278,7 @@ const updateAgreement = async (data) => {
             zoneId: zone.id,
             agreementTypeId: agreementType.id,
             agreementExemptionStatusId: exemption.id,
+            retired: false,
           },
         );
         updated += 1;
@@ -289,6 +290,7 @@ const updateAgreement = async (data) => {
           zoneId: zone.id,
           agreementTypeId: agreementType.id,
           agreementExemptionStatusId: exemption.id,
+          retired: false,
         });
         created += 1;
       }
