@@ -199,12 +199,6 @@ export default class Agreement extends Model {
           PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
       });
     });
-    q.where(function () {
-      this.whereNull('plan.extension_status').orWhereNot({
-        'plan.extension_status':
-          PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
-      });
-    });
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
         if (filters[filter] && filters[filter] !== '') {
@@ -249,6 +243,14 @@ export default class Agreement extends Model {
                 )`,
               );
             }
+          } else if (filter === 'showReplacedPlans') {
+            if (filters[filter] !== 'true')
+              q.where(function () {
+                this.whereNull('plan.extension_status').orWhereNot({
+                  'plan.extension_status':
+                    PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+                });
+              });
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
