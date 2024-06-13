@@ -181,7 +181,7 @@ export default class Agreement extends Model {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
       .orderByRaw(
-        `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
+        `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls last'}`,
       );
     if (
       Object.keys(where).length === 1 &&
