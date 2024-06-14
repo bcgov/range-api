@@ -212,7 +212,7 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
     return count !== '0';
   }
 
-  if (this.isRangeOfficer()) {
+  if (this.isRangeOfficer() || this.isReadOnly()) {
     const [result] = await db
       .table('agreement')
       .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
