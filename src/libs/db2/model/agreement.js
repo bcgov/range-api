@@ -33,6 +33,7 @@ import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
+import { PLAN_EXTENSION_STATUS } from '../../../constants';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -95,8 +96,8 @@ export default class Agreement extends Model {
     latestPlan = false;
     sendFullPlan = false;
     staffDraft = false;
-    orderBy = 'agreement.forest_file_id';
-    order = 'asc';
+    orderBy = orderBy || 'agreement.forest_file_id';
+    order = order || 'asc';
     let promises = [];
     const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
       db,
@@ -179,10 +180,6 @@ export default class Agreement extends Model {
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
-      // .leftJoin("ref_agreement_exemption_status", {
-      //   "agreement.agreement_exemption_status_id":
-      //     "ref_agreement_exemption_status.id",
-      // })
       .orderByRaw(
         `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
@@ -196,11 +193,16 @@ export default class Agreement extends Model {
     } else {
       q.where(where);
     }
-    // Filters
+    q.where(function () {
+      this.whereNull('plan.extension_status').orWhereNot({
+        'plan.extension_status':
+          PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+      });
+    });
     if (filters && Object.keys(filters).length > 0) {
       Object.keys(filters).map((filter) => {
         if (filters[filter] && filters[filter] !== '') {
-          if (filter === 'plan_creator.given_name') {
+          if (filter === 'user_account.family_name') {
             q.whereRaw(
               `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`,
             );
@@ -211,7 +213,7 @@ export default class Agreement extends Model {
             );
           } else if (filter === 'plan.status_id') {
             if (filters[filter] && filters[filter].length > 0) {
-              const filterArray = filters[filter].split(",");
+              const filterArray = filters[filter].split(',');
               q.whereIn('ref_plan_status.code', filterArray);
             }
           } else if (filter === 'planCheck') {
@@ -238,9 +240,17 @@ export default class Agreement extends Model {
                       "ref_plan_status"."id"=18
                     )
                   )
-                )`
+                )`,
               );
             }
+          } else if (filter === 'showReplacedPlans') {
+            if (filters[filter] !== 'true')
+              q.where(function () {
+                this.whereNull('plan.extension_status').orWhereNot({
+                  'plan.extension_status':
+                    PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+                });
+              });
           } else {
             q.where(filter, 'ilike', `%${filters[filter]}%`);
           }
@@ -253,6 +263,7 @@ export default class Agreement extends Model {
     } else {
       results = await q;
     }
+    // console.debug(q.toSQL().toNative());
     return results.map((row) => new Agreement(row, db));
   }
 

@@ -59,10 +59,6 @@ export default class Plan extends Model {
     super(obj, db);
 
     this.status = new PlanStatus(PlanStatus.extract(data), db);
-    // The left join will return `null` values when no related record exists
-    // so we manually exclude them.
-    // const extension = new PlanExtension(PlanExtension.extract(data));
-    // this.extension = extension.id === null ? null : extension;
     this.requestedExtension = data.extension_requests_requested_extension;
     this.requestedExtensionUserId = data.extension_requests_user_id;
     this.creator = new User(User.extract(data), db);
@@ -102,9 +98,10 @@ export default class Plan extends Model {
       'extension_status',
       'extension_required_votes',
       'extension_received_votes',
-      'extension_of',
+      'replacement_of',
       'extension_date',
       'extension_rejected_by',
+      'replacement_plan_id',
     ].map((f) => `${Plan.table}.${f}`);
   }
 

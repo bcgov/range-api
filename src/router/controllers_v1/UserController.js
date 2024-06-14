@@ -2,6 +2,7 @@ import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
+import UserDistricts from '../../libs/db2/model/userDistricts';
 
 const dm = new DataManager(config);
 const {
@@ -14,6 +15,7 @@ const {
   PlanStatusHistory,
   PlanConfirmation,
   District,
+  Districts,
   Zone,
   Plan,
   PlanFile,
@@ -272,6 +274,33 @@ export class UserController {
         { id: districtId },
         {
           userId,
+        },
+      );
+
+      res.status(200).json(updated).end();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async assignUserDistricts(req, res) {
+    try {
+      const { body, params } = req;
+      const { userId: userId } = params;
+      const districts = body.districts;
+      const userToFind = await User.findById(db, userId);
+      if (userToFind.roleId === 4 && districts.length > 0) throw('Cannot assign districts to Range Agreement Holders.');
+
+      // empty districts
+      const deleted = await UserDistricts.removeDistricts(
+        db,
+        {user_id: userId}
+      );
+      const updated = await UserDistricts.createOneOrMany(
+        db,
+        {
+          user_id: userId,
+          districts: districts
         },
       );
 
