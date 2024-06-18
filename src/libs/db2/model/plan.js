@@ -46,6 +46,7 @@ import PlanSnapshot from './plansnapshot';
 import Agreement from './agreement';
 import PlanFile from './PlanFile';
 import PlanExtensionRequests from './planextensionrequests';
+import { PLAN_EXTENSION_STATUS } from '../../../constants';
 
 export default class Plan extends Model {
   constructor(data, db = undefined) {
@@ -949,19 +950,28 @@ export default class Plan extends Model {
         this.whereNot('agreement.retired', '=', true);
         this.where('plan_end_date', '>=', endDateStart);
         this.andWhere('plan_end_date', '<=', endDateEnd);
-        this.whereNull('extension_status');
+        this.where(function () {
+          this.whereNull('extension_status').orWhere({
+            extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+          });
+        });
         this.whereIn('status_id', [8, 9, 12, 20, 21, 22]);
       })
       .orWhere(function () {
         this.whereNot('agreement.retired', '=', true);
         this.where('plan_end_date', '>=', endDateStart);
         this.andWhere('plan_end_date', '<=', endDateEnd);
-        this.whereNull('extension_status');
+        this.where(function () {
+          this.whereNull('extension_status').orWhere({
+            extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+          });
+        });
         this.whereIn('status_id', [11, 13, 18]);
         this.whereNotNull('amendment_type_id');
       })
       .orderBy(orderBy);
     try {
+      // console.log(q.toSQL().toNative());
       return await q;
     } catch (e) {
       console.error(e);

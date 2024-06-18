@@ -138,7 +138,12 @@ const main = async () => {
       await Plan.update(
         trx,
         { id: planId },
-        { extensionRequiredVotes: requiredVotes[planId], extensionStatus: 1 },
+        {
+          extensionRequiredVotes: requiredVotes[planId],
+          extensionReceivedVotes: 0,
+          extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+          extensionDate: null,
+        },
       );
     }
     await processExpiredPlans(trx);
