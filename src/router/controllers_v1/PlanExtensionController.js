@@ -141,6 +141,7 @@ export default class PlanExtensionController {
           amendmentTypeId: null,
           extensionStatus: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
         },
+        null,
       );
       await PlanExtensionController.setReplacementPlanGrazingSchedule(
         trx,
@@ -296,7 +297,7 @@ export default class PlanExtensionController {
     delete row.canonicalId;
   }
 
-  static async duplicatePlan(trx, planRow, newPlanProperties) {
+  static async duplicatePlan(trx, planRow, newPlanProperties, exclusions) {
     const planId = planRow.id;
     PlanExtensionController.removeCommonFields(planRow);
     try {
@@ -366,7 +367,7 @@ export default class PlanExtensionController {
           oldMinisterIssueId,
         });
         const ministerIssueActions = await MinisterIssueAction.find(trx, {
-          issue_id: ministerIssue.id,
+          issue_id: oldMinisterIssueId,
         });
         for (const ministerIssueAction of ministerIssueActions) {
           PlanExtensionController.removeCommonFields(ministerIssueAction);
@@ -376,7 +377,7 @@ export default class PlanExtensionController {
           });
         }
         const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
-          issue_id: ministerIssue.id,
+          minister_issue_id: oldMinisterIssueId,
         });
         for (const ministerIssuePasture of ministerIssuePastures) {
           PlanExtensionController.removeCommonFields(ministerIssuePasture);
@@ -390,20 +391,27 @@ export default class PlanExtensionController {
           });
         }
       }
-      const managementConsiderations = await ManagementConsideration.find(trx, {
-        plan_id: planId,
-      });
-      for (const managementConsideration of managementConsiderations) {
-        PlanExtensionController.removeCommonFields(managementConsideration);
-        await ManagementConsideration.create(trx, {
-          ...managementConsideration,
-          planId: newPlan.id,
-        });
+      if (!exclusions?.excludeManagementConsiderations) {
+        const managementConsiderations = await ManagementConsideration.find(
+          trx,
+          {
+            plan_id: planId,
+          },
+        );
+        for (const managementConsideration of managementConsiderations) {
+          PlanExtensionController.removeCommonFields(managementConsideration);
+          await ManagementConsideration.create(trx, {
+            ...managementConsideration,
+            planId: newPlan.id,
+          });
+        }
       }
-      const planFiles = await PlanFile.find(trx, { plan_id: planId });
-      for (const planFile of planFiles) {
-        PlanExtensionController.removeCommonFields(planFile);
-        await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
+      if (!exclusions?.excludeAttachments) {
+        const planFiles = await PlanFile.find(trx, { plan_id: planId });
+        for (const planFile of planFiles) {
+          PlanExtensionController.removeCommonFields(planFile);
+          await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
+        }
       }
       const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
         plan_id: planId,
@@ -502,6 +510,50 @@ export default class PlanExtensionController {
       );
       trx.commit();
       return res.status(200).json({ planId }).end();
+    } catch (error) {
+      logger.error(error.stack);
+      trx.rollback();
+      throw errorWithCode(error, 500);
+    }
+  }
+
+  /**
+   * copy plan
+   * @param {*} req : express req object
+   * @param {*} res : express resp object
+   */
+  static async copyPlan(req, res) {
+    const { params } = req;
+    const { planId, agreementId } = params;
+    checkRequiredFields(['planId', 'agreementId'], 'params', req);
+    const planRow = await Plan.findOne(db, { id: planId });
+    if (!planRow) {
+      throw errorWithCode('Invalid request. Could not find the plan.', 400);
+    }
+
+    const agreement = await Agreement.findOne(db, {
+      forest_file_id: agreementId,
+    });
+    if (!agreement) {
+      throw errorWithCode(
+        'Invalid request. Could not find the agreement.',
+        400,
+      );
+    }
+    const trx = await db.transaction();
+    try {
+      const newPlan = await PlanExtensionController.duplicatePlan(
+        trx,
+        planRow,
+        {
+          agreementId: agreementId,
+          statusId: 6,
+          amendmentTypeId: null,
+        },
+        { excludeAttachments: true, excludeManagementConsiderations: true },
+      );
+      trx.commit();
+      return res.status(200).json({ planId: newPlan.id }).end();
     } catch (error) {
       logger.error(error.stack);
       trx.rollback();

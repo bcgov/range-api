@@ -376,5 +376,10 @@ router.put(
   '/:planId?/extension/request',
   asyncMiddleware(PlanExtensionController.requestExtension),
 );
+// request copy plan
+router.put(
+  '/:planId?/copy/:agreementId?',
+  asyncMiddleware(PlanExtensionController.copyPlan),
+);
 
 module.exports = router;
