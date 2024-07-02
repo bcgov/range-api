@@ -15,7 +15,6 @@ const {
   PlanStatusHistory,
   PlanConfirmation,
   District,
-  Districts,
   Zone,
   Plan,
   PlanFile,
@@ -24,72 +23,60 @@ const {
 export class UserController {
   // Fetching all users
   static async allUser(req, res) {
-    try {
-      const { query } = req;
-      const { orderCId, excludeBy: eBy, exclude: e } = query;
+    const { query } = req;
+    const { orderCId, excludeBy: eBy, exclude: e } = query;
 
-      let order = [];
-      if (orderCId) {
-        order = ['client_id', orderCId];
-      }
-
-      let exclude;
-      if (eBy && e) {
-        exclude = [eBy, 'ilike', `%${e}%`];
-      }
-
-      const users = await User.findWithExclusion(db, {}, order, exclude);
-
-      res.status(200).json(users).end();
-      return;
-    } catch (error) {
-      throw error;
+    let order = [];
+    if (orderCId) {
+      order = ['client_id', orderCId];
     }
+
+    let exclude;
+    if (eBy && e) {
+      exclude = [eBy, 'ilike', `%${e}%`];
+    }
+
+    const users = await User.findWithExclusion(db, {}, order, exclude);
+
+    res.status(200).json(users).end();
+    return;
   }
 
   static async me(req, res) {
-    try {
-      const { user } = req;
-      delete user.created_at;
-      delete user.updated_at;
+    const { user } = req;
+    delete user.created_at;
+    delete user.updated_at;
 
-      if (!user.piaSeen) {
-        await User.update(db, { id: user.id }, { pia_seen: true });
-      }
-
-      const clientIds = await user.getLinkedClientNumbers(db);
-
-      const clients = await Client.find(db, { client_number: clientIds });
-
-      res
-        .status(200)
-        .json({ ...user, clients })
-        .end();
-    } catch (error) {
-      throw error;
+    if (!user.piaSeen) {
+      await User.update(db, { id: user.id }, { pia_seen: true });
     }
+
+    const clientIds = await user.getLinkedClientNumbers(db);
+
+    const clients = await Client.find(db, { client_number: clientIds });
+
+    res
+      .status(200)
+      .json({ ...user, clients })
+      .end();
   }
 
   static async updateMe(req, res) {
-    try {
-      const { body, user } = req;
-      const { id: userId } = user;
-      const { givenName, familyName, phoneNumber } = body;
+    const { body, user } = req;
+    const { id: userId } = user;
+    const { givenName, familyName, phoneNumber } = body;
 
-      const updated = await User.update(
-        db,
-        { id: userId },
-        {
-          givenName,
-          familyName,
-          phoneNumber,
-        },
-      );
+    const updated = await User.update(
+      db,
+      { id: userId },
+      {
+        givenName,
+        familyName,
+        phoneNumber,
+      },
+    );
 
-      res.status(200).json(updated).end();
-    } catch (error) {
-      throw error;
-    }
+    res.status(200).json(updated).end();
   }
 
   static async mergeAccounts(req, res) {
@@ -244,70 +231,55 @@ export class UserController {
   }
 
   static async assignUserRole(req, res) {
-    try {
-      const { body, params } = req;
-      const { userId: userId } = params;
-      const roleId = body.roleId;
+    const { body, params } = req;
+    const { userId: userId } = params;
+    const roleId = body.roleId;
 
-      const updated = await User.update(
-        db,
-        { id: userId },
-        {
-          roleId,
-        },
-      );
+    const updated = await User.update(
+      db,
+      { id: userId },
+      {
+        roleId,
+      },
+    );
 
-      res.status(200).json(updated).end();
-    } catch (error) {
-      throw error;
-    }
+    res.status(200).json(updated).end();
   }
 
   static async assignUserDistrict(req, res) {
-    try {
-      const { body, params } = req;
-      const { userId: userId } = params;
-      const districtId = body.districtId;
+    const { body, params } = req;
+    const { userId: userId } = params;
+    const districtId = body.districtId;
 
-      const updated = await District.update(
-        db,
-        { id: districtId },
-        {
-          userId,
-        },
-      );
+    const updated = await District.update(
+      db,
+      { id: districtId },
+      {
+        userId,
+      },
+    );
 
-      res.status(200).json(updated).end();
-    } catch (error) {
-      throw error;
-    }
+    res.status(200).json(updated).end();
   }
 
   static async assignUserDistricts(req, res) {
-    try {
-      const { body, params } = req;
-      const { userId: userId } = params;
-      const districts = body.districts;
-      const userToFind = await User.findById(db, userId);
-      if (userToFind.roleId === 4 && districts.length > 0) throw('Cannot assign districts to Range Agreement Holders.');
+    const { body, params } = req;
+    const { userId: userId } = params;
+    const districts = body.districts;
+    const userToFind = await User.findById(db, userId);
+    if (userToFind.roleId === 4 && districts.length > 0)
+      throw 'Cannot assign districts to Range Agreement Holders.';
 
-      // empty districts
-      const deleted = await UserDistricts.removeDistricts(
-        db,
-        {user_id: userId}
-      );
-      const updated = await UserDistricts.createOneOrMany(
-        db,
-        {
-          user_id: userId,
-          districts: districts
-        },
-      );
+    // empty districts
+    await UserDistricts.removeDistricts(db, { user_id: userId });
+    const updated = await UserDistricts.createOneOrMany(db, {
+      user_id: userId,
+      districts: districts.map((d) => {
+        return { id: d.id };
+      }),
+    });
 
-      res.status(200).json(updated).end();
-    } catch (error) {
-      throw error;
-    }
+    res.status(200).json(updated).end();
   }
 
   static async show(req, res) {

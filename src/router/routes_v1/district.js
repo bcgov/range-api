@@ -52,7 +52,7 @@ router.get(
     const { id } = req.params;
 
     try {
-      const results = await UserDistricts.find(db, {user_id: id});
+      const results = await UserDistricts.findDistrictsForUser(db, id);
       res.status(200).json(results).end();
     } catch (err) {
       res.status(500).json({ error: err }).end();
