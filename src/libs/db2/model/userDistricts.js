@@ -20,14 +20,13 @@
 
 'use strict';
 
+import District from './district';
 import Model from './model';
 
 export default class UserDistricts extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description', 'user_id'].map(
-      (field) => `${this.table}.${field}`,
-    );
+    return ['id', 'user_id'].map((field) => `${this.table}.${field}`);
   }
 
   static async createOneOrMany(db, values) {
@@ -40,19 +39,25 @@ export default class UserDistricts extends Model {
       Object.keys(district).forEach((key) => {
         obj[Model.toSnakeCase(key)] = district[key];
       });
-      obj["user_id"] = id;
+      obj['user_id'] = id;
       objs.push(obj);
     });
 
-    const count = await db.table(this.table).insert(objs);
+    await db.table(this.table).insert(objs);
 
     return [];
   }
 
   static async removeDistricts(db, where) {
-    const count = await db.table(this.table).where("user_id", where.user_id).del();
-
+    await db.table(this.table).where('user_id', where.user_id).del();
     return [];
+  }
+
+  static async findDistrictsForUser(db, userId) {
+    return await db
+      .table(this.table)
+      .leftJoin(District.table, { 'user_districts.id': 'ref_district.id' })
+      .where('user_districts.user_id', userId);
   }
 
   static get table() {

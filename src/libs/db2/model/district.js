@@ -35,7 +35,7 @@ export default class District extends Model {
     Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
-    const count = await db.table(this.table).where(where).update(obj);
+    await db.table(this.table).where(where).update(obj);
 
     return [];
   }
@@ -45,16 +45,16 @@ export default class District extends Model {
     Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
-    const count = await db.table(this.table).whereIn("id", where.ids).update(obj);
+    await db.table(this.table).whereIn('id', where.ids).update(obj);
 
     return [];
   }
 
   static async removeDistricts(db, where) {
     const obj = {
-      user_id: null
+      user_id: null,
     };
-    const count = await db.table(this.table).where("user_id", where.user_id).update(obj);
+    await db.table(this.table).where('user_id', where.user_id).update(obj);
 
     return [];
   }
