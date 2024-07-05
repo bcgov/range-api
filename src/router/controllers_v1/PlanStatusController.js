@@ -374,4 +374,11 @@ export default class PlanStatusController {
       throw err;
     }
   }
+
+  static isPlanActive(statusId, planAmendmentTypeId) {
+    if ([8, 9, 12, 20, 21, 22].indexOf(statusId) !== -1) return true;
+    if (planAmendmentTypeId && [11, 13, 18].indexOf(statusId) !== -1)
+      return true;
+    return false;
+  }
 }
