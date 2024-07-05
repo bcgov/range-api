@@ -48,7 +48,6 @@ export const isNumeric = (str) => str && /^\d+$/.test(str);
 export const checkRequiredFields = (fields = [], prop, req) => {
   const missingFields = [];
   const obj = req[prop];
-
   fields.map((f) => {
     if (obj[f] === undefined) {
       missingFields.push(f);
@@ -122,4 +121,11 @@ export const substituteFields = (str, fields) => {
     str = str.replace(new RegExp(key, 'g'), fields[key]);
   }
   return str;
+};
+
+export const removeCommonFields = (row) => {
+  delete row.id;
+  delete row.createdAt;
+  delete row.updatedAt;
+  delete row.canonicalId;
 };

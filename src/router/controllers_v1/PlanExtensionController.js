@@ -3,20 +3,13 @@ import config from '../../config';
 import { PLAN_EXTENSION_STATUS } from '../../constants';
 import DataManager from '../../libs/db2';
 import PlanFile from '../../libs/db2/model/PlanFile';
-import AdditionalRequirement from '../../libs/db2/model/additionalrequirement';
 import Agreement from '../../libs/db2/model/agreement';
 import EmailTemplate from '../../libs/db2/model/emailtemplate';
 import GrazingSchedule from '../../libs/db2/model/grazingschedule';
-import GrazingScheduleEntry from '../../libs/db2/model/grazingscheduleentry';
-import InvasivePlantChecklist from '../../libs/db2/model/invasiveplantchecklist';
-import ManagementConsideration from '../../libs/db2/model/managementconsideration';
-import MinisterIssue from '../../libs/db2/model/ministerissue';
-import MinisterIssueAction from '../../libs/db2/model/ministerissueaction';
-import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture';
-import Pasture from '../../libs/db2/model/pasture';
 import { Mailer } from '../../libs/mailer';
 import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import PlanController from './PlanController';
+import PlanStatusController from './PlanStatusController';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -129,7 +122,7 @@ export default class PlanExtensionController {
       const newPlanEndtDate = new Date(newPlanStartDate);
       newPlanEndtDate.setFullYear(newPlanStartDate.getFullYear() + 5);
       newPlanEndtDate.setDate(newPlanEndtDate.getDate() - 1);
-      const replacementPlan = await PlanExtensionController.duplicatePlan(
+      const replacementPlan = await PlanController.duplicatePlan(
         trx,
         plan,
         {
@@ -290,144 +283,6 @@ export default class PlanExtensionController {
     return planEntry;
   }
 
-  static removeCommonFields(row) {
-    delete row.id;
-    delete row.createdAt;
-    delete row.updatedAt;
-    delete row.canonicalId;
-  }
-
-  static async duplicatePlan(trx, planRow, newPlanProperties, exclusions) {
-    const planId = planRow.id;
-    PlanExtensionController.removeCommonFields(planRow);
-    try {
-      const newPlan = await Plan.create(trx, {
-        ...planRow,
-        ...newPlanProperties,
-      });
-      const additionalRequirements = await AdditionalRequirement.find(trx, {
-        plan_id: planId,
-      });
-      for (const additionalRequirement of additionalRequirements) {
-        PlanExtensionController.removeCommonFields(additionalRequirement);
-        await AdditionalRequirement.create(trx, {
-          ...additionalRequirement,
-          planId: newPlan.id,
-        });
-      }
-      const newAndOldPastureIds = [];
-      const pastures = await Pasture.find(trx, { plan_id: planId });
-      for (const pasture of pastures) {
-        const oldPastureId = pasture.id;
-        PlanExtensionController.removeCommonFields(pasture);
-        const newPasture = await Pasture.create(trx, {
-          ...pasture,
-          planId: newPlan.id,
-        });
-        newAndOldPastureIds.push({
-          newPastureId: newPasture.id,
-          oldPastureId,
-        });
-      }
-      const grazingSchedules = await GrazingSchedule.find(trx, {
-        plan_id: planId,
-      });
-      for (const grazingSchedule of grazingSchedules) {
-        const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
-          grazing_schedule_id: grazingSchedule.id,
-        });
-        PlanExtensionController.removeCommonFields(grazingSchedule);
-        const newGrazingSchedule = await GrazingSchedule.create(trx, {
-          ...grazingSchedule,
-          planId: newPlan.id,
-        });
-        for (const grazingScheduleEntry of grazingScheduleEntries) {
-          PlanExtensionController.removeCommonFields(grazingScheduleEntry);
-          await GrazingScheduleEntry.create(trx, {
-            ...grazingScheduleEntry,
-            grazingScheduleId: newGrazingSchedule.id,
-            pastureId: newAndOldPastureIds.find(
-              (element) =>
-                element.oldPastureId === grazingScheduleEntry.pastureId,
-            ).newPastureId,
-          });
-        }
-      }
-      const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
-      const newAndOldMinisterIssueIds = [];
-      for (const ministerIssue of ministerIssues) {
-        const oldMinisterIssueId = ministerIssue.id;
-        PlanExtensionController.removeCommonFields(ministerIssue);
-        const newMinisterIssue = await MinisterIssue.create(trx, {
-          ...ministerIssue,
-          planId: newPlan.id,
-        });
-        newAndOldMinisterIssueIds.push({
-          newMinisterIssueId: newMinisterIssue.id,
-          oldMinisterIssueId,
-        });
-        const ministerIssueActions = await MinisterIssueAction.find(trx, {
-          issue_id: oldMinisterIssueId,
-        });
-        for (const ministerIssueAction of ministerIssueActions) {
-          PlanExtensionController.removeCommonFields(ministerIssueAction);
-          await MinisterIssueAction.create(trx, {
-            ...ministerIssueAction,
-            issueId: newMinisterIssue.id,
-          });
-        }
-        const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
-          minister_issue_id: oldMinisterIssueId,
-        });
-        for (const ministerIssuePasture of ministerIssuePastures) {
-          PlanExtensionController.removeCommonFields(ministerIssuePasture);
-          await MinisterIssuePasture.create(trx, {
-            ...ministerIssuePasture,
-            ministerIssueId: newMinisterIssue.id,
-            pastureId: newAndOldPastureIds.find(
-              (element) =>
-                element.oldPastureId === ministerIssuePasture.pastureId,
-            ).newPastureId,
-          });
-        }
-      }
-      if (!exclusions?.excludeManagementConsiderations) {
-        const managementConsiderations = await ManagementConsideration.find(
-          trx,
-          {
-            plan_id: planId,
-          },
-        );
-        for (const managementConsideration of managementConsiderations) {
-          PlanExtensionController.removeCommonFields(managementConsideration);
-          await ManagementConsideration.create(trx, {
-            ...managementConsideration,
-            planId: newPlan.id,
-          });
-        }
-      }
-      if (!exclusions?.excludeAttachments) {
-        const planFiles = await PlanFile.find(trx, { plan_id: planId });
-        for (const planFile of planFiles) {
-          PlanExtensionController.removeCommonFields(planFile);
-          await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
-        }
-      }
-      const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
-        plan_id: planId,
-      });
-      PlanExtensionController.removeCommonFields(invasivePlantChecklist);
-      await InvasivePlantChecklist.create(trx, {
-        ...invasivePlantChecklist,
-        planId: newPlan.id,
-      });
-      return newPlan;
-    } catch (exception) {
-      logger.error(exception.stack);
-      return null;
-    }
-  }
-
   /**
    * request extension
    * @param {*} req : express req object
@@ -523,14 +378,33 @@ export default class PlanExtensionController {
    * @param {*} res : express resp object
    */
   static async copyPlan(req, res) {
-    const { params } = req;
-    const { planId, agreementId } = params;
-    checkRequiredFields(['planId', 'agreementId'], 'params', req);
+    const { body, params } = req;
+    const { planId } = params;
+    const { agreementId, destinationPlanId } = body;
+    checkRequiredFields(['planId'], 'params', req);
+    checkRequiredFields(['agreementId'], 'body', req);
     const planRow = await Plan.findOne(db, { id: planId });
     if (!planRow) {
       throw errorWithCode('Invalid request. Could not find the plan.', 400);
     }
-
+    let destinationPlan = null;
+    if (destinationPlanId) {
+      destinationPlan = await Plan.findOne(db, { id: destinationPlanId });
+      console.log(destinationPlan);
+      if (!destinationPlan) {
+        throw errorWithCode(
+          'Invalid request. Could not find the plan to replace.',
+          400,
+        );
+      }
+      if (
+        PlanStatusController.isPlanActive(
+          destinationPlan.statusId,
+          destinationPlan.amendmentTypeId,
+        )
+      )
+        throw errorWithCode('Cannot replace an active plan.', 400);
+    }
     const agreement = await Agreement.findOne(db, {
       forest_file_id: agreementId,
     });
@@ -542,13 +416,16 @@ export default class PlanExtensionController {
     }
     const trx = await db.transaction();
     try {
-      const newPlan = await PlanExtensionController.duplicatePlan(
+      if (destinationPlan)
+        PlanController.removeAllWithRelations(trx, destinationPlan.id);
+      const newPlan = await PlanController.duplicatePlan(
         trx,
         planRow,
         {
           agreementId: agreementId,
           statusId: 6,
           amendmentTypeId: null,
+          extensionStatus: null,
         },
         { excludeAttachments: true, excludeManagementConsiderations: true },
       );
