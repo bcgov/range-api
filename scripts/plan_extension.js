@@ -78,13 +78,13 @@ const processExpiredPlans = async (trx) => {
       ].includes(result.extension_status)
     ) {
       try {
-        console.log(`Removing extension for expired planId: ${result.planId}`);
+        console.log(`Removing extension for expired planId: ${result.id}`);
         await PlanExtensionRequests.remove(trx, {
-          plan_id: result.planId,
+          plan_id: result.id,
         });
         await Plan.update(
           trx,
-          { id: result.planId },
+          { id: result.id },
           {
             extension_status: null,
             extension_required_votes: 0,
