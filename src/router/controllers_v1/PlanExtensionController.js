@@ -380,7 +380,7 @@ export default class PlanExtensionController {
   static async copyPlan(req, res) {
     const { body, params } = req;
     const { planId } = params;
-    const { agreementId, destinationPlanId } = body;
+    const { agreementId, destinationPlanId, createReplacementPlan } = body;
     checkRequiredFields(['planId'], 'params', req);
     checkRequiredFields(['agreementId'], 'body', req);
     const planRow = await Plan.findOne(db, { id: planId });
@@ -390,7 +390,6 @@ export default class PlanExtensionController {
     let destinationPlan = null;
     if (destinationPlanId) {
       destinationPlan = await Plan.findOne(db, { id: destinationPlanId });
-      console.log(destinationPlan);
       if (!destinationPlan) {
         throw errorWithCode(
           'Invalid request. Could not find the plan to replace.',
@@ -401,7 +400,8 @@ export default class PlanExtensionController {
         PlanStatusController.isPlanActive(
           destinationPlan.statusId,
           destinationPlan.amendmentTypeId,
-        )
+        ) &&
+        !createReplacementPlan
       )
         throw errorWithCode('Cannot replace an active plan.', 400);
     }
@@ -416,8 +416,6 @@ export default class PlanExtensionController {
     }
     const trx = await db.transaction();
     try {
-      if (destinationPlan)
-        PlanController.removeAllWithRelations(trx, destinationPlan.id);
       const newPlan = await PlanController.duplicatePlan(
         trx,
         planRow,
@@ -426,9 +424,48 @@ export default class PlanExtensionController {
           statusId: 6,
           amendmentTypeId: null,
           extensionStatus: null,
+          replacementPlanId: null,
+          replacementOf: null,
         },
         { excludeAttachments: true, excludeManagementConsiderations: true },
       );
+      if (destinationPlan) {
+        if (createReplacementPlan) {
+          if (destinationPlan.replacementPlanId) {
+            //Found existing replacement plan so need to delete it
+            await PlanController.removeAllWithRelations(
+              trx,
+              destinationPlan.replacementPlanId,
+            );
+          }
+          await Plan.update(
+            trx,
+            { id: destinationPlan.id },
+            {
+              replacement_plan_id: newPlan.id,
+              extension_status: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED,
+            },
+          );
+          await Plan.update(
+            trx,
+            { id: newPlan.id },
+            {
+              replacementOf: destinationPlan.id,
+              extension_status:
+                PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+            },
+          );
+        } else {
+          await PlanController.removeAllWithRelations(trx, destinationPlan.id);
+        }
+      } else {
+        if (createReplacementPlan) {
+          throw errorWithCode(
+            'Invalid request. Cannot create replacement plan without the original plan.',
+            400,
+          );
+        }
+      }
       trx.commit();
       return res.status(200).json({ planId: newPlan.id }).end();
     } catch (error) {

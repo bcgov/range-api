@@ -18,6 +18,7 @@ import {
 } from '../../libs/utils';
 import { PlanRouteHelper } from '../helpers';
 import { generatePDFResponse } from './PDFGeneration';
+import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
 
 const dm = new DataManager(config);
 const {
@@ -552,6 +553,8 @@ export default class PlanController {
         plan_id: planId,
       });
       await InvasivePlantChecklist.removeById(trx, invasivePlantChecklist.id);
+      await PlanExtensionRequests.remove(trx, { plan_id: planId });
+      await PlanSnapshot.remove(trx, { plan_id: planId });
       await Plan.removeById(trx, planId);
     } catch (exception) {
       logger.error(exception.stack);
