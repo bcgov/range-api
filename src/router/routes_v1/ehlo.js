@@ -32,4 +32,4 @@ router.get(
   asyncMiddleware(async (req, res) => res.status(200).end()),
 );
 
-module.exports = router;
+export default router;

@@ -10,4 +10,4 @@ const router = new Router();
 
 // Get all roles
 router.get('/', asyncMiddleware(RoleController.allRoles));
-module.exports = router;
+export default router;

@@ -4,6 +4,7 @@ import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PLANT_COMMUNITY_CRITERIA, PURPOSE_OF_ACTION } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
+import { flatten } from 'lodash';
 
 const dm = new DataManager(config);
 const {
@@ -54,6 +55,49 @@ export default class PlanPastureController {
       );
       throw err;
     }
+  }
+
+  /**
+   * Get Available pasture for district
+   * @param {*} req : express req
+   * @param {*} res : express res
+   */
+  static async getPasturesForDistrict(req, res) {
+    const { query } = req;
+    const { districtId } = query;
+    checkRequiredFields(['districtId'], 'query', req);
+    const pastures = await db
+      .select('*')
+      .distinct('pasture.id')
+      .from('pasture')
+      .leftJoin('plan', 'pasture.plan_id', '=', 'plan.id')
+      .leftJoin(
+        'agreement',
+        'plan.agreement_id',
+        '=',
+        'agreement.forest_file_id',
+      )
+      .leftJoin('ref_zone', 'agreement.zone_id', '=', 'ref_zone.id')
+      .where('ref_district.id', districtId)
+      .leftJoin('ref_district', 'ref_zone.district_id', '=', 'ref_district.id')
+      .orderBy('name', 'asc');
+    const uniquePastures = await Promise.all(
+      pastures.map((p) => Pasture.findById(db, p.id)),
+    );
+    await Promise.all(
+      flatten(
+        uniquePastures.map((p) => [
+          p.fetchPlantCommunities(db, { pasture_id: p.id }),
+        ]),
+      ),
+    );
+    const response = pastures.map((p, index) => {
+      return { ...uniquePastures[index], agreementId: p.forest_file_id };
+    });
+    return res
+      .status(200)
+      .json(response || [])
+      .end();
   }
 
   /**

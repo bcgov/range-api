@@ -49,12 +49,21 @@ router.delete(
 router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
 
 // Assign role to user
-router.post('/:userId?/assignRole', asyncMiddleware(UserController.assignUserRole));
+router.post(
+  '/:userId?/assignRole',
+  asyncMiddleware(UserController.assignUserRole),
+);
 
 // Assign district to user
-router.post('/:userId?/assignDistrict', asyncMiddleware(UserController.assignUserDistrict));
+router.post(
+  '/:userId?/assignDistrict',
+  asyncMiddleware(UserController.assignUserDistrict),
+);
 
 // Assign multiple district to user
-router.post('/:userId?/assignDistricts', asyncMiddleware(UserController.assignUserDistricts));
+router.post(
+  '/:userId?/assignDistricts',
+  asyncMiddleware(UserController.assignUserDistricts),
+);
 
-module.exports = router;
+export default router;
