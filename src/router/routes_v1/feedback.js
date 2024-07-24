@@ -18,30 +18,22 @@ router.post(
 
     checkRequiredFields(['anonymous', 'section', 'feedback'], 'body', req);
 
-    try {
-      const { anonymous } = body;
-      const feedback = await UserFeedback.create(db, {
-        ...body,
-        user_id: anonymous ? null : user.id,
-      });
+    const { anonymous } = body;
+    const feedback = await UserFeedback.create(db, {
+      ...body,
+      user_id: anonymous ? null : user.id,
+    });
 
-      res.status(200).json(feedback).end();
-    } catch (error) {
-      throw error;
-    }
+    res.status(200).json(feedback).end();
   }),
 );
 
 router.get(
   '/',
   asyncMiddleware(async (req, res) => {
-    try {
-      const feedbacks = await UserFeedback.findWithUser(db, {});
-      res.status(200).json(feedbacks).end();
-    } catch (error) {
-      throw error;
-    }
+    const feedbacks = await UserFeedback.findWithUser(db, {});
+    res.status(200).json(feedbacks).end();
   }),
 );
 
-module.exports = router;
+export default router;

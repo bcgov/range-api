@@ -34,6 +34,7 @@ import ehlo from './routes_v1/ehlo';
 import feedback from './routes_v1/feedback';
 import files from './routes_v1/files';
 import plan from './routes_v1/plan';
+import pasture from './routes_v1/pasture';
 import reference from './routes_v1/reference';
 import user from './routes_v1/user';
 import roles from './routes_v1/roles';
@@ -57,6 +58,7 @@ module.exports = (app) => {
   app.use('/api/v1/client', client);
   app.use('/api/v1/district', district);
   app.use('/api/v1/plan', plan);
+  app.use('/api/v1/pasture', pasture);
   app.use('/api/v1/reference', reference);
   app.use('/api/v1/zone', zone);
   app.use('/api/v1/user', user);

@@ -379,4 +379,4 @@ router.put(
 // request copy plan
 router.put('/:planId?/copy', asyncMiddleware(PlanExtensionController.copyPlan));
 
-module.exports = router;
+export default router;

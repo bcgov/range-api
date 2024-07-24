@@ -34,4 +34,4 @@ router.get('/', asyncMiddleware(EmailTemplateController.allEmailTemplate));
 // Update EmailTemplate info
 router.put('/:templateId', asyncMiddleware(EmailTemplateController.updateMe));
 
-module.exports = router;
+export default router;

@@ -38,13 +38,8 @@ const { db, Version } = dm;
 router.get(
   '/',
   asyncMiddleware(async (req, res) => {
-    try {
-      const version = await Version.findOne(db, {});
-
-      res.status(200).json(version).end();
-    } catch (error) {
-      throw error;
-    }
+    const version = await Version.findOne(db, {});
+    res.status(200).json(version).end();
   }),
 );
 
@@ -52,44 +47,40 @@ router.use(passport.authenticate('jwt', { session: false }));
 router.put(
   '/',
   asyncMiddleware(async (req, res) => {
-    try {
-      const { user, body } = req;
-      const { idpHint, api, ios } = body;
+    const { user, body } = req;
+    const { idpHint, api, ios } = body;
 
-      if (user && !user.isAdministrator()) {
-        throw errorWithCode(
-          'Only Admin have the permission for this request',
-          403,
-        );
-      }
-
-      const updated = await Version.update(
-        db,
-        {},
-        {
-          idpHint,
-          api,
-          ios,
-        },
+    if (user && !user.isAdministrator()) {
+      throw errorWithCode(
+        'Only Admin have the permission for this request',
+        403,
       );
-
-      // update test and dev environments as well
-      if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
-        const opt = {
-          url: `${API_URL.DEV}/v1/version`,
-          method: 'PUT',
-          json: { idpHint, api, ios },
-        };
-        await request(opt);
-        opt.url = `${API_URL.TEST}/v1/version`;
-        await request(opt);
-      }
-
-      res.status(200).json(updated).end();
-    } catch (error) {
-      throw error;
     }
+
+    const updated = await Version.update(
+      db,
+      {},
+      {
+        idpHint,
+        api,
+        ios,
+      },
+    );
+
+    // update test and dev environments as well
+    if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
+      const opt = {
+        url: `${API_URL.DEV}/v1/version`,
+        method: 'PUT',
+        json: { idpHint, api, ios },
+      };
+      await request(opt);
+      opt.url = `${API_URL.TEST}/v1/version`;
+      await request(opt);
+    }
+
+    res.status(200).json(updated).end();
   }),
 );
 
-module.exports = router;
+export default router;
