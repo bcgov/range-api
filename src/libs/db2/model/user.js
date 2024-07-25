@@ -227,17 +227,18 @@ User.prototype.canAccessAgreement = async function (db, agreement) {
   }
 
   if (this.isDecisionMaker()) {
-    const [result] = await db
-      .table('agreement')
-      .join('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
-      .join('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
+    const result = await db
+      .select('agreement.*')
+      .distinct('agreement.forest_file_id')
+      .from('agreement')
+      .leftJoin('ref_zone', 'agreement.zone_id', '=', 'ref_zone.id')
+      .leftJoin('ref_district', 'ref_zone.district_id', '=', 'ref_district.id')
+      .leftJoin('user_districts', 'user_districts.id', '=', 'ref_district.id')
       .where({
-        'ref_district.user_id': this.id,
+        'user_districts.user_id': this.id,
         'agreement.forest_file_id': agreement.forestFileId,
-      })
-      .count();
-    const { count } = result || {};
-    return count !== '0';
+      });
+    return result.length > 0;
   }
 
   return false;
