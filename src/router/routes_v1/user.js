@@ -66,4 +66,9 @@ router.post(
   asyncMiddleware(UserController.assignUserDistricts),
 );
 
+// Get districts for pasture import
+router.get(
+  '/:userId?/districts',
+  asyncMiddleware(UserController.getAssociatedDistricts),
+);
 export default router;

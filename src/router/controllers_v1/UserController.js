@@ -282,6 +282,24 @@ export class UserController {
     res.status(200).json(updated).end();
   }
 
+  static async getAssociatedDistricts(req, res) {
+    const { params } = req;
+    const { userId: userId } = params;
+    const user = await User.findById(db, userId);
+    if (user.roleId === 4)
+      throw 'Cannot get districts for agreement holder user';
+    const districts = await db
+      .select('ref_district.*')
+      .distinct('ref_district.id')
+      .from('ref_district')
+      .leftJoin('user_districts', 'user_districts.id', '=', 'ref_district.id')
+      .leftJoin('ref_zone', 'ref_zone.district_id', '=', 'ref_district.id')
+      .where('user_districts.user_id', userId)
+      .orWhere('ref_zone.user_id', userId)
+      .orderBy('ref_district.id', 'asc');
+    res.status(200).json(districts).end();
+  }
+
   static async show(req, res) {
     const { params } = req;
     const { userId } = params;
