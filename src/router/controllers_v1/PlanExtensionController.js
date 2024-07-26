@@ -229,33 +229,18 @@ export default class PlanExtensionController {
           planEntry.extensionReceivedVotes + 1;
       }
       if (
-        (user.isRangeOfficer() ||
-          user.isAdministrator() ||
-          user.isDecisionMaker()) &&
-        planEntry.extensionReceivedVotes !== planEntry.extensionRequiredVotes
+        planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
+        planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_EXTENSION
       ) {
-        throw errorWithCode('Pending votes from Agreement Holders', 400);
+        throw errorWithCode(
+          `Invalid plan status ${planEntry.extensionStatus}`,
+          400,
+        );
       }
       if (user.isRangeOfficer() || user.isAdministrator()) {
-        if (
-          planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES
-        ) {
-          throw errorWithCode(
-            `Invalid plan status ${planEntry.extensionStatus}`,
-            400,
-          );
-        }
         updatedValues.extension_status = PLAN_EXTENSION_STATUS.STAFF_REJECTED;
       }
       if (user.isDecisionMaker()) {
-        if (
-          planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_EXTENSION
-        ) {
-          throw errorWithCode(
-            `Invalid plan status ${planEntry.extensionStatus}`,
-            400,
-          );
-        }
         updatedValues.extension_status =
           PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED;
       }
