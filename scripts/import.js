@@ -11,10 +11,10 @@ const USAGE = 'scripts/fta/FTA_RANGE_USAGE.csv';
 const LICENSEE = 'scripts/fta/FTA_RANGE_LICENSEE.csv';
 const CLIENT = 'scripts/fta/FTA_RANGE_CLIENT.csv';
 const USER = 'scripts/fta/ZONE_USER.csv';
-const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
-const USAGE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeUsages`;
-const CLIENT_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeClients`;
-const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/oauth/token?grant_type=client_credentials`;
+const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeLicensees`;
+const USAGE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeUsages`;
+const CLIENT_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeClients`;
+const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/oauth/token?grant_type=client_credentials`;
 
 const dm = new DataManager(config);
 

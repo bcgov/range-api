@@ -6,8 +6,8 @@ import fs from 'fs';
 
 dotenv.config();
 
-const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/FTA/GetAllRangeLicensees`;
-const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords/v1/fta/oauth/token?grant_type=client_credentials`;
+const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeLicensees`;
+const TOKEN_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/oauth/token?grant_type=client_credentials`;
 
 const getFTAToken = async (url) => {
   const options = {

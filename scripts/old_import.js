@@ -34,9 +34,11 @@ const LICENSEE = 'fta/FTA_RANGE_LICENSEE.csv';
 const CLIENT = 'fta/FTA_RANGE_CLIENT.csv';
 const USER = 'fta/ZONE_USER.csv';
 const LICENSEE_URL =
-  'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeLicensees';
-const USAGE_URL = 'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeUsages';
-const CLIENT_URL = 'http://nrc1db01.bcgov:8080/ords/the/FTA/GetAllRangeClients';
+  'http://nrc1db01.bcgov:8080/ords-myra/the/FTA/GetAllRangeLicensees';
+const USAGE_URL =
+  'http://nrc1db01.bcgov:8080/ords-myra/the/FTA/GetAllRangeUsages';
+const CLIENT_URL =
+  'http://nrc1db01.bcgov:8080/ords-myra/the/FTA/GetAllRangeClients';
 
 const dm = new DataManager(config);
 const {
