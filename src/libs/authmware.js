@@ -30,6 +30,7 @@ import config from '../config';
 import DataManager from './db2';
 import { SSO_ROLE_MAP } from '../constants';
 import UserPermissions from './db2/model/userPermissions';
+import ClientAgreement from './db2/model/ClientAgreement';
 
 const dm = new DataManager(config);
 const { db, User } = dm;
@@ -228,7 +229,7 @@ export default async function initPassport(app) {
 
         //Set permissions
         user.permissions = permissions;
-
+        user.agentOf = await ClientAgreement.find(db, { agent_id: user.id });
         if (!user.isActive()) {
           return done(
             errorWithCode(

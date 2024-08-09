@@ -21,17 +21,26 @@ export default class PlanExtensionController {
    * @param {*} res : express resp object
    */
   static async approveExtension(req, res) {
-    const { params, user } = req;
+    const { params, user, body } = req;
     const { planId } = params;
+    const { extensionRequestId } = body;
     checkRequiredFields(['planId'], 'params', req);
     const trx = await db.transaction();
     try {
-      const extensionRequest = await PlanExtensionRequests.findOne(trx, {
+      const extensionRequest = await PlanExtensionRequests.findOne(db, {
+        id: extensionRequestId,
         plan_id: planId,
-        user_id: user.id,
       });
       if (!extensionRequest) {
         throw errorWithCode("Extension request doesn't exist", 400);
+      }
+      if (
+        !(extensionRequest.userId === user.id) &&
+        !user.agentOf.find(
+          ({ clientId }) => clientId === extensionRequest.clientId,
+        )
+      ) {
+        throw errorWithCode('Invalid request', 400);
       }
       const planEntry = await Plan.findOne(trx, { id: planId });
       if (
@@ -41,7 +50,7 @@ export default class PlanExtensionController {
       }
       await PlanExtensionRequests.update(
         trx,
-        { plan_id: planId, user_id: user.id },
+        { id: extensionRequestId },
         { requestedExtension: true },
       );
       await Plan.update(
@@ -187,7 +196,7 @@ export default class PlanExtensionController {
    * @param {*} res : express resp object
    */
   static async rejectExtension(req, res) {
-    const { params, user } = req;
+    const { params, user, body } = req;
     const { planId } = params;
     checkRequiredFields(['planId'], 'params', req);
     let updatedValues = {
@@ -197,12 +206,21 @@ export default class PlanExtensionController {
     try {
       const planEntry = await Plan.findOne(trx, { id: planId });
       if (user.isAgreementHolder()) {
+        const { extensionRequestId } = body;
         const extensionRequest = await PlanExtensionRequests.findOne(db, {
+          id: extensionRequestId,
           plan_id: planId,
-          user_id: user.id,
         });
         if (!extensionRequest) {
           throw errorWithCode("Extension request doesn't exist", 400);
+        }
+        if (
+          !(extensionRequest.userId === user.id) &&
+          !user.agentOf.find(
+            ({ clientId }) => clientId === extensionRequest.clientId,
+          )
+        ) {
+          throw errorWithCode('Invalid request', 400);
         }
         if (
           !planEntry ||
@@ -220,7 +238,7 @@ export default class PlanExtensionController {
         }
         await PlanExtensionRequests.update(
           db,
-          { plan_id: planId, user_id: user.id },
+          { id: extensionRequest.id },
           { requestedExtension: false },
         );
         updatedValues.extension_status =
