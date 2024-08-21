@@ -154,6 +154,7 @@ export default class PlanController {
         statusId: plan.statusId,
       };
     } catch (error) {
+      console.log(error.stack);
       logger.error(`Unable to fetch plan, error: ${error.message}`);
       throw errorWithCode(
         `There was a problem fetching the record. Error: ${error.message}`,
