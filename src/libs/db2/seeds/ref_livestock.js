@@ -83,7 +83,5 @@ exports.seed = async (knex) => {
   await knex(table).delete();
   await knex(table).insert(ref);
 
-  await knex.schema.raw(
-    `ALTER SEQUENCE ${table}_id_seq RESTART WITH ${ref.length};`,
-  );
+  await knex.schema.raw(`ALTER SEQUENCE ${table}_id_seq RESTART WITH ${ref.length};`);
 };

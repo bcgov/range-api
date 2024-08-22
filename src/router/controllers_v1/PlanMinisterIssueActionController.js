@@ -7,8 +7,7 @@ import { PlanRouteHelper } from '../helpers';
 import MinisterIssue from '../../libs/db2/model/ministerissue';
 
 const dm = new DataManager(config);
-const { db, Agreement, Plan, MinisterIssueActionType, MinisterIssueAction } =
-  dm;
+const { db, Agreement, Plan, MinisterIssueActionType, MinisterIssueAction } = dm;
 
 export default class PlanMinisterIssueActionController {
   /**
@@ -36,12 +35,7 @@ export default class PlanMinisterIssueActionController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const issue = await MinisterIssue.findById(db, issueId);
       if (!issue) {
@@ -78,9 +72,7 @@ export default class PlanMinisterIssueActionController {
       const action = await MinisterIssueAction.create(db, data);
       return res.status(200).json(action).end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueActionController: store: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueActionController: store: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -110,12 +102,7 @@ export default class PlanMinisterIssueActionController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const data = {
         detail,
@@ -142,17 +129,11 @@ export default class PlanMinisterIssueActionController {
         data.no_graze_end_month = noGrazeEndMonth;
       }
 
-      const action = await MinisterIssueAction.update(
-        db,
-        { id: actionId },
-        data,
-      );
+      const action = await MinisterIssueAction.update(db, { id: actionId }, data);
 
       return res.status(200).json(action).end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueActionController: update: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueActionController: update: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -169,12 +150,7 @@ export default class PlanMinisterIssueActionController {
     checkRequiredFields(['planId', 'issueId', 'actionId'], 'params', req);
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const results = await MinisterIssueAction.removeById(db, actionId);
 
@@ -185,9 +161,7 @@ export default class PlanMinisterIssueActionController {
         })
         .end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueActionController: destroy: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueActionController: destroy: fail with error: ${error.message}`);
       throw error;
     }
   }

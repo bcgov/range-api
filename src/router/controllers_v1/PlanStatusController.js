@@ -1,9 +1,5 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import {
-  isNumeric,
-  checkRequiredFields,
-  substituteFields,
-} from '../../libs/utils';
+import { isNumeric, checkRequiredFields, substituteFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PLAN_STATUS } from '../../constants';
@@ -17,8 +13,7 @@ import Zone from '../../libs/db2/model/zone';
 import PlanController from './PlanController';
 
 const dm = new DataManager(config);
-const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } =
-  dm;
+const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } = dm;
 
 export default class PlanStatusController {
   // -------  Helper methods  -------
@@ -62,11 +57,7 @@ export default class PlanStatusController {
         await Plan.createSnapshot(db, planId, user);
       }
 
-      const updatedPlan = await Plan.update(
-        db,
-        { id: planId },
-        { ...body, is_restored: false },
-      );
+      const updatedPlan = await Plan.update(db, { id: planId }, { ...body, is_restored: false });
 
       // If the new status was legal, create a snapshot after updating
       if (
@@ -184,14 +175,8 @@ export default class PlanStatusController {
     }
 
     try {
-      const { agreement_id: agreementId, zone_id: zoneId } =
-        await Plan.agreementForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      const { agreement_id: agreementId, zone_id: zoneId } = await Plan.agreementForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       const planStatuses = await PlanStatus.find(db, { active: true });
       // make sure the status exists.
       const status = planStatuses.find((s) => s.id === statusId);
@@ -250,9 +235,7 @@ export default class PlanStatusController {
       );
       return res.status(200).json(status).end();
     } catch (err) {
-      logger.error(
-        `PlanStatusController: update: fail with error: ${err.message} `,
-      );
+      logger.error(`PlanStatusController: update: fail with error: ${err.message} `);
       throw err;
     }
   }
@@ -275,18 +258,9 @@ export default class PlanStatusController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const confirmation = await PlanConfirmation.update(
-        db,
-        { id: confirmationId },
-        body,
-      );
+      const confirmation = await PlanConfirmation.update(db, { id: confirmationId }, body);
       const allConfirmations = await PlanConfirmation.find(db, {
         plan_id: planId,
       });
@@ -304,9 +278,7 @@ export default class PlanStatusController {
       if (allConfirmed) {
         const planStatuses = await PlanStatus.find(db, { active: true });
         const statusCode =
-          isMinorAmendment === 'true'
-            ? PLAN_STATUS.STANDS_NOT_REVIEWED
-            : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
+          isMinorAmendment === 'true' ? PLAN_STATUS.STANDS_NOT_REVIEWED : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find((s) => s.code === statusCode);
         await PlanStatusHistory.create(db, {
           fromPlanStatusId: plan.status.id,
@@ -315,20 +287,14 @@ export default class PlanStatusController {
           planId,
           userId: user.id,
         });
-        const updatedPlan = await PlanStatusController.updatePlanStatus(
-          planId,
-          status,
-          user,
-        );
+        const updatedPlan = await PlanStatusController.updatePlanStatus(planId, status, user);
         updatedPlan.status = status;
         responseJson = { allConfirmed, updatedPlan, confirmation };
       }
       responseJson = { allConfirmed, confirmation };
       return res.status(200).json(responseJson).end();
     } catch (err) {
-      logger.error(
-        `PlanStatusController:updateAmendment: fail with error: ${err.message}`,
-      );
+      logger.error(`PlanStatusController:updateAmendment: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -343,20 +309,11 @@ export default class PlanStatusController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-    checkRequiredFields(
-      ['fromPlanStatusId', 'toPlanStatusId', 'note'],
-      'body',
-      req,
-    );
+    checkRequiredFields(['fromPlanStatusId', 'toPlanStatusId', 'note'], 'body', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const { id: historyId } = await PlanStatusHistory.create(db, {
         ...body,
@@ -368,17 +325,14 @@ export default class PlanStatusController {
       });
       return res.status(200).json(planStatusHistory).end();
     } catch (err) {
-      logger.error(
-        `PlanStatusController:storeStatusHistory: fail with error: ${err.message}`,
-      );
+      logger.error(`PlanStatusController:storeStatusHistory: fail with error: ${err.message}`);
       throw err;
     }
   }
 
   static isPlanActive(statusId, planAmendmentTypeId) {
     if ([8, 9, 12, 20, 21, 22].indexOf(statusId) !== -1) return true;
-    if (planAmendmentTypeId && [11, 13, 18].indexOf(statusId) !== -1)
-      return true;
+    if (planAmendmentTypeId && [11, 13, 18].indexOf(statusId) !== -1) return true;
     return false;
   }
 }

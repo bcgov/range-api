@@ -30,12 +30,8 @@ exports.up = async (knex) =>
     t.string('code', 1).notNull();
     t.text('description').notNull();
     t.boolean('active').notNull().defaultTo(true);
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     // t.index(['id']);
     // t.text('decription').nullable();
     // t.decimal('price', 6, 2).notNull();

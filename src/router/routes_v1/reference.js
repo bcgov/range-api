@@ -59,42 +59,22 @@ router.get(
     try {
       const where = { active: true };
       const agreementType = await AgreementType.find(db, where);
-      const agreementExemptionStatus = await AgreementExemptionStatus.find(
-        db,
-        where,
-      );
+      const agreementExemptionStatus = await AgreementExemptionStatus.find(db, where);
       const livestockType = await LivestockType.find(db, where);
       const planStatus = await PlanStatus.find(db, where);
       const clientType = await ClientType.find(db, where);
-      const livestockIdentifierType = await LivestockIdentifierType.find(
-        db,
-        where,
-      );
-      const ministerIssueActionType = await MinisterIssueActionType.find(
-        db,
-        where,
-      );
+      const livestockIdentifierType = await LivestockIdentifierType.find(db, where);
+      const ministerIssueActionType = await MinisterIssueActionType.find(db, where);
       const ministerIssueType = await MinisterIssueType.find(db, where);
       const amendmentType = await AmendmentType.find(db, where);
       const plantSpecies = await PlantSpecies.find(db, where);
       const plantCommunityType = await PlantCommunityType.find(db, where);
-      const plantCommunityElevation = await PlantCommunityElevation.find(
-        db,
-        where,
-      );
-      const plantCommunityActionType = await PlantCommunityActionType.find(
-        db,
-        where,
-      );
+      const plantCommunityElevation = await PlantCommunityElevation.find(db, where);
+      const plantCommunityActionType = await PlantCommunityActionType.find(db, where);
       const monitoringAreaHealth = await MonitoringAreaHealth.find(db, where);
-      const monitoringAreaPurposeType = await MonitoringAreaPurposeType.find(
-        db,
-        where,
-      );
-      const managementConsiderationType =
-        await ManagementConsiderationType.find(db, where);
-      const additionalRequirementCategory =
-        await AdditionalRequirementCategory.find(db, where);
+      const monitoringAreaPurposeType = await MonitoringAreaPurposeType.find(db, where);
+      const managementConsiderationType = await ManagementConsiderationType.find(db, where);
+      const additionalRequirementCategory = await AdditionalRequirementCategory.find(db, where);
       const zones = await Zone.find(db, {});
 
       const errorMessage = 'Unable to fetch reference data';

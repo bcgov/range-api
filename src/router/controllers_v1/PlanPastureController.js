@@ -34,12 +34,7 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
       // is being updated.
@@ -50,9 +45,7 @@ export default class PlanPastureController {
 
       return res.status(200).json(pasture).end();
     } catch (err) {
-      logger.error(
-        `PlanPastureController:store: fail with error: ${err.message}`,
-      );
+      logger.error(`PlanPastureController:store: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -71,26 +64,13 @@ export default class PlanPastureController {
       .distinct('pasture.id')
       .from('pasture')
       .leftJoin('plan', 'pasture.plan_id', '=', 'plan.id')
-      .leftJoin(
-        'agreement',
-        'plan.agreement_id',
-        '=',
-        'agreement.forest_file_id',
-      )
+      .leftJoin('agreement', 'plan.agreement_id', '=', 'agreement.forest_file_id')
       .leftJoin('ref_zone', 'agreement.zone_id', '=', 'ref_zone.id')
       .where('ref_district.id', districtId)
       .leftJoin('ref_district', 'ref_zone.district_id', '=', 'ref_district.id')
       .orderBy('name', 'asc');
-    const uniquePastures = await Promise.all(
-      pastures.map((p) => Pasture.findById(db, p.id)),
-    );
-    await Promise.all(
-      flatten(
-        uniquePastures.map((p) => [
-          p.fetchPlantCommunities(db, { pasture_id: p.id }),
-        ]),
-      ),
-    );
+    const uniquePastures = await Promise.all(pastures.map((p) => Pasture.findById(db, p.id)));
+    await Promise.all(flatten(uniquePastures.map((p) => [p.fetchPlantCommunities(db, { pasture_id: p.id })])));
     const response = pastures.map((p, index) => {
       return { ...uniquePastures[index], agreementId: p.forest_file_id };
     });
@@ -113,29 +93,18 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       // Use the planId from the URL so that we know exactly what plan
       // is being updated and to ensure its not reassigned.
       delete body.planId;
       delete body.plan_id;
 
-      const pasture = await Pasture.update(
-        db,
-        { id: pastureId },
-        { ...body, plan_id: planId },
-      );
+      const pasture = await Pasture.update(db, { id: pastureId }, { ...body, plan_id: planId });
 
       return res.status(200).json(pasture).end();
     } catch (err) {
-      logger.error(
-        `PlanPastureController: update: fail with error: ${err.message}`,
-      );
+      logger.error(`PlanPastureController: update: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -153,12 +122,7 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const result = await Pasture.remove(db, { id: pastureId });
 
@@ -168,9 +132,7 @@ export default class PlanPastureController {
 
       return res.status(204).send();
     } catch (err) {
-      logger.error(
-        `PlanPastureController: update: fail with error: ${err.message}`,
-      );
+      logger.error(`PlanPastureController: update: fail with error: ${err.message}`);
       throw err;
     }
   }
@@ -190,12 +152,7 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findOne(db, { id: pastureId });
       if (!pasture) {
@@ -204,9 +161,7 @@ export default class PlanPastureController {
 
       const { purposeOfAction } = body;
       if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
-        throw errorWithCode(
-          `Unacceptable purpose of action with "${purposeOfAction}"`,
-        );
+        throw errorWithCode(`Unacceptable purpose of action with "${purposeOfAction}"`);
       }
 
       const plantCommunity = await PlantCommunity.create(db, {
@@ -216,9 +171,7 @@ export default class PlanPastureController {
 
       return res.status(200).json(plantCommunity).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storePlatCommunity: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storePlatCommunity: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -236,12 +189,7 @@ export default class PlanPastureController {
     checkRequiredFields(['planId', 'pastureId', 'communityId'], 'params', req);
 
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
-    await PlanRouteHelper.canUserAccessThisAgreement(
-      db,
-      Agreement,
-      user,
-      agreementId,
-    );
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const pasture = await Pasture.findOne(db, { id: pastureId });
 
@@ -271,12 +219,7 @@ export default class PlanPastureController {
     checkRequiredFields(['planId', 'pastureId', 'communityId'], 'params', req);
 
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
-    await PlanRouteHelper.canUserAccessThisAgreement(
-      db,
-      Agreement,
-      user,
-      agreementId,
-    );
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const pasture = await Pasture.findById(db, pastureId);
 
@@ -310,12 +253,7 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -331,9 +269,7 @@ export default class PlanPastureController {
       });
       return res.status(200).json(plantCommunityAction).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -342,20 +278,11 @@ export default class PlanPastureController {
     const { params, body, user } = req;
     const { planId, pastureId, communityId, actionId } = params;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'actionId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'actionId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -372,16 +299,10 @@ export default class PlanPastureController {
         throw errorWithCode('Could not find plant community action', 404);
       }
 
-      const updatedAction = await PlantCommunityAction.update(
-        db,
-        { id: actionId },
-        body,
-      );
+      const updatedAction = await PlantCommunityAction.update(db, { id: actionId }, body);
       return res.status(200).json(updatedAction).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -390,20 +311,11 @@ export default class PlanPastureController {
     const { params, user } = req;
     const { planId, pastureId, communityId, actionId } = params;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'actionId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'actionId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -422,9 +334,7 @@ export default class PlanPastureController {
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storePlantCommunityAction: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -445,17 +355,10 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       if (!PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
-        throw errorWithCode(
-          `Unacceptable plant community criteria with "${criteria}"`,
-        );
+        throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -473,9 +376,7 @@ export default class PlanPastureController {
       });
       return res.status(200).json(indicatorPlant).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -485,25 +386,14 @@ export default class PlanPastureController {
     const { planId, pastureId, communityId, plantId } = params;
     const { criteria } = body;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'plantId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'plantId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       if (criteria && !PLANT_COMMUNITY_CRITERIA.includes(criteria)) {
-        throw errorWithCode(
-          `Unacceptable plant community criteria with "${criteria}"`,
-        );
+        throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
       const pasture = await Pasture.findById(db, pastureId);
@@ -521,16 +411,10 @@ export default class PlanPastureController {
         throw errorWithCode('Could not find indicator plant', 404);
       }
 
-      const updatedIndicatorPlant = await IndicatorPlant.update(
-        db,
-        { id: plantId },
-        body,
-      );
+      const updatedIndicatorPlant = await IndicatorPlant.update(db, { id: plantId }, body);
       return res.status(200).json(updatedIndicatorPlant).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -539,20 +423,11 @@ export default class PlanPastureController {
     const { params, user } = req;
     const { planId, pastureId, communityId, plantId } = params;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'plantId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'plantId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -571,9 +446,7 @@ export default class PlanPastureController {
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeIndicatorPlant: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -594,12 +467,7 @@ export default class PlanPastureController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -628,9 +496,7 @@ export default class PlanPastureController {
 
       return res.status(200).json(monitoringArea).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -640,20 +506,11 @@ export default class PlanPastureController {
     const { planId, pastureId, communityId, areaId } = params;
     const { purposeTypeIds = [], ...bodyData } = body;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'areaId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'areaId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -690,9 +547,7 @@ export default class PlanPastureController {
 
       // Create any purposes that don't exist yet
       const promises = purposeTypeIds.map((pId) => {
-        const existingPurpose = monitoringArea.purposes.find(
-          (p) => p.purposeTypeId === pId,
-        );
+        const existingPurpose = monitoringArea.purposes.find((p) => p.purposeTypeId === pId);
 
         if (!existingPurpose) {
           return MonitoringAreaPurpose.create(db, {
@@ -717,9 +572,7 @@ export default class PlanPastureController {
         .json({ ...updatedMonitoringArea, purposes })
         .end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -728,20 +581,11 @@ export default class PlanPastureController {
     const { params, user } = req;
     const { planId, pastureId, communityId, areaId } = params;
 
-    checkRequiredFields(
-      ['planId', 'pastureId', 'communityId', 'areaId'],
-      'params',
-      req,
-    );
+    checkRequiredFields(['planId', 'pastureId', 'communityId', 'areaId'], 'params', req);
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const pasture = await Pasture.findById(db, pastureId);
       if (!pasture) {
@@ -776,9 +620,7 @@ export default class PlanPastureController {
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(
-        `PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanPastureController: storeMonitoringArea: fail with error: ${error.message}`);
       throw error;
     }
   }

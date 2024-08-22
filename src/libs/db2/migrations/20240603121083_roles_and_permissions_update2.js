@@ -5,6 +5,3 @@ exports.up = async (knex) => {
     WHERE role_id = 5;
   `);
 };
-
-exports.down = async (knex) => {
-};

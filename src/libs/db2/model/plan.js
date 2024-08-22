@@ -63,10 +63,7 @@ export default class Plan extends Model {
     this.requestedExtension = data.extension_requests_requested_extension;
     this.requestedExtensionUserId = data.extension_requests_user_id;
     this.creator = new User(User.extract(data), db);
-    this.planExtensionRequests = new PlanExtensionRequests(
-      PlanExtensionRequests.extract(data),
-      db,
-    );
+    this.planExtensionRequests = new PlanExtensionRequests(PlanExtensionRequests.extract(data), db);
   }
 
   static legalStatuses = [20, 8, 9, 12, 21];
@@ -129,14 +126,7 @@ export default class Plan extends Model {
     }
   }
 
-  static async findWithStatusExtension(
-    db,
-    where,
-    order,
-    page = undefined,
-    limit = undefined,
-    whereNot = undefined,
-  ) {
+  static async findWithStatusExtension(db, where, order, page = undefined, limit = undefined, whereNot = undefined) {
     const myFields = [
       ...Plan.fields,
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
@@ -173,10 +163,7 @@ export default class Plan extends Model {
       return [];
     }
 
-    const results = await db
-      .select('agreement_id')
-      .from(Plan.table)
-      .where({ id: planId });
+    const results = await db.select('agreement_id').from(Plan.table).where({ id: planId });
 
     if (results.length === 0) return null;
 
@@ -205,11 +192,7 @@ export default class Plan extends Model {
   }
 
   static async createSnapshot(db, planId, user) {
-    const [plan] = await Plan.findWithStatusExtension(
-      db,
-      { 'plan.id': planId },
-      ['id', 'desc'],
-    );
+    const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
       throw errorWithCode("Plan doesn't exist", 404);
     }
@@ -256,10 +239,7 @@ export default class Plan extends Model {
     });
 
     if (!planSnapshot) {
-      throw errorWithCode(
-        `Snapshot for plan ${planId}, version: ${snapshotVersion} does not exist.`,
-        404,
-      );
+      throw errorWithCode(`Snapshot for plan ${planId}, version: ${snapshotVersion} does not exist.`, 404);
     }
 
     const { snapshot } = planSnapshot;
@@ -272,91 +252,69 @@ export default class Plan extends Model {
 
       await PlantCommunity.remove(db, { pasture_id: pasture.id });
 
-      const plantCommunityPromises = pasture.plantCommunities.map(
-        async (plantCommunity) => {
-          const newPlantCommunity = await PlantCommunity.create(
-            db,
-            plantCommunity,
-          );
+      const plantCommunityPromises = pasture.plantCommunities.map(async (plantCommunity) => {
+        const newPlantCommunity = await PlantCommunity.create(db, plantCommunity);
 
-          await IndicatorPlant.remove(db, {
-            plant_community_id: plantCommunity.id,
+        await IndicatorPlant.remove(db, {
+          plant_community_id: plantCommunity.id,
+        });
+
+        const indicatorPlantPromises = plantCommunity.indicatorPlants.map(async (indicatorPlant) => {
+          const newIndicatorPlant = await IndicatorPlant.create(db, indicatorPlant);
+
+          return newIndicatorPlant;
+        });
+
+        const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
+
+        await MonitoringArea.remove(db, {
+          plant_community_id: plantCommunity.id,
+        });
+
+        const monitoringAreaPromises = plantCommunity.monitoringAreas.map(async (monitoringArea) => {
+          const newMonitoringArea = await MonitoringArea.create(db, monitoringArea);
+
+          await MonitoringAreaPurpose.remove(db, {
+            monitoring_area_id: monitoringArea.id,
           });
 
-          const indicatorPlantPromises = plantCommunity.indicatorPlants.map(
-            async (indicatorPlant) => {
-              const newIndicatorPlant = await IndicatorPlant.create(
-                db,
-                indicatorPlant,
-              );
+          const purposePromises = monitoringArea.purposes.map(async (purpose) => {
+            const newPurpose = await MonitoringAreaPurpose.create(db, purpose);
 
-              return newIndicatorPlant;
-            },
-          );
-
-          const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
-
-          await MonitoringArea.remove(db, {
-            plant_community_id: plantCommunity.id,
+            return newPurpose;
           });
 
-          const monitoringAreaPromises = plantCommunity.monitoringAreas.map(
-            async (monitoringArea) => {
-              const newMonitoringArea = await MonitoringArea.create(
-                db,
-                monitoringArea,
-              );
-
-              await MonitoringAreaPurpose.remove(db, {
-                monitoring_area_id: monitoringArea.id,
-              });
-
-              const purposePromises = monitoringArea.purposes.map(
-                async (purpose) => {
-                  const newPurpose = await MonitoringAreaPurpose.create(
-                    db,
-                    purpose,
-                  );
-
-                  return newPurpose;
-                },
-              );
-
-              const newPurposes = await Promise.all(purposePromises);
-
-              return {
-                ...newMonitoringArea,
-                monitoringAreaPurposes: newPurposes,
-              };
-            },
-          );
-
-          const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
-
-          await PlantCommunityAction.remove(db, {
-            plant_community_id: plantCommunity.id,
-          });
-
-          const actionPromises = plantCommunity.plantCommunityActions.map(
-            async ({ ...action }) => {
-              const newAction = await PlantCommunityAction.create(db, {
-                ...action,
-              });
-
-              return newAction;
-            },
-          );
-
-          const newActions = await Promise.all(actionPromises);
+          const newPurposes = await Promise.all(purposePromises);
 
           return {
-            ...newPlantCommunity,
-            indicatorPlants: newIndicatorPlants,
-            monitoringAreas: newMonitoringAreas,
-            plantCommunityActions: newActions,
+            ...newMonitoringArea,
+            monitoringAreaPurposes: newPurposes,
           };
-        },
-      );
+        });
+
+        const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
+
+        await PlantCommunityAction.remove(db, {
+          plant_community_id: plantCommunity.id,
+        });
+
+        const actionPromises = plantCommunity.plantCommunityActions.map(async ({ ...action }) => {
+          const newAction = await PlantCommunityAction.create(db, {
+            ...action,
+          });
+
+          return newAction;
+        });
+
+        const newActions = await Promise.all(actionPromises);
+
+        return {
+          ...newPlantCommunity,
+          indicatorPlants: newIndicatorPlants,
+          monitoringAreas: newMonitoringAreas,
+          plantCommunityActions: newActions,
+        };
+      });
 
       const newPlantCommunities = await Promise.all(plantCommunityPromises);
 
@@ -378,13 +336,11 @@ export default class Plan extends Model {
         grazing_schedule_id: schedule.id,
       });
 
-      const entryPromises = schedule.grazingScheduleEntries.map(
-        async (entry) => {
-          const newEntry = await GrazingScheduleEntry.create(db, entry);
+      const entryPromises = schedule.grazingScheduleEntries.map(async (entry) => {
+        const newEntry = await GrazingScheduleEntry.create(db, entry);
 
-          return newEntry;
-        },
-      );
+        return newEntry;
+      });
 
       const newEntries = await Promise.all(entryPromises);
 
@@ -398,16 +354,11 @@ export default class Plan extends Model {
 
     await AdditionalRequirement.remove(db, { plan_id: planId });
 
-    const additionalRequirementPromises = snapshot.additionalRequirements.map(
-      async (requirement) => {
-        const newRequirement = await AdditionalRequirement.create(
-          db,
-          requirement,
-        );
+    const additionalRequirementPromises = snapshot.additionalRequirements.map(async (requirement) => {
+      const newRequirement = await AdditionalRequirement.create(db, requirement);
 
-        return newRequirement;
-      },
-    );
+      return newRequirement;
+    });
 
     await Promise.all(additionalRequirementPromises);
 
@@ -451,34 +402,25 @@ export default class Plan extends Model {
 
     await ManagementConsideration.remove(db, { plan_id: planId });
 
-    const managementConsiderationPromises =
-      snapshot.managementConsiderations.map(async (consideration) => {
-        const newConsideration = await ManagementConsideration.create(
-          db,
-          consideration,
-        );
+    const managementConsiderationPromises = snapshot.managementConsiderations.map(async (consideration) => {
+      const newConsideration = await ManagementConsideration.create(db, consideration);
 
-        return newConsideration;
-      });
+      return newConsideration;
+    });
 
     await Promise.all(managementConsiderationPromises);
 
     await PlanConfirmation.remove(db, { plan_id: planId });
 
-    const confirmationPromises = snapshot.confirmations.map(
-      async (confirmation) => {
-        const newConfirmation = await PlanConfirmation.create(db, confirmation);
+    const confirmationPromises = snapshot.confirmations.map(async (confirmation) => {
+      const newConfirmation = await PlanConfirmation.create(db, confirmation);
 
-        return newConfirmation;
-      },
-    );
+      return newConfirmation;
+    });
 
     await Promise.all(confirmationPromises);
 
-    if (
-      snapshot.invasivePlantChecklist &&
-      snapshot.invasivePlantChecklist.planId
-    ) {
+    if (snapshot.invasivePlantChecklist && snapshot.invasivePlantChecklist.planId) {
       await InvasivePlantChecklist.remove(db, { plan_id: planId });
 
       await InvasivePlantChecklist.create(db, snapshot.invasivePlantChecklist);
@@ -486,15 +428,13 @@ export default class Plan extends Model {
 
     await PlanStatusHistory.remove(db, { plan_id: planId });
 
-    const newStatusHistoryPromises = snapshot.planStatusHistory.map(
-      async ({ ...history }) => {
-        const newHistory = await PlanStatusHistory.create(db, {
-          ...history,
-        });
+    const newStatusHistoryPromises = snapshot.planStatusHistory.map(async ({ ...history }) => {
+      const newHistory = await PlanStatusHistory.create(db, {
+        ...history,
+      });
 
-        return newHistory;
-      },
-    );
+      return newHistory;
+    });
 
     await Promise.all(newStatusHistoryPromises);
 
@@ -523,247 +463,197 @@ export default class Plan extends Model {
     try {
       db.raw('BEGIN');
 
-      const pasturePromises = plan.pastures.map(
-        async ({ id: pastureId, ...pasture }) => {
-          const newPasture = await Pasture.create(db, {
-            ...pasture,
-            plan_id: newPlan.id,
+      const pasturePromises = plan.pastures.map(async ({ id: pastureId, ...pasture }) => {
+        const newPasture = await Pasture.create(db, {
+          ...pasture,
+          plan_id: newPlan.id,
+        });
+
+        const plantCommunityPromises = pasture.plantCommunities.map(async ({ ...plantCommunity }) => {
+          const newPlantCommunity = await PlantCommunity.create(db, {
+            ...plantCommunity,
+            pasture_id: newPasture.id,
           });
 
-          const plantCommunityPromises = pasture.plantCommunities.map(
-            async ({ ...plantCommunity }) => {
-              const newPlantCommunity = await PlantCommunity.create(db, {
-                ...plantCommunity,
-                pasture_id: newPasture.id,
+          const indicatorPlantPromises = plantCommunity.indicatorPlants.map(async ({ ...indicatorPlant }) => {
+            const newIndicatorPlant = await IndicatorPlant.create(db, {
+              ...indicatorPlant,
+              plant_community_id: newPlantCommunity.id,
+            });
+
+            return newIndicatorPlant;
+          });
+
+          const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
+
+          const monitoringAreaPromises = plantCommunity.monitoringAreas.map(async ({ ...monitoringArea }) => {
+            const newMonitoringArea = await MonitoringArea.create(db, {
+              ...monitoringArea,
+              plant_community_id: newPlantCommunity.id,
+            });
+
+            const purposePromises = monitoringArea.purposes.map(async ({ ...purpose }) => {
+              const newPurpose = await MonitoringAreaPurpose.create(db, {
+                ...purpose,
+                monitoring_area_id: newMonitoringArea.id,
               });
 
-              const indicatorPlantPromises = plantCommunity.indicatorPlants.map(
-                async ({ ...indicatorPlant }) => {
-                  const newIndicatorPlant = await IndicatorPlant.create(db, {
-                    ...indicatorPlant,
-                    plant_community_id: newPlantCommunity.id,
-                  });
+              return newPurpose;
+            });
 
-                  return newIndicatorPlant;
-                },
-              );
+            const newPurposes = await Promise.all(purposePromises);
 
-              const newIndicatorPlants = await Promise.all(
-                indicatorPlantPromises,
-              );
-
-              const monitoringAreaPromises = plantCommunity.monitoringAreas.map(
-                async ({ ...monitoringArea }) => {
-                  const newMonitoringArea = await MonitoringArea.create(db, {
-                    ...monitoringArea,
-                    plant_community_id: newPlantCommunity.id,
-                  });
-
-                  const purposePromises = monitoringArea.purposes.map(
-                    async ({ ...purpose }) => {
-                      const newPurpose = await MonitoringAreaPurpose.create(
-                        db,
-                        {
-                          ...purpose,
-                          monitoring_area_id: newMonitoringArea.id,
-                        },
-                      );
-
-                      return newPurpose;
-                    },
-                  );
-
-                  const newPurposes = await Promise.all(purposePromises);
-
-                  return {
-                    ...newMonitoringArea,
-                    monitoringAreaPurposes: newPurposes,
-                  };
-                },
-              );
-
-              const newMonitoringAreas = await Promise.all(
-                monitoringAreaPromises,
-              );
-
-              const actionPromises = plantCommunity.plantCommunityActions.map(
-                async ({ ...action }) => {
-                  const newAction = await PlantCommunityAction.create(db, {
-                    ...action,
-                    plant_community_id: newPlantCommunity.id,
-                  });
-
-                  return newAction;
-                },
-              );
-
-              const newActions = await Promise.all(actionPromises);
-
-              return {
-                ...newPlantCommunity,
-                indicatorPlants: newIndicatorPlants,
-                monitoringAreas: newMonitoringAreas,
-                plantCommunityActions: newActions,
-              };
-            },
-          );
-
-          const newPlantCommunities = await Promise.all(plantCommunityPromises);
-
-          return {
-            ...newPasture,
-            plantCommunities: newPlantCommunities,
-            original: { id: pastureId, ...pasture },
-          };
-        },
-      );
-
-      const newPastures = await Promise.all(pasturePromises);
-
-      const schedulePromises = plan.grazingSchedules.map(
-        async ({ ...schedule }) => {
-          const newSchedule = await GrazingSchedule.create(db, {
-            ...schedule,
-            plan_id: newPlan.id,
+            return {
+              ...newMonitoringArea,
+              monitoringAreaPurposes: newPurposes,
+            };
           });
 
-          const entryPromises = schedule.grazingScheduleEntries.map(
-            async ({ ...entry }) => {
-              const pasture = newPastures.find(
-                (p) => p.original.id === entry.pastureId,
-              );
-              const newEntry = await GrazingScheduleEntry.create(db, {
-                ...entry,
-                grazing_schedule_id: newSchedule.id,
-                pasture_id: pasture.id,
-              });
+          const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
 
-              return newEntry;
-            },
-          );
+          const actionPromises = plantCommunity.plantCommunityActions.map(async ({ ...action }) => {
+            const newAction = await PlantCommunityAction.create(db, {
+              ...action,
+              plant_community_id: newPlantCommunity.id,
+            });
 
-          const newEntries = await Promise.all(entryPromises);
-
-          return {
-            ...newSchedule,
-            grazingScheduleEntries: newEntries,
-          };
-        },
-      );
-
-      const newGrazingSchedules = await Promise.all(schedulePromises);
-
-      const additionalRequirementPromises = plan.additionalRequirements.map(
-        async ({ ...requirement }) => {
-          const newRequirement = await AdditionalRequirement.create(db, {
-            ...requirement,
-            plan_id: newPlan.id,
+            return newAction;
           });
-
-          return newRequirement;
-        },
-      );
-
-      const newAdditionalRequirements = await Promise.all(
-        additionalRequirementPromises,
-      );
-
-      const ministerIssuePromises = plan.ministerIssues.map(
-        async ({ ...issue }) => {
-          const newIssue = await MinisterIssue.create(db, {
-            ...issue,
-            plan_id: newPlan.id,
-          });
-
-          const actionPromises = issue.ministerIssueActions.map(
-            async ({ ...action }) => {
-              const newAction = await MinisterIssueAction.create(db, {
-                ...action,
-                issue_id: newIssue.id,
-              });
-
-              return newAction;
-            },
-          );
 
           const newActions = await Promise.all(actionPromises);
 
-          const ministerPasturePromises = issue.pastures.map(
-            async (pastureId) => {
-              const pasture = newPastures.find(
-                (p) => p.original.id === pastureId,
-              );
-              const newPasture = await MinisterIssuePasture.create(db, {
-                pasture_id: pasture.id,
-                minister_issue_id: newIssue.id,
-              });
-
-              return newPasture;
-            },
-          );
-
-          const newMinisterPastures = await Promise.all(
-            ministerPasturePromises,
-          );
-
           return {
-            ...newIssue,
-            ministerIssueActions: newActions,
-            ministerIssuePastures: newMinisterPastures,
+            ...newPlantCommunity,
+            indicatorPlants: newIndicatorPlants,
+            monitoringAreas: newMonitoringAreas,
+            plantCommunityActions: newActions,
           };
-        },
-      );
+        });
+
+        const newPlantCommunities = await Promise.all(plantCommunityPromises);
+
+        return {
+          ...newPasture,
+          plantCommunities: newPlantCommunities,
+          original: { id: pastureId, ...pasture },
+        };
+      });
+
+      const newPastures = await Promise.all(pasturePromises);
+
+      const schedulePromises = plan.grazingSchedules.map(async ({ ...schedule }) => {
+        const newSchedule = await GrazingSchedule.create(db, {
+          ...schedule,
+          plan_id: newPlan.id,
+        });
+
+        const entryPromises = schedule.grazingScheduleEntries.map(async ({ ...entry }) => {
+          const pasture = newPastures.find((p) => p.original.id === entry.pastureId);
+          const newEntry = await GrazingScheduleEntry.create(db, {
+            ...entry,
+            grazing_schedule_id: newSchedule.id,
+            pasture_id: pasture.id,
+          });
+
+          return newEntry;
+        });
+
+        const newEntries = await Promise.all(entryPromises);
+
+        return {
+          ...newSchedule,
+          grazingScheduleEntries: newEntries,
+        };
+      });
+
+      const newGrazingSchedules = await Promise.all(schedulePromises);
+
+      const additionalRequirementPromises = plan.additionalRequirements.map(async ({ ...requirement }) => {
+        const newRequirement = await AdditionalRequirement.create(db, {
+          ...requirement,
+          plan_id: newPlan.id,
+        });
+
+        return newRequirement;
+      });
+
+      const newAdditionalRequirements = await Promise.all(additionalRequirementPromises);
+
+      const ministerIssuePromises = plan.ministerIssues.map(async ({ ...issue }) => {
+        const newIssue = await MinisterIssue.create(db, {
+          ...issue,
+          plan_id: newPlan.id,
+        });
+
+        const actionPromises = issue.ministerIssueActions.map(async ({ ...action }) => {
+          const newAction = await MinisterIssueAction.create(db, {
+            ...action,
+            issue_id: newIssue.id,
+          });
+
+          return newAction;
+        });
+
+        const newActions = await Promise.all(actionPromises);
+
+        const ministerPasturePromises = issue.pastures.map(async (pastureId) => {
+          const pasture = newPastures.find((p) => p.original.id === pastureId);
+          const newPasture = await MinisterIssuePasture.create(db, {
+            pasture_id: pasture.id,
+            minister_issue_id: newIssue.id,
+          });
+
+          return newPasture;
+        });
+
+        const newMinisterPastures = await Promise.all(ministerPasturePromises);
+
+        return {
+          ...newIssue,
+          ministerIssueActions: newActions,
+          ministerIssuePastures: newMinisterPastures,
+        };
+      });
 
       const newMinisterIssues = await Promise.all(ministerIssuePromises);
 
-      const managementConsiderationPromises = plan.managementConsiderations.map(
-        async ({ ...consideration }) => {
-          const newConsideration = await ManagementConsideration.create(db, {
-            ...consideration,
-            plan_id: newPlan.id,
-          });
+      const managementConsiderationPromises = plan.managementConsiderations.map(async ({ ...consideration }) => {
+        const newConsideration = await ManagementConsideration.create(db, {
+          ...consideration,
+          plan_id: newPlan.id,
+        });
 
-          return newConsideration;
-        },
-      );
+        return newConsideration;
+      });
 
-      const newConsiderations = await Promise.all(
-        managementConsiderationPromises,
-      );
+      const newConsiderations = await Promise.all(managementConsiderationPromises);
 
-      const confirmationPromises = plan.confirmations.map(
-        async ({ ...confirmation }) => {
-          const newConfirmation = await PlanConfirmation.create(db, {
-            ...confirmation,
-            plan_id: newPlan.id,
-          });
+      const confirmationPromises = plan.confirmations.map(async ({ ...confirmation }) => {
+        const newConfirmation = await PlanConfirmation.create(db, {
+          ...confirmation,
+          plan_id: newPlan.id,
+        });
 
-          return newConfirmation;
-        },
-      );
+        return newConfirmation;
+      });
 
       const newConfirmations = await Promise.all(confirmationPromises);
 
       const { ...invasivePlantChecklist } = plan.invasivePlantChecklist;
 
-      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(
-        db,
-        {
-          ...invasivePlantChecklist,
+      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(db, {
+        ...invasivePlantChecklist,
+        plan_id: newPlan.id,
+      });
+
+      const newStatusHistoryPromises = plan.planStatusHistory.map(async ({ ...history }) => {
+        const newHistory = await PlanStatusHistory.create(db, {
+          ...history,
           plan_id: newPlan.id,
-        },
-      );
+        });
 
-      const newStatusHistoryPromises = plan.planStatusHistory.map(
-        async ({ ...history }) => {
-          const newHistory = await PlanStatusHistory.create(db, {
-            ...history,
-            plan_id: newPlan.id,
-          });
-
-          return newHistory;
-        },
-      );
+        return newHistory;
+      });
 
       await Promise.all(newStatusHistoryPromises);
 
@@ -821,10 +711,7 @@ export default class Plan extends Model {
 
   async fetchExtensionRequests() {
     const where = { plan_id: this.id };
-    const planExtensionRequests = await PlanExtensionRequests.findWithExclusion(
-      this.db,
-      where,
-    );
+    const planExtensionRequests = await PlanExtensionRequests.findWithExclusion(this.db, where);
     this.planExtensionRequests = planExtensionRequests || [];
   }
 
@@ -832,9 +719,7 @@ export default class Plan extends Model {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where, ['created_at']);
 
-    const promises = pastures.map((p) => [
-      p.fetchPlantCommunities(this.db, { pasture_id: p.id }),
-    ]);
+    const promises = pastures.map((p) => [p.fetchPlantCommunities(this.db, { pasture_id: p.id })]);
 
     await Promise.all(flatten(promises));
 
@@ -873,10 +758,7 @@ export default class Plan extends Model {
 
   async fetchPlanStatusHistory() {
     const where = { plan_id: this.id };
-    const planStatusHistory = await PlanStatusHistory.findWithUser(
-      this.db,
-      where,
-    );
+    const planStatusHistory = await PlanStatusHistory.findWithUser(this.db, where);
 
     this.planStatusHistory = planStatusHistory || [];
   }
@@ -890,20 +772,14 @@ export default class Plan extends Model {
 
   async fetchAdditionalRequirements() {
     const where = { plan_id: this.id };
-    const requirements = await AdditionalRequirement.findWithCategory(
-      this.db,
-      where,
-    );
+    const requirements = await AdditionalRequirement.findWithCategory(this.db, where);
 
     this.additionalRequirements = requirements || [];
   }
 
   async fetchManagementConsiderations() {
     const where = { plan_id: this.id };
-    const considerations = await ManagementConsideration.findWithType(
-      this.db,
-      where,
-    );
+    const considerations = await ManagementConsideration.findWithType(this.db, where);
 
     this.managementConsiderations = considerations || [];
   }

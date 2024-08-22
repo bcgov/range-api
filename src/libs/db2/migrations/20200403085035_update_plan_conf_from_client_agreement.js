@@ -85,7 +85,5 @@ exports.up = async function (knex) {
 };
 
 exports.down = async function (knex) {
-  knex.raw(
-    `drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;`,
-  );
+  knex.raw(`drop function if exists update_plan_conf_to_reflect_client_agreement() cascade;`);
 };

@@ -33,12 +33,8 @@ exports.up = async (knex) =>
 
     t.smallint('year').notNull().index();
     t.text('narative');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     // const query = `
     // ALTER TABLE ${table} ALTER COLUMN ${column} TYPE smallint USING

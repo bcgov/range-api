@@ -54,40 +54,22 @@ router.put('/:planId?', asyncMiddleware(PlanController.update));
 router.put('/:planId?/status', asyncMiddleware(PlanStatusController.update));
 
 // update existing amendment confirmation
-router.put(
-  '/:planId?/confirmation/:confirmationId?',
-  asyncMiddleware(PlanStatusController.updateAmendment),
-);
+router.put('/:planId?/confirmation/:confirmationId?', asyncMiddleware(PlanStatusController.updateAmendment));
 
 // create a plan status history
-router.post(
-  '/:planId?/status-record',
-  asyncMiddleware(PlanStatusController.storeStatusHistory),
-);
+router.post('/:planId?/status-record', asyncMiddleware(PlanStatusController.storeStatusHistory));
 
 // discard amendment
-router.post(
-  '/:planId?/discard-amendment',
-  asyncMiddleware(PlanController.discardAmendment),
-);
+router.post('/:planId?/discard-amendment', asyncMiddleware(PlanController.discardAmendment));
 
 // add attachment
-router.post(
-  '/:planId?/attachment',
-  asyncMiddleware(PlanController.storeAttachment),
-);
+router.post('/:planId?/attachment', asyncMiddleware(PlanController.storeAttachment));
 
 // update attachment
-router.put(
-  '/:planId?/attachment/:attachmentId?',
-  asyncMiddleware(PlanController.updateAttachment),
-);
+router.put('/:planId?/attachment/:attachmentId?', asyncMiddleware(PlanController.updateAttachment));
 
 // remove attachment
-router.delete(
-  '/:planId?/attachment/:attachmentId?',
-  asyncMiddleware(PlanController.removeAttachment),
-);
+router.delete('/:planId?/attachment/:attachmentId?', asyncMiddleware(PlanController.removeAttachment));
 
 //
 // Versions
@@ -100,22 +82,13 @@ router.post('/:planId?/version', asyncMiddleware(PlanVersionController.store));
 router.get('/:planId?/version', asyncMiddleware(PlanVersionController.showAll));
 
 // Get a specific version for a plan
-router.get(
-  '/:planId?/version/:version?',
-  asyncMiddleware(PlanVersionController.show),
-);
+router.get('/:planId?/version/:version?', asyncMiddleware(PlanVersionController.show));
 
 // Restore a previous version of a plan
-router.post(
-  '/:planId?/version/:version?/restore',
-  asyncMiddleware(PlanVersionController.restoreVersion),
-);
+router.post('/:planId?/version/:version?/restore', asyncMiddleware(PlanVersionController.restoreVersion));
 
 // Download Plan PDF
-router.get(
-  '/:planId/version/:version/download',
-  asyncMiddleware(PlanVersionController.download),
-);
+router.get('/:planId/version/:version/download', asyncMiddleware(PlanVersionController.download));
 //
 // Pasture
 //
@@ -124,21 +97,12 @@ router.get(
 router.post('/:planId?/pasture', asyncMiddleware(PlanPastureController.store));
 
 // Update the existing Pasture of an existing Plan
-router.put(
-  '/:planId?/pasture/:pastureId?',
-  asyncMiddleware(PlanPastureController.update),
-);
+router.put('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureController.update));
 
-router.delete(
-  '/:planId?/pasture/:pastureId?',
-  asyncMiddleware(PlanPastureController.destroy),
-);
+router.delete('/:planId?/pasture/:pastureId?', asyncMiddleware(PlanPastureController.destroy));
 
 // create a plant community
-router.post(
-  '/:planId?/pasture/:pastureId?/plant-community',
-  asyncMiddleware(PlanPastureController.storePlatCommunity),
-);
+router.post('/:planId?/pasture/:pastureId?/plant-community', asyncMiddleware(PlanPastureController.storePlatCommunity));
 
 // Update an existing plant community
 router.put(
@@ -211,34 +175,19 @@ router.delete(
 //
 
 // Add a Schedule (and related Grazing Schedule Entries) to an existing Plan
-router.post(
-  '/:planId?/schedule',
-  asyncMiddleware(PlanScheduleController.store),
-);
+router.post('/:planId?/schedule', asyncMiddleware(PlanScheduleController.store));
 
 // Update an existing Schedule (and related Grazing Schedule Entries) of an existing Plan
-router.put(
-  '/:planId?/schedule/:scheduleId?',
-  asyncMiddleware(PlanScheduleController.update),
-);
+router.put('/:planId?/schedule/:scheduleId?', asyncMiddleware(PlanScheduleController.update));
 
 // Update an existing Schedule sort order
-router.put(
-  '/:planId?/schedule/:scheduleId?/sortOrder',
-  asyncMiddleware(PlanScheduleController.updateSortOrder),
-);
+router.put('/:planId?/schedule/:scheduleId?/sortOrder', asyncMiddleware(PlanScheduleController.updateSortOrder));
 
 // Remove a Schedule (and related Grazing Schedule Entries) from an existing Plan
-router.delete(
-  '/:planId?/schedule/:scheduleId?',
-  asyncMiddleware(PlanScheduleController.destroy),
-);
+router.delete('/:planId?/schedule/:scheduleId?', asyncMiddleware(PlanScheduleController.destroy));
 
 // Add a grazing schedule entry to an existing grazing schedule
-router.post(
-  '/:planId?/schedule/:scheduleId?/entry',
-  asyncMiddleware(PlanScheduleController.storeScheduleEntry),
-);
+router.post('/:planId?/schedule/:scheduleId?/entry', asyncMiddleware(PlanScheduleController.storeScheduleEntry));
 
 // Remove a Grazing Schedule Entries from Grazing Schedule
 router.delete(
@@ -251,65 +200,38 @@ router.delete(
 //
 
 // Add a Minister Issue to an existing Plan
-router.post(
-  '/:planId?/issue',
-  asyncMiddleware(PlanMinisterIssueController.store),
-);
+router.post('/:planId?/issue', asyncMiddleware(PlanMinisterIssueController.store));
 
 // Update a Minister Issue to an existing Plan
-router.put(
-  '/:planId?/issue/:issueId?',
-  asyncMiddleware(PlanMinisterIssueController.update),
-);
+router.put('/:planId?/issue/:issueId?', asyncMiddleware(PlanMinisterIssueController.update));
 
 // Remove a Minister Issue from an existing Plan
-router.delete(
-  '/:planId?/issue/:issueId?',
-  asyncMiddleware(PlanMinisterIssueController.destroy),
-);
+router.delete('/:planId?/issue/:issueId?', asyncMiddleware(PlanMinisterIssueController.destroy));
 
 //
 // Minister Issue Action
 //
 
 // Add a Minister Issue Action to an existing Minister Issue
-router.post(
-  '/:planId?/issue/:issueId?/action',
-  asyncMiddleware(PlanMinisterIssueActionController.store),
-);
+router.post('/:planId?/issue/:issueId?/action', asyncMiddleware(PlanMinisterIssueActionController.store));
 
 // Update a Minister Issue Action to an existing Minister Issue
-router.put(
-  '/:planId?/issue/:issueId?/action/:actionId',
-  asyncMiddleware(PlanMinisterIssueActionController.update),
-);
+router.put('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(PlanMinisterIssueActionController.update));
 
 // Delete a Minister Issue Action
-router.delete(
-  '/:planId?/issue/:issueId?/action/:actionId',
-  asyncMiddleware(PlanMinisterIssueActionController.destroy),
-);
+router.delete('/:planId?/issue/:issueId?/action/:actionId', asyncMiddleware(PlanMinisterIssueActionController.destroy));
 
 /**
  * Invasive plant
  */
 // Create an invasive plant checklist
-router.post(
-  '/:planId?/invasive-plant-checklist',
-  asyncMiddleware(PlanInvasivePlantController.store),
-);
+router.post('/:planId?/invasive-plant-checklist', asyncMiddleware(PlanInvasivePlantController.store));
 
 // Update an invasive plant checklist
-router.put(
-  '/:planId?/invasive-plant-checklist/:checklistId?',
-  asyncMiddleware(PlanInvasivePlantController.update),
-);
+router.put('/:planId?/invasive-plant-checklist/:checklistId?', asyncMiddleware(PlanInvasivePlantController.update));
 
 // Create an additional requirement
-router.post(
-  '/:planId?/additional-requirement',
-  asyncMiddleware(PlanController.storeAdditionalRequirement),
-);
+router.post('/:planId?/additional-requirement', asyncMiddleware(PlanController.storeAdditionalRequirement));
 
 // Update an additional requirement
 router.put(
@@ -324,10 +246,7 @@ router.delete(
 );
 
 // Create a management consideration
-router.post(
-  '/:planId?/management-consideration',
-  asyncMiddleware(PlanManagementConsiderationController.store),
-);
+router.post('/:planId?/management-consideration', asyncMiddleware(PlanManagementConsiderationController.store));
 
 // Update a management consideration
 router.put(
@@ -345,37 +264,19 @@ router.delete(
 router.get('/:planId?/PDF', asyncMiddleware(PlanController.downloadPDF));
 
 // plan extension approve vote
-router.put(
-  '/:planId?/extension/approve',
-  asyncMiddleware(PlanExtensionController.approveExtension),
-);
+router.put('/:planId?/extension/approve', asyncMiddleware(PlanExtensionController.approveExtension));
 
 // Plan extension reject vote
-router.put(
-  '/:planId?/extension/reject',
-  asyncMiddleware(PlanExtensionController.rejectExtension),
-);
+router.put('/:planId?/extension/reject', asyncMiddleware(PlanExtensionController.rejectExtension));
 
 // extend plan
-router.put(
-  '/:planId?/extension/extend',
-  asyncMiddleware(PlanExtensionController.extendPlan),
-);
+router.put('/:planId?/extension/extend', asyncMiddleware(PlanExtensionController.extendPlan));
 // return extension plan
-router.get(
-  '/:planId?/extension',
-  asyncMiddleware(PlanExtensionController.fetchReplacementPlan),
-);
+router.get('/:planId?/extension', asyncMiddleware(PlanExtensionController.fetchReplacementPlan));
 // create extension plan
-router.put(
-  '/:planId?/extension/createReplacementPlan',
-  asyncMiddleware(PlanExtensionController.createReplacementPlan),
-);
+router.put('/:planId?/extension/createReplacementPlan', asyncMiddleware(PlanExtensionController.createReplacementPlan));
 // request extend plan
-router.put(
-  '/:planId?/extension/request',
-  asyncMiddleware(PlanExtensionController.requestExtension),
-);
+router.put('/:planId?/extension/request', asyncMiddleware(PlanExtensionController.requestExtension));
 // request copy plan
 router.put('/:planId?/copy', asyncMiddleware(PlanExtensionController.copyPlan));
 

@@ -30,9 +30,7 @@ const getAgreeementsForAH = async (user, filterSettings) => {
   );
   return agreements.map((a) => {
     const agreement = a;
-    agreement.isAgent = agentClientAgreements.some(
-      (ca) => ca.agreementId === a.id,
-    );
+    agreement.isAgent = agentClientAgreements.some((ca) => ca.agreementId === a.id);
     return a;
   });
 };
@@ -53,11 +51,7 @@ router.get(
         limit: null,
         page: null,
       });
-    } else if (
-      user.isAdministrator() ||
-      user.canReadAll() ||
-      user.isRangeOfficer()
-    ) {
+    } else if (user.isAdministrator() || user.canReadAll() || user.isRangeOfficer()) {
       if (!(filterSettings?.selectedZones?.length === 0)) {
         agreements = await Agreement.findWithAllRelations(
           db,

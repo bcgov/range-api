@@ -19,9 +19,7 @@ export default class EmailTemplate extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'name', 'from_email', 'subject', 'body'].map(
-      (field) => `${this.table}.${field}`,
-    );
+    return ['id', 'name', 'from_email', 'subject', 'body'].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {
@@ -34,32 +32,22 @@ export default class EmailTemplate extends Model {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
-    try {
-      const count = await db
-        .table(EmailTemplate.table)
-        .where(where)
-        .update(obj);
+    const count = await db.table(EmailTemplate.table).where(where).update(obj);
 
-      if (count > 0) {
-        const [{ id }] = await db
-          .table(EmailTemplate.table)
-          .where(where)
-          .returning('id');
+    if (count > 0) {
+      const [{ id }] = await db.table(EmailTemplate.table).where(where).returning('id');
 
-        const res = await db.raw(
-          `
+      const res = await db.raw(
+        `
           SELECT email_template.* FROM email_template
           WHERE email_template.id = ?;
         `,
-          [id],
-        );
-        return res.rows.map(EmailTemplate.mapRow)[0];
-      }
-
-      return [];
-    } catch (err) {
-      throw err;
+        [id],
+      );
+      return res.rows.map(EmailTemplate.mapRow)[0];
     }
+
+    return [];
   }
 
   static async create(db, values) {
@@ -68,40 +56,29 @@ export default class EmailTemplate extends Model {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
-    try {
-      const results = await db
-        .table(EmailTemplate.table)
-        .returning('id')
-        .insert(obj);
+    const results = await db.table(EmailTemplate.table).returning('id').insert(obj);
 
-      return await EmailTemplate.findOne(db, { id: results.pop() });
-    } catch (err) {
-      throw err;
-    }
+    return await EmailTemplate.findOne(db, { id: results.pop() });
   }
 
   static async findWithExclusion(db, where, order = null, exclude) {
-    try {
-      const q = db.table(EmailTemplate.table).select('id').where(where);
+    const q = db.table(EmailTemplate.table).select('id').where(where);
 
-      if (exclude) {
-        q.andWhereNot(...exclude);
-      }
+    if (exclude) {
+      q.andWhereNot(...exclude);
+    }
 
-      const results = await q;
-      const emailTemplateIds = results.map((obj) => obj.id);
+    const results = await q;
+    const emailTemplateIds = results.map((obj) => obj.id);
 
-      const res = await db.raw(
-        `
+    const res = await db.raw(
+      `
         SELECT DISTINCT ON (email_template.id) id, email_template.* FROM email_template
         WHERE email_template.id = ANY (?) ORDER BY email_template.id, ?;
       `,
-        [emailTemplateIds, order],
-      );
+      [emailTemplateIds, order],
+    );
 
-      return res.rows.map(EmailTemplate.mapRow);
-    } catch (err) {
-      throw err;
-    }
+    return res.rows.map(EmailTemplate.mapRow);
   }
 }

@@ -50,9 +50,7 @@ export default class Model {
 
   static get primaryKey() {
     const field = this.fields[0];
-    return field.indexOf('.') > -1
-      ? field.slice(field.indexOf('.') + 1)
-      : field;
+    return field.indexOf('.') > -1 ? field.slice(field.indexOf('.') + 1) : field;
   }
 
   static transformToCamelCase(data) {
@@ -82,10 +80,7 @@ export default class Model {
   static async find(db, where, order = undefined) {
     let results = [];
     const q = db.table(this.table).select(...this.fields);
-    if (
-      Object.keys(where).length === 1 &&
-      where[Object.keys(where)[0]].constructor === Array
-    ) {
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -141,11 +136,7 @@ export default class Model {
           obj[aKey] = values[aKey];
         }
       });
-    const results = await db
-      .table(this.table)
-      .where(where)
-      .update(obj)
-      .returning(this.primaryKey);
+    const results = await db.table(this.table).where(where).update(obj).returning(this.primaryKey);
     if (results.length > 0) return await this.findById(db, results.pop());
     return [];
   }
@@ -153,10 +144,7 @@ export default class Model {
   static async count(db, where = {}) {
     const q = db.table(this.table).count('*');
 
-    if (
-      Object.keys(where).length === 1 &&
-      where[Object.keys(where)[0]].constructor === Array
-    ) {
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -180,11 +168,7 @@ export default class Model {
    */
   static async setCanonicalId(db, id) {
     const data = await this.findById(db, id);
-    return this.update(
-      db,
-      { id },
-      { canonical_id: data.canonical_id || data.id },
-    );
+    return this.update(db, { id }, { canonical_id: data.canonical_id || data.id });
   }
 
   static async create(db, values) {
@@ -204,15 +188,9 @@ export default class Model {
       }
     });
 
-    const results = await db
-      .table(this.table)
-      .returning(this.primaryKey)
-      .insert(obj);
+    const results = await db.table(this.table).returning(this.primaryKey).insert(obj);
 
-    if (
-      fields.includes('canonical_id') &&
-      !(values.canonicalId || values.canonical_id)
-    ) {
+    if (fields.includes('canonical_id') && !(values.canonicalId || values.canonical_id)) {
       await this.setCanonicalId(db, results[0]);
     }
     return await this.findById(db, results.pop());

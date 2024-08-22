@@ -30,20 +30,14 @@ export default class MinisterIssueAction extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (
-        MinisterIssueAction.fields.indexOf(
-          `${MinisterIssueAction.table}.${key}`,
-        ) > -1
-      ) {
+      if (MinisterIssueAction.fields.indexOf(`${MinisterIssueAction.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
 
     super(obj, db);
 
-    this.ministerIssueActionType = new MinisterIssueActionType(
-      MinisterIssueActionType.extract(data),
-    );
+    this.ministerIssueActionType = new MinisterIssueActionType(MinisterIssueActionType.extract(data));
   }
 
   static get fields() {
@@ -70,25 +64,18 @@ export default class MinisterIssueAction extends Model {
   static async findWithType(db, where) {
     const myFields = [
       ...MinisterIssueAction.fields,
-      ...MinisterIssueActionType.fields.map(
-        (f) => `${f} AS ${f.replace('.', '_')}`,
-      ),
+      ...MinisterIssueActionType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
-    try {
-      const results = await db
-        .select(myFields)
-        .from(MinisterIssueAction.table)
-        .join('ref_minister_issue_action_type', {
-          'minister_issue_action.action_type_id':
-            'ref_minister_issue_action_type.id',
-        })
-        .where(where)
-        .orderBy('minister_issue_action.created_at', 'asc');
+    const results = await db
+      .select(myFields)
+      .from(MinisterIssueAction.table)
+      .join('ref_minister_issue_action_type', {
+        'minister_issue_action.action_type_id': 'ref_minister_issue_action_type.id',
+      })
+      .where(where)
+      .orderBy('minister_issue_action.created_at', 'asc');
 
-      return results.map((row) => new MinisterIssueAction(row, db));
-    } catch (err) {
-      throw err;
-    }
+    return results.map((row) => new MinisterIssueAction(row, db));
   }
 }

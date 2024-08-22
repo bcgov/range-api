@@ -41,34 +41,19 @@ router.get('/:userId', asyncMiddleware(UserController.show));
 
 // Assign a client id to user
 router.post('/:userId?/client', asyncMiddleware(UserController.addClientLink));
-router.delete(
-  '/:userId?/client/:clientNumber?',
-  asyncMiddleware(UserController.removeClientLink),
-);
+router.delete('/:userId?/client/:clientNumber?', asyncMiddleware(UserController.removeClientLink));
 
 router.post('/:userId?/merge', asyncMiddleware(UserController.mergeAccounts));
 
 // Assign role to user
-router.post(
-  '/:userId?/assignRole',
-  asyncMiddleware(UserController.assignUserRole),
-);
+router.post('/:userId?/assignRole', asyncMiddleware(UserController.assignUserRole));
 
 // Assign district to user
-router.post(
-  '/:userId?/assignDistrict',
-  asyncMiddleware(UserController.assignUserDistrict),
-);
+router.post('/:userId?/assignDistrict', asyncMiddleware(UserController.assignUserDistrict));
 
 // Assign multiple district to user
-router.post(
-  '/:userId?/assignDistricts',
-  asyncMiddleware(UserController.assignUserDistricts),
-);
+router.post('/:userId?/assignDistricts', asyncMiddleware(UserController.assignUserDistricts));
 
 // Get districts for pasture import
-router.get(
-  '/:userId?/districts',
-  asyncMiddleware(UserController.getAssociatedDistricts),
-);
+router.get('/:userId?/districts', asyncMiddleware(UserController.getAssociatedDistricts));
 export default router;

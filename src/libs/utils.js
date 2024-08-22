@@ -63,15 +63,13 @@ export const checkRequiredFields = (fields = [], prop, req) => {
       case 1:
       case 2:
         throw errorWithCode(
-          `There are missing fields in the ${name}. ` +
-            `Required field(s): ${missingFields.join(' and ')}`,
+          `There are missing fields in the ${name}. ` + `Required field(s): ${missingFields.join(' and ')}`,
         );
       default:
         throw errorWithCode(
           `There are missing fields in the ${name}. ` +
             `Required field(s): ${
-              `${missingFields.slice(0, length - 1).join(', ')}, ` +
-              `and ${missingFields[length - 1]}`
+              `${missingFields.slice(0, length - 1).join(', ')}, ` + `and ${missingFields[length - 1]}`
             }`,
         );
     }
@@ -80,11 +78,7 @@ export const checkRequiredFields = (fields = [], prop, req) => {
 };
 
 export const deepMapKeys = (originalObject, callback) => {
-  if (
-    typeof originalObject !== 'object' ||
-    originalObject === null ||
-    originalObject instanceof Date
-  ) {
+  if (typeof originalObject !== 'object' || originalObject === null || originalObject instanceof Date) {
     return originalObject;
   }
 

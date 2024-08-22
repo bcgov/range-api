@@ -47,13 +47,9 @@ export default class Client extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return [
-      'client_number',
-      'location_codes',
-      'name',
-      'licensee_start_date',
-      'licensee_end_date',
-    ].map((field) => `${this.table}.${field}`);
+    return ['client_number', 'location_codes', 'name', 'licensee_start_date', 'licensee_end_date'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
@@ -65,10 +61,7 @@ export default class Client extends Model {
       return [];
     }
 
-    const myFields = [
-      ...Client.fields,
-      ...ClientType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-    ];
+    const myFields = [...Client.fields, ...ClientType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`)];
 
     const results = await db
       .select(myFields)
@@ -91,10 +84,7 @@ export default class Client extends Model {
       return [];
     }
 
-    const results = await db
-      .select(Client.primaryKey)
-      .from(Client.table)
-      .whereRaw(`name ILIKE '%${term}%'`);
+    const results = await db.select(Client.primaryKey).from(Client.table).whereRaw(`name ILIKE '%${term}%'`);
 
     // return an array of `client_number`
     return flatten(results.map((result) => Object.values(result)));
@@ -105,10 +95,7 @@ export default class Client extends Model {
       return [];
     }
 
-    const results = await db
-      .select()
-      .from(Client.table)
-      .where('name', 'ilike', `%${term}%`);
+    const results = await db.select().from(Client.table).where('name', 'ilike', `%${term}%`);
 
     const clients = results.map((row) => new Client(row));
 

@@ -57,14 +57,8 @@ export default class Agreement extends Model {
 
   static async findWithAllRelations(db, where, filterSettings, sendFullPlan) {
     let promises = [];
-    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
-      db,
-      where,
-      filterSettings,
-    );
-    promises = myAgreements.map(async (agreement) => [
-      await agreement.eagerloadAllOneToManyExceptPlan(),
-    ]);
+    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+    promises = myAgreements.map(async (agreement) => [await agreement.eagerloadAllOneToManyExceptPlan()]);
     await Promise.all(flatten(promises));
     if (sendFullPlan) {
       myAgreements.forEach(async (agreement) => {
@@ -128,10 +122,7 @@ export default class Agreement extends Model {
       .orderByRaw(
         `${filterSettings.orderBy} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
-    if (
-      Object.keys(where).length === 1 &&
-      where[Object.keys(where)[0]]?.constructor === Array
-    ) {
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]]?.constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -140,8 +131,7 @@ export default class Agreement extends Model {
     }
     q.where(function () {
       this.whereNull('plan.extension_status').orWhereNot({
-        'plan.extension_status':
-          PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+        'plan.extension_status': PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
       });
     });
     const columnFilters = filterSettings.columnFilters;
@@ -153,16 +143,13 @@ export default class Agreement extends Model {
           );
         } else if (key === 'plan.plan_end_date') {
           // Can't get entire string with letters and numbers for some reason
-          q.whereRaw(
-            `TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${columnFilters[key]}%'`,
-          );
+          q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${columnFilters[key]}%'`);
         } else if (key === 'plan.status_id') {
           if (columnFilters[key] && columnFilters[key].length > 0) {
             q.whereIn('ref_plan_status.code', columnFilters[key]);
           }
         } else if (key === 'agreementCheck') {
-          if (columnFilters[key] === 'true')
-            q.where('agreement.retired', 'false');
+          if (columnFilters[key] === 'true') q.where('agreement.retired', 'false');
         } else {
           q.where(key, 'ilike', `%${columnFilters[key]}%`);
         }
@@ -193,8 +180,7 @@ export default class Agreement extends Model {
     } else if (filterSettings.showReplacedPlans === true) {
       q.where(function () {
         this.whereNull('plan.extension_status').orWhereNot({
-          'plan.extension_status':
-            PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+          'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
         });
       });
     }
@@ -213,10 +199,7 @@ export default class Agreement extends Model {
       return [];
     }
 
-    const results = await db
-      .select('agreement_id')
-      .from('client_agreement')
-      .where({ client_id: clientId });
+    const results = await db.select('agreement_id').from('client_agreement').where({ client_id: clientId });
 
     return flatten(results.map((result) => Object.values(result)));
   }
@@ -226,10 +209,7 @@ export default class Agreement extends Model {
       return [];
     }
 
-    const results = await db
-      .select('forest_file_id')
-      .from(Agreement.table)
-      .where({ zone_id: zoneId });
+    const results = await db.select('forest_file_id').from(Agreement.table).where({ zone_id: zoneId });
 
     return flatten(results.map((result) => Object.values(result)));
   }
@@ -279,10 +259,7 @@ export default class Agreement extends Model {
 
   async fetchLivestockIdentifiers() {
     const where = { agreement_id: this.forestFileId };
-    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(
-      this.db,
-      where,
-    );
+    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(this.db, where);
     this.livestockIdentifiers = livestockIdentifiers;
   }
 

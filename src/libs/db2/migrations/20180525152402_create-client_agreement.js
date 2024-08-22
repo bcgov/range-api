@@ -27,26 +27,11 @@ const table = 'client_agreement';
 exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().primary();
-    t.string('agreement_id', 9)
-      .notNull()
-      .index()
-      .references('forest_file_id')
-      .inTable('agreement');
-    t.string('client_id', 8)
-      .notNull()
-      .index()
-      .references('client_number')
-      .inTable('ref_client');
-    t.integer('client_type_id')
-      .notNull()
-      .references('id')
-      .inTable('ref_client_type');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.string('agreement_id', 9).notNull().index().references('forest_file_id').inTable('agreement');
+    t.string('client_id', 8).notNull().index().references('client_number').inTable('ref_client');
+    t.integer('client_type_id').notNull().references('id').inTable('ref_client_type');
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE
