@@ -14,9 +14,7 @@ export default class UserPermissions extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return [
-      'id', 'role_id', 'permission_id'
-    ].map(f => `${UserPermissions.table}.${f}`);
+    return ['id', 'role_id', 'permission_id'].map((f) => `${UserPermissions.table}.${f}`);
   }
 
   static get table() {
@@ -25,29 +23,28 @@ export default class UserPermissions extends Model {
 
   static async getRolePermissions(db, roleId) {
     const [...result] = await db
-    .table('role_permissions')
-    .join('permissions', { 'permissions.id': 'role_permissions.permission_id'})
-    .where({
-      'role_permissions.role_id': roleId,
-    });
-    
-    return result.map(permission => {
+      .table('role_permissions')
+      .join('permissions', { 'permissions.id': 'role_permissions.permission_id' })
+      .where({
+        'role_permissions.role_id': roleId,
+      });
+
+    return result.map((permission) => {
       return {
         id: permission.permission_id,
-        description: permission.description
-      }
+        description: permission.description,
+      };
     });
   }
 
   static async getRoles(db) {
-    const [...result] = await db
-    .table('roles');
-    
-    return result.map(role => {
+    const [...result] = await db.table('roles');
+
+    return result.map((role) => {
       return {
         id: role.id,
-        description: role.description
-      }
+        description: role.description,
+      };
     });
   }
 }

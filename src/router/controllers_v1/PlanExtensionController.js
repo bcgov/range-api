@@ -36,44 +36,25 @@ export default class PlanExtensionController {
       }
       if (
         !(extensionRequest.userId === user.id) &&
-        !user.agentOf.find(
-          ({ clientId }) => clientId === extensionRequest.clientId,
-        )
+        !user.agentOf.find(({ clientId }) => clientId === extensionRequest.clientId)
       ) {
         throw errorWithCode('Invalid request', 400);
       }
       const planEntry = await Plan.findOne(trx, { id: planId });
-      if (
-        planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
-      ) {
+      if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
         throw errorWithCode('All requests already received', 400);
       }
-      await PlanExtensionRequests.update(
-        trx,
-        { id: extensionRequestId },
-        { requestedExtension: true },
-      );
-      await Plan.update(
-        trx,
-        { id: planId },
-        { extension_received_votes: planEntry.extensionReceivedVotes + 1 },
-      );
+      await PlanExtensionRequests.update(trx, { id: extensionRequestId }, { requestedExtension: true });
+      await Plan.update(trx, { id: planId }, { extension_received_votes: planEntry.extensionReceivedVotes + 1 });
       const agreement = (
         await Agreement.findWithTypeZoneDistrictExemption(trx, {
           forest_file_id: planEntry.agreementId,
         })
       )[0];
-      if (
-        planEntry.extensionReceivedVotes ===
-        planEntry.extensionRequiredVotes + 1
-      ) {
-        await PlanExtensionController.sendPlanPendingExtensionEmail(
-          trx,
-          [agreement.zone.user.email],
-          {
-            '{agreementId}': planEntry.agreementId,
-          },
-        );
+      if (planEntry.extensionReceivedVotes === planEntry.extensionRequiredVotes + 1) {
+        await PlanExtensionController.sendPlanPendingExtensionEmail(trx, [agreement.zone.user.email], {
+          '{agreementId}': planEntry.agreementId,
+        });
       }
       trx.commit();
       return res.status(200).end();
@@ -121,10 +102,7 @@ export default class PlanExtensionController {
           PLAN_EXTENSION_STATUS.STAFF_REJECTED,
         ].includes(plan.extensionStatus)
       ) {
-        throw errorWithCode(
-          `Invalid plan extension status: ${plan.extensionStatus}`,
-          400,
-        );
+        throw errorWithCode(`Invalid plan extension status: ${plan.extensionStatus}`, 400);
       }
       const newPlanStartDate = new Date(plan.planEndDate);
       newPlanStartDate.setDate(newPlanStartDate.getDate() + 1);
@@ -145,10 +123,7 @@ export default class PlanExtensionController {
         },
         null,
       );
-      await PlanExtensionController.setReplacementPlanGrazingSchedule(
-        trx,
-        replacementPlan,
-      );
+      await PlanExtensionController.setReplacementPlanGrazingSchedule(trx, replacementPlan);
       await PlanFile.remove(trx, {
         plan_id: replacementPlan.id,
         type: 'decisionAttachments',
@@ -182,11 +157,7 @@ export default class PlanExtensionController {
       await GrazingSchedule.removeById(trx, grazingScheduleToRemove.id);
     }
     if (grazingSchedules[0]) {
-      await GrazingSchedule.update(
-        trx,
-        { id: grazingSchedules[0].id },
-        { year: plan.planStartDate.getFullYear() },
-      );
+      await GrazingSchedule.update(trx, { id: grazingSchedules[0].id }, { year: plan.planStartDate.getFullYear() });
     }
   }
 
@@ -216,58 +187,35 @@ export default class PlanExtensionController {
         }
         if (
           !(extensionRequest.userId === user.id) &&
-          !user.agentOf.find(
-            ({ clientId }) => clientId === extensionRequest.clientId,
-          )
+          !user.agentOf.find(({ clientId }) => clientId === extensionRequest.clientId)
         ) {
           throw errorWithCode('Invalid request', 400);
         }
-        if (
-          !planEntry ||
-          planEntry.extensionStatus != PLAN_EXTENSION_STATUS.AWAITING_VOTES
-        ) {
-          throw errorWithCode(
-            'Invalid request. Plan may be already extended.',
-            400,
-          );
+        if (!planEntry || planEntry.extensionStatus != PLAN_EXTENSION_STATUS.AWAITING_VOTES) {
+          throw errorWithCode('Invalid request. Plan may be already extended.', 400);
         }
-        if (
-          planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes
-        ) {
+        if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
           throw errorWithCode('All requests already accepted', 400);
         }
-        await PlanExtensionRequests.update(
-          db,
-          { id: extensionRequest.id },
-          { requestedExtension: false },
-        );
-        updatedValues.extension_status =
-          PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED;
-        updatedValues.extension_received_votes =
-          planEntry.extensionReceivedVotes + 1;
+        await PlanExtensionRequests.update(db, { id: extensionRequest.id }, { requestedExtension: false });
+        updatedValues.extension_status = PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED;
+        updatedValues.extension_received_votes = planEntry.extensionReceivedVotes + 1;
       }
       if (
         planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
         planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_EXTENSION
       ) {
-        throw errorWithCode(
-          `Invalid plan status ${planEntry.extensionStatus}`,
-          400,
-        );
+        throw errorWithCode(`Invalid plan status ${planEntry.extensionStatus}`, 400);
       }
       if (user.isRangeOfficer() || user.isAdministrator()) {
         updatedValues.extension_status = PLAN_EXTENSION_STATUS.STAFF_REJECTED;
       }
       if (user.isDecisionMaker()) {
-        updatedValues.extension_status =
-          PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED;
+        updatedValues.extension_status = PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED;
       }
       const response = await Plan.update(db, { id: planId }, updatedValues);
       trx.commit();
-      return res
-        .status(200)
-        .json({ extensionStatus: response.extensionStatus })
-        .end();
+      return res.status(200).json({ extensionStatus: response.extensionStatus }).end();
     } catch (error) {
       logger.error(error.stack);
       trx.rollback();
@@ -277,11 +225,10 @@ export default class PlanExtensionController {
 
   static async getPlanEntry(trx, planId, extensionStatus) {
     const planEntry = (
-      await Plan.findWithStatusExtension(
-        trx,
-        { 'plan.id': planId, 'plan.extension_status': extensionStatus },
-        ['id', 'desc'],
-      )
+      await Plan.findWithStatusExtension(trx, { 'plan.id': planId, 'plan.extension_status': extensionStatus }, [
+        'id',
+        'desc',
+      ])
     )[0];
     return planEntry;
   }
@@ -304,10 +251,7 @@ export default class PlanExtensionController {
       throw errorWithCode('Invalid request. Could not find the plan.', 400);
     }
     if (planRow.extensionReceivedVotes < planRow.extensionRequiredVotes) {
-      throw errorWithCode(
-        'Need positive votes from all Agreement Holders',
-        400,
-      );
+      throw errorWithCode('Need positive votes from all Agreement Holders', 400);
     }
     if (planRow.replacementOf !== null) {
       throw errorWithCode('Plan is an extension', 400);
@@ -351,10 +295,7 @@ export default class PlanExtensionController {
       throw errorWithCode('Cannot extend replacement plan', 400);
     }
     if (planRow.planEndDate.getTime() >= Date.parse(endDate)) {
-      throw errorWithCode(
-        'End date must be in future of current end date',
-        400,
-      );
+      throw errorWithCode('End date must be in future of current end date', 400);
     }
     const trx = await db.transaction();
     try {
@@ -394,16 +335,10 @@ export default class PlanExtensionController {
     if (destinationPlanId) {
       destinationPlan = await Plan.findOne(db, { id: destinationPlanId });
       if (!destinationPlan) {
-        throw errorWithCode(
-          'Invalid request. Could not find the plan to replace.',
-          400,
-        );
+        throw errorWithCode('Invalid request. Could not find the plan to replace.', 400);
       }
       if (
-        PlanStatusController.isPlanActive(
-          destinationPlan.statusId,
-          destinationPlan.amendmentTypeId,
-        ) &&
+        PlanStatusController.isPlanActive(destinationPlan.statusId, destinationPlan.amendmentTypeId) &&
         !createReplacementPlan
       )
         throw errorWithCode('Cannot replace an active plan.', 400);
@@ -412,10 +347,7 @@ export default class PlanExtensionController {
       forest_file_id: agreementId,
     });
     if (!agreement) {
-      throw errorWithCode(
-        'Invalid request. Could not find the agreement.',
-        400,
-      );
+      throw errorWithCode('Invalid request. Could not find the agreement.', 400);
     }
     const trx = await db.transaction();
     try {
@@ -436,10 +368,7 @@ export default class PlanExtensionController {
         if (createReplacementPlan) {
           if (destinationPlan.replacementPlanId) {
             //Found existing replacement plan so need to delete it
-            await PlanController.removeAllWithRelations(
-              trx,
-              destinationPlan.replacementPlanId,
-            );
+            await PlanController.removeAllWithRelations(trx, destinationPlan.replacementPlanId);
           }
           await Plan.update(
             trx,
@@ -454,8 +383,7 @@ export default class PlanExtensionController {
             { id: newPlan.id },
             {
               replacementOf: destinationPlan.id,
-              extension_status:
-                PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+              extension_status: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
             },
           );
         } else {
@@ -463,10 +391,7 @@ export default class PlanExtensionController {
         }
       } else {
         if (createReplacementPlan) {
-          throw errorWithCode(
-            'Invalid request. Cannot create replacement plan without the original plan.',
-            400,
-          );
+          throw errorWithCode('Invalid request. Cannot create replacement plan without the original plan.', 400);
         }
       }
       trx.commit();

@@ -27,9 +27,7 @@ import Model from './model';
 export default class PlanStatus extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'name', 'active'].map(
-      (field) => `${this.table}.${field}`,
-    );
+    return ['id', 'code', 'name', 'active'].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {

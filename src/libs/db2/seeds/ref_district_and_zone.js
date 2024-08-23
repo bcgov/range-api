@@ -429,9 +429,7 @@ exports.seed = async (knex) => {
   });
 
   zones.forEach((zone) => {
-    const district = districts
-      .filter((aDistrict) => aDistrict.code === zone.district)
-      .pop();
+    const district = districts.filter((aDistrict) => aDistrict.code === zone.district).pop();
     if (district) {
       zone.district_id = district.id;
     }
@@ -442,12 +440,8 @@ exports.seed = async (knex) => {
   await knex('ref_district').delete();
 
   await knex('ref_district').insert(districts);
-  await knex.schema.raw(
-    `ALTER SEQUENCE ref_district_id_seq RESTART WITH ${did + 1};`,
-  );
+  await knex.schema.raw(`ALTER SEQUENCE ref_district_id_seq RESTART WITH ${did + 1};`);
 
   await knex('ref_zone').insert(zones);
-  await knex.schema.raw(
-    `ALTER SEQUENCE ref_zone_id_seq RESTART WITH ${zid + 1};`,
-  );
+  await knex.schema.raw(`ALTER SEQUENCE ref_zone_id_seq RESTART WITH ${zid + 1};`);
 };

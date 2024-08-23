@@ -69,11 +69,7 @@ exports.up = async (knex) => {
 
   // Update values for `client_id` to the client number
   const updatedClientsP = clients.map(async (client) => {
-    const {
-      plan_confirmation_ids: pcIds,
-      client_agreement_ids: caIds,
-      link_ids: linkIds,
-    } = client;
+    const { plan_confirmation_ids: pcIds, client_agreement_ids: caIds, link_ids: linkIds } = client;
 
     if (pcIds) {
       await knex.raw(

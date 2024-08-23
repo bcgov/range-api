@@ -1,6 +1,5 @@
 const Plan = require('../../../../build/src/libs/db2/model/plan').default;
-const Agreement =
-  require('../../../../build/src/libs/db2/model/agreement').default;
+const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
   const { rows } = await knex.raw(`
@@ -30,9 +29,7 @@ exports.up = async (knex) => {
         pastPlanIds.map(async (pastPlanId) => {
           console.log(`Deleting plan ${pastPlanId}`);
 
-          await knex.raw('DELETE FROM plan_version WHERE plan_id=?', [
-            pastPlanId,
-          ]);
+          await knex.raw('DELETE FROM plan_version WHERE plan_id=?', [pastPlanId]);
           await knex.raw('DELETE FROM plan WHERE id=?', [pastPlanId]);
         }),
       );
@@ -56,9 +53,7 @@ exports.up = async (knex) => {
       );
 
       if (currentPlan) {
-        console.log(
-          `Creating snapshot from ${id} on plan ${currentPlan.plan_id}`,
-        );
+        console.log(`Creating snapshot from ${id} on plan ${currentPlan.plan_id}`);
 
         const [plan] = await Plan.findWithStatusExtension(
           knex,
@@ -69,14 +64,9 @@ exports.up = async (knex) => {
         );
 
         if (!plan) {
-          console.log(
-            `Could not find plan ${id}. 'uploaded' is probably false`,
-          );
+          console.log(`Could not find plan ${id}. 'uploaded' is probably false`);
         } else {
-          const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-            knex,
-            { forest_file_id: agreementId },
-          );
+          const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(knex, { forest_file_id: agreementId });
           await agreement.eagerloadAllOneToManyExceptPlan();
           agreement.transformToV1();
 
@@ -84,10 +74,9 @@ exports.up = async (knex) => {
 
           const {
             rows: [{ version: lastVersion }],
-          } = await knex.raw(
-            'SELECT version FROM plan_snapshot WHERE plan_id=? ORDER BY version DESC LIMIT 1;',
-            [currentPlan.plan_id],
-          );
+          } = await knex.raw('SELECT version FROM plan_snapshot WHERE plan_id=? ORDER BY version DESC LIMIT 1;', [
+            currentPlan.plan_id,
+          ]);
 
           await knex.raw(
             `
@@ -126,14 +115,9 @@ exports.up = async (knex) => {
     snapshotSets.map(async ({ ids }) => {
       await Promise.all(
         ids.map(async (id, i) => {
-          await knex.raw('UPDATE plan_snapshot SET version=? WHERE id=?', [
-            i + 1,
-            id,
-          ]);
+          await knex.raw('UPDATE plan_snapshot SET version=? WHERE id=?', [i + 1, id]);
         }),
       );
     }),
   );
 };
-
-exports.down = async (knex) => {};

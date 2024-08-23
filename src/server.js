@@ -31,9 +31,7 @@ createApp()
   .then((app) => {
     app.listen(port, '0.0.0.0', (err) => {
       if (err) {
-        return logger.error(
-          `There was a problem starting the server, ${err.message}`,
-        );
+        return logger.error(`There was a problem starting the server, ${err.message}`);
       }
       if (isDev) {
         return started(port);

@@ -19,14 +19,6 @@
 //
 
 'use strict';
-
-import {
-  calcDateDiff,
-  calcPldAUMs,
-  calcCrownAUMs,
-  calcTotalAUMs,
-  roundToSingleDecimalPlace,
-} from '../../../router/helpers/PDFHelper';
 import LivestockType from './livestocktype';
 import Model from './model';
 import Pasture from './pasture';
@@ -35,11 +27,7 @@ export default class GrazingScheduleEntry extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (
-        GrazingScheduleEntry.fields.indexOf(
-          `${GrazingScheduleEntry.table}.${key}`,
-        ) > -1
-      ) {
+      if (GrazingScheduleEntry.fields.indexOf(`${GrazingScheduleEntry.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
@@ -69,45 +57,34 @@ export default class GrazingScheduleEntry extends Model {
     return 'grazing_schedule_entry';
   }
 
-  static async findWithLivestockType(
-    db,
-    where,
-    order,
-    orderRaw,
-    page = undefined,
-    limit = undefined,
-  ) {
+  static async findWithLivestockType(db, where, order, orderRaw, page = undefined, limit = undefined) {
     const myFields = [
       ...GrazingScheduleEntry.fields,
       ...LivestockType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...Pasture.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
-    try {
-      let results = [];
-      const q = db
-        .select(myFields)
-        .from(GrazingScheduleEntry.table)
-        .join('ref_livestock', {
-          'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id',
-        })
-        .join('pasture', { 'grazing_schedule_entry.pasture_id': 'pasture.id' })
-        .where(where);
+    let results = [];
+    const q = db
+      .select(myFields)
+      .from(GrazingScheduleEntry.table)
+      .join('ref_livestock', {
+        'grazing_schedule_entry.livestock_type_id': 'ref_livestock.id',
+      })
+      .join('pasture', { 'grazing_schedule_entry.pasture_id': 'pasture.id' })
+      .where(where);
 
-      if (orderRaw) {
-        q.orderByRaw(order);
-      } else if (order) q.orderBy(...order);
+    if (orderRaw) {
+      q.orderByRaw(order);
+    } else if (order) q.orderBy(...order);
 
-      q.orderBy('grazing_schedule_entry.updated_at', 'asc');
+    q.orderBy('grazing_schedule_entry.updated_at', 'asc');
 
-      if (page && limit) {
-        const offset = limit * (page - 1);
-        results = await q.offset(offset).limit(limit);
-      } else {
-        results = await q;
-      }
-      return results;
-    } catch (err) {
-      throw err;
+    if (page && limit) {
+      const offset = limit * (page - 1);
+      results = await q.offset(offset).limit(limit);
+    } else {
+      results = await q;
     }
+    return results;
   }
 }

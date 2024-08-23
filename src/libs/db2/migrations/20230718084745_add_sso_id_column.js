@@ -5,5 +5,3 @@ exports.up = async function (knex) {
 UPDATE user_account SET sso_id = username WHERE username LIKE 'bceid%' OR username LIKE 'idir%' OR username = 'rangeadmin' OR username = 'rangestaff';          
 `);
 };
-
-exports.down = async function (knex) {};

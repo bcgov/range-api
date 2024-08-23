@@ -38,15 +38,10 @@ export default class PlanMinisterIssueController {
       const okPastureIds = plan.pastures.map((pasture) => pasture.id);
       const status = pastures.every((i) => okPastureIds.includes(i));
       if (!status) {
-        throw errorWithCode(
-          'Some pastures do not belong to the current user ',
-          400,
-        );
+        throw errorWithCode('Some pastures do not belong to the current user ', 400);
       }
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueController: validateMinisterIssueOperation: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueController: validateMinisterIssueOperation: fail with error: ${error.message}`);
       throw errorWithCode('Unable to confirm Plan ownership', 500);
     }
   }
@@ -70,16 +65,8 @@ export default class PlanMinisterIssueController {
 
   static async validate(user, planId, body) {
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
-    await PlanRouteHelper.canUserAccessThisAgreement(
-      db,
-      Agreement,
-      user,
-      agreementId,
-    );
-    await PlanMinisterIssueController.validateMinisterIssueOperation(
-      planId,
-      body,
-    );
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+    await PlanMinisterIssueController.validateMinisterIssueOperation(planId, body);
     const data = PlanMinisterIssueController.sanitizeDataForMinisterIssue(body);
     return data;
   }
@@ -103,11 +90,7 @@ export default class PlanMinisterIssueController {
     checkRequiredFields(['planId'], 'params', req);
 
     try {
-      const data = await PlanMinisterIssueController.validate(
-        user,
-        planId,
-        body,
-      );
+      const data = await PlanMinisterIssueController.validate(user, planId, body);
       const issue = await MinisterIssue.create(db, {
         ...data,
         ...{ plan_id: planId },
@@ -127,9 +110,7 @@ export default class PlanMinisterIssueController {
         .json({ ...issue, pastures })
         .end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueController: store: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueController: store: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -148,11 +129,7 @@ export default class PlanMinisterIssueController {
 
     try {
       // Validating data
-      const data = await PlanMinisterIssueController.validate(
-        user,
-        planId,
-        body,
-      );
+      const data = await PlanMinisterIssueController.validate(user, planId, body);
 
       // update the existing issue.
       const issue = await MinisterIssue.update(db, { id: issueId }, data);
@@ -170,19 +147,11 @@ export default class PlanMinisterIssueController {
       );
       const flatIssuePastures = flatten(issuePastures);
 
-      const removedPastures = flatIssuePastures.filter(
-        (p) => !pastures.includes(p.pasture.id),
-      );
-      const newPastures = pastures.filter(
-        (pId) => !flatIssuePastures.find((p) => p.pasture.id === pId),
-      );
+      const removedPastures = flatIssuePastures.filter((p) => !pastures.includes(p.pasture.id));
+      const newPastures = pastures.filter((pId) => !flatIssuePastures.find((p) => p.pasture.id === pId));
 
       // Remove pastures not present in updated pastures array
-      await Promise.all(
-        removedPastures.map((item) =>
-          MinisterIssuePasture.removeById(db, item.id),
-        ),
-      );
+      await Promise.all(removedPastures.map((item) => MinisterIssuePasture.removeById(db, item.id)));
 
       // Add new pastures provided in request body
       await Promise.all(
@@ -199,9 +168,7 @@ export default class PlanMinisterIssueController {
         .json({ ...issue, pastures })
         .end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueController: update: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueController: update: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -219,21 +186,14 @@ export default class PlanMinisterIssueController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       const results = await MinisterIssue.removeById(db, issueId);
       return res
         .status(204)
         .json({ success: results.length > 0 })
         .end();
     } catch (error) {
-      logger.error(
-        `PlanMinisterIssueController: destroy: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanMinisterIssueController: destroy: fail with error: ${error.message}`);
       throw error;
     }
   }

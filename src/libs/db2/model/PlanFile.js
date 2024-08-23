@@ -16,9 +16,7 @@ export default class PlanFile extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'name', 'url', 'type', 'plan_id', 'user_id', 'access'].map(
-      (field) => `${this.table}.${field}`,
-    );
+    return ['id', 'name', 'url', 'type', 'plan_id', 'user_id', 'access'].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {

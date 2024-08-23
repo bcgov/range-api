@@ -30,23 +30,13 @@ exports.up = async (knex) =>
 
     t.integer('plant_species_id').references('ref_plant_species.id');
     t.integer('plant_community_id').notNull();
-    t.foreign('plant_community_id')
-      .onDelete('CASCADE')
-      .references('plant_community.id');
+    t.foreign('plant_community_id').onDelete('CASCADE').references('plant_community.id');
 
-    t.enu('criteria', [
-      'rangereadiness',
-      'stubbleheight',
-      'shrubuse',
-    ]).notNull();
+    t.enu('criteria', ['rangereadiness', 'stubbleheight', 'shrubuse']).notNull();
     t.text('name');
     t.float('value');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

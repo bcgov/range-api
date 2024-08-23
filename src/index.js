@@ -29,8 +29,7 @@ import flash from 'connect-flash';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import initPassport from './libs/authmware';
-import initRouter from './router';
-
+const initRouter = require('./router');
 /**
  * @returns {Express.Application} express app
  */

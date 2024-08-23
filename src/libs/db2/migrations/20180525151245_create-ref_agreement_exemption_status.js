@@ -28,12 +28,8 @@ exports.up = async (knex) =>
     t.string('code', 2).unique().index().notNull();
     t.text('description').notNull();
     t.boolean('active').notNull().defaultTo(true);
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

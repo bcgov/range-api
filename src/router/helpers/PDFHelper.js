@@ -6,8 +6,7 @@ const shift = (number, precision) => {
   return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
 };
 
-const round = (number, precision) =>
-  shift(Math.round(shift(number, +precision)), -precision);
+const round = (number, precision) => shift(Math.round(shift(number, +precision)), -precision);
 
 /**
  * Round the float to 1 decimal
@@ -49,8 +48,7 @@ export const calcDateDiff = (first, second, isUserFriendly) => {
  * @param {float} pasturePldPercent
  * @returns {float} the pld AUMs
  */
-export const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) =>
-  totalAUMs * pasturePldPercent;
+export const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) => totalAUMs * pasturePldPercent;
 
 /**
  * Calculate Crown Animal Unit Month
@@ -82,9 +80,7 @@ export class AdditionalDetailsGenerator {
 
   setClientConfirmationStatus(plan) {
     for (const client of plan.agreement.clients) {
-      const confirmation = plan.confirmations.find(
-        (item) => item.clientId === client.id,
-      );
+      const confirmation = plan.confirmations.find((item) => item.clientId === client.id);
       client.confirmationStatus = 'Not Confirmed';
       if (confirmation && confirmation.confirmed === true) {
         client.confirmationStatus = 'Confirmed';
@@ -105,10 +101,7 @@ export class AdditionalDetailsGenerator {
         }
         for (const plantCommunity of pasture.plantCommunities) {
           if (plantCommunity) {
-            if (
-              !plantCommunity.rangeReadinessMonth &&
-              plantCommunity.rangeReadinessDay
-            ) {
+            if (!plantCommunity.rangeReadinessMonth && plantCommunity.rangeReadinessDay) {
               plantCommunity.rangeReadinessDate = moment()
                 .set('month', plantCommunity.rangeReadinessMonth - 1)
                 .set('date', plantCommunity.rangeReadinessDay)
@@ -117,10 +110,7 @@ export class AdditionalDetailsGenerator {
             if (plantCommunity.plantCommunityActions) {
               for (const action of plantCommunity.plantCommunityActions) {
                 if (action) {
-                  action.name =
-                    action.actionType.name === 'Other'
-                      ? `${action.name} (Other)`
-                      : action.actionType.name;
+                  action.name = action.actionType.name === 'Other' ? `${action.name} (Other)` : action.actionType.name;
                   if (action.actionType.name === 'Timing') {
                     action.NoGrazeStartDate =
                       action.noGrazeStartMonth && action.noGrazeStartDay
@@ -169,9 +159,7 @@ export class AdditionalDetailsGenerator {
         schedule.crownTotalAUM = 0;
         for (const entry of schedule.grazingScheduleEntries) {
           if (entry) {
-            const pasture = plan.pastures.find(
-              (item) => item.id === entry.pastureId,
-            );
+            const pasture = plan.pastures.find((item) => item.id === entry.pastureId);
             entry.pasture = 'N/A';
             if (pasture) {
               entry.pasture = pasture.name;
@@ -179,15 +167,8 @@ export class AdditionalDetailsGenerator {
             }
             entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
             entry.auFactor = entry.livestockType?.auFactor;
-            entry.totalAUM = calcTotalAUMs(
-              entry.livestockCount,
-              entry.days,
-              entry.auFactor,
-            );
-            entry.pldAUM = calcPldAUMs(
-              entry.totalAUM,
-              pasture.pldPercent,
-            ).toFixed(1);
+            entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
+            entry.pldAUM = calcPldAUMs(entry.totalAUM, pasture.pldPercent).toFixed(1);
             entry.crownAUM = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
             schedule.crownTotalAUM += entry.crownAUM;
             entry.crownAUM = entry.crownAUM.toFixed(1);
@@ -195,15 +176,10 @@ export class AdditionalDetailsGenerator {
         }
         schedule.crownTotalAUM = schedule.crownTotalAUM.toFixed(1);
         if (plan.agreement.usage) {
-          const usage = plan.agreement.usage.find(
-            (element) => element.year === schedule.year,
-          );
+          const usage = plan.agreement.usage.find((element) => element.year === schedule.year);
           if (usage) schedule.authorizedAUM = usage.authorizedAum;
           if (schedule.authorizedAUM) {
-            schedule.percentUse = (
-              (schedule.crownTotalAUM / schedule.authorizedAUM) *
-              100
-            ).toFixed(2);
+            schedule.percentUse = ((schedule.crownTotalAUM / schedule.authorizedAUM) * 100).toFixed(2);
           }
         }
       }
@@ -267,18 +243,10 @@ export class AdditionalDetailsGenerator {
       plan.status.text = 'Not approved amendment';
     } else if (plan.status.id === 12) {
       plan.status.text = 'Approved';
-    } else if (
-      (plan.status.id === 13 || plan.status.id === 18) &&
-      plan.amendmentTypeId === 2
-    ) {
+    } else if ((plan.status.id === 13 || plan.status.id === 18) && plan.amendmentTypeId === 2) {
       plan.status.text = 'Approved - mandatory amendment submitted for review';
-    } else if (
-      (plan.status.id === 13 || plan.status.id === 18) &&
-      plan.amendmentTypeId === 1
-    ) {
+    } else if ((plan.status.id === 13 || plan.status.id === 18) && plan.amendmentTypeId === 1) {
       plan.status.text = 'Approved - minor amendment submitted for review';
-    } else if (plan.status.id === 19) {
-      plan.status.text = 'Approved - Amendment in effect';
     } else if (plan.status.id === 20) {
       plan.status.text = 'Approved - Amendment in effect';
     } else if (plan.status.id === 21) {

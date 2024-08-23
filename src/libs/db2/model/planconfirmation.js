@@ -25,9 +25,7 @@ export default class PlanConfirmation extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (
-        PlanConfirmation.fields.indexOf(`${PlanConfirmation.table}.${key}`) > -1
-      ) {
+      if (PlanConfirmation.fields.indexOf(`${PlanConfirmation.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });

@@ -1,27 +1,4 @@
-//
-// MyRA
-//
-// Copyright © 2018 Province of British Columbia
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// Created by Jason Leach on 2018-05-04.
-//
-
 'use strict';
-
-/* eslint-disable max-len */
-
 import { flatten } from 'lodash';
 import AgreementType from './agreementtype';
 import Client from './client';
@@ -78,45 +55,11 @@ export default class Agreement extends Model {
     return 'agreement';
   }
 
-  static async findWithAllRelations(
-    db,
-    where,
-    page,
-    limit,
-    latestPlan,
-    sendFullPlan,
-    staffDraft,
-    orderBy,
-    order,
-    filters,
-  ) {
-    // Destructuring rest parameters(orders still matter when passing parameters!)
-    page = undefined;
-    limit = undefined;
-    latestPlan = false;
-    sendFullPlan = false;
-    staffDraft = false;
-    orderBy = orderBy || 'agreement.forest_file_id';
-    order = order || 'asc';
+  static async findWithAllRelations(db, where, filterSettings, sendFullPlan) {
     let promises = [];
-    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(
-      db,
-      where,
-      page,
-      limit,
-      orderBy,
-      order,
-      filters,
-    );
-    // fetch all data that is directly related to the agreement
-    // `await` used here to allow the queries to start imediatly and
-    // run in parallel. This greatly speeds up the fetch.
-    promises = myAgreements.map(async (agreement) => [
-      await agreement.eagerloadAllOneToManyExceptPlan(),
-    ]);
+    const myAgreements = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+    promises = myAgreements.map(async (agreement) => [await agreement.eagerloadAllOneToManyExceptPlan()]);
     await Promise.all(flatten(promises));
-
-    // fetch all data that is indirectly (nested) related to an agreement
     if (sendFullPlan) {
       myAgreements.forEach(async (agreement) => {
         await agreement.plan?.eagerloadAllOneToMany();
@@ -130,11 +73,11 @@ export default class Agreement extends Model {
   static async findWithTypeZoneDistrictExemption(
     db,
     where,
-    page = undefined,
-    limit = undefined,
-    orderBy = 'plan.agreement_id',
-    order = 'asc',
-    filters,
+    filterSettings = {
+      orderBy: 'plan.agreement_id',
+      order: 'asc',
+      columnFilters: [],
+    },
   ) {
     if (!db || !where) {
       return [];
@@ -144,14 +87,10 @@ export default class Agreement extends Model {
       ...Zone.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...District.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-      // ...AgreementExemptionStatus.fields.map(
-      //   (f) => `${f} AS ${f.replace(".", "_")}`,
-      // ),
       ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...Plan.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
-
     let results = [];
     const q = db
       .select(myFields)
@@ -181,12 +120,9 @@ export default class Agreement extends Model {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
       })
       .orderByRaw(
-        `${orderBy} ${order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
+        `${filterSettings.orderBy} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
       );
-    if (
-      Object.keys(where).length === 1 &&
-      where[Object.keys(where)[0]].constructor === Array
-    ) {
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]]?.constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -195,37 +131,36 @@ export default class Agreement extends Model {
     }
     q.where(function () {
       this.whereNull('plan.extension_status').orWhereNot({
-        'plan.extension_status':
-          PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+        'plan.extension_status': PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
       });
     });
-    if (filters && Object.keys(filters).length > 0) {
-      Object.keys(filters).map((filter) => {
-        if (filters[filter] && filters[filter] !== '') {
-          if (filter === 'user_account.family_name') {
-            q.whereRaw(
-              `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${filters[filter]}%'`,
-            );
-          } else if (filter === 'plan.plan_end_date') {
-            // Can't get entire string with letters and numbers for some reason
-            q.whereRaw(
-              `TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${filters[filter]}%'`,
-            );
-          } else if (filter === 'plan.status_id') {
-            if (filters[filter] && filters[filter].length > 0) {
-              const filterArray = filters[filter].split(',');
-              q.whereIn('ref_plan_status.code', filterArray);
-            }
-          } else if (filter === 'planCheck') {
-            if (filters[filter] === 'true')
-              q.whereNotNull('ref_plan_status.code');
-          } else if (filter === 'agreementCheck') {
-            if (filters[filter] === 'true')
-              q.where('agreement.retired', 'false');
-          } else if (filter === 'activeCheck') {
-            if (filters[filter] === 'true') {
-              q.whereRaw(
-                `(
+    const columnFilters = filterSettings.columnFilters;
+    Object.keys(columnFilters).map((key) => {
+      if (columnFilters[key] && columnFilters[key] !== '') {
+        if (key === 'user_account.family_name') {
+          q.whereRaw(
+            `"user_account"."given_name" || ' ' || "user_account"."family_name" ilike '%${columnFilters[key]}%'`,
+          );
+        } else if (key === 'plan.plan_end_date') {
+          // Can't get entire string with letters and numbers for some reason
+          q.whereRaw(`TO_CHAR("plan"."plan_end_date", 'Month DD, YYYY') ilike '%${columnFilters[key]}%'`);
+        } else if (key === 'plan.status_id') {
+          if (columnFilters[key] && columnFilters[key].length > 0) {
+            q.whereIn('ref_plan_status.code', columnFilters[key]);
+          }
+        } else if (key === 'agreementCheck') {
+          if (columnFilters[key] === 'true') q.where('agreement.retired', 'false');
+        } else {
+          q.where(key, 'ilike', `%${columnFilters[key]}%`);
+        }
+      }
+    });
+    if (filterSettings.planCheck === true) {
+      q.whereNotNull('ref_plan_status.code');
+    }
+    if (filterSettings.activeCheck === true) {
+      q.whereRaw(
+        `(
                   "ref_plan_status"."id"=8 OR
                   "ref_plan_status"."id"=9 OR
                   "ref_plan_status"."id"=12 OR
@@ -241,25 +176,17 @@ export default class Agreement extends Model {
                     )
                   )
                 )`,
-              );
-            }
-          } else if (filter === 'showReplacedPlans') {
-            if (filters[filter] !== 'true')
-              q.where(function () {
-                this.whereNull('plan.extension_status').orWhereNot({
-                  'plan.extension_status':
-                    PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
-                });
-              });
-          } else {
-            q.where(filter, 'ilike', `%${filters[filter]}%`);
-          }
-        }
+      );
+    } else if (filterSettings.showReplacedPlans === true) {
+      q.where(function () {
+        this.whereNull('plan.extension_status').orWhereNot({
+          'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+        });
       });
     }
-    if (page && limit) {
-      const offset = limit * (page - 1);
-      results = await q.offset(offset).limit(limit);
+    if (filterSettings.page && filterSettings.limit) {
+      const offset = filterSettings.limit * (filterSettings.page - 1);
+      results = await q.offset(offset).limit(filterSettings.limit);
     } else {
       results = await q;
     }
@@ -272,10 +199,7 @@ export default class Agreement extends Model {
       return [];
     }
 
-    const results = await db
-      .select('agreement_id')
-      .from('client_agreement')
-      .where({ client_id: clientId });
+    const results = await db.select('agreement_id').from('client_agreement').where({ client_id: clientId });
 
     return flatten(results.map((result) => Object.values(result)));
   }
@@ -285,10 +209,7 @@ export default class Agreement extends Model {
       return [];
     }
 
-    const results = await db
-      .select('forest_file_id')
-      .from(Agreement.table)
-      .where({ zone_id: zoneId });
+    const results = await db.select('forest_file_id').from(Agreement.table).where({ zone_id: zoneId });
 
     return flatten(results.map((result) => Object.values(result)));
   }
@@ -338,10 +259,7 @@ export default class Agreement extends Model {
 
   async fetchLivestockIdentifiers() {
     const where = { agreement_id: this.forestFileId };
-    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(
-      this.db,
-      where,
-    );
+    const livestockIdentifiers = await LivestockIdentifier.findWithTypeLocation(this.db, where);
     this.livestockIdentifiers = livestockIdentifiers;
   }
 

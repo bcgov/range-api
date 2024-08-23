@@ -87,12 +87,7 @@ router.get(
     }
     const { agreementId } = await Plan.findOne(db, { id: planId });
 
-    await PlanRouteHelper.canUserAccessThisAgreement(
-      db,
-      Agreement,
-      req.user,
-      agreementId,
-    );
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
 
     const clientAgreements = await ClientAgreement.find(db, {
       agreement_id: agreementId,
@@ -132,18 +127,9 @@ router.put(
 
     const { agreementId } = await Plan.findOne(db, { id: planId });
 
-    await PlanRouteHelper.canUserAccessThisAgreement(
-      db,
-      Agreement,
-      req.user,
-      agreementId,
-    );
+    await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
 
-    const clientAgreement = await ClientAgreement.update(
-      db,
-      { id: clientAgreementId },
-      body,
-    );
+    const clientAgreement = await ClientAgreement.update(db, { id: clientAgreementId }, body);
 
     res.json(clientAgreement).end();
   }),

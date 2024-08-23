@@ -11,9 +11,7 @@ export default class PlantCommunity extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (
-        PlantCommunity.fields.indexOf(`${PlantCommunity.table}.${key}`) > -1
-      ) {
+      if (PlantCommunity.fields.indexOf(`${PlantCommunity.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
@@ -21,14 +19,10 @@ export default class PlantCommunity extends Model {
     super(obj, db);
 
     this.elevation = data.elevation_id
-      ? (this.elevation = new PlantCommunityElevation(
-          PlantCommunityElevation.extract(data),
-        ))
+      ? (this.elevation = new PlantCommunityElevation(PlantCommunityElevation.extract(data)))
       : null;
 
-    this.communityType = new PlantCommunityType(
-      PlantCommunityType.extract(data),
-    );
+    this.communityType = new PlantCommunityType(PlantCommunityType.extract(data));
   }
 
   static get fields() {
@@ -61,28 +55,22 @@ export default class PlantCommunity extends Model {
     const myFields = [
       ...PlantCommunity.fields,
       ...PlantCommunityType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-      ...PlantCommunityElevation.fields.map(
-        (f) => `${f} AS ${f.replace('.', '_')}`,
-      ),
+      ...PlantCommunityElevation.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
 
-    try {
-      const results = await db
-        .select(myFields)
-        .from(PlantCommunity.table)
-        .join('ref_plant_community_type', {
-          'plant_community.community_type_id': 'ref_plant_community_type.id',
-        })
-        .leftJoin('ref_plant_community_elevation', {
-          'plant_community.elevation_id': 'ref_plant_community_elevation.id',
-        })
-        .where(where)
-        .orderBy('plant_community.created_at', 'asc');
+    const results = await db
+      .select(myFields)
+      .from(PlantCommunity.table)
+      .join('ref_plant_community_type', {
+        'plant_community.community_type_id': 'ref_plant_community_type.id',
+      })
+      .leftJoin('ref_plant_community_elevation', {
+        'plant_community.elevation_id': 'ref_plant_community_elevation.id',
+      })
+      .where(where)
+      .orderBy('plant_community.created_at', 'asc');
 
-      return results.map((row) => new PlantCommunity(row, db));
-    } catch (error) {
-      throw error;
-    }
+    return results.map((row) => new PlantCommunity(row, db));
   }
 
   async fetchIndicatorPlants(db, where) {
@@ -103,10 +91,7 @@ export default class PlantCommunity extends Model {
   }
 
   async fetchPlantCommunityActions(db, where) {
-    const plantCommunityActions = await PlantCommunityAction.findWithType(
-      db,
-      where,
-    );
+    const plantCommunityActions = await PlantCommunityAction.findWithType(db, where);
     this.plantCommunityActions = plantCommunityActions || [];
   }
 }

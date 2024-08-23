@@ -21,12 +21,7 @@ export default class PlanManagementConsiderationController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const consideration = await ManagementConsideration.create(db, {
         ...body,
@@ -35,9 +30,7 @@ export default class PlanManagementConsiderationController {
 
       return res.status(200).json(consideration).end();
     } catch (error) {
-      logger.error(
-        `PlanManagementConsiderationController: store: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanManagementConsiderationController: store: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -55,12 +48,7 @@ export default class PlanManagementConsiderationController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const consideration = await ManagementConsideration.update(
         db,
@@ -70,9 +58,7 @@ export default class PlanManagementConsiderationController {
 
       return res.status(200).json(consideration).end();
     } catch (error) {
-      logger.error(
-        `PlanManagementConsiderationController: update: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanManagementConsiderationController: update: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -90,26 +76,16 @@ export default class PlanManagementConsiderationController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const result = await ManagementConsideration.removeById(
-        db,
-        considerationId,
-      );
+      const result = await ManagementConsideration.removeById(db, considerationId);
       if (result === 0) {
         throw errorWithCode('No such management consideration exists', 400);
       }
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(
-        `PlanManagementConsiderationController: destroy: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanManagementConsiderationController: destroy: fail with error: ${error.message}`);
       throw error;
     }
   }

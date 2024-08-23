@@ -54,23 +54,15 @@ router.get(
   '/upload-url',
   asyncMiddleware(async (req, res) => {
     if (!req.query.name) {
-      throw errorWithCode(
-        'You must provide a filename via the `name` parameter',
-        400,
-      );
+      throw errorWithCode('You must provide a filename via the `name` parameter', 400);
     }
 
     const url = await client.presignedPutObject(bucket, req.query.name);
 
-    const publicUrl = publicEndPoint
-      ? url.replace(endPoint, publicEndPoint)
-      : url;
+    const publicUrl = publicEndPoint ? url.replace(endPoint, publicEndPoint) : url;
 
     res.json({
-      url:
-        process.env.NODE_ENV === 'production'
-          ? cleanProductionURL(publicUrl)
-          : publicUrl,
+      url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
     });
   }),
 );
@@ -81,10 +73,7 @@ router.get(
     const { user } = req;
 
     if (!req.query.id) {
-      throw errorWithCode(
-        'You must provide the file id via the `id` parameter',
-        400,
-      );
+      throw errorWithCode('You must provide the file id via the `id` parameter', 400);
     }
 
     const planFile = await PlanFile.findById(db, Number(req.query.id));
@@ -97,11 +86,7 @@ router.get(
 
     switch (access) {
       case 'staff_only':
-        if (
-          !user.isRangeOfficer() &&
-          !user.isAdministrator() &&
-          !user.isDecisionMaker()
-        ) {
+        if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
           throw errorWithCode('Unauthorized', 403);
         }
         break;
@@ -118,15 +103,10 @@ router.get(
 
     const url = await client.presignedGetObject(bucket, planFile.name);
 
-    const publicUrl = publicEndPoint
-      ? url.replace(endPoint, publicEndPoint)
-      : url;
+    const publicUrl = publicEndPoint ? url.replace(endPoint, publicEndPoint) : url;
 
     res.json({
-      url:
-        process.env.NODE_ENV === 'production'
-          ? cleanProductionURL(publicUrl)
-          : publicUrl,
+      url: process.env.NODE_ENV === 'production' ? cleanProductionURL(publicUrl) : publicUrl,
     });
   }),
 );

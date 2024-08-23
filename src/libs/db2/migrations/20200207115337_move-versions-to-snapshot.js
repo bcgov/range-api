@@ -1,6 +1,5 @@
 const Plan = require('../../../../build/src/libs/db2/model/plan').default;
-const Agreement =
-  require('../../../../build/src/libs/db2/model/agreement').default;
+const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
   /**
@@ -30,60 +29,52 @@ exports.up = async (knex) => {
 
   const promises = rows
     .filter((row) => row.past_plan_ids !== null)
-    .map(
-      async ({
-        past_plan_ids: pastPlanIds = [],
-        current_plan_id: currentPlanId,
-      }) => {
-        const snapshotsP = pastPlanIds.map(async (planId) => {
-          const {
-            rows: [versionRecord],
-          } = await knex.raw(
-            `
+    .map(async ({ past_plan_ids: pastPlanIds = [], current_plan_id: currentPlanId }) => {
+      const snapshotsP = pastPlanIds.map(async (planId) => {
+        const {
+          rows: [versionRecord],
+        } = await knex.raw(
+          `
           SELECT * FROM plan_version WHERE plan_id = ?;
         `,
-            [planId],
-          );
+          [planId],
+        );
 
-          const [plan] = await Plan.findWithStatusExtension(
-            knex,
-            {
-              'plan.id': planId,
-            },
-            ['id', 'desc'],
-          );
+        const [plan] = await Plan.findWithStatusExtension(
+          knex,
+          {
+            'plan.id': planId,
+          },
+          ['id', 'desc'],
+        );
 
-          const agreementId = await Plan.agreementForPlanId(knex, plan.id);
+        const agreementId = await Plan.agreementForPlanId(knex, plan.id);
 
-          const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-            knex,
-            { forest_file_id: agreementId },
-          );
-          await agreement.eagerloadAllOneToManyExceptPlan();
-          agreement.transformToV1();
+        const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(knex, { forest_file_id: agreementId });
+        await agreement.eagerloadAllOneToManyExceptPlan();
+        agreement.transformToV1();
 
-          await plan.eagerloadAllOneToMany();
+        await plan.eagerloadAllOneToMany();
 
-          await knex.raw(
-            `
+        await knex.raw(
+          `
           INSERT INTO plan_snapshot (snapshot, created_at, version, plan_id, status_id)
           VALUES (?, ?, ?, ?, ?)
         `,
-            [
-              JSON.stringify({ ...plan, agreement }),
-              versionRecord.created_at,
-              versionRecord.version,
-              currentPlanId,
-              plan.statusId,
-            ],
-          );
-        });
+          [
+            JSON.stringify({ ...plan, agreement }),
+            versionRecord.created_at,
+            versionRecord.version,
+            currentPlanId,
+            plan.statusId,
+          ],
+        );
+      });
 
-        const snapshots = await Promise.all(snapshotsP);
+      const snapshots = await Promise.all(snapshotsP);
 
-        return snapshots;
-      },
-    );
+      return snapshots;
+    });
 
   await Promise.all(promises);
 };

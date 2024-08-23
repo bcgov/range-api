@@ -5,9 +5,7 @@ exports.up = async (knex) => {
 
   await Promise.all(
     userAccounts.map(async (user) => {
-      if (
-        userAccounts.filter((u) => u.client_id === user.client_id).length > 1
-      ) {
+      if (userAccounts.filter((u) => u.client_id === user.client_id).length > 1) {
         console.warn(
           `There are multiple users linked to client ID ${user.client_id}. Skipping creation of link to user ID ${user.id}`,
         );
@@ -22,9 +20,7 @@ exports.up = async (knex) => {
       );
 
       if (result.rowCount === 0) {
-        throw new Error(
-          `Could not insert active client account for user: ${user}`,
-        );
+        throw new Error(`Could not insert active client account for user: ${user}`);
       }
     }),
   );

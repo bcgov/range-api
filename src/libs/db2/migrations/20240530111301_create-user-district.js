@@ -28,12 +28,8 @@ exports.up = async (knex) =>
     t.integer('id');
     t.text('code').index().notNull();
     t.text('description').notNull();
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     t.integer('user_id');
     t.foreign('user_id').references('user_account.id');
 

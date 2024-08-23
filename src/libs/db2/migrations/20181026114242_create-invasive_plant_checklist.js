@@ -36,12 +36,8 @@ exports.up = async (knex) =>
     t.boolean('undercarriges_inspected').defaultTo(false);
     t.boolean('revegetate').defaultTo(false);
     t.text('other');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

@@ -28,20 +28,14 @@ exports.up = async (knex) =>
   knex.schema.createTable(table, async (t) => {
     t.increments('id').unsigned().index().primary();
 
-    t.integer('consideration_type_id').references(
-      'ref_management_consideration_type.id',
-    );
+    t.integer('consideration_type_id').references('ref_management_consideration_type.id');
     t.integer('plan_id').notNull();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
 
     t.text('detail');
     t.text('url');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

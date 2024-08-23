@@ -29,18 +29,12 @@ exports.up = async (knex) =>
     t.increments('id').unsigned().primary();
 
     t.integer('minister_issue_id').notNull().index();
-    t.foreign('minister_issue_id')
-      .onDelete('CASCADE')
-      .references('minister_issue.id');
+    t.foreign('minister_issue_id').onDelete('CASCADE').references('minister_issue.id');
     t.integer('pasture_id').notNull().index();
     t.foreign('pasture_id').onDelete('CASCADE').references('pasture.id');
 
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

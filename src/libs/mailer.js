@@ -18,20 +18,14 @@ export class Mailer {
 
   async getBearerToken() {
     const tokenEndpoint = `${this.authenticationURL}/auth/realms/comsvcauth/protocol/openid-connect/token`;
-    const credentials = Buffer.from(
-      `${this.clientId}:${this.clientSecret}`,
-    ).toString('base64');
+    const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
     try {
-      const response = await axios.post(
-        tokenEndpoint,
-        'grant_type=client_credentials',
-        {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+      const response = await axios.post(tokenEndpoint, 'grant_type=client_credentials', {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-      );
+      });
       console.debug('Bearer token retrieved');
       return response.data.access_token;
     } catch (error) {

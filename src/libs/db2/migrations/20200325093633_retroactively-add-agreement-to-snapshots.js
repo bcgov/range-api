@@ -1,5 +1,4 @@
-const Agreement =
-  require('../../../../build/src/libs/db2/model/agreement').default;
+const Agreement = require('../../../../build/src/libs/db2/model/agreement').default;
 
 exports.up = async (knex) => {
   const { rows } = await knex.raw(`
@@ -10,10 +9,7 @@ exports.up = async (knex) => {
     if (!snapshot.agreement) {
       const { agreementId } = snapshot;
 
-      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(
-        knex,
-        { forest_file_id: agreementId },
-      );
+      const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(knex, { forest_file_id: agreementId });
       await agreement.eagerloadAllOneToManyExceptPlan();
       agreement.transformToV1();
 

@@ -4,6 +4,3 @@ exports.up = async (knex) => {
   VALUES (3, 8);
   `);
 };
-
-exports.down = async (knex) => {
-};

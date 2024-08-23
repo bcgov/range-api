@@ -31,10 +31,7 @@ export default class PlanStatusHistory extends Model {
   constructor(data, db = undefined) {
     const obj = {};
     Object.keys(data).forEach((key) => {
-      if (
-        PlanStatusHistory.fields.indexOf(`${PlanStatusHistory.table}.${key}`) >
-        -1
-      ) {
+      if (PlanStatusHistory.fields.indexOf(`${PlanStatusHistory.table}.${key}`) > -1) {
         obj[key] = data[key];
       }
     });
@@ -63,34 +60,23 @@ export default class PlanStatusHistory extends Model {
   }
 
   static async findWithUser(db, where) {
-    const myFields = [
-      ...PlanStatusHistory.fields,
-      ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-    ];
+    const myFields = [...PlanStatusHistory.fields, ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`)];
 
-    try {
-      const results = await db
-        .select(myFields)
-        .from(PlanStatusHistory.table)
-        .join('user_account', {
-          'plan_status_history.user_id': 'user_account.id',
-        })
-        .where(where)
-        .orderBy('created_at', 'desc');
+    const results = await db
+      .select(myFields)
+      .from(PlanStatusHistory.table)
+      .join('user_account', {
+        'plan_status_history.user_id': 'user_account.id',
+      })
+      .where(where)
+      .orderBy('created_at', 'desc');
 
-      return results.map((row) => new PlanStatusHistory(row, db));
-    } catch (err) {
-      throw err;
-    }
+    return results.map((row) => new PlanStatusHistory(row, db));
   }
 
   static async fetchOriginalApproval(db, planId) {
     const approvalDetails = await db
-      .select([
-        'plan_status_history.created_at',
-        'user_account.family_name',
-        'user_account.given_name',
-      ])
+      .select(['plan_status_history.created_at', 'user_account.family_name', 'user_account.given_name'])
       .table('plan_status_history')
       .leftJoin('user_account', {
         'plan_status_history.user_id': 'user_account.id',
@@ -153,10 +139,7 @@ export default class PlanStatusHistory extends Model {
           approvedBy: null,
           amendmentType: amendmentTypeArray[1],
         });
-      } else if (
-        row.from_plan_status_id === 22 ||
-        row.from_plan_status_id === 23
-      ) {
+      } else if (row.from_plan_status_id === 22 || row.from_plan_status_id === 23) {
         lastMandatoryAmendment = response.length;
         response.push({
           id: row.id,
@@ -169,8 +152,7 @@ export default class PlanStatusHistory extends Model {
       }
       if (Plan.legalStatuses.indexOf(row.to_plan_status_id) !== -1) {
         if (lastMandatoryAmendment !== null) {
-          response[lastMandatoryAmendment].approvedBy =
-            `${row.given_name} ${row.family_name}`;
+          response[lastMandatoryAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
           response[lastMandatoryAmendment].approvedAt = row.created_at;
         }
       }

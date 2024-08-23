@@ -101,21 +101,9 @@ export class UserController {
     for (const sourceUserId of sourceAccountIds) {
       UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId });
       UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId });
-      ClientAgreement.update(
-        db,
-        { agent_id: sourceUserId },
-        { agent_id: userId },
-      );
-      PlanStatusHistory.update(
-        db,
-        { user_id: sourceUserId },
-        { user_id: userId },
-      );
-      PlanConfirmation.update(
-        db,
-        { user_id: sourceUserId },
-        { user_id: userId },
-      );
+      ClientAgreement.update(db, { agent_id: sourceUserId }, { agent_id: userId });
+      PlanStatusHistory.update(db, { user_id: sourceUserId }, { user_id: userId });
+      PlanConfirmation.update(db, { user_id: sourceUserId }, { user_id: userId });
       District.update(db, { user_id: sourceUserId }, { user_id: userId });
       Zone.update(db, { user_id: sourceUserId }, { user_id: userId });
       Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId });
@@ -143,13 +131,8 @@ export class UserController {
       client_id: clientId,
     });
     if (currentLink) {
-      logger.error(
-        `Link between user ${userId} and client ${clientId} already exists.`,
-      );
-      throw errorWithCode(
-        'This user is already linked to the selected client',
-        400,
-      );
+      logger.error(`Link between user ${userId} and client ${clientId} already exists.`);
+      throw errorWithCode('This user is already linked to the selected client', 400);
     }
 
     const currentOwner = await UserClientLink.findOne(db, {
@@ -158,9 +141,7 @@ export class UserController {
     });
     if (currentOwner) {
       const currentOwnerUser = await User.findById(db, currentOwner.userId);
-      logger.error(
-        `There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`,
-      );
+      logger.error(`There is already a user (${currentOwner.userId}) linked to this client (${clientId}).`);
       throw errorWithCode(
         `Cannot link client to this user because it is already linked to another user (${currentOwnerUser.givenName} ${currentOwnerUser.familyName}).`,
         400,
@@ -178,19 +159,14 @@ export class UserController {
     const newLinkedAgreements = await ClientAgreement.find(db, {
       client_id: clientId,
     });
-    const newLinkedAgreementIds = newLinkedAgreements.map(
-      (clientAgreement) => clientAgreement.agreementId,
-    );
+    const newLinkedAgreementIds = newLinkedAgreements.map((clientAgreement) => clientAgreement.agreementId);
 
     // TODO: Remove this check after implementing agency agreements
     // eslint-disable-next-line no-restricted-syntax
     for (const clientAgreement of currentLinkedAgreements) {
       if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
         // eslint-disable-next-line no-await-in-loop
-        const existingClient = await Client.findById(
-          db,
-          clientAgreement.clientId,
-        );
+        const existingClient = await Client.findById(db, clientAgreement.clientId);
 
         logger.error(
           `Cannot link client ID ${clientId} with user ID ${userId} because it shares an agreement with client ID ${clientAgreement.clientId} (${clientAgreement.agreementId})`,
@@ -267,8 +243,7 @@ export class UserController {
     const { userId: userId } = params;
     const districts = body.districts;
     const userToFind = await User.findById(db, userId);
-    if (userToFind.roleId === 4 && districts.length > 0)
-      throw 'Cannot assign districts to Range Agreement Holders.';
+    if (userToFind.roleId === 4 && districts.length > 0) throw 'Cannot assign districts to Range Agreement Holders.';
 
     // empty districts
     await UserDistricts.removeDistricts(db, { user_id: userId });
@@ -286,8 +261,7 @@ export class UserController {
     const { params } = req;
     const { userId: userId } = params;
     const user = await User.findById(db, userId);
-    if (user.roleId === 4)
-      throw 'Cannot get districts for agreement holder user';
+    if (user.roleId === 4) throw 'Cannot get districts for agreement holder user';
     const districts = await db
       .select('ref_district.*')
       .distinct('ref_district.id')

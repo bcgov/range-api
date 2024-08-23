@@ -22,16 +22,9 @@ export default class PlanExtensionRequests extends Model {
 
   static get fields() {
     // primary key *must* be first!
-    return [
-      'id',
-      'plan_id',
-      'client_id',
-      'user_id',
-      'email',
-      'requested_extension',
-      'created_at',
-      'updated_at',
-    ].map((field) => `${this.table}.${field}`);
+    return ['id', 'plan_id', 'client_id', 'user_id', 'email', 'requested_extension', 'created_at', 'updated_at'].map(
+      (field) => `${this.table}.${field}`,
+    );
   }
 
   static get table() {
@@ -44,16 +37,10 @@ export default class PlanExtensionRequests extends Model {
       obj[Model.toSnakeCase(key)] = values[key];
     });
 
-    const count = await db
-      .table(PlanExtensionRequests.table)
-      .where(where)
-      .update(obj);
+    const count = await db.table(PlanExtensionRequests.table).where(where).update(obj);
 
     if (count > 0) {
-      const [{ id }] = await db
-        .table(PlanExtensionRequests.table)
-        .where(where)
-        .returning('id');
+      const [{ id }] = await db.table(PlanExtensionRequests.table).where(where).returning('id');
 
       const res = await db.raw(
         `
@@ -73,10 +60,7 @@ export default class PlanExtensionRequests extends Model {
     Object.keys(values).forEach((key) => {
       obj[Model.toSnakeCase(key)] = values[key];
     });
-    const results = await db
-      .table(PlanExtensionRequests.table)
-      .returning('id')
-      .insert(obj);
+    const results = await db.table(PlanExtensionRequests.table).returning('id').insert(obj);
 
     return await PlanExtensionRequests.findOne(db, { id: results.pop() });
   }

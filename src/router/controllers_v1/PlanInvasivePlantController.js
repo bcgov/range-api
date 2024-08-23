@@ -21,20 +21,13 @@ export default class PlanInvasivePlantController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       const ipcl = await InvasivePlantChecklist.findOne(db, {
         plan_id: planId,
       });
       if (ipcl) {
-        throw errorWithCode(
-          `Invasive plant checklist already exist with the plan id ${planId}`,
-        );
+        throw errorWithCode(`Invasive plant checklist already exist with the plan id ${planId}`);
       }
 
       const checklist = await InvasivePlantChecklist.create(db, {
@@ -43,9 +36,7 @@ export default class PlanInvasivePlantController {
       });
       return res.status(200).json(checklist).end();
     } catch (error) {
-      logger.error(
-        `PlanInvasivePlantController: store: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanInvasivePlantController: store: fail with error: ${error.message}`);
       throw error;
     }
   }
@@ -63,27 +54,16 @@ export default class PlanInvasivePlantController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(
-        db,
-        Agreement,
-        user,
-        agreementId,
-      );
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
       delete body.planId;
       delete body.plan_id;
 
-      const updatedChecklist = await InvasivePlantChecklist.update(
-        db,
-        { id: checklistId },
-        body,
-      );
+      const updatedChecklist = await InvasivePlantChecklist.update(db, { id: checklistId }, body);
 
       return res.status(200).json(updatedChecklist).end();
     } catch (error) {
-      logger.error(
-        `PlanInvasivePlantController: update: fail with error: ${error.message}`,
-      );
+      logger.error(`PlanInvasivePlantController: update: fail with error: ${error.message}`);
       throw error;
     }
   }

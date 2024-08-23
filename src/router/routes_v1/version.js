@@ -51,10 +51,7 @@ router.put(
     const { idpHint, api, ios } = body;
 
     if (user && !user.isAdministrator()) {
-      throw errorWithCode(
-        'Only Admin have the permission for this request',
-        403,
-      );
+      throw errorWithCode('Only Admin have the permission for this request', 403);
     }
 
     const updated = await Version.update(

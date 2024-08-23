@@ -27,9 +27,7 @@ import Model from './model';
 export default class AgreementType extends Model {
   static get fields() {
     // primary key *must* be first!
-    return ['id', 'code', 'description', 'active'].map(
-      (field) => `${this.table}.${field}`,
-    );
+    return ['id', 'code', 'description', 'active'].map((field) => `${this.table}.${field}`);
   }
 
   static get table() {

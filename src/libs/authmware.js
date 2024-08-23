@@ -83,9 +83,7 @@ export default async function initPassport(app) {
 
           if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
             computedUsername = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-          } else if (
-            jwtPayload?.identity_provider.toLowerCase().includes('bceid')
-          ) {
+          } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
             computedUsername = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
           }
 
@@ -94,9 +92,7 @@ export default async function initPassport(app) {
               username: computedUsername,
             });
             if (user == null) {
-              console.log(
-                `user ${computedUsername} not found in database, not migrating`,
-              );
+              console.log(`user ${computedUsername} not found in database, not migrating`);
             } else {
               console.log(
                 `migrating user with computed old name ${computedUsername} to new format: ${jwtPayload.preferred_username}`,
@@ -124,9 +120,7 @@ export default async function initPassport(app) {
         let ssoId = null;
         if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
           ssoId = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-        } else if (
-          jwtPayload?.identity_provider.toLowerCase().includes('bceid')
-        ) {
+        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
           ssoId = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
         }
         await User.update(
@@ -153,9 +147,7 @@ export default async function initPassport(app) {
           if (needsRO) {
             basicRoles.push(SSO_ROLE_MAP.RANGE_OFFICER);
           }
-        } else if (
-          jwtPayload?.identity_provider.toLowerCase().includes('bceid')
-        ) {
+        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
           let needsClientRole = true;
 
           if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
@@ -170,9 +162,7 @@ export default async function initPassport(app) {
 
         if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
           // dedup roles
-          user.roles = basicRoles.concat(
-            jwtPayload.client_roles.filter((r) => basicRoles.indexOf(r) < 0),
-          );
+          user.roles = basicRoles.concat(jwtPayload.client_roles.filter((r) => basicRoles.indexOf(r) < 0));
         } else {
           user.roles = basicRoles;
         }
@@ -182,26 +172,17 @@ export default async function initPassport(app) {
         let roleIdToAdd = 4; //Default Client/RUP agreement holder
         if (user.roleId) {
           //Get permissions if available
-          permissions = await UserPermissions.getRolePermissions(
-            db,
-            user.roleId,
-          );
+          permissions = await UserPermissions.getRolePermissions(db, user.roleId);
         } else {
           //set role id based on jwt
           if (jwtPayload.client_roles && jwtPayload.client_roles.length !== 0) {
             if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.ADMINISTRATOR)) {
               roleIdToAdd = 1; //Admin
-            } else if (
-              jwtPayload.client_roles.includes(SSO_ROLE_MAP.READ_ONLY)
-            ) {
+            } else if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.READ_ONLY)) {
               roleIdToAdd = 5; //Read only external auditor
-            } else if (
-              jwtPayload.client_roles.includes(SSO_ROLE_MAP.DECISION_MAKER)
-            ) {
+            } else if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.DECISION_MAKER)) {
               roleIdToAdd = 2; //Decision maker
-            } else if (
-              jwtPayload.client_roles.includes(SSO_ROLE_MAP.RANGE_OFFICER)
-            ) {
+            } else if (jwtPayload.client_roles.includes(SSO_ROLE_MAP.RANGE_OFFICER)) {
               roleIdToAdd = 3; //Agrologist
             }
           } else {
@@ -221,10 +202,7 @@ export default async function initPassport(app) {
           );
           user.roleId = roleIdToAdd;
 
-          permissions = await UserPermissions.getRolePermissions(
-            db,
-            roleIdToAdd,
-          );
+          permissions = await UserPermissions.getRolePermissions(db, roleIdToAdd);
         }
 
         //Set permissions

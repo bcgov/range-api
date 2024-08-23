@@ -58,8 +58,7 @@ exports.seed = async (knex) => {
     },
     {
       name: 'Other',
-      placeholder:
-        'Describe the action to be taken including what, where and when.',
+      placeholder: 'Describe the action to be taken including what, where and when.',
       active: true,
     },
   ].map((item, index) => ({ ...item, id: index + 1 }));

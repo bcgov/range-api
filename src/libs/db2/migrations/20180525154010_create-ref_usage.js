@@ -30,16 +30,9 @@ exports.up = async (knex) =>
     t.integer('temporary_increase').defaultTo(0);
     t.integer('total_non_use').defaultTo(0);
     t.integer('total_annual_use').defaultTo(0);
-    t.string('agreement_id', 9)
-      .notNull()
-      .references('forest_file_id')
-      .inTable('agreement');
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.string('agreement_id', 9).notNull().references('forest_file_id').inTable('agreement');
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

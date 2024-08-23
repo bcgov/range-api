@@ -39,18 +39,10 @@ export default class PlanSnapshot extends Model {
     return 'plan_snapshot';
   }
 
-  static async findSummary(
-    db,
-    where,
-    whereNotNull = undefined,
-    order = undefined,
-  ) {
+  static async findSummary(db, where, whereNotNull = undefined, order = undefined) {
     let results = [];
     const q = db.table('plan_snapshot_summary').select('*');
-    if (
-      Object.keys(where).length === 1 &&
-      where[Object.keys(where)[0]].constructor === Array
-    ) {
+    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
       q.whereIn(k, v);
@@ -89,11 +81,7 @@ export default class PlanSnapshot extends Model {
   static async create(db, values, user) {
     if (Plan.legalStatuses.indexOf(values.status_id) !== -1) {
       try {
-        let originalApproval = await PlanStatusHistory.fetchOriginalApproval(
-          db,
-          values.plan_id,
-          user,
-        );
+        let originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, values.plan_id, user);
         if (!originalApproval) {
           originalApproval = {
             familyName: user.familyName,
@@ -102,17 +90,13 @@ export default class PlanSnapshot extends Model {
           };
         }
         values.snapshot.originalApproval = originalApproval;
-        const amendmentSubmissions =
-          await PlanStatusHistory.fetchAmendmentSubmissions(db, values.plan_id);
+        const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(db, values.plan_id);
         values.snapshot.amendmentSubmissions = amendmentSubmissions;
         const response = await generatePDFResponse(values.snapshot);
         values.pdf_file = response.data;
         values.snapshot = JSON.stringify(values.snapshot);
       } catch (error) {
-        throw errorWithCode(
-          `Error creating PDF file: ${JSON.stringify(error)}`,
-          500,
-        );
+        throw errorWithCode(`Error creating PDF file: ${JSON.stringify(error)}`, 500);
       }
     }
     console.log(`About to call super`);

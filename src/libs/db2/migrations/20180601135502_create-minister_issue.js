@@ -28,19 +28,13 @@ exports.up = async (knex) =>
 
     t.integer('plan_id').notNull();
     t.foreign('plan_id').onDelete('CASCADE').references('plan.id');
-    t.integer('issue_type_id')
-      .notNull()
-      .references('ref_minister_issue_type.id');
+    t.integer('issue_type_id').notNull().references('ref_minister_issue_type.id');
 
     t.text('detail');
     t.text('objective');
     t.boolean('identified').notNull().defaultTo(false);
-    t.dateTime('created_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
-    t.dateTime('updated_at')
-      .notNull()
-      .defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('created_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
+    t.dateTime('updated_at').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
 
     const query = `
     CREATE TRIGGER update_${table}_changetimestamp BEFORE UPDATE

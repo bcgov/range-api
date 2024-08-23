@@ -32,28 +32,19 @@ export default class Cdogs {
 
   async getBearerToken() {
     const tokenEndpoint = `${this.authenticationURL}/auth/realms/comsvcauth/protocol/openid-connect/token`;
-    const credentials = Buffer.from(
-      `${this.clientId}:${this.clientSecret}`,
-    ).toString('base64');
+    const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
     try {
-      const response = await axios.post(
-        tokenEndpoint,
-        'grant_type=client_credentials',
-        {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+      const response = await axios.post(tokenEndpoint, 'grant_type=client_credentials', {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-      );
+      });
       logger.debug('Bearer token retrieved');
       return response.data.access_token;
     } catch (error) {
       logger.error(`Failed to retrieve bearer token: ${JSON.stringify(error)}`);
-      throw errorWithCode(
-        `Failed to retrieve bearer token ${JSON.stringify(error)}`,
-        500,
-      );
+      throw errorWithCode(`Failed to retrieve bearer token ${JSON.stringify(error)}`, 500);
     }
   }
 
@@ -77,13 +68,8 @@ export default class Cdogs {
       });
       return response;
     } catch (error) {
-      logger.error(
-        `Error generating PDF file: ${JSON.stringify(error.message)}`,
-      );
-      throw errorWithCode(
-        `Error generating PDF file: ${JSON.stringify(error.message)}`,
-        500,
-      );
+      logger.error(`Error generating PDF file: ${JSON.stringify(error.message)}`);
+      throw errorWithCode(`Error generating PDF file: ${JSON.stringify(error.message)}`, 500);
     }
   }
 
@@ -92,13 +78,8 @@ export default class Cdogs {
       const data = fs.readFileSync(template);
       return Buffer.from(data).toString('base64');
     } catch (error) {
-      logger.error(
-        `Error reading template file ${template}: ${JSON.stringify(error)}`,
-      );
-      throw errorWithCode(
-        `Error reading template file ${template}: ${JSON.stringify(error)}`,
-        500,
-      );
+      logger.error(`Error reading template file ${template}: ${JSON.stringify(error)}`);
+      throw errorWithCode(`Error reading template file ${template}: ${JSON.stringify(error)}`, 500);
     }
   }
 }
