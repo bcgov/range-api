@@ -52,10 +52,10 @@ router.get(
         page: null,
       });
     } else if (user.isAdministrator() || user.canReadAll() || user.isRangeOfficer()) {
-      if (!(filterSettings?.selectedZones?.length === 0)) {
+      if (!(filterSettings?.zoneInfo?.selectedZones?.length === 0)) {
         agreements = await Agreement.findWithAllRelations(
           db,
-          { 'ref_zone.id': filterSettings.selectedZones },
+          { 'ref_zone.id': filterSettings.zoneInfo?.selectedZones },
           {
             ...filterSettings,
             limit: null,
