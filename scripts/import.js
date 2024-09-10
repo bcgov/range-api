@@ -47,11 +47,7 @@ const parseDate = (dateAsString) => new Date(dateAsString.replace(/-/g, '/'));
 
 const skipping = (action, agreementId, index) => {
   if (agreementId.indexOf('RB') >= 0 || agreementId.indexOf('DL') >= 0) return;
-  console.log(
-    `Skipping Record with aId: ${agreementId}, row: ${
-      index + 2
-    }, when: ${action}`,
-  );
+  console.log(`Skipping Record with aId: ${agreementId}, row: ${index + 2}, when: ${action}`);
 };
 
 const updateDistrict = async (data) => {
@@ -77,11 +73,7 @@ const updateDistrict = async (data) => {
       });
       created += 1;
     } catch (error) {
-      console.log(
-        `Error with message = ${
-          error.message
-        }, District Code ${districtCode} row: ${index + 2}`,
-      );
+      console.log(`Error with message = ${error.message}, District Code ${districtCode} row: ${index + 2}`);
       throw error;
     }
   }
@@ -119,22 +111,15 @@ const updateZone = async (data) => {
     }
 
     try {
-      const staffEmail =
-        contact_email_address && contact_email_address.toLowerCase().trim();
-      const staff = staffEmail
-        ? (
-            await User.find(db, { email: staffEmail }, ['last_login_at', 'asc'])
-          ).pop()
-        : null;
+      const staffEmail = contact_email_address && contact_email_address.toLowerCase().trim();
+      const staff = staffEmail ? (await User.find(db, { email: staffEmail }, ['last_login_at', 'asc'])).pop() : null;
       const zone = await Zone.findOne(db, {
         code: zoneCode,
         district_id: district.id,
       });
 
       if (!zone) {
-        console.log(
-          `Adding Zone with Code ${zoneCode} District Code: ${districtCode}`,
-        );
+        console.log(`Adding Zone with Code ${zoneCode} District Code: ${districtCode}`);
         await Zone.create(db, {
           code: zoneCode,
           description: zoneDescription || 'No description available',
@@ -158,11 +143,7 @@ const updateZone = async (data) => {
         );
       }
     } catch (error) {
-      console.log(
-        `Error with message = ${error.message}, Zone Code ${zoneCode} row: ${
-          index + 2
-        }`,
-      );
+      console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`);
       throw error;
     }
   }
@@ -180,12 +161,8 @@ const updateUser = async (data) => {
     const record = data[index];
     const { contact_phone_number, contact_email_address } = record;
 
-    const email =
-      contact_email_address === null
-        ? ''
-        : contact_email_address.toLowerCase().trim();
-    const phoneNumber =
-      contact_phone_number === null ? '' : contact_phone_number.trim();
+    const email = contact_email_address === null ? '' : contact_email_address.toLowerCase().trim();
+    const phoneNumber = contact_phone_number === null ? '' : contact_phone_number.trim();
 
     if (email !== '' && phoneNumber !== '') {
       try {
@@ -242,12 +219,7 @@ const updateAgreement = async (data) => {
       initial_expiry_dt,
     } = record;
 
-    if (
-      !isValidRecord(record) ||
-      !agreementTypeCode ||
-      !zoneCode ||
-      !districtCode
-    ) {
+    if (!isValidRecord(record) || !agreementTypeCode || !zoneCode || !districtCode) {
       skipping('Updating Agreement', agreementId, index);
       continue;
     }
@@ -295,18 +267,11 @@ const updateAgreement = async (data) => {
         created += 1;
       }
     } catch (error) {
-      console.log(
-        `Error with message = ${error.message}, aId ${agreementId} row: ${
-          index + 2
-        }`,
-      );
+      console.log(`Error with message = ${error.message}, aId ${agreementId} row: ${index + 2}`);
       throw error;
     }
   }
-  const retiredAgreementIds = await Agreement.retireAgreements(
-    db,
-    activeFTAAgreementIds,
-  );
+  const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
 
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
   return `${created} agreements were created. ${updated} agreements were updated`;
@@ -355,8 +320,7 @@ const updateUsage = async (data) => {
             year: Number(calendar_year),
             authorizedAum: Number(authorized_use) || 0,
             temporaryIncrease: Number(temp_increase) || 0,
-            totalNonUse:
-              Number(non_use_nonbillable) + Number(non_use_billable) || 0,
+            totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
             totalAnnualUse: Number(total_annual_use) || 0,
             agreementId: agreement.forestFileId,
           },
@@ -367,19 +331,14 @@ const updateUsage = async (data) => {
           year: Number(calendar_year),
           authorizedAum: Number(authorized_use) || 0,
           temporaryIncrease: Number(temp_increase) || 0,
-          totalNonUse:
-            Number(non_use_nonbillable) + Number(non_use_billable) || 0,
+          totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
           agreementId: agreement.forestFileId,
         });
         created += 1;
       }
     } catch (error) {
-      console.log(
-        `Error with message = ${
-          error.message
-        }, usage year ${calendar_year} row: ${index + 2}`,
-      );
+      console.log(`Error with message = ${error.message}, usage year ${calendar_year} row: ${index + 2}`);
       throw error;
     }
   }
@@ -437,9 +396,7 @@ const updateClient = async (data) => {
           { client_number: clientNumber },
           {
             name: clientName || 'Unknown Name',
-            locationCodes: Array.from(
-              new Set(client.locationCodes.concat(clientLocationCode)),
-            ),
+            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
             startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
             endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
           },
@@ -502,11 +459,7 @@ const updateClient = async (data) => {
         }
       }
     } catch (error) {
-      console.log(
-        `Error with message = ${
-          error.message
-        }, client number ${clientNumber} row: ${index + 2}`,
-      );
+      console.log(`Error with message = ${error.message}, client number ${clientNumber} row: ${index + 2}`);
       throw error;
     }
   }
@@ -531,11 +484,7 @@ const prepareTestSetup = async () => {
     const githubrangeofficer = await User.findOne(db, {
       username: 'githubrangeofficer',
     });
-    await Zone.update(
-      db,
-      { code: 'TEST3' },
-      { user_id: githubrangeofficer.id },
-    );
+    await Zone.update(db, { code: 'TEST3' }, { user_id: githubrangeofficer.id });
     const rangeAppTester = await User.findOne(db, {
       username: 'bceid\\rangeapptester',
     });
@@ -646,16 +595,12 @@ const updateFTAData = async (licensee, client, usage) => {
   msg = msg + (await updateUser(licensee)) + '\n';
   msg = msg + (await updateAgreement(licensee)) + '\n';
 
-  const filteredClientsAB = client.filter((item) =>
-    ['A', 'B'].includes(item.forest_file_client_type_code),
-  );
+  const filteredClientsAB = client.filter((item) => ['A', 'B'].includes(item.forest_file_client_type_code));
   const filteredClientsPC = client
     .filter((item) => ['P', 'C'].includes(item.forest_file_client_type_code))
     .filter((itemPC) => {
       const foundAB = filteredClientsAB.find(
-        (itemAB) =>
-          itemAB.forest_file_id === itemPC.forest_file_id &&
-          itemAB.client_number === itemPC.client_number,
+        (itemAB) => itemAB.forest_file_id === itemPC.forest_file_id && itemAB.client_number === itemPC.client_number,
       );
       return !foundAB;
     });
@@ -716,7 +661,7 @@ const main = async () => {
     console.log(`Error importing data, message = ${err.message}`);
 
     console.log(`${err.stack}`);
-    process.exit(0);
+    process.exit(1);
   }
   process.exit(0);
 };
