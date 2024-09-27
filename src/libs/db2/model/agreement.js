@@ -148,13 +148,14 @@ export default class Agreement extends Model {
           if (columnFilters[key] && columnFilters[key].length > 0) {
             q.whereIn('ref_plan_status.code', columnFilters[key]);
           }
-        } else if (key === 'agreementCheck') {
-          if (columnFilters[key] === 'true') q.where('agreement.retired', 'false');
         } else {
           q.where(key, 'ilike', `%${columnFilters[key]}%`);
         }
       }
     });
+    if (filterSettings.agreementCheck === true) {
+      q.where('agreement.retired', 'false');
+    }
     if (filterSettings.planCheck === true) {
       q.whereNotNull('ref_plan_status.code');
     }
