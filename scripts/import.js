@@ -271,9 +271,13 @@ const updateAgreement = async (data) => {
       throw error;
     }
   }
-  Agreement.retireAgreements(db, activeFTAAgreementIds).then((retiredAgreementIds) =>
-    console.log(`Retired Agreements: ${retiredAgreementIds}`),
-  );
+
+  for (let i = 1; i < 100; i++) {
+    activeFTAAgreementIds.push(`RAN0999${String(i).padStart(2, '0')}`);
+  }
+  const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
+
+  console.log(`Retired Agreements: ${retiredAgreementIds}`);
   return `${created} agreements were created. ${updated} agreements were updated`;
 };
 
