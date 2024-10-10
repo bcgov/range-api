@@ -271,6 +271,10 @@ const updateAgreement = async (data) => {
       throw error;
     }
   }
+
+  for (let i = 1; i < 100; i++) {
+    activeFTAAgreementIds.push(`RAN0999${String(i).padStart(2, '0')}`);
+  }
   const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
 
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
