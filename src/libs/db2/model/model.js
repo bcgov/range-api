@@ -91,6 +91,7 @@ export default class Model {
     if (order && order.length > 0) {
       results = await q.orderBy(...order);
     } else {
+      // console.log(q.toSQL().toNative());
       results = await q;
     }
 

@@ -49,12 +49,9 @@ export default class PlanVersionController {
 
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
-      const versions = await PlanSnapshot.findSummary(db, { plan_id: planId }, 'effective_legal_start');
-
+      const versions = await PlanSnapshot.fetchAmendmentSubmissions(db, planId);
       await Promise.all(
         versions.map(async (v) => {
-          v.fetchStatus(db);
           if (!v.snapshot.originalApproval)
             v.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
           return v;
@@ -136,12 +133,14 @@ export default class PlanVersionController {
       res.setHeader('Content-type', 'application/pdf');
       if (!versionData.pdfFile) {
         versionData.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
-        const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(
+        versionData.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(
           db,
           planId,
           versionData.createdAt,
         );
-        versionData.snapshot.amendmentSubmissions = amendmentSubmissions;
+        versionData.snapshot.amendmentSubmissions = versionData.snapshot.amendmentSubmissions.filter((item) => {
+          return item.amendmentType !== null;
+        });
         const response = await generatePDFResponse(versionData.snapshot);
         PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
         res.send(response.data);

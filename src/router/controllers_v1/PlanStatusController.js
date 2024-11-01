@@ -74,19 +74,7 @@ export default class PlanStatusController {
          *  version for the minor amendment that was just determined to be
          *  wrongly made without effect.
          */
-        // eslint-disable-next-line no-unused-vars
-        const {
-          rows: [prevLegal],
-        } = await db.raw(
-          `
-          SELECT * FROM plan_snapshot_summary
-          WHERE effective_legal_end IS NOT NULL
-          AND plan_id = ?
-          ORDER BY created_at DESC;
-        `,
-          [planId],
-        );
-
+        const prevLegal = PlanStatusController.getLatestLegalVersion(planId);
         const {
           rows: [{ max: lastVersion }],
         } = await db.raw(
@@ -112,18 +100,7 @@ export default class PlanStatusController {
       }
 
       if (status.code === PLAN_STATUS.NOT_APPROVED) {
-        const {
-          rows: [prevLegal],
-        } = await db.raw(
-          `
-          SELECT * FROM plan_snapshot_summary
-          WHERE is_current_legal_version = true
-          AND plan_id = ?
-          ORDER BY created_at DESC;
-        `,
-          [planId],
-        );
-
+        const prevLegal = PlanStatusController.getLatestLegalVersion(planId);
         const {
           rows: [{ max: lastVersion }],
         } = await db.raw(
@@ -334,5 +311,14 @@ export default class PlanStatusController {
     if ([8, 9, 12, 20, 21, 22].indexOf(statusId) !== -1) return true;
     if (planAmendmentTypeId && [11, 13, 18].indexOf(statusId) !== -1) return true;
     return false;
+  }
+
+  static async getLatestLegalVersion(planId) {
+    const latestLegalVersion = await db('plan_snapshot')
+      .whereIn('status_id', Plan.legalStatuses)
+      .andWhere({ plan_id: planId })
+      .orderBy('created_at', 'desc')
+      .first();
+    return latestLegalVersion;
   }
 }

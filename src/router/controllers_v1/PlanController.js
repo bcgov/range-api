@@ -15,6 +15,7 @@ import { checkRequiredFields, objPathToCamelCase, removeCommonFields } from '../
 import { PlanRouteHelper } from '../helpers';
 import { generatePDFResponse } from './PDFGeneration';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
+import PlanStatusController from './PlanStatusController';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement, PlanConfirmation, PlanStatus, AdditionalRequirement, PlanFile } = dm;
@@ -58,60 +59,30 @@ export default class PlanController {
         throw errorWithCode("Plan doesn't exist", 404);
       }
       const { agreementId } = plan;
-      const statusId = plan?.status?.id;
-
-      const isStaff = user.isAdministrator() || user.isRangeOfficer() || user.isDecisionMaker() || user.canReadAll();
-
-      const [privacyVersionRaw] = await PlanSnapshot.findSummary(db, {
-        plan_id: planId,
-        privacyview: isStaff ? 'StaffView' : 'AHView',
-      });
-      const privacyVersion = privacyVersionRaw?.snapshot;
-
-      const shouldBeLiveVersion = privacyVersion == null;
-
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-
       const [agreement] = await Agreement.findWithTypeZoneDistrictExemption(db, { forest_file_id: agreementId });
       await agreement.eagerloadAllOneToManyExceptPlan();
       agreement.transformToV1();
-
-      if (shouldBeLiveVersion) {
-        await plan.eagerloadAllOneToMany();
-        plan.agreement = agreement;
-
-        const filteredFiles = filterFiles(plan.files, user);
-
-        const mappedGrazingSchedules = await Promise.all(
-          plan.grazingSchedules.map(async (schedule) => {
-            let sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
-            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pastureName', 'pasture.name');
-            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('refLivestockName', 'livestockType.name');
-            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pldAuMs', 'pldAUMs');
-            sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('crownAuMs', 'crownAUMs');
-            return {
-              ...schedule,
-              sortBy: sanitizedSortBy,
-            };
-          }),
-        );
-        return {
-          ...plan,
-          grazingSchedules: mappedGrazingSchedules,
-          files: filteredFiles,
-        };
-      }
-
-      logger.info('loading last version');
-
-      privacyVersion.status_id = statusId;
-
-      const filteredFiles = filterFiles(privacyVersion.files, user);
+      await plan.eagerloadAllOneToMany();
+      plan.agreement = agreement;
+      const filteredFiles = filterFiles(plan.files, user);
+      const mappedGrazingSchedules = await Promise.all(
+        plan.grazingSchedules.map(async (schedule) => {
+          let sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pastureName', 'pasture.name');
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('refLivestockName', 'livestockType.name');
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pldAuMs', 'pldAUMs');
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('crownAuMs', 'crownAUMs');
+          return {
+            ...schedule,
+            sortBy: sanitizedSortBy,
+          };
+        }),
+      );
       return {
-        ...privacyVersion,
+        ...plan,
+        grazingSchedules: mappedGrazingSchedules,
         files: filteredFiles,
-        status: plan.status,
-        statusId: plan.statusId,
       };
     } catch (error) {
       console.log(error.stack);
@@ -178,7 +149,6 @@ export default class PlanController {
 
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
-
     await Plan.update(db, { id: planId }, body);
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
@@ -293,15 +263,7 @@ export default class PlanController {
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-    const prevLegalVersion = await db
-      .table('plan_snapshot_summary')
-      .whereIn('status_id', Plan.legalStatuses)
-      .andWhere({
-        plan_id: planId,
-      })
-      .orderBy('created_at', 'desc')
-      .first();
-
+    const prevLegalVersion = await PlanStatusController.getLatestLegalVersion(planId);
     if (!prevLegalVersion) {
       throw errorWithCode('Could not find previous legal version.', 500);
     }
@@ -311,7 +273,7 @@ export default class PlanController {
     await Plan.restoreVersion(db, planId, prevLegalVersion.version);
 
     const versionsToDiscard = await db
-      .table('plan_snapshot_summary')
+      .table('plan_snapshot')
       .select('id')
       .where({ plan_id: planId })
       .andWhereRaw('created_at > ?::timestamp', [prevLegalVersion.created_at.toISOString()]);
@@ -329,7 +291,7 @@ export default class PlanController {
     const { params, user, body } = req;
     const { planId } = params;
 
-    if (!user || !user.isRangeOfficer()) {
+    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
       throw errorWithCode('Unauthorized', 403);
     }
 
@@ -352,8 +314,7 @@ export default class PlanController {
   static async updateAttachment(req, res) {
     const { params, user, body } = req;
     const { planId, attachmentId } = params;
-
-    if (!user || !user.isRangeOfficer()) {
+    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
       throw errorWithCode('Unauthorized', 403);
     }
 
@@ -380,7 +341,7 @@ export default class PlanController {
     const { params, user } = req;
     const { planId, attachmentId } = params;
 
-    if (!user || !user.isRangeOfficer()) {
+    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
       throw errorWithCode('Unauthorized', 403);
     }
 
@@ -586,8 +547,10 @@ export default class PlanController {
     const { planId } = params;
     const plan = await PlanController.fetchPlan(planId, user);
     plan.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
-    const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(db, planId);
-    plan.amendmentSubmissions = amendmentSubmissions;
+    const amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(db, planId);
+    plan.amendmentSubmissions = amendmentSubmissions.filter((item) => {
+      return item.amendmentType !== null;
+    });
     const response = await generatePDFResponse(plan);
     res.json(response.data).end();
   }

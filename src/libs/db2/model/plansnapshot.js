@@ -5,6 +5,7 @@ import PlanStatus from './planstatus';
 import { generatePDFResponse } from '../../../router/controllers_v1/PDFGeneration';
 import Plan from './plan';
 import PlanStatusHistory from './planstatushistory';
+import AmendmentType from './amendmenttype';
 
 export default class PlanSnapshot extends Model {
   constructor(data, db = undefined) {
@@ -71,6 +72,95 @@ export default class PlanSnapshot extends Model {
     return objs;
   }
 
+  static async fetchAmendmentSubmissions(db, planId, startDate) {
+    const amendmentTypeArray = [];
+    const amendmentTypeRows = await AmendmentType.find(db, {});
+    amendmentTypeRows.forEach((element) => {
+      amendmentTypeArray[element.id] = element.description;
+    });
+    const query = db
+      .select([
+        'plan_snapshot.id',
+        'plan_snapshot.plan_id',
+        'plan_snapshot.version',
+        'plan_snapshot.snapshot',
+        'plan_snapshot.status_id',
+        'plan_snapshot.created_at',
+        'user_account.family_name',
+        'user_account.given_name',
+      ])
+      .table('plan_snapshot')
+      .leftJoin('user_account', {
+        'plan_snapshot.user_id': 'user_account.id',
+      })
+      .andWhere({
+        plan_id: planId,
+      })
+      .orderBy('plan_snapshot.created_at', 'dsc');
+    if (startDate) query.andWhere('plan_snapshot.created_at', '<=', startDate);
+    const response = [];
+    let lastMandatoryAmendment = null;
+    const results = await query;
+    for (let index = 0; index < results.length; index++) {
+      const row = results[index];
+      const nextRow = results[index + 1];
+      row.isCurrentLegalVersion = false;
+      if (row.status_id === 21) {
+        response.push({
+          id: row.id,
+          version: row.version,
+          planId: row.plan_id,
+          createdAt: row.created_at,
+          submittedBy: `${row.given_name} ${row.family_name}`,
+          approvedAt: null,
+          approvedBy: null,
+          amendmentType: amendmentTypeArray[1],
+          snapshot: row.snapshot,
+        });
+      } else if (row.status_id === 22 || (row.status_id === 23 && nextRow?.status_id !== 21)) {
+        lastMandatoryAmendment = response.length;
+        response.push({
+          id: row.id,
+          version: row.version,
+          planId: row.plan_id,
+          createdAt: row.created_at,
+          submittedBy: `${row.given_name} ${row.family_name}`,
+          approvedAt: null,
+          approvedBy: null,
+          amendmentType: amendmentTypeArray[2],
+          snapshot: row.snapshot,
+        });
+      } else if (row.status_id === 12 && row.snapshot.amendmentTypeId === null) {
+        response.push({
+          id: row.id,
+          version: row.version,
+          planId: row.plan_id,
+          createdAt: null,
+          submittedBy: null,
+          approvedAt: row.created_at,
+          approvedBy: `${row.given_name} ${row.family_name}`,
+          amendmentType: null,
+          snapshot: row.snapshot,
+        });
+      }
+      if (Plan.legalStatuses.indexOf(row.status_id) !== -1) {
+        if (lastMandatoryAmendment !== null) {
+          response[lastMandatoryAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
+          response[lastMandatoryAmendment].approvedAt = row.created_at;
+          response[lastMandatoryAmendment].version = row.version;
+          response[lastMandatoryAmendment].snapshot = row.snapshot;
+          lastMandatoryAmendment = null;
+        }
+      }
+    }
+    const responseReversed = response.reverse();
+    const currentLegalVersion = responseReversed.find(
+      (resp) => Plan.legalStatuses.indexOf(resp.snapshot.statusId) !== -1,
+    );
+    if (currentLegalVersion) currentLegalVersion.isCurrentLegalVersion = true;
+    return responseReversed;
+  }
+
   async fetchStatus(db) {
     const status = await PlanStatus.findOne(db, { id: this.statusId });
     if (status) {
@@ -90,8 +180,10 @@ export default class PlanSnapshot extends Model {
           };
         }
         values.snapshot.originalApproval = originalApproval;
-        const amendmentSubmissions = await PlanStatusHistory.fetchAmendmentSubmissions(db, values.plan_id);
-        values.snapshot.amendmentSubmissions = amendmentSubmissions;
+        values.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(db, values.plan_id);
+        values.snapshot.amendmentSubmissions = values.snapshot.amendmentSubmissions.filter((item) => {
+          return item.amendmentType !== null;
+        });
         const response = await generatePDFResponse(values.snapshot);
         values.pdf_file = response.data;
         values.snapshot = JSON.stringify(values.snapshot);
@@ -99,7 +191,6 @@ export default class PlanSnapshot extends Model {
         throw errorWithCode(`Error creating PDF file: ${JSON.stringify(error)}`, 500);
       }
     }
-    console.log(`About to call super`);
     await super.create(db, values);
   }
 }
