@@ -143,7 +143,7 @@ export default class PlanSnapshot extends Model {
           snapshot: row.snapshot,
         });
       }
-      if (Plan.legalStatuses.indexOf(row.status_id) !== -1) {
+      if ([20, 8, 9, 12].indexOf(row.status_id) !== -1) {
         if (lastMandatoryAmendment !== null) {
           response[lastMandatoryAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
           response[lastMandatoryAmendment].approvedAt = row.created_at;
@@ -153,12 +153,13 @@ export default class PlanSnapshot extends Model {
         }
       }
     }
-    const responseReversed = response.reverse();
-    const currentLegalVersion = responseReversed.find(
+    const responseSorted = response.reverse();
+
+    const currentLegalVersion = responseSorted.find(
       (resp) => Plan.legalStatuses.indexOf(resp.snapshot.statusId) !== -1,
     );
     if (currentLegalVersion) currentLegalVersion.isCurrentLegalVersion = true;
-    return responseReversed;
+    return responseSorted;
   }
 
   async fetchStatus(db) {
