@@ -231,11 +231,17 @@ export default class Agreement extends Model {
   }
 
   static async retireAgreements(db, activeFTAAgreementIds) {
-    const results = db
+    const results = await db
       .table(Agreement.table)
       .whereNotIn('forest_file_id', activeFTAAgreementIds)
+      .where('forest_file_id', 'not like', 'RAN099%')
       .update({ retired: true })
       .returning(this.primaryKey);
+    await db
+      .table(Plan.table)
+      .whereNotIn('agreement_id', activeFTAAgreementIds)
+      .where('agreement_id', 'not like', 'RAN099%')
+      .update({ status_id: 25 });
     return results;
   }
 
