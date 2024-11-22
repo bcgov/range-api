@@ -512,8 +512,8 @@ export default class PlanController {
         removeCommonFields(grazingScheduleEntry);
         await GrazingScheduleEntry.create(trx, {
           ...grazingScheduleEntry,
-          grazingScheduleId: newGrazingSchedule.id,
-          pastureId: newAndOldPastureIds.find((element) => element.oldPastureId === grazingScheduleEntry.pastureId)
+          grazing_schedule_id: newGrazingSchedule.id,
+          pasture_id: newAndOldPastureIds.find((element) => element.oldPastureId === grazingScheduleEntry.pastureId)
             .newPastureId,
         });
       }
