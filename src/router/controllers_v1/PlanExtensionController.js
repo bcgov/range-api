@@ -394,6 +394,7 @@ export default class PlanExtensionController {
           throw errorWithCode('Invalid request. Cannot create replacement plan without the original plan.', 400);
         }
       }
+      // trx.rollback();
       trx.commit();
       return res.status(200).json({ planId: newPlan.id }).end();
     } catch (error) {

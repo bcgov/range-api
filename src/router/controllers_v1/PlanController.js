@@ -16,6 +16,11 @@ import { PlanRouteHelper } from '../helpers';
 import { generatePDFResponse } from './PDFGeneration';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
 import PlanStatusController from './PlanStatusController';
+import IndicatorPlant from '../../libs/db2/model/indicatorplant';
+import MonitoringArea from '../../libs/db2/model/monitoringarea';
+import PlantCommunityAction from '../../libs/db2/model/plantcommunityaction';
+import PlantCommunity from '../../libs/db2/model/plantcommunity';
+import MonitoringAreaPurpose from '../../libs/db2/model/monitoringareapurpose';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement, PlanConfirmation, PlanStatus, AdditionalRequirement, PlanFile } = dm;
@@ -422,125 +427,161 @@ export default class PlanController {
   static async duplicatePlan(trx, planRow, newPlanProperties, exclusions) {
     const planId = planRow.id;
     removeCommonFields(planRow);
-    try {
-      const newPlan = await Plan.create(trx, {
-        ...planRow,
-        ...newPlanProperties,
-      });
-      const additionalRequirements = await AdditionalRequirement.find(trx, {
-        plan_id: planId,
-      });
-      for (const additionalRequirement of additionalRequirements) {
-        removeCommonFields(additionalRequirement);
-        await AdditionalRequirement.create(trx, {
-          ...additionalRequirement,
-          planId: newPlan.id,
-        });
-      }
-      const newAndOldPastureIds = [];
-      const pastures = await Pasture.find(trx, { plan_id: planId });
-      for (const pasture of pastures) {
-        const oldPastureId = pasture.id;
-        removeCommonFields(pasture);
-        const newPasture = await Pasture.create(trx, {
-          ...pasture,
-          planId: newPlan.id,
-        });
-        newAndOldPastureIds.push({
-          newPastureId: newPasture.id,
-          oldPastureId,
-        });
-      }
-      const grazingSchedules = await GrazingSchedule.find(trx, {
-        plan_id: planId,
-      });
-      for (const grazingSchedule of grazingSchedules) {
-        const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
-          grazing_schedule_id: grazingSchedule.id,
-        });
-        removeCommonFields(grazingSchedule);
-        const newGrazingSchedule = await GrazingSchedule.create(trx, {
-          ...grazingSchedule,
-          planId: newPlan.id,
-        });
-        for (const grazingScheduleEntry of grazingScheduleEntries) {
-          removeCommonFields(grazingScheduleEntry);
-          await GrazingScheduleEntry.create(trx, {
-            ...grazingScheduleEntry,
-            grazingScheduleId: newGrazingSchedule.id,
-            pastureId: newAndOldPastureIds.find((element) => element.oldPastureId === grazingScheduleEntry.pastureId)
-              .newPastureId,
-          });
-        }
-      }
-      const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
-      const newAndOldMinisterIssueIds = [];
-      for (const ministerIssue of ministerIssues) {
-        const oldMinisterIssueId = ministerIssue.id;
-        removeCommonFields(ministerIssue);
-        const newMinisterIssue = await MinisterIssue.create(trx, {
-          ...ministerIssue,
-          planId: newPlan.id,
-        });
-        newAndOldMinisterIssueIds.push({
-          newMinisterIssueId: newMinisterIssue.id,
-          oldMinisterIssueId,
-        });
-        const ministerIssueActions = await MinisterIssueAction.find(trx, {
-          issue_id: oldMinisterIssueId,
-        });
-        for (const ministerIssueAction of ministerIssueActions) {
-          removeCommonFields(ministerIssueAction);
-          await MinisterIssueAction.create(trx, {
-            ...ministerIssueAction,
-            issueId: newMinisterIssue.id,
-          });
-        }
-        const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
-          minister_issue_id: oldMinisterIssueId,
-        });
-        for (const ministerIssuePasture of ministerIssuePastures) {
-          removeCommonFields(ministerIssuePasture);
-          await MinisterIssuePasture.create(trx, {
-            ...ministerIssuePasture,
-            ministerIssueId: newMinisterIssue.id,
-            pastureId: newAndOldPastureIds.find((element) => element.oldPastureId === ministerIssuePasture.pastureId)
-              .newPastureId,
-          });
-        }
-      }
-      if (!exclusions?.excludeManagementConsiderations) {
-        const managementConsiderations = await ManagementConsideration.find(trx, {
-          plan_id: planId,
-        });
-        for (const managementConsideration of managementConsiderations) {
-          removeCommonFields(managementConsideration);
-          await ManagementConsideration.create(trx, {
-            ...managementConsideration,
-            planId: newPlan.id,
-          });
-        }
-      }
-      if (!exclusions?.excludeAttachments) {
-        const planFiles = await PlanFile.find(trx, { plan_id: planId });
-        for (const planFile of planFiles) {
-          removeCommonFields(planFile);
-          await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
-        }
-      }
-      const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
-        plan_id: planId,
-      });
-      removeCommonFields(invasivePlantChecklist);
-      await InvasivePlantChecklist.create(trx, {
-        ...invasivePlantChecklist,
+    const newPlan = await Plan.create(trx, {
+      ...planRow,
+      ...newPlanProperties,
+    });
+    const additionalRequirements = await AdditionalRequirement.find(trx, {
+      plan_id: planId,
+    });
+    for (const additionalRequirement of additionalRequirements) {
+      removeCommonFields(additionalRequirement);
+      await AdditionalRequirement.create(trx, {
+        ...additionalRequirement,
         planId: newPlan.id,
       });
-      return newPlan;
-    } catch (exception) {
-      logger.error(exception.stack);
-      return null;
     }
+    const newAndOldPastureIds = [];
+    const pastures = await Pasture.find(trx, { plan_id: planId });
+    for (const pasture of pastures) {
+      const oldPastureId = pasture.id;
+      await pasture.fetchPlantCommunities(trx, { pasture_id: pasture.id });
+      removeCommonFields(pasture);
+      const newPasture = await Pasture.create(trx, {
+        ...pasture,
+        planId: newPlan.id,
+      });
+      newAndOldPastureIds.push({
+        newPastureId: newPasture.id,
+        oldPastureId,
+      });
+      for (const plantCommunity of pasture.plantCommunities) {
+        removeCommonFields(plantCommunity);
+        const newPlantCommunity = await PlantCommunity.create(trx, {
+          ...plantCommunity,
+          pasture_id: newPasture.id,
+        });
+        newPlantCommunity.indicatorPlants = await Promise.all(
+          plantCommunity.indicatorPlants.map((indicatorPlant) => {
+            removeCommonFields(indicatorPlant);
+            return IndicatorPlant.create(trx, { ...indicatorPlant, plant_community_id: newPlantCommunity.id });
+          }),
+        );
+        newPlantCommunity.plantCommunityActions = await Promise.all(
+          plantCommunity.plantCommunityActions.map((plantCommunityAction) => {
+            removeCommonFields(plantCommunityAction);
+            return PlantCommunityAction.create(trx, {
+              ...plantCommunityAction,
+              plant_community_id: newPlantCommunity.id,
+            });
+          }),
+        );
+        newPlantCommunity.monitoringAreas = await Promise.all(
+          plantCommunity.monitoringAreas.map(async (monitoringArea) => {
+            const oldMonitoringAreaId = monitoringArea.id;
+            removeCommonFields(monitoringArea);
+            const newMonitoringArea = await MonitoringArea.create(trx, {
+              ...monitoringArea,
+              plant_community_id: newPlantCommunity.id,
+            });
+            const monitoringAreaPurposes = await MonitoringAreaPurpose.find(trx, {
+              monitoring_area_id: oldMonitoringAreaId,
+            });
+            for (const purpose of monitoringAreaPurposes) {
+              removeCommonFields(purpose);
+              await MonitoringAreaPurpose.create(trx, { ...purpose, monitoring_area_id: newMonitoringArea.id });
+            }
+            return newMonitoringArea;
+          }),
+        );
+      }
+    }
+    const grazingSchedules = await GrazingSchedule.find(trx, {
+      plan_id: planId,
+    });
+    for (const grazingSchedule of grazingSchedules) {
+      const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
+        grazing_schedule_id: grazingSchedule.id,
+      });
+      removeCommonFields(grazingSchedule);
+      const newGrazingSchedule = await GrazingSchedule.create(trx, {
+        ...grazingSchedule,
+        planId: newPlan.id,
+      });
+      for (const grazingScheduleEntry of grazingScheduleEntries) {
+        removeCommonFields(grazingScheduleEntry);
+        await GrazingScheduleEntry.create(trx, {
+          ...grazingScheduleEntry,
+          grazingScheduleId: newGrazingSchedule.id,
+          pastureId: newAndOldPastureIds.find((element) => element.oldPastureId === grazingScheduleEntry.pastureId)
+            .newPastureId,
+        });
+      }
+    }
+    const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
+    const newAndOldMinisterIssueIds = [];
+    for (const ministerIssue of ministerIssues) {
+      const oldMinisterIssueId = ministerIssue.id;
+      removeCommonFields(ministerIssue);
+      const newMinisterIssue = await MinisterIssue.create(trx, {
+        ...ministerIssue,
+        planId: newPlan.id,
+      });
+      newAndOldMinisterIssueIds.push({
+        newMinisterIssueId: newMinisterIssue.id,
+        oldMinisterIssueId,
+      });
+      const ministerIssueActions = await MinisterIssueAction.find(trx, {
+        issue_id: oldMinisterIssueId,
+      });
+      for (const ministerIssueAction of ministerIssueActions) {
+        removeCommonFields(ministerIssueAction);
+        await MinisterIssueAction.create(trx, {
+          ...ministerIssueAction,
+          issueId: newMinisterIssue.id,
+        });
+      }
+      const ministerIssuePastures = await MinisterIssuePasture.find(trx, {
+        minister_issue_id: oldMinisterIssueId,
+      });
+      for (const ministerIssuePasture of ministerIssuePastures) {
+        removeCommonFields(ministerIssuePasture);
+        await MinisterIssuePasture.create(trx, {
+          ...ministerIssuePasture,
+          ministerIssueId: newMinisterIssue.id,
+          pastureId: newAndOldPastureIds.find((element) => element.oldPastureId === ministerIssuePasture.pastureId)
+            .newPastureId,
+        });
+      }
+    }
+    if (!exclusions?.excludeManagementConsiderations) {
+      const managementConsiderations = await ManagementConsideration.find(trx, {
+        plan_id: planId,
+      });
+      for (const managementConsideration of managementConsiderations) {
+        removeCommonFields(managementConsideration);
+        await ManagementConsideration.create(trx, {
+          ...managementConsideration,
+          planId: newPlan.id,
+        });
+      }
+    }
+    if (!exclusions?.excludeAttachments) {
+      const planFiles = await PlanFile.find(trx, { plan_id: planId });
+      for (const planFile of planFiles) {
+        removeCommonFields(planFile);
+        await PlanFile.create(trx, { ...planFile, planId: newPlan.id });
+      }
+    }
+    const invasivePlantChecklist = await InvasivePlantChecklist.findOne(trx, {
+      plan_id: planId,
+    });
+    removeCommonFields(invasivePlantChecklist);
+    await InvasivePlantChecklist.create(trx, {
+      ...invasivePlantChecklist,
+      planId: newPlan.id,
+    });
+    return newPlan;
   }
   static async downloadPDF(req, res) {
     const { user, params } = req;
