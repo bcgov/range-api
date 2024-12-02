@@ -119,7 +119,7 @@ export default class PlanExtensionController {
           planEndDate: newPlanEndtDate,
           statusId: 6,
           amendmentTypeId: null,
-          extensionStatus: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+          extensionStatus: PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN,
         },
         null,
       );
@@ -383,7 +383,7 @@ export default class PlanExtensionController {
             { id: newPlan.id },
             {
               replacementOf: destinationPlan.id,
-              extension_status: PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+              extension_status: PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN,
             },
           );
         } else {

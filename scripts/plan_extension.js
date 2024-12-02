@@ -1,4 +1,5 @@
 import config from '../src/config';
+import { PLAN_STATUS } from '../src/constants';
 import { PLAN_EXTENSION_STATUS } from '../src/constants';
 import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
@@ -28,32 +29,20 @@ const sendEmailToAgreementHolders = async (db, expiringPlan) => {
 };
 
 const processExpiredPlans = async (trx) => {
-  const results = await trx
-    .select()
-    .from(Plan.table)
-    .where('plan_end_date', '<', new Date())
-    .whereNotNull('extension_status')
-    .whereNot({
-      extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
-    })
-    .whereNot({
-      extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
-    });
-  console.log(results);
+  const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date());
+  // .whereNot({
+  //   extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+  // });
   for (const result of results) {
-    if (
-      result.extension_status === PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED
-    ) {
+    console.log(result);
+    if (result.extension_status === PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED) {
       try {
-        console.log(
-          `Replacing planId: ${result.id} with the replacement plan ${result.replacement_plan_id}`,
-        );
+        console.log(`Replacing planId: ${result.id} with the replacement plan ${result.replacement_plan_id}`);
         await Plan.update(
           trx,
           { id: result.id },
           {
-            extension_status:
-              PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+            extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
           },
         );
         await Plan.update(
@@ -68,35 +57,41 @@ const processExpiredPlans = async (trx) => {
         console.log(error.stack);
       }
     }
-    if (
-      [
-        PLAN_EXTENSION_STATUS.AWAITING_VOTES,
-        PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
-        PLAN_EXTENSION_STATUS.STAFF_REJECTED,
-        PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
-        PLAN_EXTENSION_STATUS.AWAITING_EXTENSION,
-      ].includes(result.extension_status)
-    ) {
-      try {
-        console.log(`Removing extension for expired planId: ${result.id}`);
-        await PlanExtensionRequests.remove(trx, {
-          plan_id: result.id,
-        });
-        await Plan.update(
-          trx,
-          { id: result.id },
-          {
-            extension_status: null,
-            extension_required_votes: 0,
-            extension_received_votes: 0,
-            extension_date: null,
-            extension_rejected_by: null,
-          },
-        );
-      } catch (error) {
-        console.log(error.stack);
-      }
+    if (result.status_id !== 26) {
+      await Plan.update(
+        trx,
+        { id: result.id },
+        {
+          status_id: 26,
+        },
+      );
     }
+    // if (
+    //   [
+    //     PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+    //     PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
+    //     PLAN_EXTENSION_STATUS.STAFF_REJECTED,
+    //     PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
+    //     PLAN_EXTENSION_STATUS.AWAITING_EXTENSION,
+    //   ].includes(result.extension_status)
+    // ) {
+    //   try {
+    //     console.log(`Removing extension for expired planId: ${result.id}`);
+    //     await Plan.update(
+    //       trx,
+    //       { id: result.id },
+    //       {
+    //         extension_status: null,
+    //         extension_required_votes: 0,
+    //         extension_received_votes: 0,
+    //         extension_date: null,
+    //         extension_rejected_by: null,
+    //       },
+    //     );
+    //   } catch (error) {
+    //     console.log(error.stack);
+    //   }
+    // }
   }
 };
 
@@ -107,12 +102,7 @@ const main = async () => {
     const currentDate = new Date();
     const oneYearLater = new Date();
     oneYearLater.setMonth(currentDate.getMonth() + 12);
-    const expiringPlans = await Plan.fetchExpiringPlans(
-      trx,
-      currentDate,
-      oneYearLater,
-      'plan.id',
-    );
+    const expiringPlans = await Plan.fetchExpiringPlans(trx, currentDate, oneYearLater, 'plan.id');
     const requiredVotes = {};
     for (const expiringPlan of expiringPlans) {
       console.log(`Processing ${expiringPlan.planId}`);
@@ -123,13 +113,9 @@ const main = async () => {
           userId: expiringPlan.userId,
           email: expiringPlan.email,
         });
-        if (requiredVotes[expiringPlan.planId] === undefined)
-          requiredVotes[expiringPlan.planId] = 1;
-        else
-          requiredVotes[expiringPlan.planId] =
-            requiredVotes[expiringPlan.planId] + 1;
-        if (expiringPlan.email)
-          await sendEmailToAgreementHolders(trx, expiringPlan);
+        if (requiredVotes[expiringPlan.planId] === undefined) requiredVotes[expiringPlan.planId] = 1;
+        else requiredVotes[expiringPlan.planId] = requiredVotes[expiringPlan.planId] + 1;
+        if (expiringPlan.email) await sendEmailToAgreementHolders(trx, expiringPlan);
       } catch (error) {
         console.error(error);
       }

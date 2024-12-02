@@ -131,7 +131,7 @@ export default class Agreement extends Model {
     }
     q.where(function () {
       this.whereNull('plan.extension_status').orWhereNot({
-        'plan.extension_status': PLAN_EXTENSION_STATUS.INCACTIVE_REPLACEMENT_PLAN,
+        'plan.extension_status': PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN,
       });
     });
     const columnFilters = filterSettings.columnFilters;
