@@ -431,6 +431,7 @@ export default class PlanController {
       ...planRow,
       ...newPlanProperties,
     });
+    await PlanConfirmation.createConfirmations(trx, newPlan.agreementId, newPlan.id);
     const additionalRequirements = await AdditionalRequirement.find(trx, {
       plan_id: planId,
     });

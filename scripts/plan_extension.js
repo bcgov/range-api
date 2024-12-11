@@ -1,5 +1,4 @@
 import config from '../src/config';
-import { PLAN_STATUS } from '../src/constants';
 import { PLAN_EXTENSION_STATUS } from '../src/constants';
 import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
@@ -29,7 +28,7 @@ const sendEmailToAgreementHolders = async (db, expiringPlan) => {
 };
 
 const processExpiredPlans = async (trx) => {
-  const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date());
+  const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date()).whereNot('status_id', 26);
   // .whereNot({
   //   extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
   // });
@@ -52,7 +51,6 @@ const processExpiredPlans = async (trx) => {
             extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
           },
         );
-        continue;
       } catch (error) {
         console.log(error.stack);
       }

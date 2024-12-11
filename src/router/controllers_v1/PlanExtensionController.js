@@ -100,7 +100,8 @@ export default class PlanExtensionController {
           PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
           PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
           PLAN_EXTENSION_STATUS.STAFF_REJECTED,
-        ].includes(plan.extensionStatus)
+        ].includes(plan.extensionStatus) &&
+        plan.statusId !== 26
       ) {
         throw errorWithCode(`Invalid plan extension status: ${plan.extensionStatus}`, 400);
       }
