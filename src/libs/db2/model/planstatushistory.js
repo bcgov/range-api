@@ -23,7 +23,6 @@
 'use strict';
 
 import Model from './model';
-import Plan from './plan';
 import User from './user';
 
 export default class PlanStatusHistory extends Model {
@@ -71,28 +70,5 @@ export default class PlanStatusHistory extends Model {
       .orderBy('created_at', 'desc');
 
     return results.map((row) => new PlanStatusHistory(row, db));
-  }
-
-  static async fetchOriginalApproval(db, planId) {
-    const approvalDetails = await db
-      .select(['plan_status_history.created_at', 'user_account.family_name', 'user_account.given_name'])
-      .table('plan_status_history')
-      .leftJoin('user_account', {
-        'plan_status_history.user_id': 'user_account.id',
-      })
-      .whereIn('to_plan_status_id', Plan.legalStatuses)
-      .andWhere({
-        plan_id: planId,
-      })
-      .orderBy('plan_status_history.created_at')
-      .first();
-    if (approvalDetails) {
-      return {
-        createdAt: approvalDetails.created_at,
-        familyName: approvalDetails.family_name,
-        givenName: approvalDetails.given_name,
-      };
-    }
-    return null;
   }
 }

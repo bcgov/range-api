@@ -5,7 +5,6 @@ import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 import { generatePDFResponse } from './PDFGeneration';
-import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement } = dm;
@@ -50,14 +49,6 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
       const versions = await PlanSnapshot.fetchAmendmentSubmissions(db, planId);
-      await Promise.all(
-        versions.map(async (v) => {
-          if (!v.snapshot.originalApproval)
-            v.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
-          return v;
-        }),
-      );
-
       return res.status(200).json({ versions }).end();
     } catch (error) {
       logger.error(error);
@@ -131,22 +122,21 @@ export default class PlanVersionController {
       if (!versionData) throw errorWithCode('Could not find version for plan', 404);
       res.setHeader('Content-disposition', `attachment; filename=${agreementId}.pdf`);
       res.setHeader('Content-type', 'application/pdf');
-      if (!versionData.pdfFile) {
-        versionData.snapshot.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
-        versionData.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(
-          db,
-          planId,
-          versionData.createdAt,
-        );
-        versionData.snapshot.amendmentSubmissions = versionData.snapshot.amendmentSubmissions.filter((item) => {
-          return item.amendmentType !== null;
-        });
-        const response = await generatePDFResponse(versionData.snapshot);
-        PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
-        res.send(response.data);
-      } else {
-        res.send(versionData.pdfFile);
-      }
+      versionData.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(
+        db,
+        planId,
+        versionData.createdAt,
+      );
+      if (versionData.snapshot.amendmentSubmissions.length > 0)
+        versionData.snapshot.originalApproval = {
+          approver:
+            versionData.snapshot.amendmentSubmissions[versionData.snapshot.amendmentSubmissions.length - 1].approvedBy,
+          date: versionData.snapshot.amendmentSubmissions[versionData.snapshot.amendmentSubmissions.length - 1]
+            .approvedAt,
+        };
+      const response = await generatePDFResponse(versionData.snapshot);
+      PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
+      res.send(response.data);
     } catch (error) {
       logger.error(error);
       throw error;

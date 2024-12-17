@@ -10,7 +10,6 @@ import MinisterIssueAction from '../../libs/db2/model/ministerissueaction';
 import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture';
 import Pasture from '../../libs/db2/model/pasture';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
-import PlanStatusHistory from '../../libs/db2/model/planstatushistory';
 import { checkRequiredFields, objPathToCamelCase, removeCommonFields } from '../../libs/utils';
 import { PlanRouteHelper } from '../helpers';
 import { generatePDFResponse } from './PDFGeneration';
@@ -588,11 +587,13 @@ export default class PlanController {
     const { user, params } = req;
     const { planId } = params;
     const plan = await PlanController.fetchPlan(planId, user);
-    plan.originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, planId);
     const amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(db, planId);
-    plan.amendmentSubmissions = amendmentSubmissions.filter((item) => {
-      return item.amendmentType !== null;
-    });
+    if (amendmentSubmissions.length > 0)
+      plan.originalApproval = {
+        approver: amendmentSubmissions[amendmentSubmissions.length - 1].approvedBy,
+        date: amendmentSubmissions[amendmentSubmissions.length - 1].approvedAt,
+      };
+    plan.amendmentSubmissions = amendmentSubmissions;
     const response = await generatePDFResponse(plan);
     res.json(response.data).end();
   }

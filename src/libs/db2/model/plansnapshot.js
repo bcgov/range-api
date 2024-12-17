@@ -2,9 +2,7 @@ import { errorWithCode } from '@bcgov/nodejs-common-utils';
 import Model from './model';
 import User from './user';
 import PlanStatus from './planstatus';
-import { generatePDFResponse } from '../../../router/controllers_v1/PDFGeneration';
 import Plan from './plan';
-import PlanStatusHistory from './planstatushistory';
 import AmendmentType from './amendmenttype';
 
 export default class PlanSnapshot extends Model {
@@ -169,24 +167,9 @@ export default class PlanSnapshot extends Model {
     }
   }
 
-  static async create(db, values, user) {
+  static async create(db, values) {
     if (Plan.legalStatuses.indexOf(values.status_id) !== -1) {
       try {
-        let originalApproval = await PlanStatusHistory.fetchOriginalApproval(db, values.plan_id, user);
-        if (!originalApproval) {
-          originalApproval = {
-            familyName: user.familyName,
-            givenName: user.givenName,
-            createdAt: new Date().toISOString(),
-          };
-        }
-        values.snapshot.originalApproval = originalApproval;
-        values.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(db, values.plan_id);
-        values.snapshot.amendmentSubmissions = values.snapshot.amendmentSubmissions.filter((item) => {
-          return item.amendmentType !== null;
-        });
-        const response = await generatePDFResponse(values.snapshot);
-        values.pdf_file = response.data;
         values.snapshot = JSON.stringify(values.snapshot);
       } catch (error) {
         throw errorWithCode(`Error creating PDF file: ${JSON.stringify(error)}`, 500);
