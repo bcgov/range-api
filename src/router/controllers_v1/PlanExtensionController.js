@@ -157,7 +157,34 @@ export default class PlanExtensionController {
       await GrazingSchedule.removeById(trx, grazingScheduleToRemove.id);
     }
     if (grazingSchedules[0]) {
-      await GrazingSchedule.update(trx, { id: grazingSchedules[0].id }, { year: plan.planStartDate.getFullYear() });
+      const grazingScheduleYear = plan.planStartDate.getFullYear();
+      await GrazingSchedule.update(trx, { id: grazingSchedules[0].id }, { year: grazingScheduleYear });
+      await PlanExtensionController.updateGrazingScheduleYear(trx, grazingSchedules[0].id, grazingScheduleYear);
+    }
+  }
+
+  static async updateGrazingScheduleYear(trx, grazingScheduleId, targetYear) {
+    // Fetch entries by grazing_schedule_id
+    const entries = await trx
+      .select('id', 'date_in', 'date_out')
+      .from('grazing_schedule_entry')
+      .where('grazing_schedule_id', grazingScheduleId);
+
+    // Update each entry
+    for (const entry of entries) {
+      // Extract original dates
+      const dateIn = new Date(entry.date_in);
+      const dateOut = new Date(entry.date_out);
+
+      // Construct new dates with the target year
+      const updatedDateIn = new Date(targetYear, dateIn.getMonth(), dateIn.getDate());
+      const updatedDateOut = new Date(targetYear, dateOut.getMonth(), dateOut.getDate());
+
+      // Update the entry in the database
+      await trx('grazing_schedule_entry').where('id', entry.id).update({
+        date_in: updatedDateIn,
+        date_out: updatedDateOut,
+      });
     }
   }
 
