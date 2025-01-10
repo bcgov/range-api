@@ -55,7 +55,11 @@ const processExpiredPlans = async (trx) => {
         console.log(error.stack);
       }
     }
-    if (result.status_id !== 26) {
+    if (
+      result.status_id !== 26 &&
+      result.extension_received_votes !== result.extensionr_received_votes &&
+      result.extension_status !== PLAN_EXTENSION_STATUS.AWAITING_VOTES
+    ) {
       await Plan.update(
         trx,
         { id: result.id },
@@ -63,6 +67,8 @@ const processExpiredPlans = async (trx) => {
           status_id: 26,
         },
       );
+    } else {
+      console.log('Not expiring this plan extension in-progress \r\n' + JSON.stringify(result, null, 2));
     }
     // if (
     //   [
