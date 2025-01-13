@@ -29,7 +29,6 @@ import LivestockType from './model/livestocktype';
 import Pasture from './model/pasture';
 import Plan from './model/plan';
 import PlanVersion from './model/planversion';
-import PlanExtension from './model/planextension';
 import PlanStatus from './model/planstatus';
 import Usage from './model/usage';
 import User from './model/user';
@@ -115,7 +114,6 @@ export default class DataManager {
     this.Plan = Plan;
     this.PlanVersion = PlanVersion;
     this.PlanStatus = PlanStatus;
-    this.PlanExtension = PlanExtension;
     this.PlanExtensionRequests = PlanExtensionRequests;
     this.Pasture = Pasture;
     this.User = User;

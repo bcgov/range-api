@@ -25,7 +25,6 @@ import { errorWithCode } from '@bcgov/nodejs-common-utils';
 import GrazingSchedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';
-import PlanExtension from './planextension';
 import PlanStatus from './planstatus';
 import MinisterIssue from './ministerissue';
 import PlanStatusHistory from './planstatushistory';
@@ -130,7 +129,6 @@ export default class Plan extends Model {
     const myFields = [
       ...Plan.fields,
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
-      ...PlanExtension.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
     ];
     let results = [];
@@ -139,7 +137,6 @@ export default class Plan extends Model {
       .from(Plan.table)
       .join('ref_plan_status', { 'plan.status_id': 'ref_plan_status.id' })
       // left join otherwise if extension is NULL we don't get any results
-      .leftJoin('extension', { 'plan.extension_id': 'extension.id' })
       .join('user_account', { 'plan.creator_id': 'user_account.id' })
       .where({ ...where, uploaded: true })
       .orderBy(...order);
