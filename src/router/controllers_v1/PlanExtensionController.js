@@ -331,8 +331,8 @@ export default class PlanExtensionController {
         trx,
         { id: planId },
         {
+          planEndDate: endDate,
           extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,
-          statusId: 6,
         },
       );
       trx.commit();

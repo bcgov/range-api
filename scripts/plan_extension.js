@@ -1,3 +1,4 @@
+import { replace } from 'lodash';
 import config from '../src/config';
 import { PLAN_EXTENSION_STATUS } from '../src/constants';
 import DataManager from '../src/libs/db2';
@@ -27,34 +28,33 @@ const sendEmailToAgreementHolders = async (db, expiringPlan) => {
   );
 };
 
-const processExpiredPlans = async (trx) => {
-  const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date()).whereNot('status_id', 26);
-  // .whereNot({
-  //   extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
-  // });
+const activateReplacementPlans = async (trx) => {
+  const results = await trx
+    .select()
+    .from(Plan.table)
+    .where('plan_start_date', '<=', new Date())
+    .andWhere('extension_status', PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN);
   for (const result of results) {
-    console.log(result);
-    if (result.extension_status === PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED) {
-      try {
-        console.log(`Replacing planId: ${result.id} with the replacement plan ${result.replacement_plan_id}`);
-        await Plan.update(
-          trx,
-          { id: result.id },
-          {
-            extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
-          },
-        );
-        await Plan.update(
-          trx,
-          { id: result.replacement_plan_id },
-          {
-            extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
-          },
-        );
-      } catch (error) {
-        console.log(error.stack);
-      }
-    }
+    await Plan.update(
+      trx,
+      { id: result.id },
+      {
+        extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+      },
+    );
+    await Plan.update(
+      trx,
+      { id: result.replacement_of },
+      {
+        extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+      },
+    );
+  }
+};
+
+const processExpiredPlans = async (trx) => {
+  const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date());
+  for (const result of results) {
     if (
       result.status_id !== 26 &&
       result.extension_received_votes !== result.extensionr_received_votes &&
@@ -67,35 +67,7 @@ const processExpiredPlans = async (trx) => {
           status_id: 26,
         },
       );
-    } else {
-      console.log('Not expiring this plan extension in-progress \r\n' + JSON.stringify(result, null, 2));
     }
-    // if (
-    //   [
-    //     PLAN_EXTENSION_STATUS.AWAITING_VOTES,
-    //     PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
-    //     PLAN_EXTENSION_STATUS.STAFF_REJECTED,
-    //     PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
-    //     PLAN_EXTENSION_STATUS.AWAITING_EXTENSION,
-    //   ].includes(result.extension_status)
-    // ) {
-    //   try {
-    //     console.log(`Removing extension for expired planId: ${result.id}`);
-    //     await Plan.update(
-    //       trx,
-    //       { id: result.id },
-    //       {
-    //         extension_status: null,
-    //         extension_required_votes: 0,
-    //         extension_received_votes: 0,
-    //         extension_date: null,
-    //         extension_rejected_by: null,
-    //       },
-    //     );
-    //   } catch (error) {
-    //     console.log(error.stack);
-    //   }
-    // }
   }
 };
 
@@ -137,6 +109,7 @@ const main = async () => {
       );
     }
     await processExpiredPlans(trx);
+    await activateReplacementPlans(trx);
     trx.commit();
   } catch (err) {
     trx.rollback();

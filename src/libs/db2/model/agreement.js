@@ -130,9 +130,13 @@ export default class Agreement extends Model {
       q.where(where);
     }
     q.where(function () {
-      this.whereNull('plan.extension_status').orWhereNot({
-        'plan.extension_status': PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN,
-      });
+      this.whereNull('plan.extension_status')
+        .orWhereNot({
+          'plan.extension_status': PLAN_EXTENSION_STATUS.INACTIVE_REPLACEMENT_PLAN,
+        })
+        .whereNot({
+          'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+        });
     });
     const columnFilters = filterSettings.columnFilters;
     Object.keys(columnFilters).map((key) => {
@@ -178,12 +182,6 @@ export default class Agreement extends Model {
                   )
                 )`,
       );
-    } else if (filterSettings.showReplacedPlans === true) {
-      q.where(function () {
-        this.whereNull('plan.extension_status').orWhereNot({
-          'plan.extension_status': PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
-        });
-      });
     }
     if (filterSettings.page && filterSettings.limit) {
       const offset = filterSettings.limit * (filterSettings.page - 1);
