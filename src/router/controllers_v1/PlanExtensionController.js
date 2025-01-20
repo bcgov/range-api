@@ -286,7 +286,7 @@ export default class PlanExtensionController {
     }
     const trx = await db.transaction();
     try {
-      await Plan.update(trx, { id: planId }, { extensionStatus: 3 });
+      await Plan.update(trx, { id: planId }, { extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_EXTENSION });
       trx.commit();
       return res.status(200).end();
     } catch (error) {

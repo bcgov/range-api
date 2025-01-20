@@ -5,6 +5,7 @@ import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
 import { Mailer } from '../src/libs/mailer';
 import { substituteFields } from '../src/libs/utils';
+import PlanStatusController from '../src/router/controllers_v1/PlanStatusController';
 
 const dm = new DataManager(config);
 
@@ -56,18 +57,18 @@ const processExpiredPlans = async (trx) => {
   const results = await trx.select().from(Plan.table).where('plan_end_date', '<', new Date());
   for (const result of results) {
     if (
-      result.status_id !== 26 &&
-      result.extension_received_votes !== result.extensionr_received_votes &&
-      result.extension_status !== PLAN_EXTENSION_STATUS.AWAITING_VOTES
-    ) {
-      await Plan.update(
-        trx,
-        { id: result.id },
-        {
-          status_id: 26,
-        },
-      );
-    }
+      result.status_id === 26 ||
+      (result.extension_status === PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
+        result.extension_received_votes === result.extension_required_votes)
+    )
+      continue;
+    await Plan.update(
+      trx,
+      { id: result.id },
+      {
+        status_id: 26,
+      },
+    );
   }
 };
 
