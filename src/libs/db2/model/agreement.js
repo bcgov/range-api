@@ -118,10 +118,12 @@ export default class Agreement extends Model {
       })
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
-      })
-      .orderByRaw(
-        `${filterSettings.orderBy} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}`,
-      );
+      });
+
+    q.orderByRaw(
+      `${filterSettings.orderBy} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'} 
+    ${filterSettings.orderBy === 'extension_status' ? ', CASE WHEN extension_received_votes = extension_required_votes THEN 1 ELSE 0 END desc, extension_required_votes desc' : ''}`,
+    );
     if (Object.keys(where).length === 1 && where[Object.keys(where)[0]]?.constructor === Array) {
       const k = Object.keys(where)[0];
       const v = where[k];
