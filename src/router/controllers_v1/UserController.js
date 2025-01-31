@@ -3,6 +3,7 @@ import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import UserDistricts from '../../libs/db2/model/userDistricts';
+import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
 
 const dm = new DataManager(config);
 const {
@@ -185,17 +186,31 @@ export class UserController {
       type: 'owner',
     });
 
+    const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
+    for (const request of requestsToUpdate) {
+      if (request.userId === null) {
+        const user = await User.findById(db, userId);
+        await PlanExtensionRequests.update(
+          db,
+          { id: request.id },
+          {
+            user_id: user.id,
+            email: user.email,
+          },
+        );
+      }
+    }
     res.status(200).json(result).end();
   }
 
   static async removeClientLink(req, res) {
     const { params } = req;
-    const { clientNumber, userId } = params;
+    const { clientNumber: clientId, userId } = params;
 
     checkRequiredFields(['clientNumber', 'userId'], 'params', req);
 
     const result = await UserClientLink.remove(db, {
-      client_id: clientNumber,
+      client_id: clientId,
       user_id: userId,
     });
 
@@ -203,6 +218,17 @@ export class UserController {
       throw errorWithCode("Client link doesn't exist for user", 404);
     }
 
+    const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
+    for (const request of requestsToUpdate) {
+      await PlanExtensionRequests.update(
+        db,
+        { id: request.id },
+        {
+          user_id: null,
+          email: null,
+        },
+      );
+    }
     res.status(200).json(result).end();
   }
 

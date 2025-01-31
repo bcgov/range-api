@@ -31,29 +31,29 @@ export default class PlanExtensionRequests extends Model {
     return 'plan_extension_requests';
   }
 
-  static async update(db, where, values) {
-    const obj = {};
-    Object.keys(values).forEach((key) => {
-      obj[Model.toSnakeCase(key)] = values[key];
-    });
-
-    const count = await db.table(PlanExtensionRequests.table).where(where).update(obj);
-
-    if (count > 0) {
-      const [{ id }] = await db.table(PlanExtensionRequests.table).where(where).returning('id');
-
-      const res = await db.raw(
-        `
-          SELECT plan_extension_requests.* FROM plan_extension_requests
-          WHERE plan_extension_requests.id = ?;
-        `,
-        [id],
-      );
-      return res.rows.map(PlanExtensionRequests.mapRow)[0];
-    }
-
-    return [];
-  }
+  // static async update(db, where, values) {
+  //   const obj = {};
+  //   Object.keys(values).forEach((key) => {
+  //     obj[Model.toSnakeCase(key)] = values[key];
+  //   });
+  //
+  //   const count = await db.table(PlanExtensionRequests.table).where(where).update(obj);
+  //
+  //   if (count > 0) {
+  //     const [{ id }] = await db.table(PlanExtensionRequests.table).where(where).returning('id');
+  //
+  //     const res = await db.raw(
+  //       `
+  //         SELECT plan_extension_requests.* FROM plan_extension_requests
+  //         WHERE plan_extension_requests.id = ?;
+  //       `,
+  //       [id],
+  //     );
+  //     return res.rows.map(PlanExtensionRequests.mapRow)[0];
+  //   }
+  //
+  //   return [];
+  // }
 
   static async create(db, values) {
     const obj = {};
