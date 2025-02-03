@@ -4,6 +4,7 @@ import DataManager from '../../libs/db2';
 import config from '../../config';
 import UserDistricts from '../../libs/db2/model/userDistricts';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
+import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 
 const dm = new DataManager(config);
 const {
@@ -102,9 +103,12 @@ export class UserController {
     for (const sourceUserId of sourceAccountIds) {
       UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId });
       UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId });
+      UserDistricts.update(db, { user_id: sourceUserId }, { user_id: userId });
       ClientAgreement.update(db, { agent_id: sourceUserId }, { agent_id: userId });
       PlanStatusHistory.update(db, { user_id: sourceUserId }, { user_id: userId });
       PlanConfirmation.update(db, { user_id: sourceUserId }, { user_id: userId });
+      PlanExtensionRequests.update(db, { user_id: sourceUserId }, { user_id: userId });
+      PlanSnapshot.update(db, { user_id: sourceUserId }, { user_id: userId });
       District.update(db, { user_id: sourceUserId }, { user_id: userId });
       Zone.update(db, { user_id: sourceUserId }, { user_id: userId });
       Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId });
