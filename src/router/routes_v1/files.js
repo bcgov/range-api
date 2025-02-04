@@ -101,7 +101,7 @@ router.get(
         throw errorWithCode('Unauthorized', 403);
     }
 
-    const url = await client.presignedGetObject(bucket, planFile.name);
+    const url = await client.presignedGetObject(bucket, decodeURIComponent(planFile.name));
 
     const publicUrl = publicEndPoint ? url.replace(endPoint, publicEndPoint) : url;
 

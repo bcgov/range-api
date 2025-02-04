@@ -304,8 +304,8 @@ export default class PlanController {
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const planFile = await PlanFile.create(db, {
-      name: body.name,
-      url: body.url,
+      name: decodeURIComponent(body.name),
+      url: decodeURIComponent(body.url),
       type: body.type,
       access: body.access ?? 'staff_only',
       plan_id: planId,
