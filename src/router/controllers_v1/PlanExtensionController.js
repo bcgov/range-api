@@ -86,9 +86,12 @@ export default class PlanExtensionController {
    * @param {*} res : express resp object
    */
   static async createReplacementPlan(req, res) {
-    const { params } = req;
+    const { params, user } = req;
     const { planId } = params;
     checkRequiredFields(['planId'], 'params', req);
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('You do not have the permission to create a replacement plan as an agreement holder', 403);
+    }
     const trx = await db.transaction();
     try {
       const plan = await Plan.findOne(trx, { id: planId });
