@@ -58,6 +58,7 @@ const processExpiredPlans = async (trx) => {
   for (const result of results) {
     if (
       result.status_id === 26 ||
+      result.extension_status === PLAN_EXTENSION_STATUS.AWAITING_EXTENSION ||
       (result.extension_status === PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
         result.extension_received_votes === result.extension_required_votes)
     )
