@@ -77,7 +77,7 @@ export default class GrazingScheduleEntry extends Model {
       q.orderByRaw(order);
     } else if (order) q.orderBy(...order);
 
-    q.orderBy('grazing_schedule_entry.updated_at', 'asc');
+    q.orderBy('grazing_schedule_entry.id', 'asc');
 
     if (page && limit) {
       const offset = limit * (page - 1);
