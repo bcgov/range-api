@@ -61,7 +61,7 @@ export const SSO_ROLE_MAP = {
 
 export const PLAN_STATUS = {
   PENDING: 'P',
-  COMPLETED: 'O',
+  // COMPLETED: 'O',
   DRAFT: 'D',
   CREATED: 'C',
   CHANGE_REQUESTED: 'R',
