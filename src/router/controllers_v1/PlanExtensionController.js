@@ -335,9 +335,11 @@ export default class PlanExtensionController {
         { id: planId },
         {
           planEndDate: endDate,
+          amendmentTypeId: 4,
           extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,
         },
       );
+      await Plan.createSnapshot(trx, planId, user);
       trx.commit();
       return res.status(200).json({ planId }).end();
     } catch (error) {

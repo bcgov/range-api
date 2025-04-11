@@ -19,6 +19,11 @@ exports.seed = async (knex) => {
       description: 'Amendment',
       active: true,
     },
+    {
+      code: 'EXT',
+      description: 'Plan Extension',
+      active: true,
+    },
   ].map((item, index) => ({ ...item, id: index + 1 }));
 
   await knex(table).delete();

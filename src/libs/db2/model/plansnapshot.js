@@ -140,6 +140,18 @@ export default class PlanSnapshot extends Model {
           amendmentType: null,
           snapshot: row.snapshot,
         });
+      } else if (row.snapshot.amendmentTypeId === 4) {
+        response.push({
+          id: row.id,
+          version: row.version,
+          planId: row.plan_id,
+          createdAt: null,
+          submittedBy: null,
+          approvedAt: row.created_at,
+          approvedBy: `${row.given_name} ${row.family_name}`,
+          amendmentType: amendmentTypeArray[4],
+          snapshot: row.snapshot,
+        });
       }
       if ([20, 8, 9, 12].indexOf(row.status_id) !== -1) {
         if (lastMandatoryAmendment !== null) {
