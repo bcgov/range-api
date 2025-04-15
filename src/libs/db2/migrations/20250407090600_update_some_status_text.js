@@ -5,7 +5,7 @@ exports.up = async (knex) => {
   await knex('ref_plan_status').where('id', 3).update({ active: false });
   await knex('ref_plan_status').where('id', 4).update({ active: false });
   await knex('ref_plan_status').where('id', 17).update({ active: false });
-  await knex('ref_plan_status').where('id', 20).update({ active: false });
+  await knex('ref_plan_status').where('id', 20).update({ active: true });
   await knex('ref_plan_status').where('id', 24).update({ active: false });
 };
 
