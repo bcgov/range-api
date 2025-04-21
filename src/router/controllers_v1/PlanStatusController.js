@@ -74,7 +74,7 @@ export default class PlanStatusController {
          *  version for the minor amendment that was just determined to be
          *  wrongly made without effect.
          */
-        const prevLegal = PlanStatusController.getLatestLegalVersion(planId);
+        const prevLegal = await PlanStatusController.getLatestLegalVersion(planId);
         const {
           rows: [{ max: lastVersion }],
         } = await db.raw(
@@ -100,7 +100,7 @@ export default class PlanStatusController {
       }
 
       if (status.code === PLAN_STATUS.NOT_APPROVED) {
-        const prevLegal = PlanStatusController.getLatestLegalVersion(planId);
+        const prevLegal = await PlanStatusController.getLatestLegalVersion(planId);
         const {
           rows: [{ max: lastVersion }],
         } = await db.raw(
