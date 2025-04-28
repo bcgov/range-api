@@ -5,7 +5,7 @@ exports.up = async (knex) => {
   await knex('ref_plan_status').where('id', 4).update({ name: 'Draft in Progress - AH' });
   await knex('ref_plan_status').where('id', 5).update({ name: 'Awaiting Input - AH' });
   await knex('ref_plan_status').where('id', 6).update({ name: 'Staff Draft' });
-  await knex('ref_plan_status').where('id', 7).update({ name: 'Wrongly Made Without Effect - AH' });
+  await knex('ref_plan_status').where('id', 7).update({ name: 'Wrongly Made Without Effect' });
   await knex('ref_plan_status').where('id', 8).update({ name: 'Wrongly Made Stands' });
   await knex('ref_plan_status').where('id', 9).update({ name: 'Stands' });
   await knex('ref_plan_status').where('id', 10).update({ name: 'Changes Requested - AH' });

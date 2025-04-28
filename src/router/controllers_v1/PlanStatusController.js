@@ -23,9 +23,8 @@ export default class PlanStatusController {
    * @param {*} status : object
    * @param {*} user : Models/User
    */
-  static async updatePlanStatus(planId, status = {}, user) {
+  static async updatePlanStatus(trx, planId, status = {}, user) {
     try {
-      // const plan = await Plan.findOne(db, { id: planId });
       const body = { status_id: status.id };
       switch (status.code) {
         case PLAN_STATUS.APPROVED:
@@ -44,7 +43,7 @@ export default class PlanStatusController {
           break;
         case PLAN_STATUS.AWAITING_CONFIRMATION:
           // refresh all the old confirmations and start fresh
-          await PlanConfirmation.refreshConfirmations(db, planId, user);
+          await PlanConfirmation.refreshConfirmations(trx, planId, user);
           break;
         default:
           break;
@@ -52,20 +51,16 @@ export default class PlanStatusController {
 
       // Don't create a snapshot if the plan we're updating the status for
       // already has a legal status
-      const originalPlan = await Plan.findById(db, planId);
-      if (!originalPlan.isRestored && !Plan.isLegal(originalPlan)) {
-        await Plan.createSnapshot(db, planId, user);
+      const originalPlan = await Plan.findById(trx, planId);
+      if (!originalPlan.isRestored && !Plan.isLegal(originalPlan) && !originalPlan.statusId === status.id) {
+        await Plan.createSnapshot(trx, planId, user);
       }
 
-      const updatedPlan = await Plan.update(db, { id: planId }, { ...body, is_restored: false });
+      const updatedPlan = await Plan.update(trx, { id: planId }, { ...body, is_restored: false });
 
       // If the new status was legal, create a snapshot after updating
-      if (
-        (!originalPlan.isRestored && Plan.isLegal(updatedPlan)) ||
-        status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT ||
-        status.code === PLAN_STATUS.NOT_APPROVED
-      ) {
-        await Plan.createSnapshot(db, planId, user);
+      if ((!originalPlan.isRestored && Plan.isLegal(updatedPlan)) || status.code === PLAN_STATUS.NOT_APPROVED) {
+        await Plan.createSnapshot(trx, planId, user);
       }
 
       if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
@@ -74,36 +69,23 @@ export default class PlanStatusController {
          *  version for the minor amendment that was just determined to be
          *  wrongly made without effect.
          */
-        const prevLegal = await PlanStatusController.getLatestLegalVersion(planId);
-        const {
-          rows: [{ max: lastVersion }],
-        } = await db.raw(
-          `
-          SELECT MAX(version) FROM plan_snapshot
-          WHERE plan_id = ?
-        `,
-          [planId],
-        );
-
-        await PlanSnapshot.create(
-          db,
-          {
-            snapshot: prevLegal.snapshot,
-            plan_id: planId,
-            version: lastVersion + 1,
-            created_at: new Date(),
-            status_id: prevLegal.status_id,
-            user_id: user.id,
-          },
-          user,
-        );
+        await Plan.createSnapshot(trx, planId, user);
+        const prevLegal = await PlanStatusController.getLatestLegalVersion(planId, [8, 9, 12]);
+        await Plan.restoreVersion(trx, planId, prevLegal.version, true);
+        await PlanStatusHistory.create(trx, {
+          fromPlanStatusId: status.id,
+          toPlanStatusId: prevLegal.snapshot.statusId,
+          note: 'restored',
+          planId,
+          userId: user.id,
+        });
       }
 
       if (status.code === PLAN_STATUS.NOT_APPROVED) {
         const prevLegal = await PlanStatusController.getLatestLegalVersion(planId);
         const {
           rows: [{ max: lastVersion }],
-        } = await db.raw(
+        } = await trx.raw(
           `
           SELECT MAX(version) FROM plan_snapshot
           WHERE plan_id = ?
@@ -112,7 +94,7 @@ export default class PlanStatusController {
         );
 
         await PlanSnapshot.create(
-          db,
+          trx,
           {
             snapshot: prevLegal.snapshot,
             plan_id: planId,
@@ -143,7 +125,7 @@ export default class PlanStatusController {
     const { params, body, user } = req;
     const { statusId, note } = body;
     const { planId } = params;
-
+    const trx = await db.transaction();
     checkRequiredFields(['planId'], 'params', req);
     checkRequiredFields(['statusId'], 'body', req);
 
@@ -152,46 +134,46 @@ export default class PlanStatusController {
     }
 
     try {
-      const { agreement_id: agreementId, zone_id: zoneId } = await Plan.agreementForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      const planStatuses = await PlanStatus.find(db, { active: true });
+      const { agreement_id: agreementId, zone_id: zoneId } = await Plan.agreementForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
+      const planStatuses = await PlanStatus.find(trx, { active: true });
       // make sure the status exists.
       const status = planStatuses.find((s) => s.id === statusId);
       if (!status) {
         throw errorWithCode('You must supply a valid status ID', 403);
       }
-      const plan = await Plan.findById(db, planId);
-      const zone = await Zone.findById(db, zoneId);
-      const rangeOfficer = await User.findById(db, zone.userId);
+      const plan = await Plan.findById(trx, planId);
+      const zone = await Zone.findById(trx, zoneId);
+      const rangeOfficer = await User.findById(trx, zone.userId);
       const { statusId: prevStatusId } = plan;
-      await PlanStatusHistory.create(db, {
+      await PlanStatusHistory.create(trx, {
         fromPlanStatusId: prevStatusId,
         toPlanStatusId: statusId,
         note: note || ' ',
         planId,
         userId: user.id,
       });
-      await PlanStatusController.updatePlanStatus(planId, status, user);
-      const clients = await Client.clientsForAgreement(db, {
+      await PlanStatusController.updatePlanStatus(trx, planId, status, user);
+      const clients = await Client.clientsForAgreement(trx, {
         forestFileId: agreementId,
       });
       const emails = [rangeOfficer.email];
       for (const client of clients) {
-        const user = await User.fromClientId(db, client.clientNumber);
+        const user = await User.fromClientId(trx, client.clientNumber);
         if (user && user.email) {
           emails.push(user.email);
         }
       }
-      const agents = await User.getAgentsFromAgreementId(db, agreementId);
+      const agents = await User.getAgentsFromAgreementId(trx, agreementId);
       const agentEmails = [...new Set(agents.map((agent) => agent.email))];
       for (const agentEmail of agentEmails) {
         if (agentEmail && agentEmail.email) {
           emails.push(agentEmail.email);
         }
       }
-      const toStatus = await PlanStatus.findById(db, statusId);
-      const fromStatus = await PlanStatus.findById(db, prevStatusId);
-      const templates = await EmailTemplate.findWithExclusion(db, {
+      const toStatus = await PlanStatus.findById(trx, statusId);
+      const fromStatus = await PlanStatus.findById(trx, prevStatusId);
+      const templates = await EmailTemplate.findWithExclusion(trx, {
         name: 'Plan Status Change',
       });
       const template = templates[0];
@@ -210,8 +192,10 @@ export default class PlanStatusController {
         substituteFields(template.body, emailFields),
         'html',
       );
+      trx.commit();
       return res.status(200).json(status).end();
     } catch (err) {
+      trx.rollback();
       logger.error(`PlanStatusController: update: fail with error: ${err.message} `);
       throw err;
     }
@@ -230,15 +214,15 @@ export default class PlanStatusController {
       user,
     } = req;
     const { planId, confirmationId } = params;
-
+    const trx = await db.transaction();
     checkRequiredFields(['planId', 'confirmationId'], 'params', req);
 
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
 
-      const confirmation = await PlanConfirmation.update(db, { id: confirmationId }, body);
-      const allConfirmations = await PlanConfirmation.find(db, {
+      const confirmation = await PlanConfirmation.update(trx, { id: confirmationId }, body);
+      const allConfirmations = await PlanConfirmation.find(trx, {
         plan_id: planId,
       });
       let allConfirmed = true;
@@ -253,24 +237,26 @@ export default class PlanStatusController {
       let responseJson = null;
       // update the amendment status when the last agreement holder confirms
       if (allConfirmed) {
-        const planStatuses = await PlanStatus.find(db, { active: true });
+        const planStatuses = await PlanStatus.find(trx, { active: true });
         const statusCode =
           isMinorAmendment === 'true' ? PLAN_STATUS.STANDS_NOT_REVIEWED : PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION;
         const status = planStatuses.find((s) => s.code === statusCode);
-        await PlanStatusHistory.create(db, {
+        await PlanStatusHistory.create(trx, {
           fromPlanStatusId: plan.status.id,
           toPlanStatusId: status.id,
           note: ' ',
           planId,
           userId: user.id,
         });
-        const updatedPlan = await PlanStatusController.updatePlanStatus(planId, status, user);
+        const updatedPlan = await PlanStatusController.updatePlanStatus(trx, planId, status, user);
         updatedPlan.status = status;
         responseJson = { allConfirmed, updatedPlan, confirmation };
       }
       responseJson = { allConfirmed, confirmation };
+      trx.commit();
       return res.status(200).json(responseJson).end();
     } catch (err) {
+      trx.rollback();
       logger.error(`PlanStatusController:updateAmendment: fail with error: ${err.message}`);
       throw err;
     }
@@ -313,9 +299,9 @@ export default class PlanStatusController {
     return false;
   }
 
-  static async getLatestLegalVersion(planId) {
+  static async getLatestLegalVersion(planId, legalStatusesToSearch) {
     const latestLegalVersion = await db('plan_snapshot')
-      .whereIn('status_id', Plan.legalStatuses)
+      .whereIn('status_id', legalStatusesToSearch || Plan.legalStatuses)
       .andWhere({ plan_id: planId })
       .orderBy('created_at', 'desc')
       .first();

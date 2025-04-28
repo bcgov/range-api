@@ -98,12 +98,14 @@ export default class PlanSnapshot extends Model {
     if (startDate) query.andWhere('plan_snapshot.created_at', '<=', startDate);
     const response = [];
     let lastMandatoryAmendment = null;
+    let lastMinorAmendment = null;
     const results = await query;
     for (let index = 0; index < results.length; index++) {
       const row = results[index];
       const nextRow = results[index + 1];
       row.isCurrentLegalVersion = false;
       if (row.status_id === 21) {
+        lastMinorAmendment = response.length;
         response.push({
           id: row.id,
           version: row.version,
@@ -160,6 +162,15 @@ export default class PlanSnapshot extends Model {
           response[lastMandatoryAmendment].version = row.version;
           response[lastMandatoryAmendment].snapshot = row.snapshot;
           lastMandatoryAmendment = null;
+        }
+      }
+      if ([7, 8].indexOf(row.status_id) !== -1) {
+        if (lastMinorAmendment !== null) {
+          response[lastMinorAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
+          response[lastMinorAmendment].approvedAt = row.created_at;
+          response[lastMinorAmendment].version = row.version;
+          response[lastMinorAmendment].snapshot = row.snapshot;
+          lastMinorAmendment = null;
         }
       }
     }

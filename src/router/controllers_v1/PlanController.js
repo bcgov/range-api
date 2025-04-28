@@ -131,7 +131,6 @@ export default class PlanController {
       creator_id: user.id,
     });
 
-    // create unsiged confirmations for AHs
     await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
 
     return res.status(200).json(plan).end();

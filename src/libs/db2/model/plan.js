@@ -229,7 +229,7 @@ export default class Plan extends Model {
     return snapshotRecord;
   }
 
-  static async restoreVersion(db, planId, snapshotVersion) {
+  static async restoreVersion(db, planId, snapshotVersion, preserverHistory = false) {
     const planSnapshot = await PlanSnapshot.findOne(db, {
       plan_id: planId,
       version: snapshotVersion,
@@ -423,18 +423,16 @@ export default class Plan extends Model {
       await InvasivePlantChecklist.create(db, snapshot.invasivePlantChecklist);
     }
 
-    await PlanStatusHistory.remove(db, { plan_id: planId });
-
-    const newStatusHistoryPromises = snapshot.planStatusHistory.map(async ({ ...history }) => {
-      const newHistory = await PlanStatusHistory.create(db, {
-        ...history,
+    if (!preserverHistory) {
+      await PlanStatusHistory.remove(db, { plan_id: planId });
+      const newStatusHistoryPromises = snapshot.planStatusHistory.map(async ({ ...history }) => {
+        const newHistory = await PlanStatusHistory.create(db, {
+          ...history,
+        });
+        return newHistory;
       });
-
-      return newHistory;
-    });
-
-    await Promise.all(newStatusHistoryPromises);
-
+      await Promise.all(newStatusHistoryPromises);
+    }
     await PlanFile.remove(db, { plan_id: planId });
 
     const filePromises = snapshot.files.map(async (file) => {
