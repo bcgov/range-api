@@ -104,6 +104,19 @@ export default class PlanSnapshot extends Model {
       const row = results[index];
       const nextRow = results[index + 1];
       row.isCurrentLegalVersion = false;
+      if (row.snapshot?.amendmentTypeId === 4) {
+        response.push({
+          id: row.id,
+          version: row.version,
+          planId: row.plan_id,
+          createdAt: null,
+          submittedBy: null,
+          approvedAt: row.created_at,
+          approvedBy: `${row.given_name} ${row.family_name}`,
+          amendmentType: amendmentTypeArray[4],
+          snapshot: row.snapshot,
+        });
+      }
       if (row.status_id === 21) {
         lastMinorAmendment = response.length;
         response.push({
@@ -142,18 +155,6 @@ export default class PlanSnapshot extends Model {
           amendmentType: null,
           snapshot: row.snapshot,
         });
-      } else if (row.snapshot.amendmentTypeId === 4) {
-        response.push({
-          id: row.id,
-          version: row.version,
-          planId: row.plan_id,
-          createdAt: null,
-          submittedBy: null,
-          approvedAt: row.created_at,
-          approvedBy: `${row.given_name} ${row.family_name}`,
-          amendmentType: amendmentTypeArray[4],
-          snapshot: row.snapshot,
-        });
       }
       if ([20, 8, 9, 12].indexOf(row.status_id) !== -1) {
         if (lastMandatoryAmendment !== null) {
@@ -164,7 +165,7 @@ export default class PlanSnapshot extends Model {
           lastMandatoryAmendment = null;
         }
       }
-      if ([7, 8].indexOf(row.status_id) !== -1) {
+      if ([7, 8, 9].indexOf(row.status_id) !== -1) {
         if (lastMinorAmendment !== null) {
           response[lastMinorAmendment].approvedBy = `${row.given_name} ${row.family_name}`;
           response[lastMinorAmendment].approvedAt = row.created_at;
