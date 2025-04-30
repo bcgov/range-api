@@ -279,15 +279,12 @@ export default class PlanController {
       .table('plan_snapshot')
       .select('id')
       .where({ plan_id: planId })
-      .andWhereRaw('created_at > ?::timestamp', [prevLegalVersion.created_at.toISOString()]);
+      .andWhereRaw('id > ?', prevLegalVersion.id);
 
     const versionIdsToDiscard = versionsToDiscard.map((v) => v.id);
-
     logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
-
-    await db.table('plan_snapshot').update({ is_discarded: true }).whereIn('id', versionIdsToDiscard);
-
-    res.status(200).end();
+    await db.table('plan_snapshot').whereIn('id', versionIdsToDiscard).delete();
+    res.json().end();
   }
 
   static async storeAttachment(req, res) {

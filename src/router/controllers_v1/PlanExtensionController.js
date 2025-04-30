@@ -335,6 +335,7 @@ export default class PlanExtensionController {
         { id: planId },
         {
           planEndDate: endDate,
+          statusId: 9, //Stands
           amendmentTypeId: 4,
           extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,
         },
