@@ -59,7 +59,11 @@ export default class PlanStatusController {
       const updatedPlan = await Plan.update(trx, { id: planId }, { ...body, is_restored: false });
 
       // If the new status was legal, create a snapshot after updating
-      if ((!originalPlan.isRestored && Plan.isLegal(updatedPlan)) || status.code === PLAN_STATUS.NOT_APPROVED) {
+      if (
+        (!originalPlan.isRestored && Plan.isLegal(updatedPlan)) ||
+        status.code === PLAN_STATUS.NOT_APPROVED ||
+        (Plan.isLegal(originalPlan) && !Plan.isLegal(updatedPlan))
+      ) {
         await Plan.createSnapshot(trx, planId, user);
       }
 
