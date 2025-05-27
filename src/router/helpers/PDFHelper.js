@@ -154,7 +154,7 @@ export class AdditionalDetailsGenerator {
   }
 
   setScheduleDetails(plan) {
-    for (const schedule of plan.grazingSchedules) {
+    for (const schedule of plan.schedules) {
       if (schedule) {
         schedule.crownTotalAUM = 0;
         for (const entry of schedule.grazingScheduleEntries) {

@@ -331,10 +331,7 @@ const test = async (agreementId) => {
           model: LivestockIdentifier,
           include: [LivestockIdentifierLocation, LivestockIdentifierType],
           attributes: {
-            exclude: [
-              'livestock_identifier_type_id',
-              'livestock_identifier_location_id',
-            ],
+            exclude: ['livestock_identifier_type_id', 'livestock_identifier_location_id'],
           },
         },
         {
@@ -379,11 +376,7 @@ const test = async (agreementId) => {
                   model: GrazingScheduleEntry,
                   include: [LivestockType, Pasture],
                   attributes: {
-                    exclude: [
-                      'grazing_schedule_id',
-                      'livestock_type_id',
-                      'plan_grazing_schedule',
-                    ],
+                    exclude: ['grazing_schedule_id', 'livestock_type_id', 'plan_grazing_schedule'],
                   },
                 },
               ],
@@ -406,13 +399,7 @@ const test = async (agreementId) => {
         },
       ],
       attributes: {
-        exclude: [
-          'primary_agreement_holder_id',
-          'agreement_type_id',
-          'zone_id',
-          'extension_id',
-          'status_id',
-        ],
+        exclude: ['primary_agreement_holder_id', 'agreement_type_id', 'zone_id', 'extension_id', 'status_id'],
       },
     });
 
@@ -428,22 +415,6 @@ const test = async (agreementId) => {
 
     const plan = agreement.plans.filter((plan) => plan.pastures.length > 0);
     assert(plan);
-
-    // assert(agreement.pastures[1].plantCommunities.length >= 1);
-    // assert(agreement.pastures[1].plantCommunities[0].aspect);
-    // assert(agreement.pastures[1].plantCommunities[0].elevation);
-    // assert(agreement.pastures[1].plantCommunities[0].actions.length >= 1);
-    // assert(agreement.pastures[1].plantCommunities[0].actions[0].actionPurpose);
-    // assert(agreement.pastures[1].plantCommunities[0].actions[0].actionType);
-    // assert(agreement.primaryAgreementHolder);
-    // assert(agreement.livestockIdentifiers.length >= 2);
-    // assert(agreement.livestockIdentifiers[0].livestockIdentifierLocation);
-    // assert(agreement.livestockIdentifiers[0].livestockIdentifierType);
-    // assert(agreement.grazingSchedules.length > 0);
-    // assert(agreement.grazingSchedules[0].grazingScheduleEntries.length === 2);
-    // assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].livestockType);
-    // assert(agreement.grazingSchedules[0].grazingScheduleEntries[0].pasture);
-    // assert(agreement.usage.length > 0);
 
     console.log('TEST OK!');
   } catch (err) {

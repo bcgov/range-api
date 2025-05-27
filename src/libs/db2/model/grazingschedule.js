@@ -28,9 +28,10 @@ import {
   roundToSingleDecimalPlace,
 } from '../../../router/helpers/PDFHelper';
 import GrazingScheduleEntry from './grazingscheduleentry';
+import HayCuttingScheduleEntry from './haycuttingscheduleentry';
 import Model from './model';
 
-export default class GrazingSchedule extends Model {
+export default class Schedule extends Model {
   static get fields() {
     // primary key *must* be first!
     return ['id', 'year', 'narative', 'plan_id', 'canonical_id', 'sort_by', 'sort_order', 'created_at'].map(
@@ -42,8 +43,29 @@ export default class GrazingSchedule extends Model {
     return 'grazing_schedule';
   }
 
+  static scheduleEntryCreators = {
+    1: GrazingScheduleEntry.create,
+    2: GrazingScheduleEntry.create,
+    3: HayCuttingScheduleEntry.create,
+    4: HayCuttingScheduleEntry.create,
+  };
+
+  async fetchHayCuttingScheduleEntries(trx) {
+    let order;
+    let orderRaw = false;
+
+    if (this.sortBy === 'days') {
+      order = `date_out - date_in ${this.sortOrder ? this.sortOrder : 'asc'}`;
+      orderRaw = true;
+    } else {
+      order = this.sortBy && this.sortOrder ? [this.sortBy.replace('.', '_'), this.sortOrder] : undefined;
+    }
+    const where = { haycutting_schedule_id: this.id };
+    this.scheduleEntries = await HayCuttingScheduleEntry.findWithOrder(trx, where, order, orderRaw);
+  }
+
   // eslint-disable-next-line class-methods-use-this
-  async fetchGrazingSchedulesEntries() {
+  async fetchGrazingSchedulesEntries(trx) {
     let order;
     let orderRaw = false;
 
@@ -59,7 +81,7 @@ export default class GrazingSchedule extends Model {
       }
     }
     const where = { grazing_schedule_id: this.id };
-    let entries = await GrazingScheduleEntry.findWithLivestockType(this.db, where, order, orderRaw);
+    let entries = await GrazingScheduleEntry.findWithLivestockType(trx, where, order, orderRaw);
     if (this.sortBy === 'pld_au_ms' || this.sortBy === 'crown_au_ms') {
       entries = entries.map((row) => {
         const days = calcDateDiff(row.date_out, row.date_in, false);
@@ -79,6 +101,6 @@ export default class GrazingSchedule extends Model {
         else entries.sort((a, b) => b.crownAUMs - a.crownAUMs);
       }
     }
-    this.grazingScheduleEntries = entries.map((entry) => new GrazingScheduleEntry(entry, this.db));
+    this.scheduleEntries = entries.map((entry) => new GrazingScheduleEntry(entry, trx));
   }
 }

@@ -115,13 +115,8 @@
       </div>
       <div class="header__right">
         <div class="header__title">Range Use Plan</div>
-        <div>
-          {{agreement.id}} | {{getPrimaryContactName agreement.clients}}
-        </div>
-        <div>
-          {{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat
-          plan.planEndDate}}
-        </div>
+        <div>{{agreement.id}} | {{getPrimaryContactName agreement.clients}}</div>
+        <div>{{getStandardDateFormat plan.planStartDate}} - {{getStandardDateFormat plan.planEndDate}}</div>
       </div>
     </div>
     <div class="header__divider"></div>
@@ -135,15 +130,12 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Agreement Type</div>
-        <div class="textfield__content">
-          {{getAgreementType agreement.agreementType}}
-        </div>
+        <div class="textfield__content">{{getAgreementType agreement.agreementType}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Agreement Date</div>
         <div class="textfield__content">
-          {{getStandardDateFormat agreement.agreementStartDate}} -
-          {{getStandardDateFormat agreement.agreementEndDate}}
+          {{getStandardDateFormat agreement.agreementStartDate}} - {{getStandardDateFormat agreement.agreementEndDate}}
         </div>
       </div>
 
@@ -153,9 +145,7 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Alternative Business Name</div>
-        <div class="textfield__content">
-          {{handleNullValue plan.altBusinessName}}
-        </div>
+        <div class="textfield__content">{{handleNullValue plan.altBusinessName}}</div>
       </div>
     </div>
     <div class="cell-6">
@@ -174,9 +164,7 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Contact Phone</div>
-        <div class="textfield__content">
-          {{handleNullValue user.contactPhoneNumber}}
-        </div>
+        <div class="textfield__content">{{handleNullValue user.contactPhoneNumber}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Contact Email</div>
@@ -189,9 +177,7 @@
     <div class="cell-6">
       <div class="textfield">
         <div class="textfield__title">Plan Start Date</div>
-        <div class="textfield__content">
-          {{getStandardDateFormat plan.planStartDate}}
-        </div>
+        <div class="textfield__content">{{getStandardDateFormat plan.planStartDate}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Extended</div>
@@ -201,15 +187,11 @@
     <div class="cell-6">
       <div class="textfield">
         <div class="textfield__title">Plan End Date</div>
-        <div class="textfield__content">
-          {{getStandardDateFormat plan.planEndDate}}
-        </div>
+        <div class="textfield__content">{{getStandardDateFormat plan.planEndDate}}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Exemption Status</div>
-        <div class="textfield__content">
-          {{handleNullValue agreement.agreementExemptionStatus.description}}
-        </div>
+        <div class="textfield__content">{{handleNullValue agreement.agreementExemptionStatus.description}}</div>
       </div>
     </div>
 
@@ -238,21 +220,15 @@
       <div class="section-title">Pasture: {{this.name}}</div>
       <div class="cell-4">
         <div class="textfield__title">Allowable AUMs</div>
-        <div class="textfield__content">
-          {{handleNullValue this.allowableAum "N/P"}}
-        </div>
+        <div class="textfield__content">{{handleNullValue this.allowableAum "N/P"}}</div>
       </div>
       <div class="cell-4">
         <div class="textfield__title">Private Land Deduction</div>
-        <div class="textfield__content">
-          {{handleNullValue this.pldPercent "N/P"}}
-        </div>
+        <div class="textfield__content">{{handleNullValue this.pldPercent "N/P"}}</div>
       </div>
       <div class="cell-4">
         <div class="textfield__title">Grace Days</div>
-        <div class="textfield__content">
-          {{handleNullValue this.graceDays "N/P"}}
-        </div>
+        <div class="textfield__content">{{handleNullValue this.graceDays "N/P"}}</div>
       </div>
       <div class="textfield__title">Pasture Notes (non legal content)</div>
       <div class="textfield__content">{{handleNullValue this.notes}}</div>
@@ -263,7 +239,7 @@
 
     <h2>Schedule</h2>
     <div class="divider"></div>
-    {{#each grazingSchedules}}
+    {{#each schedules}}
     <div class="grazing-schedule">
       <div class="section-title">{{this.year}} Grazing Schedule</div>
       <table>
@@ -295,8 +271,8 @@
         {{/each}}
       </table>
       <p class="text-right">
-        <span class="bold">Authorized AUMs:</span> {{this.authorizedAUMs}}
-        &nbsp; <span class="bold">Total AUMs:</span> {{this.crownTotalAUMs}}
+        <span class="bold">Authorized AUMs:</span> {{this.authorizedAUMs}} &nbsp;
+        <span class="bold">Total AUMs:</span> {{this.crownTotalAUMs}}
       </p>
       <div class="bold">Schedule Description</div>
       <div>{{handleNullValue this.narative}}</div>
@@ -312,9 +288,7 @@
     <div class="minister-issue">
       <div class="section-title">
         <div class="cell-6">Issue Type: {{this.ministerIssueType.name}}</div>
-        <div class="cell-6 text-right">
-          Identified: {{getYesOrNo this.identified }}
-        </div>
+        <div class="cell-6 text-right">Identified: {{getYesOrNo this.identified }}</div>
       </div>
       <div class="textfield">
         <div class="textfield__title">Detail</div>
@@ -326,9 +300,7 @@
       </div>
       <div class="textfield">
         <div class="textfield__title">Pastures</div>
-        <div class="textfield__content">
-          {{handleNullValue this.pastureNames}}
-        </div>
+        <div class="textfield__content">{{handleNullValue this.pastureNames}}</div>
       </div>
       <div class="textfield__title">Actions</div>
       <!-- {{#if this.actionsExist}}
