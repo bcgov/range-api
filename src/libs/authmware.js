@@ -130,6 +130,7 @@ export default async function initPassport(app) {
           },
           {
             ssoId: ssoId,
+            email: jwtPayload.email,
           },
         );
         // User roles are assigned in SSO and extracted from the JWT.
