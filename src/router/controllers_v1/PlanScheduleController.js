@@ -45,6 +45,8 @@ export default class PlanScheduleController {
       });
       // eslint-disable-next-line arrow-body-style
       const promises = grazingScheduleEntries.map(async (entry) => {
+        entry.dateIn = entry.dateIn.split('T')[0];
+        entry.dateOut = entry.dateOut.split('T')[0];
         return GrazingScheduleEntry.create(db, {
           ...entry,
           grazing_schedule_id: schedule.id,
@@ -108,7 +110,8 @@ export default class PlanScheduleController {
       const promises = grazingScheduleEntries.map(async (entry) => {
         delete entry.scheduleId; // eslint-disable-line no-param-reassign
         delete entry.schedule_id; // eslint-disable-line no-param-reassign
-
+        entry.dateIn = entry.dateIn.split('T')[0];
+        entry.dateOut = entry.dateOut.split('T')[0];
         if (entry.id) {
           const { ...entryData } = entry;
           return GrazingScheduleEntry.update(

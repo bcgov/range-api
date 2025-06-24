@@ -134,6 +134,14 @@ export default class PlanVersionController {
           date: versionData.snapshot.amendmentSubmissions[versionData.snapshot.amendmentSubmissions.length - 1]
             .approvedAt,
         };
+      versionData.snapshot.grazingSchedules = versionData.snapshot.grazingSchedules.map((schedule) => ({
+        ...schedule,
+        grazingScheduleEntries: schedule.grazingScheduleEntries.map((entry) => ({
+          ...entry,
+          dateIn: entry.dateIn ? new Date(entry.dateIn).toISOString().split('T')[0] : null,
+          dateOut: entry.dateOut ? new Date(entry.dateOut).toISOString().split('T')[0] : null,
+        })),
+      }));
       const response = await generatePDFResponse(versionData.snapshot);
       PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
       res.send(response.data);

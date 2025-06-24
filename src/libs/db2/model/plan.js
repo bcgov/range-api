@@ -726,11 +726,18 @@ export default class Plan extends Model {
     const where = { plan_id: this.id };
     const schedules = await GrazingSchedule.find(this.db, where, order);
     // egar load grazing schedule entries.
-    const promises = schedules.map((s) =>
-      s.fetchGrazingSchedulesEntries(this.db, {
+    const promises = schedules.map(async (s) => {
+      await s.fetchGrazingSchedulesEntries(this.db, {
         grazing_schedule_id: s.id,
-      }),
-    );
+      });
+
+      // Remove time from each entry's dateIn and dateOut
+      s.grazingScheduleEntries = s.grazingScheduleEntries.map((entry) => ({
+        ...entry,
+        dateIn: entry.dateIn ? new Date(entry.dateIn).toISOString().split('T')[0] : null,
+        dateOut: entry.dateOut ? new Date(entry.dateOut).toISOString().split('T')[0] : null,
+      }));
+    });
     await Promise.all(promises);
 
     this.grazingSchedules = schedules || [];
