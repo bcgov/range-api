@@ -40,12 +40,33 @@ export default class PlanExtensionController {
       ) {
         throw errorWithCode('Invalid request', 400);
       }
+      const agentClientIds = (user.agentOf || []).map((a) => a.clientId);
+      let requestsToUpdate = [];
+      if (agentClientIds.length > 0) {
+        requestsToUpdate = await PlanExtensionRequests.find(trx, {
+          plan_id: planId,
+          client_id: agentClientIds,
+        });
+      }
+      const singleRequest = await PlanExtensionRequests.findOne(trx, { id: extensionRequestId });
+      if (singleRequest && !requestsToUpdate.find((r) => r.id === singleRequest.id)) {
+        requestsToUpdate.push(singleRequest);
+      }
+      // Only update those where requestedExtension is null
+      const requestsToActuallyUpdate = requestsToUpdate.filter((r) => r.requestedExtension === null);
+      for (const req of requestsToActuallyUpdate) {
+        await PlanExtensionRequests.update(trx, { id: req.id }, { requestedExtension: true });
+      }
+      // Increment extensionReceivedVotes by the number of requests updated
       const planEntry = await Plan.findOne(trx, { id: planId });
       if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
         throw errorWithCode('All requests already received', 400);
       }
-      await PlanExtensionRequests.update(trx, { id: extensionRequestId }, { requestedExtension: true });
-      await Plan.update(trx, { id: planId }, { extension_received_votes: planEntry.extensionReceivedVotes + 1 });
+      await Plan.update(
+        trx,
+        { id: planId },
+        { extension_received_votes: planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length },
+      );
       const agreement = (
         await Agreement.findWithTypeZoneDistrictExemption(trx, {
           forest_file_id: planEntry.agreementId,
@@ -199,6 +220,7 @@ export default class PlanExtensionController {
    */
   static async rejectExtension(req, res) {
     const { params, user, body } = req;
+    const { extensionRequestId } = body;
     const { planId } = params;
     checkRequiredFields(['planId'], 'params', req);
     let updatedValues = {
@@ -208,29 +230,32 @@ export default class PlanExtensionController {
     try {
       const planEntry = await Plan.findOne(trx, { id: planId });
       if (user.isAgreementHolder()) {
-        const { extensionRequestId } = body;
-        const extensionRequest = await PlanExtensionRequests.findOne(db, {
-          id: extensionRequestId,
-          plan_id: planId,
-        });
-        if (!extensionRequest) {
-          throw errorWithCode("Extension request doesn't exist", 400);
-        }
-        if (
-          !(extensionRequest.userId === user.id) &&
-          !user.agentOf.find(({ clientId }) => clientId === extensionRequest.clientId)
-        ) {
-          throw errorWithCode('Invalid request', 400);
-        }
         if (!planEntry || planEntry.extensionStatus != PLAN_EXTENSION_STATUS.AWAITING_VOTES) {
           throw errorWithCode('Invalid request. Plan may be already extended.', 400);
         }
         if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
           throw errorWithCode('All requests already accepted', 400);
         }
-        await PlanExtensionRequests.update(db, { id: extensionRequest.id }, { requestedExtension: false });
+        // Find all relevant requests for this planId and user's agentOf clientIds
+        const agentClientIds = (user.agentOf || []).map((a) => a.clientId);
+        let requestsToUpdate = [];
+        if (agentClientIds.length > 0) {
+          requestsToUpdate = await PlanExtensionRequests.find(trx, {
+            plan_id: planId,
+            client_id: agentClientIds,
+          });
+        }
+        // Always include the single request if not already in the list
+        const singleRequest = await PlanExtensionRequests.findOne(trx, { id: extensionRequestId });
+        if (singleRequest && !requestsToUpdate.find((r) => r.id === singleRequest.id)) {
+          requestsToUpdate.push(singleRequest);
+        }
+        const requestsToActuallyUpdate = requestsToUpdate.filter((r) => r.requestedExtension === null);
+        for (const req of requestsToActuallyUpdate) {
+          await PlanExtensionRequests.update(trx, { id: req.id }, { requestedExtension: false });
+        }
         updatedValues.extension_status = PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED;
-        updatedValues.extension_received_votes = planEntry.extensionReceivedVotes + 1;
+        updatedValues.extension_received_votes = planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length;
       }
       if (
         planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES &&

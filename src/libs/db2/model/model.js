@@ -80,13 +80,14 @@ export default class Model {
   static async find(db, where, order = undefined) {
     let results = [];
     const q = db.table(this.table).select(...this.fields);
-    if (Object.keys(where).length === 1 && where[Object.keys(where)[0]].constructor === Array) {
-      const k = Object.keys(where)[0];
-      const v = where[k];
-      q.whereIn(k, v);
-    } else {
-      q.where(where);
-    }
+    // Enhanced: handle arrays in any where key (not just single-key case)
+    Object.entries(where).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        q.whereIn(k, v);
+      } else {
+        q.where(k, v);
+      }
+    });
 
     if (order && order.length > 0) {
       results = await q.orderBy(...order);
