@@ -5,7 +5,7 @@ import DataManager from '../../libs/db2';
 import PlanFile from '../../libs/db2/model/PlanFile';
 import Agreement from '../../libs/db2/model/agreement';
 import EmailTemplate from '../../libs/db2/model/emailtemplate';
-import GrazingSchedule from '../../libs/db2/model/grazingschedule';
+import Schedule from '../../libs/db2/model/grazingschedule';
 import { Mailer } from '../../libs/mailer';
 import { checkRequiredFields, substituteFields } from '../../libs/utils';
 import PlanController from './PlanController';
@@ -171,20 +171,20 @@ export default class PlanExtensionController {
   }
 
   static async setReplacementPlanGrazingSchedule(trx, plan) {
-    const grazingSchedules = await GrazingSchedule.find(
+    const schedules = await Schedule.find(
       trx,
       {
         plan_id: plan.id,
       },
       ['year', 'desc'],
     );
-    for (const grazingScheduleToRemove of grazingSchedules.slice(1)) {
-      await GrazingSchedule.removeById(trx, grazingScheduleToRemove.id);
+    for (const scheduleToRemove of schedules.slice(1)) {
+      await Schedule.removeById(trx, scheduleToRemove.id);
     }
-    if (grazingSchedules[0]) {
-      const grazingScheduleYear = plan.planStartDate.getFullYear();
-      await GrazingSchedule.update(trx, { id: grazingSchedules[0].id }, { year: grazingScheduleYear });
-      await PlanExtensionController.updateGrazingScheduleEntriesYear(trx, grazingSchedules[0].id, grazingScheduleYear);
+    if (schedules[0]) {
+      const scheduleYear = plan.planStartDate.getFullYear();
+      await Schedule.update(trx, { id: schedules[0].id }, { year: scheduleYear });
+      await PlanExtensionController.updateGrazingScheduleEntriesYear(trx, schedules[0].id, scheduleYear);
     }
   }
 

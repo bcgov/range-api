@@ -22,7 +22,7 @@
 
 import { flatten } from 'lodash';
 import { errorWithCode } from '@bcgov/nodejs-common-utils';
-import GrazingSchedule from './grazingschedule';
+import Schedule from './grazingschedule';
 import Model from './model';
 import Pasture from './pasture';
 import PlanStatus from './planstatus';
@@ -39,6 +39,7 @@ import MonitoringArea from './monitoringarea';
 import MonitoringAreaPurpose from './monitoringareapurpose';
 import PlantCommunityAction from './plantcommunityaction';
 import GrazingScheduleEntry from './grazingscheduleentry';
+import HayCuttingScheduleEntry from './haycuttingscheduleentry';
 import MinisterIssueAction from './ministerissueaction';
 import MinisterIssuePasture from './ministerissuepasture';
 import PlanSnapshot from './plansnapshot';
@@ -324,30 +325,31 @@ export default class Plan extends Model {
 
     const newPastures = await Promise.all(pasturePromises);
 
-    await GrazingSchedule.remove(db, { plan_id: planId });
+    await Schedule.remove(db, { plan_id: planId });
 
-    const schedulePromises = snapshot.grazingSchedules.map(async (schedule) => {
-      const newSchedule = await GrazingSchedule.create(db, schedule);
+    await Promise.all(
+      snapshot.schedules.map(async (schedule) => {
+        const newSchedule = await Schedule.create(db, schedule);
 
-      await GrazingScheduleEntry.remove(db, {
-        grazing_schedule_id: schedule.id,
-      });
+        await Promise.all([
+          GrazingScheduleEntry.remove(db, { grazing_schedule_id: schedule.id }),
+          HayCuttingScheduleEntry.remove(db, { haycutting_schedule_id: schedule.id }),
+        ]);
 
-      const entryPromises = schedule.grazingScheduleEntries.map(async (entry) => {
-        const newEntry = await GrazingScheduleEntry.create(db, entry);
+        const scheduleEntryCreator = Schedule.scheduleEntryCreators[snapshot.agreement.agreement_type_id];
 
-        return newEntry;
-      });
+        const scheduleEntries = await Promise.all(
+          (schedule.scheduleEntries || [])
+            .map((entry) => (scheduleEntryCreator ? scheduleEntryCreator(db, entry) : null))
+            .filter(Boolean),
+        );
 
-      const newEntries = await Promise.all(entryPromises);
-
-      return {
-        ...newSchedule,
-        grazingScheduleEntries: newEntries,
-      };
-    });
-
-    await Promise.all(schedulePromises);
+        return {
+          ...newSchedule,
+          scheduleEntries,
+        };
+      }),
+    );
 
     await AdditionalRequirement.remove(db, { plan_id: planId });
 
@@ -444,232 +446,6 @@ export default class Plan extends Model {
     await Promise.all(filePromises);
   }
 
-  static async duplicateAll(db, planId) {
-    const planRow = await Plan.findById(db, planId);
-    const plan = new Plan(planRow, db);
-
-    await plan.eagerloadAllOneToMany();
-
-    const { ...planData } = planRow;
-    const newPlan = await Plan.create(db, {
-      ...planData,
-    });
-
-    try {
-      db.raw('BEGIN');
-
-      const pasturePromises = plan.pastures.map(async ({ id: pastureId, ...pasture }) => {
-        const newPasture = await Pasture.create(db, {
-          ...pasture,
-          plan_id: newPlan.id,
-        });
-
-        const plantCommunityPromises = pasture.plantCommunities.map(async ({ ...plantCommunity }) => {
-          const newPlantCommunity = await PlantCommunity.create(db, {
-            ...plantCommunity,
-            pasture_id: newPasture.id,
-          });
-
-          const indicatorPlantPromises = plantCommunity.indicatorPlants.map(async ({ ...indicatorPlant }) => {
-            const newIndicatorPlant = await IndicatorPlant.create(db, {
-              ...indicatorPlant,
-              plant_community_id: newPlantCommunity.id,
-            });
-
-            return newIndicatorPlant;
-          });
-
-          const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
-
-          const monitoringAreaPromises = plantCommunity.monitoringAreas.map(async ({ ...monitoringArea }) => {
-            const newMonitoringArea = await MonitoringArea.create(db, {
-              ...monitoringArea,
-              plant_community_id: newPlantCommunity.id,
-            });
-
-            const purposePromises = monitoringArea.purposes.map(async ({ ...purpose }) => {
-              const newPurpose = await MonitoringAreaPurpose.create(db, {
-                ...purpose,
-                monitoring_area_id: newMonitoringArea.id,
-              });
-
-              return newPurpose;
-            });
-
-            const newPurposes = await Promise.all(purposePromises);
-
-            return {
-              ...newMonitoringArea,
-              monitoringAreaPurposes: newPurposes,
-            };
-          });
-
-          const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
-
-          const actionPromises = plantCommunity.plantCommunityActions.map(async ({ ...action }) => {
-            const newAction = await PlantCommunityAction.create(db, {
-              ...action,
-              plant_community_id: newPlantCommunity.id,
-            });
-
-            return newAction;
-          });
-
-          const newActions = await Promise.all(actionPromises);
-
-          return {
-            ...newPlantCommunity,
-            indicatorPlants: newIndicatorPlants,
-            monitoringAreas: newMonitoringAreas,
-            plantCommunityActions: newActions,
-          };
-        });
-
-        const newPlantCommunities = await Promise.all(plantCommunityPromises);
-
-        return {
-          ...newPasture,
-          plantCommunities: newPlantCommunities,
-          original: { id: pastureId, ...pasture },
-        };
-      });
-
-      const newPastures = await Promise.all(pasturePromises);
-
-      const schedulePromises = plan.grazingSchedules.map(async ({ ...schedule }) => {
-        const newSchedule = await GrazingSchedule.create(db, {
-          ...schedule,
-          plan_id: newPlan.id,
-        });
-
-        const entryPromises = schedule.grazingScheduleEntries.map(async ({ ...entry }) => {
-          const pasture = newPastures.find((p) => p.original.id === entry.pastureId);
-          const newEntry = await GrazingScheduleEntry.create(db, {
-            ...entry,
-            grazing_schedule_id: newSchedule.id,
-            pasture_id: pasture.id,
-          });
-
-          return newEntry;
-        });
-
-        const newEntries = await Promise.all(entryPromises);
-
-        return {
-          ...newSchedule,
-          grazingScheduleEntries: newEntries,
-        };
-      });
-
-      const newGrazingSchedules = await Promise.all(schedulePromises);
-
-      const additionalRequirementPromises = plan.additionalRequirements.map(async ({ ...requirement }) => {
-        const newRequirement = await AdditionalRequirement.create(db, {
-          ...requirement,
-          plan_id: newPlan.id,
-        });
-
-        return newRequirement;
-      });
-
-      const newAdditionalRequirements = await Promise.all(additionalRequirementPromises);
-
-      const ministerIssuePromises = plan.ministerIssues.map(async ({ ...issue }) => {
-        const newIssue = await MinisterIssue.create(db, {
-          ...issue,
-          plan_id: newPlan.id,
-        });
-
-        const actionPromises = issue.ministerIssueActions.map(async ({ ...action }) => {
-          const newAction = await MinisterIssueAction.create(db, {
-            ...action,
-            issue_id: newIssue.id,
-          });
-
-          return newAction;
-        });
-
-        const newActions = await Promise.all(actionPromises);
-
-        const ministerPasturePromises = issue.pastures.map(async (pastureId) => {
-          const pasture = newPastures.find((p) => p.original.id === pastureId);
-          const newPasture = await MinisterIssuePasture.create(db, {
-            pasture_id: pasture.id,
-            minister_issue_id: newIssue.id,
-          });
-
-          return newPasture;
-        });
-
-        const newMinisterPastures = await Promise.all(ministerPasturePromises);
-
-        return {
-          ...newIssue,
-          ministerIssueActions: newActions,
-          ministerIssuePastures: newMinisterPastures,
-        };
-      });
-
-      const newMinisterIssues = await Promise.all(ministerIssuePromises);
-
-      const managementConsiderationPromises = plan.managementConsiderations.map(async ({ ...consideration }) => {
-        const newConsideration = await ManagementConsideration.create(db, {
-          ...consideration,
-          plan_id: newPlan.id,
-        });
-
-        return newConsideration;
-      });
-
-      const newConsiderations = await Promise.all(managementConsiderationPromises);
-
-      const confirmationPromises = plan.confirmations.map(async ({ ...confirmation }) => {
-        const newConfirmation = await PlanConfirmation.create(db, {
-          ...confirmation,
-          plan_id: newPlan.id,
-        });
-
-        return newConfirmation;
-      });
-
-      const newConfirmations = await Promise.all(confirmationPromises);
-
-      const { ...invasivePlantChecklist } = plan.invasivePlantChecklist;
-
-      const newInvasivePlantChecklist = await InvasivePlantChecklist.create(db, {
-        ...invasivePlantChecklist,
-        plan_id: newPlan.id,
-      });
-
-      const newStatusHistoryPromises = plan.planStatusHistory.map(async ({ ...history }) => {
-        const newHistory = await PlanStatusHistory.create(db, {
-          ...history,
-          plan_id: newPlan.id,
-        });
-
-        return newHistory;
-      });
-
-      await Promise.all(newStatusHistoryPromises);
-
-      db.raw('COMMIT');
-
-      return {
-        ...newPlan,
-        pastures: newPastures,
-        additionalRequirements: newAdditionalRequirements,
-        ministerIssues: newMinisterIssues,
-        managementConsiderations: newConsiderations,
-        grazingSchedules: newGrazingSchedules,
-        invasivePlantChecklist: newInvasivePlantChecklist,
-        confirmations: newConfirmations,
-      };
-    } catch (e) {
-      db.raw('ROLLBACK');
-      throw e;
-    }
-  }
-
   static isLegal(plan) {
     return Plan.legalStatuses.includes(plan.statusId);
   }
@@ -679,8 +455,9 @@ export default class Plan extends Model {
   }
 
   async eagerloadAllOneToMany() {
+    const agreement = await Plan.agreementForPlanId(this.db, this.id);
     await this.fetchPastures();
-    await this.fetchGrazingSchedules();
+    await this.fetchSchedules(agreement.agreement_type_id);
     await this.fetchMinisterIssues();
     await this.fetchPlanStatusHistory();
     await this.fetchPlanConfirmations();
@@ -713,34 +490,23 @@ export default class Plan extends Model {
   async fetchPastures() {
     const where = { plan_id: this.id };
     const pastures = await Pasture.find(this.db, where, ['created_at']);
-
     const promises = pastures.map((p) => [p.fetchPlantCommunities(this.db, { pasture_id: p.id })]);
-
     await Promise.all(flatten(promises));
-
     this.pastures = pastures || [];
   }
 
-  async fetchGrazingSchedules() {
+  async fetchSchedules(agreementTypeId) {
     const order = ['year', 'asc'];
     const where = { plan_id: this.id };
-    const schedules = await GrazingSchedule.find(this.db, where, order);
-    // egar load grazing schedule entries.
-    const promises = schedules.map(async (s) => {
-      await s.fetchGrazingSchedulesEntries(this.db, {
-        grazing_schedule_id: s.id,
-      });
-
-      // Remove time from each entry's dateIn and dateOut
-      s.grazingScheduleEntries = s.grazingScheduleEntries.map((entry) => ({
-        ...entry,
-        dateIn: entry.dateIn ? new Date(entry.dateIn).toISOString().split('T')[0] : null,
-        dateOut: entry.dateOut ? new Date(entry.dateOut).toISOString().split('T')[0] : null,
-      }));
-    });
+    const schedules = await Schedule.find(this.db, where, order);
+    let promises = [];
+    if (agreementTypeId === 1 || agreementTypeId === 2) {
+      promises = schedules.map((s) => s.fetchGrazingSchedulesEntries(this.db));
+    } else if (agreementTypeId === 2 || agreementTypeId === 3) {
+      promises = schedules.map((s) => s.fetchHayCuttingScheduleEntries(this.db));
+    }
     await Promise.all(promises);
-
-    this.grazingSchedules = schedules || [];
+    this.schedules = schedules || [];
   }
 
   async fetchMinisterIssues() {

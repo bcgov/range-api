@@ -1,8 +1,9 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import config from '../../config';
 import DataManager from '../../libs/db2';
-import GrazingSchedule from '../../libs/db2/model/grazingschedule';
+import Schedule from '../../libs/db2/model/grazingschedule';
 import GrazingScheduleEntry from '../../libs/db2/model/grazingscheduleentry';
+import HayCuttingScheduleEntry from '../../libs/db2/model/haycuttingscheduleentry';
 import InvasivePlantChecklist from '../../libs/db2/model/invasiveplantchecklist';
 import ManagementConsideration from '../../libs/db2/model/managementconsideration';
 import MinisterIssue from '../../libs/db2/model/ministerissue';
@@ -71,7 +72,7 @@ export default class PlanController {
       plan.agreement = agreement;
       const filteredFiles = filterFiles(plan.files, user);
       const mappedGrazingSchedules = await Promise.all(
-        plan.grazingSchedules.map(async (schedule) => {
+        plan.schedules.map(async (schedule) => {
           let sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
           sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pastureName', 'pasture.name');
           sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('refLivestockName', 'livestockType.name');
@@ -85,7 +86,7 @@ export default class PlanController {
       );
       return {
         ...plan,
-        grazingSchedules: mappedGrazingSchedules,
+        schedules: mappedGrazingSchedules,
         files: filteredFiles,
       };
     } catch (error) {
@@ -369,18 +370,18 @@ export default class PlanController {
       for (const pasture of pastures) {
         await Pasture.removeById(trx, pasture.id);
       }
-      const grazingSchedules = await GrazingSchedule.find(trx, {
+      const schedules = await Schedule.find(trx, {
         plan_id: planId,
       });
-      for (const grazingSchedule of grazingSchedules) {
-        const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
-          grazing_schedule_id: grazingSchedule.id,
-        });
-        for (const grazingScheduleEntry of grazingScheduleEntries) {
-          await GrazingScheduleEntry.removeById(trx, grazingScheduleEntry.id);
-        }
-        await GrazingSchedule.removeById(trx, grazingSchedule.id);
-      }
+      await Promise.all(
+        schedules.map(async ({ id }) => {
+          await Promise.all([
+            GrazingScheduleEntry.remove(trx, { grazing_schedule_id: id }),
+            HayCuttingScheduleEntry.remove(trx, { haycutting_schedule_id: id }),
+          ]);
+          await Schedule.removeById(trx, id);
+        }),
+      );
       const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
       for (const ministerIssue of ministerIssues) {
         const ministerIssueActions = await MinisterIssueAction.find(trx, {
@@ -492,27 +493,52 @@ export default class PlanController {
         );
       }
     }
-    const grazingSchedules = await GrazingSchedule.find(trx, {
-      plan_id: planId,
-    });
-    for (const grazingSchedule of grazingSchedules) {
-      const grazingScheduleEntries = await GrazingScheduleEntry.find(trx, {
-        grazing_schedule_id: grazingSchedule.id,
-      });
-      removeCommonFields(grazingSchedule);
-      const newGrazingSchedule = await GrazingSchedule.create(trx, {
-        ...grazingSchedule,
+    const schedules = await Schedule.find(trx, { plan_id: planId });
+
+    for (const schedule of schedules) {
+      removeCommonFields(schedule);
+
+      const newSchedule = await Schedule.create(trx, {
+        ...schedule,
         planId: newPlan.id,
       });
-      for (const grazingScheduleEntry of grazingScheduleEntries) {
-        removeCommonFields(grazingScheduleEntry);
-        await GrazingScheduleEntry.create(trx, {
-          ...grazingScheduleEntry,
-          grazing_schedule_id: newGrazingSchedule.id,
-          pasture_id: newAndOldPastureIds.find((element) => element.oldPastureId === grazingScheduleEntry.pastureId)
-            .newPastureId,
-        });
-      }
+
+      const [grazingEntries = [], hayCuttingEntries = []] = await Promise.all([
+        GrazingScheduleEntry.find(trx, { grazing_schedule_id: schedule.id }),
+        HayCuttingScheduleEntry.find(trx, { haycutting_schedule_id: schedule.id }),
+      ]);
+
+      const pastureMap = (entry) => newAndOldPastureIds.find((el) => el.oldPastureId === entry.pastureId)?.newPastureId;
+
+      const grazingCreates = grazingEntries.flatMap((entry) => {
+        removeCommonFields(entry);
+        const newPastureId = pastureMap(entry);
+        return newPastureId
+          ? [
+              GrazingScheduleEntry.create(trx, {
+                ...entry,
+                grazing_schedule_id: newSchedule.id,
+                pasture_id: newPastureId,
+              }),
+            ]
+          : [];
+      });
+
+      const hayCuttingCreates = hayCuttingEntries.flatMap((entry) => {
+        removeCommonFields(entry);
+        const newPastureId = pastureMap(entry);
+        return newPastureId
+          ? [
+              HayCuttingScheduleEntry.create(trx, {
+                ...entry,
+                haycutting_schedule_id: newSchedule.id,
+                pasture_id: newPastureId,
+              }),
+            ]
+          : [];
+      });
+
+      await Promise.all([...grazingCreates, ...hayCuttingCreates]);
     }
     const ministerIssues = await MinisterIssue.find(trx, { plan_id: planId });
     const newAndOldMinisterIssueIds = [];
