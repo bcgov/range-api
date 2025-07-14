@@ -750,7 +750,7 @@ definitions:
               id: 1
               updatedAt: 2018-03-15T16:52:37.658Z
           createdAt: 2043-03-09T16:52:36.961Z
-          grazingSchedules:
+          schedules:
             - createdAt: 2018-03-15T16:52:37.658Z
               year: 2018
               narrative: TODO example
@@ -868,7 +868,7 @@ definitions:
               id: 1
               updatedAt: 2018-03-15T16:52:37.658Z
           createdAt: 2043-03-09T16:52:36.961Z
-          grazingSchedules:
+          schedules:
             - createdAt: 2018-03-15T16:52:37.658Z
               year: 2018
               narrative: TODO example
@@ -1020,7 +1020,7 @@ definitions:
         $ref: '#/definitions/AgreementStatus'
       extension:
         $ref: '#/definitions/Extension'
-      grazingSchedules:
+      schedules:
         type: array
         items:
           $ref: '#/definitions/GrazingSchedule'
@@ -1057,7 +1057,7 @@ definitions:
           id: 1
           updatedAt: 2018-03-15T16:52:37.658Z
       createdAt: 2043-03-09T16:52:36.961Z
-      grazingSchedules:
+      schedules:
         - createdAt: 2018-03-15T16:52:37.658Z
           year: 2018
           narrative: TODO example

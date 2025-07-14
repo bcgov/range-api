@@ -5,7 +5,7 @@ import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
 
 const dm = new DataManager(config);
-const { db, Agreement, Plan, GrazingSchedule, GrazingScheduleEntry } = dm;
+const { db, Agreement, Plan, Schedule, GrazingScheduleEntry, HayCuttingScheduleEntry } = dm;
 
 export default class PlanScheduleController {
   /**
@@ -14,52 +14,76 @@ export default class PlanScheduleController {
    * @param {*} res : express res
    */
   static async store(req, res) {
-    const { params, body, user } = req;
-    const { planId } = params;
-    const { grazingScheduleEntries } = body;
+    const {
+      params: { planId },
+      body,
+      user,
+    } = req;
+    const { scheduleEntries = [], sortBy, ...rest } = body;
 
     checkRequiredFields(['planId'], 'params', req);
-    checkRequiredFields(['grazingScheduleEntries'], 'body', req);
 
-    grazingScheduleEntries.forEach((entry) => {
-      if (!entry.livestockTypeId) {
-        throw errorWithCode('grazingScheduleEntries must have livestockType');
-      }
-    });
+    const trx = await db.transaction();
 
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
 
-      // Use the planId from the URL so that we know exactly what plan
-      // is being updated and to ensure its not reassigned.
-      delete body.planId;
-      delete body.plan_id;
-
-      // TODO:(jl) Wrap this in a transaction so that its an all
-      // or nothing created.
-      const schedule = await GrazingSchedule.create(db, {
-        ...body,
-        plan_id: planId,
-        sort_by: body.sortBy && objPathToSnakeCase(body.sortBy),
+      const agreement = await Agreement.findWithTypeZoneDistrictExemption(trx, {
+        'agreement.forest_file_id': agreementId,
       });
-      // eslint-disable-next-line arrow-body-style
-      const promises = grazingScheduleEntries.map(async (entry) => {
-        entry.dateIn = entry.dateIn.split('T')[0];
-        entry.dateOut = entry.dateOut.split('T')[0];
-        return GrazingScheduleEntry.create(db, {
-          ...entry,
-          grazing_schedule_id: schedule.id,
-          pasture_id: entry.pastureId,
-          livestock_count: entry.livestockCount.toString(),
+      const agreementData = agreement[0]; // findWithTypeZoneDistrictExemption returns an array
+      const isGrazing = Agreement.isGrazingSchedule(agreementData);
+      const isHayCutting = Agreement.isHayCuttingSchedule(agreementData);
+      // Additional validation for grazing entries
+      if (isGrazing) {
+        scheduleEntries.forEach((entry) => {
+          if (!entry.livestockTypeId) {
+            throw errorWithCode('Each grazing schedule entry must have a livestockTypeId');
+          }
         });
+      }
+
+      delete rest.id;
+      const schedule = await Schedule.create(trx, {
+        ...rest,
+        plan_id: planId,
+        sort_by: sortBy && objPathToSnakeCase(sortBy),
       });
 
-      await Promise.all(promises);
-      await schedule.fetchGrazingSchedulesEntries();
+      const entryCreates = scheduleEntries.map((entry) => {
+        const baseEntry = {
+          ...entry,
+          pasture_id: entry.pastureId,
+        };
+
+        if (isGrazing) {
+          return GrazingScheduleEntry.create(trx, {
+            ...baseEntry,
+            grazing_schedule_id: schedule.id,
+            livestock_count: entry.livestockCount?.toString(),
+          });
+        } else if (isHayCutting) {
+          return HayCuttingScheduleEntry.create(trx, {
+            ...baseEntry,
+            haycutting_schedule_id: schedule.id,
+          });
+        }
+      });
+
+      await Promise.all(entryCreates);
+
+      if (isGrazing) {
+        await schedule.fetchGrazingSchedulesEntries(trx);
+      } else {
+        await schedule.fetchHayCuttingScheduleEntries(trx);
+      }
+
+      await trx.commit();
 
       return res.status(200).json(schedule).end();
     } catch (error) {
+      await trx.rollback();
       logger.error(`PlanScheduleController: store: fail with error: ${error.message}`);
       throw error;
     }
@@ -72,72 +96,86 @@ export default class PlanScheduleController {
    */
   static async update(req, res) {
     const { body, user, params } = req;
-    const { grazingScheduleEntries } = body;
     const { planId, scheduleId } = params;
+    const { scheduleEntries = [], sortBy, ...rest } = body;
 
     checkRequiredFields(['planId', 'scheduleId'], 'params', req);
-    checkRequiredFields(['grazingScheduleEntries'], 'body', req);
 
-    grazingScheduleEntries.forEach((entry) => {
-      if (!entry.livestockTypeId) {
-        throw errorWithCode('grazingScheduleEntries must have livestockType');
-      }
-    });
+    const trx = await db.transaction();
 
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
 
-      // Use the planId from the URL so that we know exactly what plan
-      // is being updated and to ensure its not reassigned.
-      delete body.planId;
-      delete body.plan_id;
+      const agreement = await Agreement.findWithTypeZoneDistrictExemption(trx, {
+        'agreement.forest_file_id': agreementId,
+      });
+      const agreementData = agreement[0]; // findWithTypeZoneDistrictExemption returns an array
+      const isGrazing = Agreement.isGrazingSchedule(agreementData);
+      const isHayCutting = Agreement.isHayCuttingSchedule(agreementData);
 
-      const { sortBy } = body;
-
-      // TODO:(jl) Wrap this in a transaction so that its an all
-      // or nothing create.
-      const schedule = await GrazingSchedule.update(
-        db,
+      // Extra validation for grazing entries
+      if (isGrazing) {
+        scheduleEntries.forEach((entry) => {
+          if (!entry.livestockTypeId) {
+            throw errorWithCode('Each grazing schedule entry must have a livestockTypeId');
+          }
+        });
+      }
+      const schedule = await Schedule.update(
+        trx,
         { id: scheduleId },
         {
-          ...body,
+          ...rest,
           plan_id: planId,
           sort_by: sortBy && objPathToSnakeCase(sortBy),
         },
       );
-      // eslint-disable-next-line arrow-body-style
-      const promises = grazingScheduleEntries.map(async (entry) => {
-        delete entry.scheduleId; // eslint-disable-line no-param-reassign
-        delete entry.schedule_id; // eslint-disable-line no-param-reassign
-        entry.dateIn = entry.dateIn.split('T')[0];
-        entry.dateOut = entry.dateOut.split('T')[0];
-        if (entry.id) {
-          const { ...entryData } = entry;
-          return GrazingScheduleEntry.update(
-            db,
-            { id: entry.id },
-            {
-              ...entryData,
-              grazing_schedule_id: schedule.id,
-              pasture_id: entry.pastureId,
-            },
+      const ops = scheduleEntries.map((entry) => {
+        const baseData = {
+          ...entry,
+          pasture_id: entry.pastureId,
+        };
+
+        if (isGrazing) {
+          const data = {
+            ...baseData,
+            grazing_schedule_id: schedule.id,
+            livestock_count: entry.livestockCount?.toString(),
+          };
+
+          return entry.id
+            ? GrazingScheduleEntry.update(trx, { id: entry.id }, data)
+            : GrazingScheduleEntry.create(trx, data);
+        } else if (isHayCutting) {
+          const data = {
+            ...baseData,
+            haycutting_schedule_id: schedule.id,
+          };
+          return entry.id
+            ? HayCuttingScheduleEntry.update(trx, { id: entry.id }, data)
+            : HayCuttingScheduleEntry.create(trx, data);
+        } else {
+          throw errorWithCode(
+            `Unsupported schedule entry type for agreement type ${agreementData.agreementTypeId}`,
+            400,
           );
         }
-
-        return GrazingScheduleEntry.create(db, {
-          ...entry,
-          grazing_schedule_id: schedule.id,
-          pasture_id: entry.pastureId,
-          livestock_count: entry.livestockCount.toString(),
-        });
       });
 
-      await Promise.all(promises);
-      await schedule.fetchGrazingSchedulesEntries();
+      await Promise.all(ops);
+
+      if (isGrazing) {
+        await schedule.fetchGrazingSchedulesEntries(trx);
+      } else if (isHayCutting) {
+        await schedule.fetchHayCuttingScheduleEntries(trx);
+      }
+
+      await trx.commit();
 
       return res.status(200).json(schedule).end();
     } catch (error) {
+      await trx.rollback();
       logger.error(`PlanScheduleController: update: fail with error: ${error.message}`);
       throw error;
     }
@@ -160,7 +198,7 @@ export default class PlanScheduleController {
 
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
-      const result = await GrazingSchedule.removeById(db, scheduleId);
+      const result = await Schedule.removeById(db, scheduleId);
       if (result === 0) {
         throw errorWithCode('No such schedule exists', 400);
       }
@@ -184,30 +222,42 @@ export default class PlanScheduleController {
 
     checkRequiredFields(['planId', 'scheduleId'], 'params', req);
 
-    checkRequiredFields(['livestockTypeId'], 'body', req);
+    const trx = await db.transaction();
 
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      // Use the planId from the URL so that we know exactly what plan
-      // is being updated and to ensure its not reassigned.
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
+
+      // Remove plan-related IDs from body to avoid conflict
       delete body.planId;
       delete body.plan_id;
 
-      const schedule = await GrazingSchedule.findById(db, scheduleId);
-
-      // Unit test defect fix: Check schedule exists
+      const schedule = await Schedule.findById(trx, scheduleId);
       if (!schedule) {
         throw errorWithCode('No such schedule exists', 400);
       }
 
-      const entry = await GrazingScheduleEntry.create(db, {
+      const agreement = await Agreement.findById(trx, agreementId);
+      if (!agreement) {
+        throw errorWithCode('No such agreement exists', 400);
+      }
+
+      const agreementTypeId = agreement.agreementTypeId;
+      const creator = Schedule.scheduleEntryCreators?.[agreementTypeId];
+
+      if (!creator) {
+        throw errorWithCode(`Unsupported schedule entry type for agreement type ${agreementTypeId}`, 400);
+      }
+
+      const entry = await creator(trx, {
         ...body,
-        grazing_schedule_id: schedule.id,
+        [`${creator === GrazingScheduleEntry.create ? 'grazing' : 'haycutting'}_schedule_id`]: schedule.id,
       });
 
+      await trx.commit();
       return res.status(200).json(entry).end();
     } catch (error) {
+      await trx.rollback();
       logger.error(`PlanScheduleController: storeScheduleEntry: fail with error: ${error.message}`);
       throw error;
     }
@@ -222,23 +272,47 @@ export default class PlanScheduleController {
     const { params, user } = req;
     const { planId, grazingScheduleEntryId } = params;
 
-    checkRequiredFields(['planId', 'scheduleId', 'grazingScheduleEntryId'], 'params', req);
+    checkRequiredFields(['planId', 'grazingScheduleEntryId'], 'params', req);
+
+    const trx = await db.transaction();
 
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
-      // WARNING: This will do a cascading delete on any grazing schedule
-      // entries. It will not modify other relations.
-      const result = await GrazingScheduleEntry.removeById(db, grazingScheduleEntryId);
-      if (result === 0) {
-        throw errorWithCode('No such grazing schedule entry exists', 400);
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      const agreement = await Agreement.find(trx, { id: agreementId });
+
+      if (!agreement) {
+        throw errorWithCode(`Agreement not found for plan ID ${planId}`, 400);
       }
 
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
+
+      const agreementTypeId = agreement.agreementTypeId;
+
+      const entryRemovers = {
+        1: GrazingScheduleEntry.removeById,
+        2: GrazingScheduleEntry.removeById,
+        3: HayCuttingScheduleEntry.removeById,
+        4: HayCuttingScheduleEntry.removeById,
+      };
+
+      const remover = entryRemovers[agreementTypeId];
+      if (!remover) {
+        throw errorWithCode(`Unsupported agreement type: ${agreementTypeId}`, 400);
+      }
+
+      const result = await remover(trx, grazingScheduleEntryId);
+
+      if (result === 0) {
+        throw errorWithCode('No such schedule entry exists', 400);
+      }
+
+      await trx.commit();
       return res.status(204).end();
     } catch (error) {
-      const message = `PlanScheduleController:destroyScheduleEntry: fail for id => ${grazingScheduleEntryId}`;
-      logger.error(`${message}, with error = ${error.message}`);
-
+      await trx.rollback();
+      logger.error(
+        `PlanScheduleController: destroyScheduleEntry: fail for id => ${params.grazingScheduleEntryId}, with error = ${error.message}`,
+      );
       throw error;
     }
   }
@@ -248,26 +322,36 @@ export default class PlanScheduleController {
     const { planId, scheduleId } = params;
     const { sortOrder } = body;
     let { sortBy } = body;
+
     checkRequiredFields(['planId', 'scheduleId'], 'params', req);
+
+    const trx = await db.transaction();
+
     try {
-      const agreementId = await Plan.agreementIdForPlanId(db, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
+
       if (sortBy) {
         sortBy = objPathToSnakeCase(sortBy.replace('livestockType', 'ref_livestock')).replace('.', '_');
       }
-      const result = await db.raw(
-        `
-        UPDATE grazing_schedule set sort_by = ?, sort_order = ? WHERE id = ?;
-      `,
-        [sortBy, sortOrder, scheduleId],
-      );
-      if (result === 0) {
+
+      const updated = await trx('grazing_schedule')
+        .where({ id: scheduleId })
+        .update({
+          sort_by: sortBy || null,
+          sort_order: sortOrder || null,
+        });
+
+      if (updated === 0) {
         throw errorWithCode('No such grazing schedule entry exists', 400);
       }
+
+      await trx.commit();
       return res.status(204).end();
     } catch (error) {
-      const message = `PlanScheduleController:updateSortOrder: fail for id => ${scheduleId}`;
-      logger.error(`${message}, with error = ${error.message}`);
+      await trx.rollback();
+      const message = `PlanScheduleController:updateSortOrder failed for schedule ID: ${scheduleId}`;
+      logger.error(`${message}, error: ${error.message}`);
       throw error;
     }
   }

@@ -25,6 +25,8 @@ export default class Agreement extends Model {
     this.zone.district = new District(District.extract(data), db);
     this.zone.user = new User(User.extract(data), db);
     this.agreementType = new AgreementType(AgreementType.extract(data), db);
+    this.isGrazingSchedule = Agreement.isGrazingSchedule(this);
+    this.isHayCuttingSchedule = Agreement.isHayCuttingSchedule(this);
     if (data.plan_id) {
       this.plan = new Plan(Plan.extract(data), db);
       this.plan.status = new PlanStatus(PlanStatus.extract(data), db);
@@ -53,6 +55,14 @@ export default class Agreement extends Model {
 
   static get table() {
     return 'agreement';
+  }
+
+  static isHayCuttingSchedule(agreement) {
+    return agreement?.agreementType && (agreement.agreementType.id === 3 || agreement.agreementType.id === 4);
+  }
+
+  static isGrazingSchedule(agreement) {
+    return agreement?.agreementType && (agreement.agreementType.id === 1 || agreement.agreementType.id === 2);
   }
 
   static async findWithAllRelations(db, where, filterSettings, sendFullPlan) {

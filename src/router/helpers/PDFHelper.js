@@ -1,5 +1,6 @@
 import moment from 'moment';
 import { DAYS_ON_THE_AVERAGE, NOT_PROVIDED } from '../../constants';
+import Agreement from '../../libs/db2/model/agreement';
 
 const shift = (number, precision) => {
   const numArray = `${number}`.split('e');
@@ -154,26 +155,48 @@ export class AdditionalDetailsGenerator {
   }
 
   setScheduleDetails(plan) {
-    for (const schedule of plan.grazingSchedules) {
+    for (const schedule of plan.schedules) {
       if (schedule) {
         schedule.crownTotalAUM = 0;
-        for (const entry of schedule.grazingScheduleEntries) {
+        // Check if this is a hay cutting schedule using helper function
+        const isHayCutting = Agreement.isHayCuttingSchedule(plan.agreement);
+        for (const entry of schedule.scheduleEntries) {
           if (entry) {
             const pasture = plan.pastures.find((item) => item.id === entry.pastureId);
             entry.pasture = 'N/A';
             if (pasture) {
               entry.pasture = pasture.name;
-              entry.graceDays = entry.graceDays || pasture.graceDays;
+              if (Agreement.isGrazingSchedule(plan.agreement)) {
+                entry.graceDays = entry.graceDays || pasture.graceDays;
+              }
             }
-            entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
-            entry.auFactor = entry.livestockType?.auFactor;
-            entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-            entry.pldAUM = calcPldAUMs(entry.totalAUM, pasture.pldPercent).toFixed(1);
-            entry.crownAUM = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
-            schedule.crownTotalAUM += entry.crownAUM;
-            entry.crownAUM = entry.crownAUM.toFixed(1);
+
+            if (isHayCutting) {
+              // Format dates for hay cutting schedules
+              entry.dateInFormatted = entry.dateIn ? moment(entry.dateIn).format('MMM DD, YYYY') : 'N/A';
+              entry.dateOutFormatted = entry.dateOut ? moment(entry.dateOut).format('MMM DD, YYYY') : 'N/A';
+
+              // For hay cutting schedules, totalAUM is based on tonne values
+              // No PLD (Private Land Deduction) calculations for hay cutting schedules
+              entry.totalAUM = entry.tonnes || 0;
+              delete entry.pldAUM; // No PLD for hay cutting schedules
+              entry.crownAUM = entry.totalAUM; // Crown AUM equals total AUM for hay cutting
+              schedule.crownTotalAUM += entry.crownAUM;
+              entry.crownAUM = entry.crownAUM.toFixed(1);
+            } else {
+              // Process grazing schedule entries (existing logic)
+              entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
+              entry.auFactor = entry.livestockType?.auFactor;
+              entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
+              entry.pldAUM = calcPldAUMs(entry.totalAUM, pasture.pldPercent).toFixed(1);
+              entry.crownAUM = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
+              schedule.crownTotalAUM += entry.crownAUM;
+              entry.crownAUM = entry.crownAUM.toFixed(1);
+            }
           }
         }
+
+        // Calculate schedule totals and usage percentages for all schedule types
         schedule.crownTotalAUM = schedule.crownTotalAUM.toFixed(1);
         if (plan.agreement.usage) {
           const usage = plan.agreement.usage.find((element) => element.year === schedule.year);
