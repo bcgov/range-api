@@ -111,4 +111,70 @@ router.get(
   }),
 );
 
+router.delete(
+  '/delete',
+  asyncMiddleware(async (req, res) => {
+    const { user } = req;
+
+    if (!req.query.id) {
+      throw errorWithCode('You must provide the file id via the `id` parameter', 400);
+    }
+
+    const planFile = await PlanFile.findById(db, Number(req.query.id));
+
+    if (!planFile) {
+      throw errorWithCode('File does not exist', 404);
+    }
+
+    const { access } = planFile;
+
+    // Check authorization - only staff or the file owner can delete files
+    switch (access) {
+      case 'staff_only':
+        if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
+          throw errorWithCode('Unauthorized', 403);
+        }
+        break;
+      case 'user_only':
+        if (
+          user.id !== planFile.userId &&
+          !user.isRangeOfficer() &&
+          !user.isAdministrator() &&
+          !user.isDecisionMaker()
+        ) {
+          throw errorWithCode('Unauthorized', 403);
+        }
+        break;
+      case 'everyone':
+        // For 'everyone' access, only staff or the file owner can delete
+        if (
+          user.id !== planFile.userId &&
+          !user.isRangeOfficer() &&
+          !user.isAdministrator() &&
+          !user.isDecisionMaker()
+        ) {
+          throw errorWithCode('Unauthorized', 403);
+        }
+        break;
+      default:
+        throw errorWithCode('Unauthorized', 403);
+    }
+
+    try {
+      // Delete the file from MinIO storage
+      await client.removeObject(bucket, decodeURIComponent(planFile.name));
+
+      // Delete the file record from the database
+      await PlanFile.remove(db, { id: planFile.id });
+
+      res.json({
+        success: true,
+        message: 'File deleted successfully',
+      });
+    } catch (error) {
+      throw errorWithCode(`Failed to delete file: ${error.message}`, 500);
+    }
+  }),
+);
+
 export default router;
