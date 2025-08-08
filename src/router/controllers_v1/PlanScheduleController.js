@@ -3,6 +3,7 @@ import { checkRequiredFields, objPathToSnakeCase } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
+import { processAgreementUsageStatus } from '../../../scripts/process_no_use.js';
 
 const dm = new DataManager(config);
 const { db, Agreement, Plan, Schedule, GrazingScheduleEntry, HayCuttingScheduleEntry } = dm;
@@ -78,6 +79,9 @@ export default class PlanScheduleController {
       } else {
         await schedule.fetchHayCuttingScheduleEntries(trx);
       }
+
+      // Update usage status for this agreement within the transaction
+      await processAgreementUsageStatus(trx, agreementId, agreementData.agreementTypeId);
 
       await trx.commit();
 
@@ -171,6 +175,9 @@ export default class PlanScheduleController {
         await schedule.fetchHayCuttingScheduleEntries(trx);
       }
 
+      // Update usage status for this agreement within the transaction
+      await processAgreementUsageStatus(trx, agreementId, agreementData.agreementTypeId);
+
       await trx.commit();
 
       return res.status(200).json(schedule).end();
@@ -191,20 +198,30 @@ export default class PlanScheduleController {
     const { planId, scheduleId } = params;
 
     checkRequiredFields(['planId', 'scheduleId'], 'params', req);
-
+    const trx = await db.transaction();
     try {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
+      // Get agreement data for usage update
+      const agreement = await Agreement.findWithTypeZoneDistrictExemption(trx, {
+        'agreement.forest_file_id': agreementId,
+      });
+      const agreementData = agreement[0];
+
       // WARNING: This will do a cascading delete on any grazing schedule
       // entries. It will not modify other relations.
-      const result = await Schedule.removeById(db, scheduleId);
+      const result = await Schedule.removeById(trx, scheduleId);
       if (result === 0) {
         throw errorWithCode('No such schedule exists', 400);
       }
 
+      // Update usage status for this agreement after schedule deletion
+      await processAgreementUsageStatus(trx, agreementId, agreementData.agreementTypeId);
+      await trx.commit();
       return res.status(204).end();
     } catch (error) {
+      await trx.rollback();
       const message = `PlanScheduleController: destroy: fail for id => ${scheduleId}`;
       logger.error(`${message}, with error = ${error.message}`);
       throw error;
@@ -253,6 +270,9 @@ export default class PlanScheduleController {
         ...body,
         [`${creator === GrazingScheduleEntry.create ? 'grazing' : 'haycutting'}_schedule_id`]: schedule.id,
       });
+
+      // Update usage status for this agreement within the transaction
+      await processAgreementUsageStatus(trx, agreementId, agreementTypeId);
 
       await trx.commit();
       return res.status(200).json(entry).end();
@@ -306,7 +326,11 @@ export default class PlanScheduleController {
         throw errorWithCode('No such schedule entry exists', 400);
       }
 
+      // Update usage status for this agreement after schedule entry deletion
+      await processAgreementUsageStatus(trx, agreementId, agreementTypeId);
+
       await trx.commit();
+
       return res.status(204).end();
     } catch (error) {
       await trx.rollback();
