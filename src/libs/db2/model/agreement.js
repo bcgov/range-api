@@ -50,6 +50,8 @@ export default class Agreement extends Model {
       'agreement_exemption_status_id',
       'agreement_type_id',
       'retired',
+      'usage_status',
+      'over_use',
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
@@ -63,6 +65,37 @@ export default class Agreement extends Model {
 
   static isGrazingSchedule(agreement) {
     return agreement?.agreementType && (agreement.agreementType.id === 1 || agreement.agreementType.id === 2);
+  }
+
+  static getUsageStatusText(status) {
+    switch (status) {
+      case 0:
+        return 'NoUse';
+      case 1:
+        return 'OverUse';
+      default:
+        return 'Normal';
+    }
+  }
+
+  get usageStatusText() {
+    return Agreement.getUsageStatusText(this.usageStatus);
+  }
+
+  get isNoUse() {
+    return this.usageStatus === 0;
+  }
+
+  get isOverUse() {
+    return this.usageStatus === 1;
+  }
+
+  get overUseAmount() {
+    return this.overUse || 0;
+  }
+
+  get hasOverUse() {
+    return this.overUse && this.overUse > 0;
   }
 
   static async findWithAllRelations(db, where, filterSettings, sendFullPlan) {
