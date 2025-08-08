@@ -50,6 +50,9 @@ export default class Agreement extends Model {
       'agreement_exemption_status_id',
       'agreement_type_id',
       'retired',
+      'usage_status',
+      'percentage_use',
+      'has_current_schedule',
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
@@ -63,6 +66,37 @@ export default class Agreement extends Model {
 
   static isGrazingSchedule(agreement) {
     return agreement?.agreementType && (agreement.agreementType.id === 1 || agreement.agreementType.id === 2);
+  }
+
+  static getUsageStatusText(status) {
+    switch (status) {
+      case 0:
+        return 'No Use';
+      case 1:
+        return 'Over Use';
+      default:
+        return 'Normal';
+    }
+  }
+
+  get usageStatusText() {
+    return Agreement.getUsageStatusText(this.usage_status);
+  }
+
+  get isNoUse() {
+    return this.usage_status === 0;
+  }
+
+  get isOverUse() {
+    return this.usage_status === 1;
+  }
+
+  get percentageUseAmount() {
+    return this.percentage_use || 0;
+  }
+
+  get hasOverUse() {
+    return this.percentage_use && this.percentage_use > 0;
   }
 
   static async findWithAllRelations(db, where, filterSettings, sendFullPlan) {
@@ -163,6 +197,74 @@ export default class Agreement extends Model {
         } else if (key === 'plan.status_id') {
           if (columnFilters[key] && columnFilters[key].length > 0) {
             q.whereIn('ref_plan_status.code', columnFilters[key]);
+          }
+        } else if (key === 'agreement.usage_status') {
+          if (columnFilters[key] && columnFilters[key].length > 0) {
+            q.whereIn('agreement.usage_status', columnFilters[key]);
+          }
+        } else if (key === 'agreement.has_current_schedule') {
+          if (columnFilters[key] && columnFilters[key].length > 0) {
+            const lowerKey = columnFilters[key].toLowerCase();
+            q.where('agreement.has_current_schedule', lowerKey === 'y' ? 1 : lowerKey === 'n' ? 0 : null);
+          }
+        } else if (key === 'agreement.percentage_use') {
+          // Handle numeric comparison operators for percentage_use
+          const filterValue = columnFilters[key].toString().trim();
+          const lowerFilterValue = filterValue.toLowerCase();
+
+          // Helper function to parse operator and value from a string
+          const parseCondition = (conditionStr) => {
+            const trimmed = conditionStr.trim();
+            const operators = ['!=', '>=', '<=', '>', '<', '='];
+
+            for (const op of operators) {
+              if (trimmed.startsWith(op)) {
+                const valueStr = trimmed.startsWith(op + ' ')
+                  ? trimmed.substring(op.length + 1)
+                  : trimmed.substring(op.length);
+                const value = parseFloat(valueStr);
+                if (!isNaN(value)) {
+                  return { operator: op, value: value };
+                }
+              }
+            }
+
+            // If no operator found but it's a valid number, treat as equals
+            const numValue = parseFloat(trimmed);
+            if (!isNaN(numValue) && !trimmed.includes(' ')) {
+              return { operator: '=', value: numValue };
+            }
+
+            return null;
+          };
+
+          // Helper function to apply condition to query
+          const applyCondition = (queryBuilder, condition, useOr = false) => {
+            if (!condition) return;
+            const method = useOr ? 'orWhere' : 'where';
+            queryBuilder[method]('agreement.percentage_use', condition.operator, condition.value);
+          };
+
+          if (lowerFilterValue.includes(' and ')) {
+            // Handle "and" conditions: ">10 and <50" (case-insensitive)
+            const parts = filterValue.split(/ and /i);
+            parts.forEach((part) => {
+              const condition = parseCondition(part);
+              applyCondition(q, condition);
+            });
+          } else if (lowerFilterValue.includes(' or ')) {
+            // Handle "or" conditions: "<10 or >90" (case-insensitive)
+            const parts = filterValue.split(/ or /i);
+            q.where(function () {
+              parts.forEach((part, index) => {
+                const condition = parseCondition(part);
+                applyCondition(this, condition, index > 0);
+              });
+            });
+          } else {
+            // Handle single condition: ">223.66", "=100", "223.66" etc.
+            const condition = parseCondition(filterValue);
+            applyCondition(q, condition);
           }
         } else {
           q.where(key, 'ilike', `%${columnFilters[key]}%`);
