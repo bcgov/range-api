@@ -207,6 +207,7 @@ const updateAgreement = async (data) => {
 
   let created = 0;
   let updated = 0;
+  let skipped = 0;
   let activeFTAAgreementIds = [];
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -220,6 +221,7 @@ const updateAgreement = async (data) => {
     } = record;
 
     if (!isValidRecord(record) || !agreementTypeCode || !zoneCode || !districtCode) {
+      skipped += 1;
       skipping('Updating Agreement', agreementId, index);
       continue;
     }
@@ -240,30 +242,19 @@ const updateAgreement = async (data) => {
     try {
       activeFTAAgreementIds.push(agreementId);
       const agreement = await Agreement.findById(db, agreementId);
+      let record = {
+        agreementStartDate: new Date(legal_effective_dt), // Short Format
+        agreementEndDate: new Date(initial_expiry_dt), // Short Format
+        zoneId: zone.id,
+        agreementTypeId: agreementType.id,
+        agreementExemptionStatusId: exemption.id,
+        retired: false,
+      };
       if (agreement) {
-        await Agreement.update(
-          db,
-          { forest_file_id: agreementId },
-          {
-            agreementStartDate: new Date(legal_effective_dt), // Short Format
-            agreementEndDate: new Date(initial_expiry_dt), // Short Format
-            zoneId: zone.id,
-            agreementTypeId: agreementType.id,
-            agreementExemptionStatusId: exemption.id,
-            retired: false,
-          },
-        );
+        await Agreement.update(db, { forest_file_id: agreementId }, record);
         updated += 1;
       } else {
-        await Agreement.create(db, {
-          forestFileId: agreementId,
-          agreementStartDate: new Date(legal_effective_dt), // Short Format
-          agreementEndDate: new Date(initial_expiry_dt), // Short Format
-          zoneId: zone.id,
-          agreementTypeId: agreementType.id,
-          agreementExemptionStatusId: exemption.id,
-          retired: false,
-        });
+        await Agreement.create(db, { forestFileId: agreementId, ...record });
         created += 1;
       }
     } catch (error) {
@@ -278,7 +269,7 @@ const updateAgreement = async (data) => {
   const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
 
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
-  return `${created} agreements were created. ${updated} agreements were updated`;
+  return `${created} agreements were created. ${updated} agreements were updated. ${skipped} agreements were skipped.`;
 };
 
 const updateUsage = async (data) => {

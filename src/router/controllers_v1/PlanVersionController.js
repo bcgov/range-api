@@ -110,7 +110,7 @@ export default class PlanVersionController {
     checkRequiredFields(['planId', 'version'], 'params', req);
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     if (!plan) {
-      throw errorWithCode("Plan doesn't exist", 404);
+      throw errorWithCode("Plan doesn't exist: " + planId, 404);
     }
     const { agreementId } = plan;
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
