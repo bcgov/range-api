@@ -277,48 +277,30 @@ export default class Agreement extends Model {
     if (filterSettings.planCheck === true) {
       q.whereNotNull('ref_plan_status.code');
     }
+
+    // Define the active plan status condition once to avoid duplication
+    const activePlanStatusCondition = `(
+      "ref_plan_status"."id"=8 OR
+      "ref_plan_status"."id"=9 OR
+      "ref_plan_status"."id"=12 OR
+      "ref_plan_status"."id"=20 OR
+      "ref_plan_status"."id"=21 OR
+      "ref_plan_status"."id"=22 OR
+      (
+        "plan"."amendment_type_id" IS NOT NULL
+        AND (
+           "ref_plan_status"."id"!=26 AND 
+           "ref_plan_status"."id"!=25
+        )
+      )
+    )`;
+
     if (filterSettings.activeCheck === true) {
-      q.whereRaw(
-        `(
-                  "ref_plan_status"."id"=8 OR
-                  "ref_plan_status"."id"=9 OR
-                  "ref_plan_status"."id"=12 OR
-                  "ref_plan_status"."id"=20 OR
-                  "ref_plan_status"."id"=21 OR
-                  "ref_plan_status"."id"=22 OR
-                  (
-                    "plan"."amendment_type_id" IS NOT NULL
-                    AND (
-                      "ref_plan_status"."id"=11 OR
-                      "ref_plan_status"."id"=13 OR
-                      "ref_plan_status"."id"=18
-                    )
-                  )
-                )`,
-      );
+      q.whereRaw(activePlanStatusCondition);
     }
     if (filterSettings.missingRUP === true) {
       q.where(function () {
-        this.whereNull('plan.id')
-          .orWhereNull('ref_plan_status.id')
-          .orWhereRaw(
-            `NOT (
-                      "ref_plan_status"."id"=8 OR
-                      "ref_plan_status"."id"=9 OR
-                      "ref_plan_status"."id"=12 OR
-                      "ref_plan_status"."id"=20 OR
-                      "ref_plan_status"."id"=21 OR
-                      "ref_plan_status"."id"=22 OR
-                      (
-                        "plan"."amendment_type_id" IS NOT NULL
-                        AND (
-                          "ref_plan_status"."id"=11 OR
-                          "ref_plan_status"."id"=13 OR
-                          "ref_plan_status"."id"=18
-                        )
-                      )
-                    )`,
-          );
+        this.whereNull('plan.id').orWhereNull('ref_plan_status.id').orWhereRaw(`NOT ${activePlanStatusCondition}`);
       });
     }
     if (filterSettings.page && filterSettings.limit) {
