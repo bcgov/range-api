@@ -554,7 +554,7 @@ const loadFile = (name) =>
     });
   });
 
-const loadDataFromUrl = async (token, url) => {
+const loadDataFromUrl = async (token, url, maxRetries = 3, delayMs = 2000) => {
   const options = {
     headers: { 'content-type': 'application/json', Authorization: token },
     method: 'GET',
@@ -562,12 +562,29 @@ const loadDataFromUrl = async (token, url) => {
     json: true,
   };
 
-  const response = await request(options);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Loading data from URL (attempt ${attempt}/${maxRetries}): ${url}`);
+      const response = await request(options);
+      console.log(`Successfully loaded data from URL on attempt ${attempt}`);
+      return response.items;
+    } catch (error) {
+      console.log(`Data loading attempt ${attempt} failed for URL ${url}:`, error.message);
 
-  return response.items;
+      if (attempt === maxRetries) {
+        console.log(`All ${maxRetries} data loading attempts failed for URL: ${url}`);
+        throw error;
+      }
+
+      // Wait before retrying (exponential backoff)
+      const delay = delayMs * Math.pow(2, attempt - 1);
+      console.log(`Waiting ${delay}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 };
 
-const getFTAToken = async (url) => {
+const getFTAToken = async (url, maxRetries = 3, delayMs = 2000) => {
   const options = {
     headers: { 'content-type': 'application/json' },
     method: 'POST',
@@ -579,9 +596,26 @@ const getFTAToken = async (url) => {
     },
   };
 
-  const response = await request(options);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempting to get FTA token (attempt ${attempt}/${maxRetries})`);
+      const response = await request(options);
+      console.log(`Successfully obtained FTA token on attempt ${attempt}`);
+      return response;
+    } catch (error) {
+      console.log(`Token request attempt ${attempt} failed:`, error.message);
 
-  return response;
+      if (attempt === maxRetries) {
+        console.log(`All ${maxRetries} token request attempts failed`);
+        throw error;
+      }
+
+      // Wait before retrying (exponential backoff)
+      const delay = delayMs * Math.pow(2, attempt - 1);
+      console.log(`Waiting ${delay}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 };
 
 const updateFTAData = async (licensee, client, usage) => {
