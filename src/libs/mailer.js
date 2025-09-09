@@ -34,12 +34,12 @@ export class Mailer {
     }
   }
 
-  async sendEmail(to, from, subject, body, bodyType) {
+  async sendEmail(to, from, subject, body, bodyType, attachments = []) {
     if (!eval(this.enabled)) return;
     const emailEndpoint = `${this.emailServiceURL}/api/v1/email`;
     try {
       const token = await this.getBearerToken();
-      const emailPayload = { to, from, subject, body, bodyType };
+      const emailPayload = { to, from, subject, body, bodyType, attachments };
       logger.debug(`email payload: ${JSON.stringify(emailPayload)}`);
       await axios
         .post(emailEndpoint, JSON.stringify(emailPayload), {

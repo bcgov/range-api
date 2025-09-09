@@ -17,7 +17,7 @@ import config from '../../config';
 import AdditionalRequirement from './model/additionalrequirement';
 import AdditionalRequirementCategory from './model/additionalrequirementcategory';
 import Agreement from './model/agreement';
-import AgreementExemptionStatus from './model/agreementexemptionstatus';
+import ExemptionStatusType from './model/exemptionstatustype';
 import AgreementType from './model/agreementtype';
 import AmendmentType from './model/amendmenttype';
 import Client from './model/client';
@@ -25,6 +25,10 @@ import ClientAgreement from './model/ClientAgreement';
 import ClientType from './model/clienttype';
 import District from './model/district';
 import EmailTemplate from './model/emailtemplate';
+import Exemption from './model/exemption';
+import AgreementExemptionStatus from './model/agreementexemptionstatus';
+import ExemptionStatusHistory from './model/exemptionstatushistory';
+import ExemptionAttachment from './model/exemptionattachment';
 import Schedule from './model/grazingschedule';
 import GrazingScheduleEntry from './model/grazingscheduleentry';
 import HayCuttingScheduleEntry from './model/haycuttingscheduleentry';
@@ -94,7 +98,7 @@ export default class DataManager {
     this.db = k;
     this.config = config;
     this.Agreement = Agreement;
-    this.AgreementExemptionStatus = AgreementExemptionStatus;
+    this.ExemptionStatusType = ExemptionStatusType;
     this.AgreementType = AgreementType;
     this.Client = Client;
     this.ClientType = ClientType;
@@ -146,5 +150,9 @@ export default class DataManager {
     this.UserClientLink = UserClientLink;
     this.PlanFile = PlanFile;
     this.EmailTemplate = EmailTemplate;
+    this.Exemption = Exemption;
+    this.AgreementExemptionStatus = AgreementExemptionStatus;
+    this.ExemptionStatusHistory = ExemptionStatusHistory;
+    this.ExemptionAttachment = ExemptionAttachment;
   }
 }

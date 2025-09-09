@@ -13,7 +13,7 @@ import Pasture from '../../libs/db2/model/pasture';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 import { checkRequiredFields, objPathToCamelCase, removeCommonFields } from '../../libs/utils';
 import { PlanRouteHelper } from '../helpers';
-import { generatePDFResponse } from './PDFGeneration';
+import { generatePlanPDF } from './PDFGeneration';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests';
 import PlanStatusController from './PlanStatusController';
 import IndicatorPlant from '../../libs/db2/model/indicatorplant';
@@ -636,7 +636,7 @@ export default class PlanController {
         date: amendmentSubmissions[amendmentSubmissions.length - 1].approvedAt,
       };
     plan.amendmentSubmissions = amendmentSubmissions;
-    const response = await generatePDFResponse(plan);
+    const response = await generatePlanPDF(plan);
     res.json(response.data).end();
   }
 }

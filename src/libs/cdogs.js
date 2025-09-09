@@ -17,11 +17,11 @@ export default class Cdogs {
     this.enabled = enabled;
   }
 
-  async init() {
+  async init(templateFile) {
     this.template = {
       encodingType: 'base64',
       fileType: 'docx',
-      content: await Cdogs.readTemplate(),
+      content: await Cdogs.readTemplate(templateFile),
     };
     this.options = {
       cacheReport: false,
@@ -48,14 +48,14 @@ export default class Cdogs {
     }
   }
 
-  async generatePDF(planData) {
+  async generatePDF(data, pdfFileName = `${data.agreementId}.pdf`) {
     if (!this.enabled.toLowerCase() === 'true') return {};
     const serviceURL = `${this.serviceURL}/api/v2/template/render`;
     try {
       const token = await this.getBearerToken();
       const payload = {
-        data: planData,
-        options: { ...this.options, reportName: `${planData.agreementId}.pdf` },
+        data: data,
+        options: { ...this.options, reportName: pdfFileName },
         template: this.template,
       };
       const response = await axios.post(serviceURL, JSON.stringify(payload), {

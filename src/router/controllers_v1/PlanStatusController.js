@@ -1,22 +1,21 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
-import { isNumeric, checkRequiredFields, substituteFields } from '../../libs/utils';
+import { isNumeric, checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
-import { PLAN_STATUS } from '../../constants';
+import moment from 'moment';
+import { AGREEMENT_EXEMPTION_STATUS, EXEMPTION_STATUS, PLAN_STATUS } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
-import { Mailer } from '../../libs/mailer';
-import Client from '../../libs/db2/model/client';
-import User from '../../libs/db2/model/user';
-import EmailTemplate from '../../libs/db2/model/emailtemplate';
-import Zone from '../../libs/db2/model/zone';
 import PlanController from './PlanController';
+import NotificationHelper from '../helpers/NotificationHelper';
+import Zone from '../../libs/db2/model/zone';
+import User from '../../libs/db2/model/user';
+import ExemptionStatusController from './ExemptionStatusController';
 
 const dm = new DataManager(config);
-const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement } = dm;
+const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement, Exemption } = dm;
 
 export default class PlanStatusController {
-  // -------  Helper methods  -------
   /**
    * Update Plan status
    * @param {*} planId : string
@@ -28,15 +27,28 @@ export default class PlanStatusController {
       const body = { status_id: status.id };
       switch (status.code) {
         case PLAN_STATUS.APPROVED:
-          body.effective_at = new Date();
-          break;
         case PLAN_STATUS.STANDS:
-          body.effective_at = new Date();
-          body.submitted_at = new Date();
-          break;
         case PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT:
-          body.effective_at = null;
+        case PLAN_STATUS.STANDS_NOT_REVIEWED: {
+          let comment = 'Exemption cancelled due to plan status change.';
+          if (status.code === PLAN_STATUS.APPROVED) {
+            body.effective_at = new Date();
+            comment = 'Exemption cancelled due to plan approval.';
+          } else if (status.code === PLAN_STATUS.STANDS) {
+            body.effective_at = new Date();
+            body.submitted_at = new Date();
+            comment = 'Exemption cancelled due to plan status change to stands.';
+          } else if (status.code === PLAN_STATUS.WRONGLY_MADE_WITHOUT_EFFECT) {
+            body.effective_at = null;
+            comment = 'Exemption cancelled due to plan status change to wrongly made without effect.';
+          } else if (status.code === PLAN_STATUS.STANDS_NOT_REVIEWED) {
+            comment = 'Exemption cancelled due to plan status change to stands not reviewed.';
+          }
+
+          const { agreement_id: agreementId } = await Plan.agreementForPlanId(trx, planId);
+          await PlanStatusController.cancelActiveExemptionsForAgreement(trx, agreementId, planId, user, comment);
           break;
+        }
         case PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION:
         case PLAN_STATUS.SUBMITTED_FOR_REVIEW:
           body.submitted_at = new Date();
@@ -118,6 +130,42 @@ export default class PlanStatusController {
     }
   }
 
+  static async cancelActiveExemptionsForAgreement(trx, agreementId, planId, user, comment) {
+    const approvedExemptions = await Exemption.find(trx, {
+      agreement_id: agreementId,
+      status: EXEMPTION_STATUS.APPROVED,
+    });
+
+    const today = moment().startOf('day');
+    const trulyActiveExemptions = approvedExemptions.filter((ex) => {
+      const startDate = moment(ex.start_date).startOf('day');
+      const endDate = moment(ex.end_date).startOf('day');
+      return today.isBetween(startDate, endDate, null, '[]');
+    });
+
+    if (trulyActiveExemptions.length > 0) {
+      for (const exemption of trulyActiveExemptions) {
+        await ExemptionStatusController.performExemptionTransition(
+          trx,
+          exemption.id,
+          EXEMPTION_STATUS.CANCELLED,
+          comment,
+          user,
+          agreementId,
+          exemption,
+        );
+      }
+
+      // Update agreement exemption status to NOT_EXEMPTED
+      await Agreement.update(
+        trx,
+        { forest_file_id: agreementId },
+        { exemption_status: AGREEMENT_EXEMPTION_STATUS.NOT_EXEMPTED },
+      );
+      // Notification for exemption cancellation is handled within performExemptionTransition
+    }
+  }
+
   // ----- Router Methods ------
   /**
    * Update Plan status
@@ -138,7 +186,7 @@ export default class PlanStatusController {
     }
 
     try {
-      const { agreement_id: agreementId, zone_id: zoneId } = await Plan.agreementForPlanId(trx, planId);
+      const { agreement_id: agreementId } = await Plan.agreementForPlanId(trx, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
       const planStatuses = await PlanStatus.find(trx, { active: true });
       // make sure the status exists.
@@ -147,8 +195,6 @@ export default class PlanStatusController {
         throw errorWithCode('You must supply a valid status ID', 403);
       }
       const plan = await Plan.findById(trx, planId);
-      const zone = await Zone.findById(trx, zoneId);
-      const rangeOfficer = await User.findById(trx, zone.userId);
       const { statusId: prevStatusId } = plan;
       await PlanStatusHistory.create(trx, {
         fromPlanStatusId: prevStatusId,
@@ -158,29 +204,14 @@ export default class PlanStatusController {
         userId: user.id,
       });
       await PlanStatusController.updatePlanStatus(trx, planId, status, user);
-      const clients = await Client.clientsForAgreement(trx, {
-        forestFileId: agreementId,
-      });
-      const emails = [rangeOfficer.email];
-      for (const client of clients) {
-        const user = await User.fromClientId(trx, client.clientNumber);
-        if (user && user.email) {
-          emails.push(user.email);
-        }
-      }
-      const agents = await User.getAgentsFromAgreementId(trx, agreementId);
-      const agentEmails = [...new Set(agents.map((agent) => agent.email))];
-      for (const agentEmail of agentEmails) {
-        if (agentEmail && agentEmail.email) {
-          emails.push(agentEmail.email);
-        }
-      }
+
+      const [agreement] = await Agreement.find(trx, { forest_file_id: agreementId });
+      const zone = await Zone.findById(trx, agreement.zoneId);
+      const rangeOfficer = await User.findById(trx, zone.userId);
+
+      const { emails } = await NotificationHelper.getParticipants(trx, agreementId);
       const toStatus = await PlanStatus.findById(trx, statusId);
       const fromStatus = await PlanStatus.findById(trx, prevStatusId);
-      const templates = await EmailTemplate.findWithExclusion(trx, {
-        name: 'Plan Status Change',
-      });
-      const template = templates[0];
       const emailFields = {
         '{agreementId}': agreementId,
         '{fromStatus}': fromStatus.name,
@@ -189,14 +220,7 @@ export default class PlanStatusController {
         '{rangeOfficerEmail}': rangeOfficer.email,
         '{note}': note || ' ',
       };
-      const mailer = new Mailer();
-      mailer.sendEmail(
-        emails,
-        template.fromEmail,
-        substituteFields(template.subject, emailFields),
-        substituteFields(template.body, emailFields),
-        'html',
-      );
+      await NotificationHelper.sendEmail(trx, emails, 'Plan Status Change', emailFields);
       trx.commit();
       return res.status(200).json(status).end();
     } catch (err) {

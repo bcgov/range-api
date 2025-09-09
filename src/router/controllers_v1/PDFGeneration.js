@@ -1,7 +1,7 @@
 import Cdogs from '../../libs/cdogs';
 import { AdditionalDetailsGenerator } from '../helpers/PDFHelper';
 
-export const generatePDFResponse = async (plan) => {
+export const generatePlanPDF = async (plan) => {
   const dogs = new Cdogs();
   dogs.init();
   const adg = new AdditionalDetailsGenerator();
@@ -14,5 +14,12 @@ export const generatePDFResponse = async (plan) => {
   adg.setIndicatorPlantDetails(plan);
   adg.setScheduleDetails(plan);
   const response = await dogs.generatePDF(plan);
+  return response;
+};
+
+export const generateExemptionPDF = async (exemption) => {
+  const dogs = new Cdogs();
+  dogs.init('exemptionTemplate.docx');
+  const response = await dogs.generatePDF(exemption, `${exemption.agreementId}_exemption.pdf`);
   return response;
 };

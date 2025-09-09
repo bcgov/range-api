@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Created by Jason Leach on 2018-05-07.
+// Created by Jason Leach on 2018-05-28.
 //
 
 /* eslint-env es6 */
@@ -31,6 +31,6 @@ export default class AgreementExemptionStatus extends Model {
   }
 
   static get table() {
-    return 'ref_agreement_exemption_status';
+    return 'agreement_exemption_status';
   }
 }

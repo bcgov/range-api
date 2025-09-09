@@ -1,52 +1,12 @@
 import { asyncMiddleware, errorWithCode } from '@bcgov/nodejs-common-utils';
-import * as Minio from 'minio';
 import { Router } from 'express';
 import DataManager from '../../libs/db2';
-
-const cleanProductionURL = (publicUrl) => {
-  publicUrl = publicUrl.replace('http', 'https');
-  publicUrl = publicUrl.replace(':9000/', '/');
-  return publicUrl;
-};
+import { ATTACHMENT_TYPE } from '../../constants';
+import ExemptionAttachment from '../../libs/db2/model/exemptionattachment';
+import { client, bucket, endPoint, publicEndPoint, cleanProductionURL, deleteFileFromMinio } from '../../libs/minio';
 
 const dm = new DataManager();
 const { db, PlanFile } = dm;
-
-const endPoint = process.env.MINIO_ENDPOINT;
-const publicEndPoint = process.env.MINIO_PUBLIC_ENDPOINT;
-const port = process.env.MINIO_PORT;
-const accessKey = process.env.MINIO_ACCESS_KEY;
-const secretKey = process.env.MINIO_SECRET_KEY;
-const bucket = process.env.MINIO_BUCKET;
-
-if (!endPoint) {
-  throw new Error('MINIO_ENDPOINT environment variable not provided');
-}
-
-if (!port) {
-  throw new Error('MINIO_PORT environment variable not provided');
-}
-
-if (!accessKey) {
-  throw new Error('MINIO_ACCESS_KEY environment variable not provided');
-}
-
-if (!secretKey) {
-  throw new Error('MINIO_SECRET_KEY environment variable not provided');
-}
-
-if (!bucket) {
-  throw new Error('MINIO_BUCKET environment variable not provided');
-}
-
-const client = new Minio.Client({
-  endPoint,
-  port: Number(port),
-  useSSL: false,
-  accessKey,
-  secretKey,
-  s3ForcePathStyle: true,
-});
 
 const router = new Router();
 
@@ -72,17 +32,29 @@ router.get(
   asyncMiddleware(async (req, res) => {
     const { user } = req;
 
+    if (!req.query.fileType) {
+      throw errorWithCode('You must provide the file type via the `fileType` parameter', 400);
+    }
     if (!req.query.id) {
       throw errorWithCode('You must provide the file id via the `id` parameter', 400);
     }
 
-    const planFile = await PlanFile.findById(db, Number(req.query.id));
+    let file = null;
+    const fileType = req.query.fileType;
+    console.log('fileType', fileType);
+    if (fileType && fileType === ATTACHMENT_TYPE.PLAN_ATTACHMENT) {
+      file = await PlanFile.findById(db, Number(req.query.id));
+    } else if (fileType && fileType === ATTACHMENT_TYPE.EXEMPTION_ATTACHMENT) {
+      file = await ExemptionAttachment.findById(db, Number(req.query.id));
+    } else {
+      throw errorWithCode('You must provide a valid fileType via the `fileType` parameter', 400);
+    }
 
-    if (!planFile) {
+    if (!file) {
       throw errorWithCode('File does not exist', 404);
     }
 
-    const { access } = planFile;
+    const { access } = file;
 
     switch (access) {
       case 'staff_only':
@@ -91,7 +63,7 @@ router.get(
         }
         break;
       case 'user_only':
-        if (user.id !== planFile.userId) {
+        if (user.id !== file.userId) {
           throw errorWithCode('Unauthorized', 403);
         }
         break;
@@ -101,7 +73,7 @@ router.get(
         throw errorWithCode('Unauthorized', 403);
     }
 
-    const url = await client.presignedGetObject(bucket, decodeURIComponent(planFile.name));
+    const url = await client.presignedGetObject(bucket, decodeURIComponent(file.name));
 
     const publicUrl = publicEndPoint ? url.replace(endPoint, publicEndPoint) : url;
 
@@ -162,7 +134,7 @@ router.delete(
 
     try {
       // Delete the file from MinIO storage
-      await client.removeObject(bucket, decodeURIComponent(planFile.name));
+      await deleteFileFromMinio(planFile.name);
 
       // Delete the file record from the database
       await PlanFile.remove(db, { id: planFile.id });
