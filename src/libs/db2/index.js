@@ -17,7 +17,7 @@ import config from '../../config';
 import AdditionalRequirement from './model/additionalrequirement';
 import AdditionalRequirementCategory from './model/additionalrequirementcategory';
 import Agreement from './model/agreement';
-import AgreementExemptionStatus from './model/agreementexemptionstatus';
+import ExemptionStatusType from './model/exemptionstatustype';
 import AgreementType from './model/agreementtype';
 import AmendmentType from './model/amendmenttype';
 import Client from './model/client';
@@ -94,7 +94,7 @@ export default class DataManager {
     this.db = k;
     this.config = config;
     this.Agreement = Agreement;
-    this.AgreementExemptionStatus = AgreementExemptionStatus;
+    this.ExemptionStatusType = ExemptionStatusType;
     this.AgreementType = AgreementType;
     this.Client = Client;
     this.ClientType = ClientType;

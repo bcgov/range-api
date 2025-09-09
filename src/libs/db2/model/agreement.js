@@ -25,6 +25,7 @@ export default class Agreement extends Model {
     this.zone.district = new District(District.extract(data), db);
     this.zone.user = new User(User.extract(data), db);
     this.agreementType = new AgreementType(AgreementType.extract(data), db);
+    // this.exemptionStatus removed (use new status type if needed)
     this.isGrazingSchedule = Agreement.isGrazingSchedule(this);
     this.isHayCuttingSchedule = Agreement.isHayCuttingSchedule(this);
     if (data.plan_id) {
@@ -131,6 +132,7 @@ export default class Agreement extends Model {
       ...Zone.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...District.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      // ...AgreementExemptionStatus.fields removed (use new status type if needed)
       ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...Plan.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
@@ -162,6 +164,9 @@ export default class Agreement extends Model {
       })
       .leftJoin('ref_agreement_type', {
         'agreement.agreement_type_id': 'ref_agreement_type.id',
+      })
+      .leftJoin('ref_agreement_exemption_status', {
+        'agreement.agreement_exemption_status_id': 'ref_agreement_exemption_status.id',
       });
 
     q.orderByRaw(
