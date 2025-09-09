@@ -31,7 +31,7 @@ const dm = new DataManager(config);
 const {
   db,
   AgreementType,
-  AgreementExemptionStatus,
+  ExemptionStatusType,
   ClientType,
   LivestockType,
   LivestockIdentifierType,
@@ -59,7 +59,7 @@ router.get(
     try {
       const where = { active: true };
       const agreementType = await AgreementType.find(db, where);
-      const agreementExemptionStatus = await AgreementExemptionStatus.find(db, where);
+      const agreementExemptionStatus = await ExemptionStatusType.find(db, where);
       const livestockType = await LivestockType.find(db, where);
       const planStatus = await PlanStatus.find(db, where);
       const clientType = await ClientType.find(db, where);

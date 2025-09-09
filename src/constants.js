@@ -118,3 +118,12 @@ export const PLAN_EXTENSION_STATUS = {
 };
 
 export const NOT_PROVIDED = 'Not provided';
+
+// Exemption workflow status codes
+export const EXEMPTION_STATUS = {
+  DRAFT: 'draft',
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  DELETED: 'deleted',
+};
