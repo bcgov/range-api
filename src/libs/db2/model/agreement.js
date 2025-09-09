@@ -10,7 +10,8 @@ import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
-import { PLAN_EXTENSION_STATUS } from '../../../constants';
+import { AGREEMENT_EXEMPTION_STATUS, PLAN_EXTENSION_STATUS } from '../../../constants';
+import AgreementExemptionStatus from './agreementexemptionstatus';
 
 export default class Agreement extends Model {
   constructor(data, db = undefined) {
@@ -25,6 +26,8 @@ export default class Agreement extends Model {
     this.zone.district = new District(District.extract(data), db);
     this.zone.user = new User(User.extract(data), db);
     this.agreementType = new AgreementType(AgreementType.extract(data), db);
+    this.agreementExemptionStatus = new AgreementExemptionStatus(AgreementExemptionStatus.extract(data), db);
+    this.exemptionStatus = data.exemption_status;
     this.isGrazingSchedule = Agreement.isGrazingSchedule(this);
     this.isHayCuttingSchedule = Agreement.isHayCuttingSchedule(this);
     if (data.plan_id) {
@@ -47,12 +50,12 @@ export default class Agreement extends Model {
       'agreement_start_date',
       'agreement_end_date',
       'zone_id',
-      'agreement_exemption_status_id',
       'agreement_type_id',
       'retired',
       'usage_status',
       'percentage_use',
       'has_current_schedule',
+      'exemption_status',
     ].map((f) => `${Agreement.table}.${f}`);
   }
 
@@ -76,6 +79,19 @@ export default class Agreement extends Model {
         return 'Over Use';
       default:
         return 'Normal';
+    }
+  }
+
+  static getExemptionStatusText(status) {
+    switch (status) {
+      case AGREEMENT_EXEMPTION_STATUS.NOT_EXEMPTED:
+        return 'Not Exempted';
+      case AGREEMENT_EXEMPTION_STATUS.ACTIVE:
+        return 'Active';
+      case AGREEMENT_EXEMPTION_STATUS.SCHEDULED:
+        return 'Scheduled';
+      default:
+        return 'Unknown';
     }
   }
 
@@ -131,6 +147,7 @@ export default class Agreement extends Model {
       ...Zone.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...District.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...AgreementType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      ...AgreementExemptionStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...User.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...Plan.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
       ...PlanStatus.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
@@ -145,14 +162,15 @@ export default class Agreement extends Model {
       .leftJoin('ref_plan_status', {
         'plan.status_id': 'ref_plan_status.id',
       })
+      .leftJoin('agreement_exemption_status', {
+        'agreement.exemption_status': 'agreement_exemption_status.code',
+      })
       .leftJoin('ref_zone', { 'agreement.zone_id': 'ref_zone.id' })
       .leftJoin('ref_district', { 'ref_zone.district_id': 'ref_district.id' })
       .leftJoin('user_account', { 'ref_zone.user_id': 'user_account.id' })
-
       .leftJoin('user_account as plan_creator', {
         'plan.creator_id': 'plan_creator.id',
       })
-
       .leftJoin('client_agreement', {
         'agreement.forest_file_id': 'client_agreement.agreement_id',
         'client_agreement.client_type_id': 1,
@@ -206,6 +224,10 @@ export default class Agreement extends Model {
           if (columnFilters[key] && columnFilters[key].length > 0) {
             const lowerKey = columnFilters[key].toLowerCase();
             q.where('agreement.has_current_schedule', lowerKey === 'y' ? 1 : lowerKey === 'n' ? 0 : null);
+          }
+        } else if (key === 'agreement.agreement_exemption_status_id') {
+          if (columnFilters[key] && columnFilters[key].length > 0) {
+            q.whereIn('agreement_exemption_status.id', columnFilters[key]);
           }
         } else if (key === 'agreement.percentage_use') {
           // Handle numeric comparison operators for percentage_use

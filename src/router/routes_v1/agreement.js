@@ -5,7 +5,10 @@ import { Router } from 'express';
 import config from '../../config';
 import DataManager from '../../libs/db2';
 import UserDistricts from '../../libs/db2/model/userDistricts';
+import ExemptionController from '../controllers_v1/ExemptionController';
+import ExemptionStatusController from '../controllers_v1/ExemptionStatusController';
 const router = new Router();
+
 const dm2 = new DataManager(config);
 const { db, Agreement, Zone, ClientAgreement } = dm2;
 
@@ -99,5 +102,24 @@ router.get(
     res.status(200).json(result).end();
   }),
 );
+
+// Exemption routes nested under /agreement/:agreementId/exemption
+const exemptionBase = '/:agreementId/exemption';
+// Exemption history
+router.get(`${exemptionBase}`, asyncMiddleware(ExemptionController.index));
+router.post(`${exemptionBase}`, asyncMiddleware(ExemptionController.store));
+router.put(`${exemptionBase}/:exemptionId`, asyncMiddleware(ExemptionController.update));
+router.delete(`${exemptionBase}/:exemptionId`, asyncMiddleware(ExemptionController.destroy));
+router.get(`${exemptionBase}/:exemptionId/download`, asyncMiddleware(ExemptionController.downloadPDF));
+// Exemption attachments
+router.get(`${exemptionBase}/:exemptionId/attachments`, asyncMiddleware(ExemptionController.getAttachments));
+router.post(`${exemptionBase}/:exemptionId/attachments`, asyncMiddleware(ExemptionController.uploadAttachment));
+router.delete(
+  `${exemptionBase}/:exemptionId/attachments/:attachmentId`,
+  asyncMiddleware(ExemptionController.deleteAttachment),
+);
+// Exemption status workflow/history routes
+router.get(`${exemptionBase}/:exemptionId/status-history`, asyncMiddleware(ExemptionStatusController.history));
+router.post(`${exemptionBase}/:exemptionId/transition`, asyncMiddleware(ExemptionStatusController.transition));
 
 export default router;

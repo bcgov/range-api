@@ -32,6 +32,7 @@ const {
   db,
   AgreementType,
   AgreementExemptionStatus,
+  ExemptionStatusType,
   ClientType,
   LivestockType,
   LivestockIdentifierType,
@@ -58,6 +59,7 @@ router.get(
   asyncMiddleware(async (req, res) => {
     try {
       const where = { active: true };
+      const exemptionStatusType = await ExemptionStatusType.find(db, where);
       const agreementType = await AgreementType.find(db, where);
       const agreementExemptionStatus = await AgreementExemptionStatus.find(db, where);
       const livestockType = await LivestockType.find(db, where);
@@ -82,6 +84,9 @@ router.get(
       const response = {
         AGREEMENT_TYPE: agreementType || { error: errorMessage },
         AGREEMENT_EXEMPTION_STATUS: agreementExemptionStatus || {
+          error: errorMessage,
+        },
+        EXEMPTION_STATUS_TYPE: exemptionStatusType || {
           error: errorMessage,
         },
         LIVESTOCK_TYPE: livestockType || { error: errorMessage },

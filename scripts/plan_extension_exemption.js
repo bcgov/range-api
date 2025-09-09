@@ -1,15 +1,17 @@
-import { replace } from 'lodash';
 import config from '../src/config';
-import { PLAN_EXTENSION_STATUS } from '../src/constants';
+import { PLAN_EXTENSION_STATUS, AGREEMENT_EXEMPTION_STATUS, SYSTEM_USER_ID } from '../src/constants';
 import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
 import { Mailer } from '../src/libs/mailer';
 import { substituteFields } from '../src/libs/utils';
-import PlanStatusController from '../src/router/controllers_v1/PlanStatusController';
+import {
+  updateAgreementExemptions,
+  sendAgreementExemptionStatusEmails,
+} from '../src/router/helpers/AgreementExemptionHelper';
 
 const dm = new DataManager(config);
 
-const { db, Plan, PlanExtensionRequests } = dm;
+const { db, Plan, PlanExtensionRequests, Agreement, User } = dm;
 
 const sendEmailToAgreementHolders = async (db, expiringPlan) => {
   const template = await EmailTemplate.findOne(db, {
@@ -74,9 +76,14 @@ const processExpiredPlans = async (trx) => {
 };
 
 const main = async () => {
-  console.log('Starting plan extension batch process..');
   const trx = await db.transaction();
   try {
+    // Fetch system user
+    const systemUser = await User.findById(trx, SYSTEM_USER_ID);
+    if (!systemUser) {
+      throw new Error('System user not found. Please ensure a user with SYSTEM_USER_ID exists.');
+    }
+
     const currentDate = new Date();
     const oneYearLater = new Date();
     oneYearLater.setMonth(currentDate.getMonth() + 12);
@@ -112,9 +119,12 @@ const main = async () => {
     }
     await processExpiredPlans(trx);
     await activateReplacementPlans(trx);
+    const updates = await updateAgreementExemptions(trx, systemUser); // Pass systemUser
+    await sendAgreementExemptionStatusEmails(trx, updates);
     trx.commit();
   } catch (err) {
     trx.rollback();
+    console.error('Error in main function:', err); // Log the error
     process.exit(0);
   }
   process.exit(0);
