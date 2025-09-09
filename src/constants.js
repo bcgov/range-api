@@ -118,3 +118,26 @@ export const PLAN_EXTENSION_STATUS = {
 };
 
 export const NOT_PROVIDED = 'Not provided';
+
+// Exemption workflow status codes
+export const EXEMPTION_STATUS = {
+  DRAFT: 'Draft',
+  PENDING_APPROVAL: 'Pending Approval',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  DELETED: 'Deleted',
+  CANCELLED: 'Cancelled',
+};
+
+export const ATTACHMENT_TYPE = {
+  PLAN_ATTACHMENT: 'Plan attachment',
+  EXEMPTION_ATTACHMENT: 'Exemption attachment',
+};
+
+export const AGREEMENT_EXEMPTION_STATUS = {
+  NOT_EXEMPTED: 'NOT_EXEMPTED',
+  ACTIVE: 'ACTIVE',
+  SCHEDULED: 'SCHEDULED',
+};
+
+export const SYSTEM_USER_ID = 1115;
