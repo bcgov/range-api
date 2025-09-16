@@ -496,17 +496,15 @@ export default class PlanController {
     const schedules = await Schedule.find(trx, { plan_id: planId });
 
     for (const schedule of schedules) {
-      removeCommonFields(schedule);
-
-      const newSchedule = await Schedule.create(trx, {
-        ...schedule,
-        planId: newPlan.id,
-      });
-
       const [grazingEntries = [], hayCuttingEntries = []] = await Promise.all([
         GrazingScheduleEntry.find(trx, { grazing_schedule_id: schedule.id }),
         HayCuttingScheduleEntry.find(trx, { haycutting_schedule_id: schedule.id }),
       ]);
+      removeCommonFields(schedule);
+      const newSchedule = await Schedule.create(trx, {
+        ...schedule,
+        planId: newPlan.id,
+      });
 
       const pastureMap = (entry) => newAndOldPastureIds.find((el) => el.oldPastureId === entry.pastureId)?.newPastureId;
 
