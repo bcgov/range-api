@@ -187,6 +187,7 @@ export default class PlanStatusController {
         '{toStatus}': toStatus.name,
         '{rangeOfficerName}': `${rangeOfficer.givenName} ${rangeOfficer.familyName}`,
         '{rangeOfficerEmail}': rangeOfficer.email,
+        '{note}': note || ' ',
       };
       const mailer = new Mailer();
       mailer.sendEmail(
