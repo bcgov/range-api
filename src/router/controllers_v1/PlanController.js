@@ -153,7 +153,29 @@ export default class PlanController {
 
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
-    await Plan.update(db, { id: planId }, body);
+
+    const trx = await db.transaction();
+    try {
+      // Handle file updates if present
+      if (body.files) {
+        const files = body.files;
+        delete body.files;
+
+        // Update each file's access property
+        for (const file of files) {
+          if (file.id && file.access) {
+            await PlanFile.update(trx, { id: file.id }, { access: file.access });
+          }
+        }
+      }
+
+      await Plan.update(trx, { id: planId }, body);
+      await trx.commit();
+    } catch (err) {
+      await trx.rollback();
+      throw err;
+    }
+
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
     await plan.eagerloadAllOneToMany();
 
