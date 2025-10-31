@@ -298,7 +298,7 @@ export default class PlanScheduleController {
 
     try {
       const agreementId = await Plan.agreementIdForPlanId(trx, planId);
-      const agreement = await Agreement.find(trx, { id: agreementId });
+      const agreement = await Agreement.findById(trx, agreementId);
 
       if (!agreement) {
         throw errorWithCode(`Agreement not found for plan ID ${planId}`, 400);
@@ -308,19 +308,21 @@ export default class PlanScheduleController {
 
       const agreementTypeId = agreement.agreementTypeId;
 
+      // Map agreement types to the model classes and call the static removeById
+      // method on the class so `this.primaryKey` is available inside the method.
       const entryRemovers = {
-        1: GrazingScheduleEntry.removeById,
-        2: GrazingScheduleEntry.removeById,
-        3: HayCuttingScheduleEntry.removeById,
-        4: HayCuttingScheduleEntry.removeById,
+        1: GrazingScheduleEntry,
+        2: GrazingScheduleEntry,
+        3: HayCuttingScheduleEntry,
+        4: HayCuttingScheduleEntry,
       };
 
-      const remover = entryRemovers[agreementTypeId];
-      if (!remover) {
+      const removerClass = entryRemovers[agreementTypeId];
+      if (!removerClass) {
         throw errorWithCode(`Unsupported agreement type: ${agreementTypeId}`, 400);
       }
 
-      const result = await remover(trx, grazingScheduleEntryId);
+      const result = await removerClass.removeById(trx, grazingScheduleEntryId);
 
       if (result === 0) {
         throw errorWithCode('No such schedule entry exists', 400);
