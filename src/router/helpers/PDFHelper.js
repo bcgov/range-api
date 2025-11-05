@@ -7,15 +7,7 @@ const shift = (number, precision) => {
   return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
 };
 
-const round = (number, precision) => shift(Math.round(shift(number, +precision)), -precision);
-
-/**
- * Round the float to 1 decimal
- *
- * @param {float} number
- * @returns the rounded float number
- */
-export const roundToSingleDecimalPlace = (number) => round(number, 1);
+export const round = (number, precision) => shift(Math.round(shift(number, +precision)), -precision);
 
 /**
  *
@@ -182,25 +174,24 @@ export class AdditionalDetailsGenerator {
               delete entry.pldAUM; // No PLD for hay cutting schedules
               entry.crownAUM = entry.totalAUM; // Crown AUM equals total AUM for hay cutting
               schedule.crownTotalAUM += entry.crownAUM;
-              entry.crownAUM = entry.crownAUM.toFixed(1);
+              entry.crownAUM = round(entry.crownAUM, 1);
             } else {
               // Process grazing schedule entries (existing logic)
               entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
               entry.auFactor = entry.livestockType?.auFactor;
               entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-              entry.pldAUM = calcPldAUMs(entry.totalAUM, pasture.pldPercent).toFixed(1);
-              entry.crownAUM = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
+              entry.pldAUM = round(calcPldAUMs(entry.totalAUM, pasture.pldPercent), 1);
+              const crownAUMWithDecimal = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
+              entry.crownAUM = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
               schedule.crownTotalAUM += entry.crownAUM;
-              entry.crownAUM = entry.crownAUM.toFixed(1);
             }
           }
         }
 
         // Calculate schedule totals and usage percentages for all schedule types
-        schedule.crownTotalAUM = schedule.crownTotalAUM.toFixed(1);
         if (plan.agreement.usage) {
           const usage = plan.agreement.usage.find((element) => element.year === schedule.year);
-          if (usage) schedule.authorizedAUM = usage.authorizedAum;
+          if (usage) schedule.authorizedAUM = usage.totalAnnualUse;
           if (schedule.authorizedAUM) {
             schedule.percentUse = ((schedule.crownTotalAUM / schedule.authorizedAUM) * 100).toFixed(2);
           }

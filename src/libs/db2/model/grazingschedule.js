@@ -20,13 +20,7 @@
 
 'use strict';
 
-import {
-  calcCrownAUMs,
-  calcDateDiff,
-  calcPldAUMs,
-  calcTotalAUMs,
-  roundToSingleDecimalPlace,
-} from '../../../router/helpers/PDFHelper';
+import { calcCrownAUMs, calcDateDiff, calcPldAUMs, calcTotalAUMs, round } from '../../../router/helpers/PDFHelper';
 import GrazingScheduleEntry from './grazingscheduleentry';
 import HayCuttingScheduleEntry from './haycuttingscheduleentry';
 import Model from './model';
@@ -102,8 +96,9 @@ export default class Schedule extends Model {
         const auFactor = row.ref_livestock_au_factor;
         const livestockCount = row.livestock_count;
         const totalAUMs = calcTotalAUMs(livestockCount, days, auFactor);
-        row.pldAUMs = roundToSingleDecimalPlace(calcPldAUMs(totalAUMs, pldPercent));
-        row.crownAUMs = roundToSingleDecimalPlace(calcCrownAUMs(totalAUMs, row.pldAUMs));
+        row.pldAUMs = round(calcPldAUMs(totalAUMs, pldPercent), 1);
+        const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, row.pldAUMs);
+        row.crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
         row.dateIn = row.dateIn ? new Date(row.dateIn).toISOString().split('T')[0] : null;
         row.dateOut = row.dateOut ? new Date(row.dateOut).toISOString().split('T')[0] : null;
         return row;
@@ -116,6 +111,7 @@ export default class Schedule extends Model {
         else entries.sort((a, b) => b.crownAUMs - a.crownAUMs);
       }
     }
+
     this.scheduleEntries = entries.map((entry) => new GrazingScheduleEntry(entry, trx));
   }
 }

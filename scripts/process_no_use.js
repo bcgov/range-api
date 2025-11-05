@@ -9,6 +9,7 @@ import {
   calcCrownAUMs,
   calcDateDiff,
   calcCrownTotalAUMs,
+  round,
 } from '../src/router/helpers/PDFHelper.js';
 
 const dm = new DataManager(config);
@@ -23,8 +24,9 @@ const calculateScheduleTotalAUMs = (schedule) => {
     // For grazing schedules: calculate with PLD considerations
     if (entry.livestockCount && entry.days && entry.auFactor) {
       const totalAUMs = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-      const pldAUMs = calcPldAUMs(totalAUMs, entry.pldPercent || 0).toFixed(1);
-      const crownAUMs = calcCrownAUMs(totalAUMs, pldAUMs);
+      const pldAUMs = round(calcPldAUMs(totalAUMs, entry.pldPercent || 0), 1);
+      const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, pldAUMs);
+      const crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
 
       return {
         ...entry,
@@ -84,7 +86,6 @@ const processAgreementUsageStatus = async (
     logger.info(`Processing agreement ${forestFileId} with usage: ${JSON.stringify(usage)}`);
     const allowedAnnualUsage = usage ? parseFloat(usage.total_annual_use) : null;
     let usageStatus = null; // Default to normal
-    let percentageUseAmount = null; // Default to null
 
     // Check if a plan exists for this agreement
     // Get all plans for this agreement, ordered by creation date
@@ -150,7 +151,7 @@ const processAgreementUsageStatus = async (
             .where('haycutting_schedule_id', schedule.id);
         }
 
-        totalScheduleAUMs = calculateScheduleTotalAUMs({ scheduleEntries }).toFixed(1);
+        totalScheduleAUMs = calculateScheduleTotalAUMs({ scheduleEntries });
       }
     }
 
