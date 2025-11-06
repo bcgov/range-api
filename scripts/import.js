@@ -637,7 +637,8 @@ const updateFTAData = async (licensee, client, usage) => {
   msg = msg + (await updateClient(filteredClientsAB)) + '\n';
   msg = msg + (await updateClient(filteredClientsPC)) + '\n';
   msg = msg + (await updateZone(licensee)) + '\n';
-  msg = msg + (await updateUsage(usage));
+  if (usage) msg = msg + (await updateUsage(usage));
+  else console.log('***** No usage data available to update *****');
 
   console.log(msg);
 };
