@@ -229,61 +229,6 @@ export default class PlanScheduleController {
   }
 
   /**
-   * Add a grazing schedule entry to an existing grazing schedule
-   * @param {*} req : express req
-   * @param {*} res : express res
-   */
-  static async storeScheduleEntry(req, res) {
-    const { body, params, user } = req;
-    const { planId, scheduleId } = params;
-
-    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
-
-    const trx = await db.transaction();
-
-    try {
-      const agreementId = await Plan.agreementIdForPlanId(trx, planId);
-      await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
-
-      // Remove plan-related IDs from body to avoid conflict
-      delete body.planId;
-      delete body.plan_id;
-
-      const schedule = await Schedule.findById(trx, scheduleId);
-      if (!schedule) {
-        throw errorWithCode('No such schedule exists', 400);
-      }
-
-      const agreement = await Agreement.findById(trx, agreementId);
-      if (!agreement) {
-        throw errorWithCode('No such agreement exists', 400);
-      }
-
-      const agreementTypeId = agreement.agreementTypeId;
-      const creator = Schedule.scheduleEntryCreators?.[agreementTypeId];
-
-      if (!creator) {
-        throw errorWithCode(`Unsupported schedule entry type for agreement type ${agreementTypeId}`, 400);
-      }
-
-      const entry = await creator(trx, {
-        ...body,
-        [`${creator === GrazingScheduleEntry.create ? 'grazing' : 'haycutting'}_schedule_id`]: schedule.id,
-      });
-
-      // Update usage status for this agreement within the transaction
-      await processAgreementUsageStatus(trx, agreementId, agreementTypeId);
-
-      await trx.commit();
-      return res.status(200).json(entry).end();
-    } catch (error) {
-      await trx.rollback();
-      logger.error(`PlanScheduleController: storeScheduleEntry: fail with error: ${error.message}`);
-      throw error;
-    }
-  }
-
-  /**
    * Remove a Grazing Schedule Entries from Grazing Schedule
    * @param {*} req : express req
    * @param {*} res : express res
