@@ -43,11 +43,13 @@ export default class Schedule extends Model {
     return 'grazing_schedule';
   }
 
+  // Store the model classes (not unbound functions). Callers should invoke
+  // the static `create` method on the class to ensure `this` is the class.
   static scheduleEntryCreators = {
-    1: GrazingScheduleEntry.create,
-    2: GrazingScheduleEntry.create,
-    3: HayCuttingScheduleEntry.create,
-    4: HayCuttingScheduleEntry.create,
+    1: GrazingScheduleEntry,
+    2: GrazingScheduleEntry,
+    3: HayCuttingScheduleEntry,
+    4: HayCuttingScheduleEntry,
   };
 
   async fetchHayCuttingScheduleEntries(trx) {

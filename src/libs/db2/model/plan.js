@@ -326,7 +326,6 @@ export default class Plan extends Model {
     const newPastures = await Promise.all(pasturePromises);
 
     await Schedule.remove(db, { plan_id: planId });
-
     await Promise.all(
       snapshot.schedules.map(async (schedule) => {
         const newSchedule = await Schedule.create(db, schedule);
@@ -335,15 +334,19 @@ export default class Plan extends Model {
           GrazingScheduleEntry.remove(db, { grazing_schedule_id: schedule.id }),
           HayCuttingScheduleEntry.remove(db, { haycutting_schedule_id: schedule.id }),
         ]);
-
-        const scheduleEntryCreator = Schedule.scheduleEntryCreators[snapshot.agreement.agreement_type_id];
-
+        const scheduleEntryCreator = Schedule.scheduleEntryCreators[snapshot.agreement.agreementTypeId];
         const scheduleEntries = await Promise.all(
           (schedule.scheduleEntries || [])
-            .map((entry) => (scheduleEntryCreator ? scheduleEntryCreator(db, entry) : null))
+            .map((entry) => {
+              if (!scheduleEntryCreator) return null;
+              const entryWithScheduleId =
+                scheduleEntryCreator === GrazingScheduleEntry
+                  ? { ...entry, grazing_schedule_id: newSchedule.id }
+                  : { ...entry, haycutting_schedule_id: newSchedule.id };
+              return scheduleEntryCreator.create(db, entryWithScheduleId);
+            })
             .filter(Boolean),
         );
-
         return {
           ...newSchedule,
           scheduleEntries,
