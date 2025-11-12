@@ -7,6 +7,20 @@ const shift = (number, precision) => {
   return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
 };
 
+// Format percent use - round up with no decimal places
+// If value is between 0 and 1 (exclusive), set to 1
+// Otherwise, round up to nearest integer
+export const roundUpPercentUse = (percentUse) => {
+  if (percentUse === undefined || percentUse === null || isNaN(percentUse)) {
+    return 0;
+  }
+  const value = parseFloat(percentUse);
+  if (value > 0 && value < 1) {
+    return 1;
+  }
+  return Math.ceil(value);
+};
+
 export const round = (number, precision) => shift(Math.round(shift(number, +precision)), -precision);
 
 /**
@@ -180,7 +194,7 @@ export class AdditionalDetailsGenerator {
               entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
               entry.auFactor = entry.livestockType?.auFactor;
               entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-              entry.pldAUM = round(calcPldAUMs(entry.totalAUM, pasture.pldPercent), 1);
+              entry.pldAUM = round(calcPldAUMs(entry.totalAUM, pasture.pldPercent), 0);
               const crownAUMWithDecimal = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
               entry.crownAUM = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
               schedule.crownTotalAUM += entry.crownAUM;
@@ -193,7 +207,7 @@ export class AdditionalDetailsGenerator {
           const usage = plan.agreement.usage.find((element) => element.year === schedule.year);
           if (usage) schedule.authorizedAUM = usage.totalAnnualUse;
           if (schedule.authorizedAUM) {
-            schedule.percentUse = ((schedule.crownTotalAUM / schedule.authorizedAUM) * 100).toFixed(2);
+            schedule.percentUse = roundUpPercentUse((schedule.crownTotalAUM / schedule.authorizedAUM) * 100);
           }
         }
       }

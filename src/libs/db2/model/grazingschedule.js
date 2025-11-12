@@ -96,7 +96,7 @@ export default class Schedule extends Model {
         const auFactor = row.ref_livestock_au_factor;
         const livestockCount = row.livestock_count;
         const totalAUMs = calcTotalAUMs(livestockCount, days, auFactor);
-        row.pldAUMs = round(calcPldAUMs(totalAUMs, pldPercent), 1);
+        row.pldAUMs = round(calcPldAUMs(totalAUMs, pldPercent), 0);
         const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, row.pldAUMs);
         row.crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
         row.dateIn = row.dateIn ? new Date(row.dateIn).toISOString().split('T')[0] : null;

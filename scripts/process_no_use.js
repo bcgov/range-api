@@ -10,6 +10,7 @@ import {
   calcDateDiff,
   calcCrownTotalAUMs,
   round,
+  roundUpPercentUse,
 } from '../src/router/helpers/PDFHelper.js';
 
 const dm = new DataManager(config);
@@ -24,7 +25,7 @@ const calculateScheduleTotalAUMs = (schedule) => {
     // For grazing schedules: calculate with PLD considerations
     if (entry.livestockCount && entry.days && entry.auFactor) {
       const totalAUMs = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-      const pldAUMs = round(calcPldAUMs(totalAUMs, entry.pldPercent || 0), 1);
+      const pldAUMs = round(calcPldAUMs(totalAUMs, entry.pldPercent || 0), 0);
       const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, pldAUMs);
       const crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
 
@@ -158,7 +159,7 @@ const processAgreementUsageStatus = async (
     // Calculate percentage use of total annual usage relative to scheduled AUMs
     let percentageUse = null;
     if (totalScheduleAUMs > 0) {
-      percentageUse = ((totalScheduleAUMs / allowedAnnualUsage) * 100).toFixed(2);
+      percentageUse = roundUpPercentUse((totalScheduleAUMs / allowedAnnualUsage) * 100);
     }
     if (allowedAnnualUsage === null) {
       usageStatus = null;
