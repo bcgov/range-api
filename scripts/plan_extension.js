@@ -1,11 +1,9 @@
-import { replace } from 'lodash';
 import config from '../src/config';
 import { PLAN_EXTENSION_STATUS } from '../src/constants';
 import DataManager from '../src/libs/db2';
 import EmailTemplate from '../src/libs/db2/model/emailtemplate';
 import { Mailer } from '../src/libs/mailer';
 import { substituteFields } from '../src/libs/utils';
-import PlanStatusController from '../src/router/controllers_v1/PlanStatusController';
 
 const dm = new DataManager(config);
 

@@ -602,7 +602,7 @@ export default class Plan extends Model {
             extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
           });
         });
-        this.whereIn('status_id', [8, 9, 12, 20, 21, 22]);
+        this.whereIn('status_id', [8, 9, 12, 15, 20, 21, 22, 23]);
       })
       .orWhere(function () {
         this.whereNot('agreement.retired', '=', true);
