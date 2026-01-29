@@ -10,7 +10,7 @@ import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
-import { AGREEMENT_EXEMPTION_STATUS, PLAN_EXTENSION_STATUS } from '../../../constants';
+import { AGREEMENT_EXEMPTION_STATUS, PLAN_EXTENSION_STATUS, EXEMPTION_STATUS, PLAN_STATUS } from '../../../constants';
 import AgreementExemptionStatus from './agreementexemptionstatus';
 
 export default class Agreement extends Model {
@@ -298,6 +298,24 @@ export default class Agreement extends Model {
     }
     if (filterSettings.planCheck === true) {
       q.whereNotNull('ref_plan_status.code');
+    }
+
+    if (filterSettings.dmActionableOnly === true) {
+      q.where(function () {
+        this.whereIn('ref_plan_status.code', [
+          PLAN_STATUS.RECOMMEND_READY,
+          PLAN_STATUS.RECOMMEND_NOT_READY,
+          PLAN_STATUS.STANDS_REVIEW,
+        ])
+          .orWhere('plan.extension_status', PLAN_EXTENSION_STATUS.AWAITING_EXTENSION)
+          .orWhere('plan.extension_status', PLAN_EXTENSION_STATUS.AWAITING_EXTENSION)
+          .orWhereExists(function () {
+            this.select('*')
+              .from('exemption')
+              .whereRaw('exemption.agreement_id = agreement.forest_file_id')
+              .where('exemption.status', EXEMPTION_STATUS.PENDING_APPROVAL);
+          });
+      });
     }
 
     // Define the active plan status condition once to avoid duplication
