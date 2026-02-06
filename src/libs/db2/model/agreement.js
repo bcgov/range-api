@@ -86,6 +86,8 @@ export default class Agreement extends Model {
     switch (status) {
       case AGREEMENT_EXEMPTION_STATUS.NOT_EXEMPTED:
         return 'Not Exempted';
+      case AGREEMENT_EXEMPTION_STATUS.IN_PROGRESS:
+        return 'In Progress';
       case AGREEMENT_EXEMPTION_STATUS.ACTIVE:
         return 'Active';
       case AGREEMENT_EXEMPTION_STATUS.SCHEDULED:
@@ -225,9 +227,9 @@ export default class Agreement extends Model {
             const lowerKey = columnFilters[key].toLowerCase();
             q.where('agreement.has_current_schedule', lowerKey === 'y' ? 1 : lowerKey === 'n' ? 0 : null);
           }
-        } else if (key === 'agreement.agreement_exemption_status_id') {
+        } else if (key === 'agreement.exemption_status') {
           if (columnFilters[key] && columnFilters[key].length > 0) {
-            q.whereIn('agreement_exemption_status.id', columnFilters[key]);
+            q.whereIn('agreement_exemption_status.code', columnFilters[key]);
           }
         } else if (key === 'agreement.percentage_use') {
           // Handle numeric comparison operators for percentage_use
