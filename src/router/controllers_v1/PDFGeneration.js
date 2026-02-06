@@ -20,6 +20,7 @@ export const generatePlanPDF = async (plan) => {
 export const generateExemptionPDF = async (exemption) => {
   const dogs = new Cdogs();
   dogs.init('exemptionTemplate.docx');
+
   const response = await dogs.generatePDF(exemption, `${exemption.agreementId}_exemption.pdf`);
   return response;
 };

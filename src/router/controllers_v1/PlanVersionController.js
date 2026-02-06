@@ -4,7 +4,7 @@ import DataManager from '../../libs/db2';
 import config from '../../config';
 import { PlanRouteHelper } from '../helpers';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
-import { generatePDFResponse } from './PDFGeneration';
+import { generatePlanPDF } from './PDFGeneration';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement } = dm;
@@ -142,7 +142,7 @@ export default class PlanVersionController {
           dateOut: entry.dateOut ? new Date(entry.dateOut).toISOString().split('T')[0] : null,
         })),
       }));
-      const response = await generatePDFResponse(versionData.snapshot);
+      const response = await generatePlanPDF(versionData.snapshot);
       PlanSnapshot.update(db, { plan_id: planId, version }, { pdf_file: response.data });
       res.send(response.data);
     } catch (error) {

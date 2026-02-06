@@ -71,7 +71,7 @@ export default class Exemption extends Model {
       .orderBy(orderBy, order);
     return Promise.all(
       results.map(async (row) => {
-        const exemption = new Exemption(row);
+        const exemption = new Exemption(row, trx);
         exemption.attachments = await ExemptionAttachment.findByExemptionId(trx, exemption.id);
         return exemption;
       }),
@@ -103,7 +103,7 @@ export default class Exemption extends Model {
       return null;
     }
 
-    const exemption = new Exemption(row);
+    const exemption = new Exemption(row, trx);
     exemption.attachments = await ExemptionAttachment.findByExemptionId(trx, exemption.id);
     return exemption;
   }

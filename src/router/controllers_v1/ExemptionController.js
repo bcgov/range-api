@@ -487,6 +487,12 @@ export default class ExemptionController {
     const { exemptionId } = params;
     checkRequiredFields(['exemptionId'], 'params', req);
     const exemption = await Exemption.findById(db, exemptionId);
+    const agreement = await Agreement.findById(db, exemption.agreementId);
+    console.log('agreement', agreement);
+    if (agreement) {
+      await agreement.fetchClients();
+      exemption.agreement = agreement;
+    }
     const response = await generateExemptionPDF(exemption);
     res.json(response.data).end();
   }
@@ -496,6 +502,12 @@ export default class ExemptionController {
 
     // 1. Generated PDF
     try {
+      const agreement = await Agreement.findById(db, exemption.agreementId);
+      console.log('agreement', agreement);
+      if (agreement) {
+        await agreement.fetchClients();
+        exemption.agreement = agreement;
+      }
       const pdfResponse = await generateExemptionPDF(exemption);
       emailAttachments.push({
         content: Buffer.from(pdfResponse.data).toString('base64'),
