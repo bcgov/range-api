@@ -2,7 +2,7 @@ import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
-import { EXEMPTION_STATUS } from '../../constants';
+import { EXEMPTION_STATUS, AGREEMENT_EXEMPTION_STATUS } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import ExemptionStatusHistory from '../../libs/db2/model/exemptionstatushistory';
 import ExemptionAttachment from '../../libs/db2/model/exemptionattachment';
@@ -234,6 +234,14 @@ export default class ExemptionController {
 
       const fullExemption = await Exemption.findById(trx, newExemption.id);
       const [agreement] = await Agreement.find(trx, { forest_file_id: agreementId });
+
+      // Set agreement exemption status to IN_PROGRESS when exemption is created
+      await Agreement.update(
+        trx,
+        { forest_file_id: agreementId },
+        { exemption_status: AGREEMENT_EXEMPTION_STATUS.IN_PROGRESS },
+      );
+
       const zone = await Zone.findById(trx, agreement.zoneId);
       const rangeOfficer = await User.findById(trx, zone.userId);
       const { emails } = await NotificationHelper.getParticipants(trx, agreementId);
