@@ -16,8 +16,9 @@ exports.up = async function (knex) {
     INSERT INTO agreement_exemption_status (id, code, description, active)
     VALUES
       (1, 'NOT_EXEMPTED', 'Not Exempted', TRUE),
-      (2, 'ACTIVE', 'Active', TRUE),
-      (3, 'SCHEDULED', 'Scheduled', TRUE)
+      (2, 'EXEMPTED', 'Exempted', TRUE),
+      (3, 'SCHEDULED', 'Scheduled', TRUE),
+      (4, 'IN_PROGRESS', 'In Progress', TRUE)
   `);
 
   // 2. Add exemption_status column to agreement table

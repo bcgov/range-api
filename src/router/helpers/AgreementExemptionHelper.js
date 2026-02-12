@@ -72,7 +72,7 @@ export const updateAgreementExemptions = async (trx, user, agreementId = null) =
     const currentDeterminedStatus = agreementExemptionStatusUpdates[currentAgreementId];
     if (today.isBetween(exemptionStartDate, exemptionEndDate, null, '[]')) {
       // Exemption is active today
-      agreementExemptionStatusUpdates[currentAgreementId] = AGREEMENT_EXEMPTION_STATUS.ACTIVE;
+      agreementExemptionStatusUpdates[currentAgreementId] = AGREEMENT_EXEMPTION_STATUS.EXEMPTED;
     } else if (
       exemptionStartDate.isAfter(today) &&
       currentDeterminedStatus === AGREEMENT_EXEMPTION_STATUS.NOT_EXEMPTED

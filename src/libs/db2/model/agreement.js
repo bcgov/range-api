@@ -88,8 +88,8 @@ export default class Agreement extends Model {
         return 'Not Exempted';
       case AGREEMENT_EXEMPTION_STATUS.IN_PROGRESS:
         return 'In Progress';
-      case AGREEMENT_EXEMPTION_STATUS.ACTIVE:
-        return 'Active';
+      case AGREEMENT_EXEMPTION_STATUS.EXEMPTED:
+        return 'Exempted';
       case AGREEMENT_EXEMPTION_STATUS.SCHEDULED:
         return 'Scheduled';
       default:
