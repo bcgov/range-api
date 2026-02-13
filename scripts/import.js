@@ -23,7 +23,6 @@ const {
   UserClientLink,
   Agreement,
   AgreementType,
-  AgreementExemptionStatus,
   Client,
   ClientType,
   ClientAgreement,
@@ -203,7 +202,6 @@ const updateAgreement = async (data) => {
   agreementTypes.map((at) => {
     agreementTypesMap[at.code] = at;
   });
-  const exemption = await AgreementExemptionStatus.findOne(db, { code: 'N' }); // Not Exempt
 
   let created = 0;
   let updated = 0;
@@ -247,14 +245,16 @@ const updateAgreement = async (data) => {
         agreementEndDate: new Date(initial_expiry_dt), // Short Format
         zoneId: zone.id,
         agreementTypeId: agreementType.id,
-        agreementExemptionStatusId: exemption.id,
         retired: false,
       };
       if (agreement) {
         await Agreement.update(db, { forest_file_id: agreementId }, record);
         updated += 1;
       } else {
-        await Agreement.create(db, { forestFileId: agreementId, ...record });
+        await Agreement.create(db, {
+          forestFileId: agreementId,
+          ...record,
+        });
         created += 1;
       }
     } catch (error) {
@@ -266,8 +266,10 @@ const updateAgreement = async (data) => {
   for (let i = 1; i < 100; i++) {
     activeFTAAgreementIds.push(`RAN0999${String(i).padStart(2, '0')}`);
   }
+  const unretiredAgreementIds = await Agreement.unretireAgreements(db, activeFTAAgreementIds);
   const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
 
+  console.log(`Unretired Agreements: ${unretiredAgreementIds}`);
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
   return `${created} agreements were created. ${updated} agreements were updated. ${skipped} agreements were skipped.`;
 };

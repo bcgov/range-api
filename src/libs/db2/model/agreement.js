@@ -10,7 +10,13 @@ import PlanStatus from './planstatus';
 import Usage from './usage';
 import User from './user';
 import Zone from './zone';
-import { AGREEMENT_EXEMPTION_STATUS, PLAN_EXTENSION_STATUS, EXEMPTION_STATUS, PLAN_STATUS } from '../../../constants';
+import {
+  AGREEMENT_EXEMPTION_STATUS,
+  PLAN_EXTENSION_STATUS,
+  EXEMPTION_STATUS,
+  PLAN_STATUS,
+  SYSTEM_USER_ID,
+} from '../../../constants';
 import AgreementExemptionStatus from './agreementexemptionstatus';
 
 export default class Agreement extends Model {
@@ -403,6 +409,42 @@ export default class Agreement extends Model {
       .where('agreement_id', 'not like', 'RAN099%')
       .update({ status_id: 25 });
     return results;
+  }
+
+  static async unretireAgreements(db, activeFTAAgreementIds) {
+    const agreementsToUnretire = await db
+      .table(Agreement.table)
+      .whereIn('forest_file_id', activeFTAAgreementIds)
+      .where({ retired: true })
+      .select('forest_file_id');
+
+    const agreementIds = agreementsToUnretire.map((a) => a.forest_file_id);
+
+    if (agreementIds.length === 0) {
+      return [];
+    }
+
+    await db.table(Agreement.table).whereIn('forest_file_id', agreementIds).update({ retired: false });
+
+    const plansToUpdate = await db
+      .table(Plan.table)
+      .whereIn('agreement_id', agreementIds)
+      .where({ status_id: 25 })
+      .select('id', 'status_id');
+
+    for (const plan of plansToUpdate) {
+      await db.table(Plan.table).where({ id: plan.id }).update({ status_id: 6 });
+
+      await db.table('plan_status_history').insert({
+        plan_id: plan.id,
+        from_plan_status_id: plan.status_id,
+        to_plan_status_id: 6,
+        user_id: SYSTEM_USER_ID,
+        note: 'Agreement renewed in FTA, unretiring agreement and setting plan to staff draft.',
+      });
+    }
+
+    return agreementIds;
   }
 
   async eagerloadAllOneToManyExceptPlan() {
