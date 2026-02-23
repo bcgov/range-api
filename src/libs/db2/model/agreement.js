@@ -316,7 +316,6 @@ export default class Agreement extends Model {
           PLAN_STATUS.STANDS_REVIEW,
         ])
           .orWhere('plan.extension_status', PLAN_EXTENSION_STATUS.AWAITING_EXTENSION)
-          .orWhere('plan.extension_status', PLAN_EXTENSION_STATUS.AWAITING_EXTENSION)
           .orWhereExists(function () {
             this.select('*')
               .from('exemption')

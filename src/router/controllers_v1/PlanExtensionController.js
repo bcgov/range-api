@@ -1,15 +1,14 @@
 import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import config from '../../config';
-import { PLAN_EXTENSION_STATUS } from '../../constants';
+import { PLAN_EXTENSION_STATUS, SSO_ROLE_MAP } from '../../constants';
 import DataManager from '../../libs/db2';
 import PlanFile from '../../libs/db2/model/PlanFile';
 import Agreement from '../../libs/db2/model/agreement';
-import EmailTemplate from '../../libs/db2/model/emailtemplate';
 import Schedule from '../../libs/db2/model/grazingschedule';
-import { Mailer } from '../../libs/mailer';
-import { checkRequiredFields, substituteFields } from '../../libs/utils';
+import { checkRequiredFields } from '../../libs/utils';
 import PlanController from './PlanController';
 import PlanStatusController from './PlanStatusController';
+import NotificationHelper from '../helpers/NotificationHelper';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests } = dm;
@@ -73,7 +72,7 @@ export default class PlanExtensionController {
         })
       )[0];
       if (planEntry.extensionReceivedVotes === planEntry.extensionRequiredVotes + 1) {
-        await PlanExtensionController.sendPlanPendingExtensionEmail(trx, [agreement.zone.user.email], {
+        await NotificationHelper.sendEmail(db, [agreement.zone.user.email], 'Plan Pending Extension', {
           '{agreementId}': planEntry.agreementId,
         });
       }
@@ -315,6 +314,17 @@ export default class PlanExtensionController {
     const trx = await db.transaction();
     try {
       await Plan.update(trx, { id: planId }, { extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_EXTENSION });
+
+      // Send Response Required email to decision makers
+      const { emails: decisionMakerEmails } = await NotificationHelper.getParticipants(trx, planRow.agreementId, [
+        SSO_ROLE_MAP.RANGE_OFFICER,
+        SSO_ROLE_MAP.AGREEMENT_HOLDER,
+      ]);
+      const emailFields = {
+        '{agreementId}': planRow.agreementId,
+      };
+      await NotificationHelper.sendEmail(trx, decisionMakerEmails, 'Response Required', emailFields);
+
       trx.commit();
       return res.status(200).end();
     } catch (error) {
@@ -461,19 +471,5 @@ export default class PlanExtensionController {
       trx.rollback();
       throw errorWithCode(error, 500);
     }
-  }
-
-  static async sendPlanPendingExtensionEmail(db, emails, parameters) {
-    const template = await EmailTemplate.findOne(db, {
-      name: 'Plan Pending Extension',
-    });
-    const mailer = new Mailer();
-    await mailer.sendEmail(
-      emails,
-      template.fromEmail,
-      substituteFields(template.subject, parameters),
-      substituteFields(template.body, parameters),
-      'html',
-    );
   }
 }

@@ -3,7 +3,7 @@ import { isNumeric, checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import moment from 'moment';
-import { AGREEMENT_EXEMPTION_STATUS, EXEMPTION_STATUS, PLAN_STATUS } from '../../constants';
+import { AGREEMENT_EXEMPTION_STATUS, EXEMPTION_STATUS, PLAN_STATUS, SSO_ROLE_MAP } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot';
 import PlanController from './PlanController';
@@ -153,6 +153,7 @@ export default class PlanStatusController {
           user,
           agreementId,
           exemption,
+          [SSO_ROLE_MAP.DECISION_MAKER],
         );
       }
 
@@ -209,7 +210,6 @@ export default class PlanStatusController {
       const zone = await Zone.findById(trx, agreement.zoneId);
       const rangeOfficer = await User.findById(trx, zone.userId);
 
-      const { emails } = await NotificationHelper.getParticipants(trx, agreementId);
       const toStatus = await PlanStatus.findById(trx, statusId);
       const fromStatus = await PlanStatus.findById(trx, prevStatusId);
       const emailFields = {
@@ -220,7 +220,26 @@ export default class PlanStatusController {
         '{rangeOfficerEmail}': rangeOfficer.email,
         '{note}': note || ' ',
       };
+
+      // If status requires decision maker action, send Response Required to decision makers only
+      if (
+        status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION ||
+        status.code === PLAN_STATUS.RECOMMEND_READY ||
+        status.code === PLAN_STATUS.RECOMMEND_NOT_READY
+      ) {
+        const { emails: decisionMakerEmails } = await NotificationHelper.getParticipants(trx, agreementId, [
+          SSO_ROLE_MAP.RANGE_OFFICER,
+          SSO_ROLE_MAP.AGREEMENT_HOLDER,
+        ]);
+        const responseFields = {
+          '{agreementId}': agreementId,
+        };
+        await NotificationHelper.sendEmail(trx, decisionMakerEmails, 'Response Required', responseFields);
+      }
+      // For other statuses, send Plan Status Change email excluding decision makers
+      const { emails } = await NotificationHelper.getParticipants(trx, agreementId, [SSO_ROLE_MAP.DECISION_MAKER]);
       await NotificationHelper.sendEmail(trx, emails, 'Plan Status Change', emailFields);
+
       trx.commit();
       return res.status(200).json(status).end();
     } catch (err) {

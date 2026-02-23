@@ -2,7 +2,7 @@ import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
-import { EXEMPTION_STATUS, AGREEMENT_EXEMPTION_STATUS } from '../../constants';
+import { EXEMPTION_STATUS, AGREEMENT_EXEMPTION_STATUS, SSO_ROLE_MAP } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import ExemptionStatusHistory from '../../libs/db2/model/exemptionstatushistory';
 import ExemptionAttachment from '../../libs/db2/model/exemptionattachment';
@@ -232,7 +232,6 @@ export default class ExemptionController {
       }
       newExemption.attachments = createdAttachments;
 
-      const fullExemption = await Exemption.findById(trx, newExemption.id);
       const [agreement] = await Agreement.find(trx, { forest_file_id: agreementId });
 
       // Set agreement exemption status to IN_PROGRESS when exemption is created
@@ -244,7 +243,10 @@ export default class ExemptionController {
 
       const zone = await Zone.findById(trx, agreement.zoneId);
       const rangeOfficer = await User.findById(trx, zone.userId);
-      const { emails } = await NotificationHelper.getParticipants(trx, agreementId);
+      const { emails } = await NotificationHelper.getParticipants(trx, agreementId, [
+        SSO_ROLE_MAP.AGREEMENT_HOLDER,
+        SSO_ROLE_MAP.RANGE_OFFICER,
+      ]);
       const emailFields = {
         '{agreementId}': agreementId,
         '{fromStatus}': 'created',
@@ -253,11 +255,7 @@ export default class ExemptionController {
         '{rangeOfficerEmail}': rangeOfficer.email,
         '{note}': 'Created' || ' ',
       };
-      const emailAttachments = await ExemptionController.prepareEmailAttachments(
-        fullExemption,
-        fullExemption.attachments,
-      );
-      await NotificationHelper.sendEmail(trx, emails, 'Exemption Status Change', emailFields, emailAttachments);
+      await NotificationHelper.sendEmail(trx, emails, 'Response Required', emailFields);
       await trx.commit();
       res.status(201).json(newExemption);
     } catch (error) {

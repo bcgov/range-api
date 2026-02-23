@@ -1,7 +1,7 @@
 'use strict';
 
 import moment from 'moment';
-import { AGREEMENT_EXEMPTION_STATUS, EXEMPTION_STATUS } from '../../constants';
+import { AGREEMENT_EXEMPTION_STATUS, EXEMPTION_STATUS, SSO_ROLE_MAP } from '../../constants';
 import DataManager from '../../libs/db2';
 import config from '../../config';
 import NotificationHelper from './NotificationHelper';
@@ -59,6 +59,7 @@ export const updateAgreementExemptions = async (trx, user, agreementId = null) =
           user, // Pass systemUser
           currentAgreementId,
           exemption,
+          [SSO_ROLE_MAP.DECISION_MAKER], // Exclude district managers from notifications for this cancellation
         );
       }
       continue; // Skip to next exemption

@@ -1,35 +1,15 @@
 import config from '../src/config';
 import { PLAN_EXTENSION_STATUS, SYSTEM_USER_ID } from '../src/constants';
 import DataManager from '../src/libs/db2';
-import EmailTemplate from '../src/libs/db2/model/emailtemplate';
-import { Mailer } from '../src/libs/mailer';
-import { substituteFields } from '../src/libs/utils';
 import {
   updateAgreementExemptions,
   sendAgreementExemptionStatusEmails,
 } from '../src/router/helpers/AgreementExemptionHelper';
+import NotificationHelper from '../src/router/helpers/NotificationHelper';
 
 const dm = new DataManager(config);
 
-const { db, Plan, PlanExtensionRequests, Agreement, User } = dm;
-
-const sendEmailToAgreementHolders = async (db, expiringPlan) => {
-  const template = await EmailTemplate.findOne(db, {
-    name: 'Request Plan Extension Votes',
-  });
-  const mailer = new Mailer();
-  await mailer.sendEmail(
-    [expiringPlan.email],
-    template.fromEmail,
-    substituteFields(template.subject, {
-      '{agreementId}': expiringPlan.agreementId,
-    }),
-    substituteFields(template.body, {
-      '{agreementId}': expiringPlan.agreementId,
-    }),
-    'html',
-  );
-};
+const { db, Plan, PlanExtensionRequests, User } = dm;
 
 const activateReplacementPlans = async (trx) => {
   const results = await trx
@@ -100,7 +80,11 @@ const main = async () => {
         });
         if (requiredVotes[expiringPlan.planId] === undefined) requiredVotes[expiringPlan.planId] = 1;
         else requiredVotes[expiringPlan.planId] = requiredVotes[expiringPlan.planId] + 1;
-        if (expiringPlan.email) await sendEmailToAgreementHolders(trx, expiringPlan);
+        if (expiringPlan.email) {
+          await NotificationHelper.sendEmail(db, [expiringPlan.email], 'Request Plan Extension Votes', {
+            '{agreementId}': expiringPlan.agreementId,
+          });
+        }
       } catch (error) {
         console.error(error);
       }

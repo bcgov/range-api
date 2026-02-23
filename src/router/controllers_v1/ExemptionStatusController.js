@@ -2,7 +2,7 @@ import { errorWithCode, logger } from '@bcgov/nodejs-common-utils';
 import { checkRequiredFields } from '../../libs/utils';
 import DataManager from '../../libs/db2';
 import config from '../../config';
-import { EXEMPTION_STATUS, SYSTEM_USER_ID } from '../../constants';
+import { EXEMPTION_STATUS, SSO_ROLE_MAP, SYSTEM_USER_ID } from '../../constants';
 import { PlanRouteHelper } from '../helpers';
 import Exemption from '../../libs/db2/model/exemption';
 import ExemptionStatusHistory from '../../libs/db2/model/exemptionstatushistory';
@@ -26,7 +26,16 @@ export default class ExemptionStatusController {
    * @param {*} agreementId // Passed for notification purposes
    * @param {*} exemption // The exemption object itself
    */
-  static async performExemptionTransition(trx, exemptionId, newStatus, comment, user = null, agreementId, exemption) {
+  static async performExemptionTransition(
+    trx,
+    exemptionId,
+    newStatus,
+    comment,
+    user = null,
+    agreementId,
+    exemption,
+    emailExclusions,
+  ) {
     const statusComment = comment || '';
     const updateData = { status: newStatus };
 
@@ -54,7 +63,7 @@ export default class ExemptionStatusController {
     const zone = await Zone.findById(trx, agreement.zoneId);
     const rangeOfficer = await User.findById(trx, zone.userId);
 
-    const { emails } = await NotificationHelper.getParticipants(trx, agreementId);
+    const { emails } = await NotificationHelper.getParticipants(trx, agreementId, emailExclusions);
     const emailFields = {
       '{agreementId}': agreementId,
       '{fromStatus}': exemption.status,
@@ -68,6 +77,18 @@ export default class ExemptionStatusController {
       updatedExemption.attachments,
     );
     await NotificationHelper.sendEmail(trx, emails, 'Exemption Status Change', emailFields, emailAttachments);
+
+    // Send Response Required email to decision makers when status changes to PENDING_APPROVAL
+    if (newStatus === EXEMPTION_STATUS.PENDING_APPROVAL && exemption.status !== EXEMPTION_STATUS.PENDING_APPROVAL) {
+      const { emails: decisionMakerEmails } = await NotificationHelper.getParticipants(trx, agreementId, [
+        SSO_ROLE_MAP.RANGE_OFFICER,
+        SSO_ROLE_MAP.AGREEMENT_HOLDER,
+      ]);
+      const responseFields = {
+        '{agreementId}': agreementId,
+      };
+      await NotificationHelper.sendEmail(trx, decisionMakerEmails, 'Response Required', responseFields);
+    }
 
     await updateAgreementExemptions(trx, user, agreementId);
 
@@ -100,6 +121,7 @@ export default class ExemptionStatusController {
     checkRequiredFields(['agreementId', 'exemptionId'], 'params', req);
     checkRequiredFields(['action'], 'body', req);
     const trx = await db.transaction();
+    const emailExclusions = [SSO_ROLE_MAP.DECISION_MAKER];
     try {
       await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
       const exemption = await Exemption.findById(trx, exemptionId);
@@ -112,6 +134,7 @@ export default class ExemptionStatusController {
           throw errorWithCode('Can only submit draft or rejected exemptions for approval.', 403);
         }
         newStatus = EXEMPTION_STATUS.PENDING_APPROVAL;
+        emailExclusions.push(...[SSO_ROLE_MAP.AGREEMENT_HOLDER, SSO_ROLE_MAP.RANGE_OFFICER]);
       } else if ((user.isDecisionMaker() || user.isAdministrator()) && action === 'approve') {
         if (exemption.status !== EXEMPTION_STATUS.PENDING_APPROVAL) {
           throw errorWithCode('Exemption must be pending for approval.', 403);
@@ -122,6 +145,7 @@ export default class ExemptionStatusController {
           throw errorWithCode('Exemption must be pending for rejection.', 403);
         }
         newStatus = EXEMPTION_STATUS.REJECTED;
+        emailExclusions.push(...[SSO_ROLE_MAP.AGREEMENT_HOLDER]);
       } else if ((user.isDecisionMaker() || user.isAdministrator()) && action === 'cancel') {
         if (exemption.status === EXEMPTION_STATUS.CANCELLED) {
           throw errorWithCode('Exemption is already cancelled.', 403);
@@ -139,6 +163,7 @@ export default class ExemptionStatusController {
         user,
         agreementId,
         exemption,
+        emailExclusions,
       );
 
       await trx.commit();
