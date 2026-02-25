@@ -223,7 +223,7 @@ export default class PlanStatusController {
 
       // If status requires decision maker action, send Response Required to decision makers only
       if (
-        status.code === PLAN_STATUS.SUBMITTED_FOR_FINAL_DECISION ||
+        status.code === PLAN_STATUS.STANDS_REVIEW ||
         status.code === PLAN_STATUS.RECOMMEND_READY ||
         status.code === PLAN_STATUS.RECOMMEND_NOT_READY
       ) {

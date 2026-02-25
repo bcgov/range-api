@@ -29,6 +29,7 @@ export default class NotificationHelper {
         .table('user_account')
         .join('user_districts', 'user_districts.user_id', '=', 'user_account.id')
         .where('user_districts.id', zone.districtId)
+        .andWhere('user_account.role_id', 2)
         .select('user_account.email');
 
       for (const manager of districtManagers) {
