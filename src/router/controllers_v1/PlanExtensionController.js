@@ -123,6 +123,7 @@ export default class PlanExtensionController {
           PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED,
           PLAN_EXTENSION_STATUS.DISTRICT_MANAGER_REJECTED,
           PLAN_EXTENSION_STATUS.STAFF_REJECTED,
+          PLAN_EXTENSION_STATUS.EXTENDED,
         ].includes(plan.extensionStatus) &&
         plan.statusId !== 26
       ) {
