@@ -142,3 +142,40 @@ export const AGREEMENT_EXEMPTION_STATUS = {
 };
 
 export const SYSTEM_USER_ID = 1115;
+
+export const AGREEMENT_EXPORT_COLUMNS = {
+  RAN: 'RAN',
+  LICENSE_TYPE: 'License Type',
+  RANGE_NAME: 'Range Name',
+  LICENSEE: 'Licensee',
+  AGREEMENT_HOLDER_1: 'Agreement Holder 1',
+  AGREEMENT_HOLDER_1_EMAIL: 'Agreement Holder 1 Email',
+  AGREEMENT_HOLDER_2: 'Agreement Holder 2',
+  AGREEMENT_HOLDER_2_EMAIL: 'Agreement Holder 2 Email',
+  AGREEMENT_HOLDER_3: 'Agreement Holder 3',
+  AGREEMENT_HOLDER_3_EMAIL: 'Agreement Holder 3 Email',
+  AGREEMENT_HOLDER_4: 'Agreement Holder 4',
+  AGREEMENT_HOLDER_4_EMAIL: 'Agreement Holder 4 Email',
+  AGREEMENT_HOLDER_5: 'Agreement Holder 5',
+  AGREEMENT_HOLDER_5_EMAIL: 'Agreement Holder 5 Email',
+  ZONE_AGROLOGIST: 'Zone Agrologist',
+  ZONE: 'Zone',
+  DISTRICT: 'District',
+  PLAN_STATUS: 'Plan Status',
+  PLAN_START_DATE: 'Plan Start Date',
+  PLAN_END_DATE: 'Plan End Date',
+  USAGE_STATUS: 'Usage Status',
+  PERCENTAGE_USE: 'Percentage Use',
+  HAS_CURRENT_SCHEDULE: 'Has Current Schedule',
+  EXEMPTION_STATUS: 'Exemption Status',
+};
+
+export const AGREEMENT_EXPORT = {
+  FILENAME: 'agreements.csv',
+  CONTENT_TYPE: 'text/csv',
+  NO_PLAN_DEFAULT: 'No Plan',
+  YES: 'Yes',
+  NO: 'No',
+  DATE_FORMAT: 'YYYY-MM-DD',
+  TEST_RAN_PREFIX: 'RAN0999',
+};

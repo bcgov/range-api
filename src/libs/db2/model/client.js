@@ -38,6 +38,9 @@ export default class Client extends Model {
     super(obj, db);
 
     this.clientType = new ClientType(ClientType.extract(data), db);
+    this.email = data.user_email || '';
+    this.userGivenName = data.user_given_name || '';
+    this.userFamilyName = data.user_family_name || '';
   }
 
   // To match previous Agreement (sequelize) schema.
@@ -61,7 +64,13 @@ export default class Client extends Model {
       return [];
     }
 
-    const myFields = [...Client.fields, ...ClientType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`)];
+    const myFields = [
+      ...Client.fields,
+      ...ClientType.fields.map((f) => `${f} AS ${f.replace('.', '_')}`),
+      'user_account.email AS user_email',
+      'user_account.given_name AS user_given_name',
+      'user_account.family_name AS user_family_name',
+    ];
 
     const results = await db
       .select(myFields)
@@ -71,6 +80,12 @@ export default class Client extends Model {
       })
       .join('ref_client_type', {
         'client_agreement.client_type_id': 'ref_client_type.id',
+      })
+      .leftJoin('user_client_link', {
+        'user_client_link.client_id': 'ref_client.client_number',
+      })
+      .leftJoin('user_account', {
+        'user_account.id': 'user_client_link.user_id',
       })
       .where({ 'client_agreement.agreement_id': agreement.forestFileId });
 

@@ -103,6 +103,16 @@ export default class Agreement extends Model {
     }
   }
 
+  static getLicenseTypeText(agreement) {
+    if (Agreement.isHayCuttingSchedule(agreement)) {
+      return 'Hay Cutting Licence';
+    }
+    if (Agreement.isGrazingSchedule(agreement)) {
+      return 'Grazing Licence';
+    }
+    return '';
+  }
+
   get usageStatusText() {
     return Agreement.getUsageStatusText(this.usage_status);
   }
@@ -491,6 +501,9 @@ export default class Agreement extends Model {
         clientTypeCode: client.clientType.code,
         startDate: client.licenseeStartDate,
         endDate: client.licenseeEndDate,
+        email: client.email,
+        userGivenName: client.userGivenName,
+        userFamilyName: client.userFamilyName,
       };
 
       return aClient;
