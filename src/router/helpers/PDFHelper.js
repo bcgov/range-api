@@ -108,7 +108,7 @@ export class AdditionalDetailsGenerator {
         }
         for (const plantCommunity of pasture.plantCommunities) {
           if (plantCommunity) {
-            if (!plantCommunity.rangeReadinessMonth && plantCommunity.rangeReadinessDay) {
+            if (plantCommunity.rangeReadinessMonth && plantCommunity.rangeReadinessDay) {
               plantCommunity.rangeReadinessDate = moment()
                 .set('month', plantCommunity.rangeReadinessMonth - 1)
                 .set('date', plantCommunity.rangeReadinessDay)
