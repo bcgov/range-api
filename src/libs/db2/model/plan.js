@@ -505,7 +505,7 @@ export default class Plan extends Model {
     let promises = [];
     if (agreementTypeId === 1 || agreementTypeId === 2) {
       promises = schedules.map((s) => s.fetchGrazingSchedulesEntries(this.db));
-    } else if (agreementTypeId === 2 || agreementTypeId === 3) {
+    } else if (agreementTypeId === 3 || agreementTypeId === 4) {
       promises = schedules.map((s) => s.fetchHayCuttingScheduleEntries(this.db));
     }
     await Promise.all(promises);

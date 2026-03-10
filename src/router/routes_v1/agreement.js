@@ -10,6 +10,8 @@ import UserDistricts from '../../libs/db2/model/userDistricts';
 import ExemptionController from '../controllers_v1/ExemptionController';
 import ExemptionStatusController from '../controllers_v1/ExemptionStatusController';
 import { AGREEMENT_EXPORT_COLUMNS, AGREEMENT_EXPORT } from '../../constants';
+import { calculateMaxLivestock } from '../helpers/livestockRequirementCalculator';
+import LivestockType from '../../libs/db2/model/livestocktype';
 
 const router = new Router();
 
@@ -114,6 +116,60 @@ router.get(
   }),
 );
 
+// Export max livestock values as CSV
+router.get(
+  '/export/livestock',
+  asyncMiddleware(async (req, res) => {
+    const { user, query } = req;
+
+    if (!user.isAdministrator() && !user.isRangeOfficer() && !user.isDecisionMaker() && !user.isReadOnly()) {
+      throw errorWithCode('Unauthorized', 403);
+    }
+
+    const filterSettings = query.filterSettings ? JSON.parse(query.filterSettings) : {};
+
+    let agreements = await getAgreements(user, filterSettings);
+    // Filter out test agreements
+    agreements = agreements.filter((agreement) => !agreement.forestFileId.startsWith(AGREEMENT_EXPORT.TEST_RAN_PREFIX));
+    agreements.map((agreement) => agreement.transformToV1());
+
+    const livestockTypes = await LivestockType.getAllActive(db);
+
+    const csvData = [];
+    for (const agreement of agreements) {
+      if (agreement.plan && agreement.plan.id) {
+        await agreement.plan.fetchSchedules(agreement.agreementType?.id);
+        if (agreement.plan.schedules) {
+          for (const schedule of agreement.plan.schedules) {
+            const maxLivestock = calculateMaxLivestock(schedule.scheduleEntries);
+
+            const row = {
+              [AGREEMENT_EXPORT_COLUMNS.RAN]: agreement.forestFileId,
+              Year: schedule.year,
+            };
+
+            livestockTypes.forEach((type) => {
+              const columnName = `${type.name}${AGREEMENT_EXPORT.LIVESTOCK_COLUMN_SUFFIX}`;
+              row[columnName] = maxLivestock[type.id] || 0;
+            });
+
+            csvData.push(row);
+          }
+        }
+      }
+    }
+
+    csv.stringify(csvData, { header: true }, (err, output) => {
+      if (err) {
+        throw err;
+      }
+      res.setHeader('Content-Type', AGREEMENT_EXPORT.CONTENT_TYPE);
+      res.setHeader('Content-Disposition', 'attachment; filename="livestock_export.csv"');
+      res.status(200).send(output);
+    });
+  }),
+);
+
 // Export agreements as CSV
 router.get(
   '/export',
@@ -139,8 +195,9 @@ router.get(
         return 0;
       });
 
-      const primaryClient = sortedClients[0];
-      const clientName = primaryClient?.name || '';
+      // Get licensee client name (client_type_id 1)
+      const licenseeClient = agreement.clients.find((c) => c.clientTypeCode === '1');
+      const clientName = licenseeClient?.name || '';
 
       // Get up to 5 agreement holders (from user account names) and emails, fill remaining with empty strings
       const holders = Array(5)
@@ -158,7 +215,7 @@ router.get(
         .fill('')
         .map((_, index) => sortedClients[index]?.email || '');
 
-      return {
+      const row = {
         [AGREEMENT_EXPORT_COLUMNS.RAN]: agreement.forestFileId,
         [AGREEMENT_EXPORT_COLUMNS.LICENSE_TYPE]: Agreement.getLicenseTypeText(agreement),
         [AGREEMENT_EXPORT_COLUMNS.RANGE_NAME]: agreement.plan?.rangeName || '',
@@ -192,6 +249,8 @@ router.get(
           : AGREEMENT_EXPORT.NO,
         [AGREEMENT_EXPORT_COLUMNS.EXEMPTION_STATUS]: Agreement.getExemptionStatusText(agreement.exemptionStatus),
       };
+
+      return row;
     });
 
     csv.stringify(csvData, { header: true }, (err, output) => {

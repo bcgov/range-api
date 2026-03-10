@@ -178,4 +178,5 @@ export const AGREEMENT_EXPORT = {
   NO: 'No',
   DATE_FORMAT: 'YYYY-MM-DD',
   TEST_RAN_PREFIX: 'RAN0999',
+  LIVESTOCK_COLUMN_SUFFIX: ' - Max Required',
 };

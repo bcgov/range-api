@@ -31,4 +31,12 @@ export default class LivestockType extends Model {
   static get table() {
     return 'ref_livestock';
   }
+
+  static async getAllActive(db) {
+    if (!db) {
+      return [];
+    }
+    const results = await db.select().from(this.table).where({ active: true }).orderBy('id', 'asc');
+    return results.map((row) => new LivestockType(row, db));
+  }
 }
