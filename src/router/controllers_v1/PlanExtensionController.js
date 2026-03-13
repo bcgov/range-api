@@ -392,11 +392,14 @@ export default class PlanExtensionController {
    * @param {*} res : express resp object
    */
   static async copyPlan(req, res) {
-    const { body, params } = req;
+    const { body, params, user } = req;
     const { planId } = params;
     const { agreementId, destinationPlanId, createReplacementPlan } = body;
     checkRequiredFields(['planId'], 'params', req);
     checkRequiredFields(['agreementId'], 'body', req);
+    if (user && user.isAgreementHolder()) {
+      throw errorWithCode('You do not have the permission to copy a plan as an agreement holder', 403);
+    }
     const planRow = await Plan.findOne(db, { id: planId });
     if (!planRow) {
       throw errorWithCode('Invalid request. Could not find the plan.', 400);
