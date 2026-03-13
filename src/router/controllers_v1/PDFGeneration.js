@@ -1,9 +1,13 @@
 import Cdogs from '../../libs/cdogs';
+import Agreement from '../../libs/db2/model/agreement';
 import { AdditionalDetailsGenerator } from '../helpers/PDFHelper';
 
 export const generatePlanPDF = async (plan) => {
+  const templateFile = Agreement.isGrazingSchedule(plan.agreement)
+    ? './planTemplate_GrazingSchedule.docx'
+    : './planTemplate_HaycuttingSchedule.docx';
   const dogs = new Cdogs();
-  dogs.init();
+  dogs.init(templateFile);
   const adg = new AdditionalDetailsGenerator();
   adg.setStatusText(plan);
   adg.setDocumentGenerationDate(plan);

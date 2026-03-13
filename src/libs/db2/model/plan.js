@@ -93,6 +93,7 @@ export default class Plan extends Model {
       'is_restored',
       'conditions',
       'proposed_conditions',
+      'livestock_distribution_detail',
       'extension_status',
       'extension_required_votes',
       'extension_received_votes',
