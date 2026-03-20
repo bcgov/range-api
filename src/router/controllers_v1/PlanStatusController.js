@@ -53,10 +53,15 @@ export default class PlanStatusController {
         case PLAN_STATUS.SUBMITTED_FOR_REVIEW:
           body.submitted_at = new Date();
           break;
-        case PLAN_STATUS.AWAITING_CONFIRMATION:
-          // refresh all the old confirmations and start fresh
+        case PLAN_STATUS.AWAITING_CONFIRMATION: {
+          const existingConfirmations = await PlanConfirmation.find(trx, { plan_id: planId });
+          if (existingConfirmations.length === 0) {
+            const plan = await Plan.findById(trx, planId);
+            await PlanConfirmation.createConfirmations(trx, plan.agreementId, planId);
+          }
           await PlanConfirmation.refreshConfirmations(trx, planId, user);
           break;
+        }
         default:
           break;
       }

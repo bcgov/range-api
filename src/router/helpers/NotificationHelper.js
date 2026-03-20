@@ -71,6 +71,11 @@ export default class NotificationHelper {
 
   static async sendEmail(db, emails, templateName, emailFields, attachments = []) {
     try {
+      if (!emails || emails.length === 0) {
+        logger.info(`No recipients for email template: ${templateName}`);
+        return;
+      }
+
       const templates = await EmailTemplate.findWithExclusion(db, {
         name: templateName,
       });

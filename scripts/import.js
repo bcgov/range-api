@@ -453,6 +453,21 @@ const updateClient = async (data) => {
               client_type_id: clientType.id,
             },
           );
+          // When client type changes, ensure plan_confirmations exist for this client
+          const plan = await Plan.findOne(db, { agreement_id: agreementId });
+          if (plan) {
+            const existingConfirmation = await PlanConfirmation.findOne(db, {
+              plan_id: plan.id,
+              client_id: clientNumber,
+            });
+            if (!existingConfirmation) {
+              await PlanConfirmation.create(db, {
+                plan_id: plan.id,
+                confirmed: false,
+                client_id: clientNumber,
+              });
+            }
+          }
         }
       }
     } catch (error) {
