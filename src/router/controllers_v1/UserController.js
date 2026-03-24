@@ -140,6 +140,19 @@ export class UserController {
       throw errorWithCode('This user is already linked to the selected client', 400);
     }
 
+    // Check if user already has any active client link - restrict to one client per user
+    const existingLinks = await UserClientLink.find(db, {
+      user_id: userId,
+      active: true,
+    });
+    if (existingLinks.length > 0) {
+      logger.error(`User ${userId} already has ${existingLinks.length} client(s) linked. Cannot link another client.`);
+      throw errorWithCode(
+        'A user account can only be linked to one client. Please unlink the existing client first.',
+        400,
+      );
+    }
+
     const currentOwner = await UserClientLink.findOne(db, {
       client_id: clientId,
       type: 'owner',
