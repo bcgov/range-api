@@ -268,6 +268,7 @@ const updateAgreement = async (data) => {
   }
   const unretiredAgreementIds = await Agreement.unretireAgreements(db, activeFTAAgreementIds);
   const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
+  console.log(activeFTAAgreementIds.find((id) => id == 'RAN073578'));
   await Agreement.unretirePlans(db, activeFTAAgreementIds);
 
   console.log(`Unretired Agreements: ${unretiredAgreementIds}`);

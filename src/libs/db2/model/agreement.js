@@ -474,15 +474,20 @@ export default class Agreement extends Model {
       .select('id', 'status_id', 'agreement_id');
 
     const STAFF_DRAFT_STATUS = 6;
+    const RETIRED_STATUS = 25;
 
     for (const plan of plansToUnretire) {
-      const lastStatusHistory = await db
+      const lastStatusToRetired = await db
         .table('plan_status_history')
-        .where({ plan_id: plan.id })
+        .where({ plan_id: plan.id, to_plan_status_id: RETIRED_STATUS })
         .orderBy('created_at', 'desc')
         .first();
 
-      const previousStatusId = lastStatusHistory?.from_plan_status_id || STAFF_DRAFT_STATUS;
+      let previousStatusId = lastStatusToRetired?.from_plan_status_id || STAFF_DRAFT_STATUS;
+
+      if (previousStatusId === RETIRED_STATUS) {
+        previousStatusId = STAFF_DRAFT_STATUS;
+      }
 
       await db.table(Plan.table).where({ id: plan.id }).update({ status_id: previousStatusId });
 
