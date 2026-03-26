@@ -1,5 +1,5 @@
 import type { inferAsyncReturnType } from '@trpc/server';
-import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { prisma } from '@/config/database.js';
 import { logger } from '@/utils/logger.js';
 
@@ -9,7 +9,7 @@ export interface Context {
   logger: typeof logger;
 }
 
-export const createContext = async ({ req, res }: FetchCreateContextFnOptions): Promise<Context> => {
+export const createContext = (_opts: CreateExpressContextOptions): Context => {
   return {
     prisma,
     logger,

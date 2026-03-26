@@ -1,15 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 
 describe('Zod Validation Tests', () => {
-  const agreementSchema = z.object({
-    forestFileId: z.string().min(1).max(20),
-    agreementStartDate: z.date(),
-    agreementEndDate: z.date(),
-    agreementTypeId: z.number(),
-    zoneId: z.number(),
-    exemptionStatus: z.string().default('NOT_EXEMPTED'),
-  });
+  const agreementSchema = z
+    .object({
+      forestFileId: z.string().min(1).max(20),
+      agreementStartDate: z.date(),
+      agreementEndDate: z.date(),
+      agreementTypeId: z.number(),
+      zoneId: z.number(),
+      exemptionStatus: z.string().default('NOT_EXEMPTED'),
+    })
+    .refine((data) => data.agreementEndDate > data.agreementStartDate, {
+      message: 'End date must be after start date',
+      path: ['agreementEndDate'],
+    });
 
   it('should validate a valid agreement', () => {
     const validAgreement = {
@@ -53,8 +58,8 @@ describe('Zod Validation Tests', () => {
   it('should apply default exemptionStatus', () => {
     const partialAgreement = {
       forestFileId: 'RAN073578',
-      agreementStartDate: new Date(),
-      agreementEndDate: new Date(),
+      agreementStartDate: new Date('2026-01-01'),
+      agreementEndDate: new Date('2026-01-02'),
       agreementTypeId: 1,
       zoneId: 1,
     };

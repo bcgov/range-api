@@ -25,7 +25,6 @@ model Agreement {
   zone                 Zone                 @relation(fields: [zoneId], references: [id])
   clientAgreements     ClientAgreement[]
   exemptions           Exemption[]
-  grazingSchedules     GrazingSchedule[]
   livestockIdentifiers LivestockIdentifier[]
   plans               Plan[]
 
@@ -51,7 +50,7 @@ model Zone {
 
   district   District   @relation(fields: [districtId], references: [id])
   agreements Agreement[]
-  users      User[]
+  zoneLinks  ZoneLink[]
 
   @@map("ref_zone")
 }
@@ -126,6 +125,7 @@ model User {
   role         Role?       @relation(fields: [roleId], references: [id])
   userClientLinks UserClientLink[]
   zoneLinks      ZoneLink[]
+  createdPlans   Plan[]
 
   @@map("user_account")
 }
