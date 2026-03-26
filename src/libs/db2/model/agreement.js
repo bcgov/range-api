@@ -456,6 +456,32 @@ export default class Agreement extends Model {
     return agreementIds;
   }
 
+  static async unretirePlans(db, activeFTAAgreementIds) {
+    if (!activeFTAAgreementIds || activeFTAAgreementIds.length === 0) {
+      return;
+    }
+
+    const plansToUnretire = await db
+      .table(Plan.table)
+      .whereIn('agreement_id', activeFTAAgreementIds)
+      .where({ status_id: 25 })
+      .whereNot({ extension_status: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED })
+      .whereNot({ extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN })
+      .select('id', 'status_id', 'agreement_id');
+
+    for (const plan of plansToUnretire) {
+      await db.table(Plan.table).where({ id: plan.id }).update({ status_id: 6 });
+
+      await db.table('plan_status_history').insert({
+        plan_id: plan.id,
+        from_plan_status_id: plan.status_id,
+        to_plan_status_id: 6,
+        user_id: SYSTEM_USER_ID,
+        note: 'Agreement is active in FTA, unretiring plan and setting to staff draft.',
+      });
+    }
+  }
+
   async eagerloadAllOneToManyExceptPlan() {
     await this.fetchClients();
     await this.fetchUsage();
