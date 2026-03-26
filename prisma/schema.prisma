@@ -1,0 +1,383 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agreement {
+  forestFileId        String   @id @map("forest_file_id")
+  agreementStartDate DateTime @map("agreement_start_date")
+  agreementEndDate   DateTime @map("agreement_end_date")
+  agreementTypeId    Int      @map("agreement_type_id")
+  zoneId             Int      @map("zone_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  retired            Boolean  @default(false)
+  usageStatus        Int?     @map("usage_status")
+  percentageUse      Decimal? @map("percentage_use")
+  hasCurrentSchedule Int?     @map("has_current_schedule")
+  exemptionStatus    String   @default("NOT_EXEMPTED") @map("exemption_status")
+
+  agreementType         AgreementType        @relation(fields: [agreementTypeId], references: [id])
+  zone                 Zone                 @relation(fields: [zoneId], references: [id])
+  clientAgreements     ClientAgreement[]
+  exemptions           Exemption[]
+  grazingSchedules     GrazingSchedule[]
+  livestockIdentifiers LivestockIdentifier[]
+  plans               Plan[]
+
+  @@map("agreement")
+}
+
+model AgreementType {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  name        String
+  description String?
+
+  agreements Agreement[]
+
+  @@map("ref_agreement_type")
+}
+
+model Zone {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  districtId  Int    @map("district_id")
+  description String?
+
+  district   District   @relation(fields: [districtId], references: [id])
+  agreements Agreement[]
+  users      User[]
+
+  @@map("ref_zone")
+}
+
+model District {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String
+
+  zones Zone[]
+  users User[]
+
+  @@map("ref_district")
+}
+
+model Client {
+  clientNumber String   @id @map("client_number")
+  name        String
+  locationCodes String[]
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  clientAgreements ClientAgreement[]
+  userClientLinks  UserClientLink[]
+
+  @@map("ref_client")
+}
+
+model ClientAgreement {
+  id           Int      @id @default(autoincrement())
+  agreementId  String   @map("agreement_id")
+  clientId     String   @map("client_id")
+  clientTypeId Int      @map("client_type_id")
+  agentId      Int?     @map("agent_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  agreement  Agreement   @relation(fields: [agreementId], references: [forestFileId])
+  client    Client      @relation(fields: [clientId], references: [clientNumber])
+  clientType ClientType @relation(fields: [clientTypeId], references: [id])
+
+  @@unique([agreementId, clientId])
+  @@map("client_agreement")
+}
+
+model ClientType {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  description String?
+  active      Boolean @default(true)
+
+  clientAgreements ClientAgreement[]
+
+  @@map("ref_client_type")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  givenName  String?   @map("given_name")
+  familyName String?   @map("family_name")
+  ssoId      String?   @unique @map("sso_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  districtId   Int?
+  roleId       Int?
+  district     District?   @relation(fields: [districtId], references: [id])
+  role         Role?       @relation(fields: [roleId], references: [id])
+  userClientLinks UserClientLink[]
+  zoneLinks      ZoneLink[]
+
+  @@map("user_account")
+}
+
+model UserClientLink {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  clientId  String   @map("client_id")
+  type      String   @default("owner")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  client Client @relation(fields: [clientId], references: [clientNumber])
+
+  @@unique([userId, clientId])
+  @@map("user_client_link")
+}
+
+model ZoneLink {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  zoneId    Int      @map("zone_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+  zone Zone @relation(fields: [zoneId], references: [id])
+
+  @@unique([userId, zoneId])
+  @@map("zone_link")
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String
+
+  users User[]
+
+  @@map("ref_role")
+}
+
+model Plan {
+  id                  Int       @id @default(autoincrement())
+  agreementId         String    @map("agreement_id")
+  statusId            Int       @map("status_id")
+  amendmentTypeId     Int?      @map("amendment_type_id")
+  creatorId           Int       @map("creator_id")
+  rangeName           String?   @map("range_name")
+  altBusinessName     String?   @map("alt_business_name")
+  planStartDate       DateTime? @map("plan_start_date")
+  planEndDate         DateTime? @map("plan_end_date")
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  uploaded            Boolean   @default(false)
+  effectiveAt         DateTime? @map("effective_at")
+  submittedAt         DateTime? @map("submitted_at")
+  canonicalId         Int?      @unique @map("canonical_id")
+  isRestored          Boolean   @default(false) @map("is_restored")
+  conditions          String?
+  proposedConditions  String?   @map("proposed_conditions")
+  extensionStatus     Int?      @map("extension_status")
+  replacementOf       Int?      @map("replacement_of")
+  extensionRequiredVotes   Int? @map("extension_required_votes")
+  extensionReceivedVotes   Int? @map("extension_received_votes")
+  extensionDate           DateTime? @map("extension_date")
+  extensionRejectedBy     Int? @map("extension_rejected_by")
+  replacementPlanId       Int? @map("replacement_plan_id")
+  livestockDistributionDetail String? @map("livestock_distribution_detail")
+
+  agreement      Agreement       @relation(fields: [agreementId], references: [forestFileId])
+  status        PlanStatus      @relation(fields: [statusId], references: [id])
+  creator       User            @relation(fields: [creatorId], references: [id])
+  grazingSchedules GrazingSchedule[]
+  pastures       Pasture[]
+  planFiles      PlanFile[]
+  extensions     PlanExtensionRequest[]
+  confirmations  PlanConfirmation[]
+
+  @@map("plan")
+}
+
+model PlanStatus {
+  id                  Int     @id @default(autoincrement())
+  code                String  @unique
+  name                String
+  active              Boolean @default(true)
+  descriptionFull     String?
+  descriptionShort    String?
+
+  plans Plan[]
+
+  @@map("ref_plan_status")
+}
+
+model GrazingSchedule {
+  id        Int      @id @default(autoincrement())
+  planId    Int      @map("plan_id")
+  year      Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  plan    Plan     @relation(fields: [planId], references: [id])
+  entries GrazingScheduleEntry[]
+
+  @@unique([planId, year])
+  @@map("grazing_schedule")
+}
+
+model GrazingScheduleEntry {
+  id                Int     @id @default(autoincrement())
+  grazingScheduleId Int     @map("grazing_schedule_id")
+  pastureId         Int     @map("pasture_id")
+  desc              String?
+  livestockType     String  @map("livestock_type")
+  animalUnitDays    Decimal @map("animal_unit_days")
+  layingHens        Int?
+  broilerHens       Int?
+  hogs              Int?
+  horses            Int?
+  sheep             Int?
+  cattle            Int?
+  wildlife          Int?
+  other             Int?
+  grazingDays       Int?    @map("grazing_days")
+  yield             Decimal?
+
+  grazingSchedule GrazingSchedule @relation(fields: [grazingScheduleId], references: [id])
+  pasture        Pasture        @relation(fields: [pastureId], references: [id])
+
+  @@map("grazing_schedule_entry")
+}
+
+model Pasture {
+  id          Int     @id @default(autoincrement())
+  planId      Int     @map("plan_id")
+  name        String
+  description String?
+  acres       Decimal?
+
+  plan             Plan                   @relation(fields: [planId], references: [id])
+  grazingEntries   GrazingScheduleEntry[]
+  plantCommunities PlantCommunity[]
+
+  @@map("pasture")
+}
+
+model PlantCommunity {
+  id              Int     @id @default(autoincrement())
+  pastureId       Int     @map("pasture_id")
+  name            String
+  description     String?
+  communityType   String? @map("community_type")
+  acres           Decimal?
+  shrubHerbs      Decimal?
+  nativeGrass     Decimal?
+  introducedGrass Decimal?
+  forest          Decimal?
+  browse          Decimal?
+  arthurType      String? @map("arthur_type")
+  rangeReadiness  String? @map("range_readiness")
+  condition       String?
+
+  pasture    Pasture @relation(fields: [pastureId], references: [id])
+  indicators IndicatorPlant[]
+
+  @@map("plant_community")
+}
+
+model IndicatorPlant {
+  id              Int     @id @default(autoincrement())
+  plantCommunityId Int    @map("plant_community_id")
+  name            String
+  cover           Decimal?
+  utilization     String?
+  keySpecies      Boolean @default(false) @map("key_species")
+
+  plantCommunity PlantCommunity @relation(fields: [plantCommunityId], references: [id])
+
+  @@map("indicator_plant")
+}
+
+model PlanFile {
+  id        Int      @id @default(autoincrement())
+  planId    Int      @map("plan_id")
+  type      String
+  name      String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@map("plan_file")
+}
+
+model PlanExtensionRequest {
+  id                 Int       @id @default(autoincrement())
+  planId             Int       @map("plan_id")
+  clientId           String?   @map("client_id")
+  requestedExtension Boolean   @default(false) @map("requested_extension")
+  extensionYear      Int?      @map("extension_year")
+  userId             Int?      @map("user_id")
+  email              String?
+  note               String?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@map("plan_extension_requests")
+}
+
+model PlanConfirmation {
+  id        Int      @id @default(autoincrement())
+  planId    Int      @map("plan_id")
+  clientId  String   @map("client_id")
+  confirmed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@unique([planId, clientId])
+  @@map("plan_confirmation")
+}
+
+model LivestockIdentifier {
+  id           Int      @id @default(autoincrement())
+  agreementId  String   @map("agreement_id")
+  livestockType String  @map("livestock_type")
+  count        Int
+  year         Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  agreement Agreement @relation(fields: [agreementId], references: [forestFileId])
+
+  @@map("livestock_identifier")
+}
+
+model Exemption {
+  id              Int      @id @default(autoincrement())
+  agreementId     String   @map("agreement_id")
+  type            String
+  status          String
+  year            Int
+  submittedAt     DateTime? @map("submitted_at")
+  approvedAt      DateTime? @map("approved_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  agreement Agreement @relation(fields: [agreementId], references: [forestFileId])
+
+  @@map("exemption")
+}

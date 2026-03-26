@@ -1,0 +1,69 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "import", "prettier", "security", "unicorn"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:@typescript-eslint/stylistic-type-checked",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "prefer-const": "error",
+    "no-var": "error",
+    "eqeqeq": ["error", "always"],
+    "security/node/astjs-guarantee-all": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "import/no-unresolved": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", ["parent", "sibling"], "index"],
+        "pathGroups": [
+          {
+            "pattern": "@/**",
+            "group": "internal"
+          }
+        ],
+        "newlines-between": "always"
+      }
+    ],
+    "unicorn/better-regex": "error",
+    "unicorn/catch-error-name": "error",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebab-case"
+      }
+    ],
+    "unicorn/no-null": "off",
+    "unicorn/numeric-separators-style": "error",
+    "unicorn/prevent-abbreviations": [
+      "error",
+      {
+        "allowList": {
+          "i": true,
+          "id": true,
+          "db": true,
+          "e": true,
+          "err": true,
+          "req": true,
+          "res": true,
+          "el": true
+        }
+      }
+    ]
+  },
+  "ignorePatterns": ["dist", "node_modules", "coverage"]
+}
