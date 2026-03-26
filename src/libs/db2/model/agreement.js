@@ -465,8 +465,12 @@ export default class Agreement extends Model {
       .table(Plan.table)
       .whereIn('agreement_id', activeFTAAgreementIds)
       .where({ status_id: 25 })
-      .whereNot({ extension_status: PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED })
-      .whereNot({ extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN })
+      .where(function () {
+        this.whereNull('extension_status').orWhereNotIn('extension_status', [
+          PLAN_EXTENSION_STATUS.REPLACEMENT_PLAN_CREATED,
+          PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+        ]);
+      })
       .select('id', 'status_id', 'agreement_id');
 
     const STAFF_DRAFT_STATUS = 6;
