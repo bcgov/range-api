@@ -469,15 +469,25 @@ export default class Agreement extends Model {
       .whereNot({ extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN })
       .select('id', 'status_id', 'agreement_id');
 
+    const STAFF_DRAFT_STATUS = 6;
+
     for (const plan of plansToUnretire) {
-      await db.table(Plan.table).where({ id: plan.id }).update({ status_id: 6 });
+      const lastStatusHistory = await db
+        .table('plan_status_history')
+        .where({ plan_id: plan.id })
+        .orderBy('created_at', 'desc')
+        .first();
+
+      const previousStatusId = lastStatusHistory?.from_plan_status_id || STAFF_DRAFT_STATUS;
+
+      await db.table(Plan.table).where({ id: plan.id }).update({ status_id: previousStatusId });
 
       await db.table('plan_status_history').insert({
         plan_id: plan.id,
         from_plan_status_id: plan.status_id,
-        to_plan_status_id: 6,
+        to_plan_status_id: previousStatusId,
         user_id: SYSTEM_USER_ID,
-        note: 'Agreement is active in FTA, unretiring plan and setting to staff draft.',
+        note: 'Agreement is active in FTA, unretiring plan and restoring previous status.',
       });
     }
   }
