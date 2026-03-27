@@ -7,7 +7,7 @@ export const agreementRouter = router({
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(20),
-        cursor: z.string().optional(),
+        skip: z.number().min(0).default(0),
         search: z.string().optional(),
         districtId: z.number().optional(),
         zoneId: z.number().optional(),
@@ -15,47 +15,52 @@ export const agreementRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, districtId, zoneId, includeRetired } = input;
+      const { limit, skip, search, districtId, zoneId, includeRetired } = input;
 
-      const agreements = await ctx.prisma.agreement.findMany({
-        take: limit + 1,
-        ...(cursor && { cursor: { forestFileId: cursor }, skip: 1 }),
-        where: {
-          ...(!includeRetired && { retired: false }),
-          ...(search && {
-            forestFileId: { contains: search, mode: 'insensitive' },
-          }),
-          ...(districtId && {
-            zone: { districtId },
-          }),
-          ...(zoneId && { zoneId }),
-        },
-        include: {
-          agreementType: true,
-          zone: {
-            include: {
-              district: true,
+      const where = {
+        ...(!includeRetired && { retired: false }),
+        ...(search && {
+          forestFileId: { contains: search },
+        }),
+        ...(districtId && {
+          zone: { districtId },
+        }),
+        ...(zoneId && { zoneId }),
+      };
+
+      const [agreements, total] = await Promise.all([
+        ctx.prisma.agreement.findMany({
+          take: limit,
+          skip,
+          where,
+          include: {
+            agreementType: true,
+            zone: {
+              include: {
+                district: true,
+              },
+            },
+            clientAgreements: {
+              include: {
+                client: true,
+                clientType: true,
+              },
+            },
+            plans: {
+              include: {
+                status: true,
+              },
+              orderBy: { createdAt: 'desc' },
             },
           },
-          clientAgreements: {
-            include: {
-              client: true,
-              clientType: true,
-            },
-          },
-        },
-        orderBy: { forestFileId: 'desc' },
-      });
-
-      let nextCursor: string | undefined;
-      if (agreements.length > limit) {
-        const nextItem = agreements.pop();
-        nextCursor = nextItem?.forestFileId;
-      }
+          orderBy: { forestFileId: 'desc' },
+        }),
+        ctx.prisma.agreement.count({ where }),
+      ]);
 
       return {
         agreements,
-        nextCursor,
+        total,
       };
     }),
 
@@ -78,6 +83,7 @@ export const agreementRouter = router({
         plans: {
           include: {
             status: true,
+            creator: true,
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -142,4 +148,79 @@ export const agreementRouter = router({
         data: input,
       });
     }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        forestFileId: z.string(),
+        agreementStartDate: z.date().optional(),
+        agreementEndDate: z.date().optional(),
+        exemptionStatus: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { forestFileId, ...data } = input;
+      return ctx.prisma.agreement.update({
+        where: { forestFileId },
+        data,
+      });
+    }),
+
+  retire: protectedProcedure.input(z.object({ forestFileId: z.string() })).mutation(async ({ ctx, input }) => {
+    const agreement = await ctx.prisma.agreement.findUnique({
+      where: { forestFileId: input.forestFileId },
+    });
+
+    if (!agreement) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Agreement not found',
+      });
+    }
+
+    return ctx.prisma.agreement.update({
+      where: { forestFileId: input.forestFileId },
+      data: { retired: true },
+    });
+  }),
+
+  unretire: protectedProcedure.input(z.object({ forestFileId: z.string() })).mutation(async ({ ctx, input }) => {
+    const agreement = await ctx.prisma.agreement.findUnique({
+      where: { forestFileId: input.forestFileId },
+    });
+
+    if (!agreement) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Agreement not found',
+      });
+    }
+
+    return ctx.prisma.agreement.update({
+      where: { forestFileId: input.forestFileId },
+      data: { retired: false },
+    });
+  }),
+
+  stats: publicProcedure.query(async ({ ctx }) => {
+    const [totalAgreements, activeAgreements, retiredAgreements, totalPlans, activePlans] = await Promise.all([
+      ctx.prisma.agreement.count(),
+      ctx.prisma.agreement.count({ where: { retired: false } }),
+      ctx.prisma.agreement.count({ where: { retired: true } }),
+      ctx.prisma.plan.count(),
+      ctx.prisma.plan.count({
+        where: {
+          status: { code: { not: 'RE' } },
+        },
+      }),
+    ]);
+
+    return {
+      totalAgreements,
+      activeAgreements,
+      retiredAgreements,
+      totalPlans,
+      activePlans,
+    };
+  }),
 });

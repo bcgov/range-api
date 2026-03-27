@@ -8,376 +8,909 @@ datasource db {
 }
 
 model Agreement {
-  forestFileId        String   @id @map("forest_file_id")
-  agreementStartDate DateTime @map("agreement_start_date")
-  agreementEndDate   DateTime @map("agreement_end_date")
-  agreementTypeId    Int      @map("agreement_type_id")
-  zoneId             Int      @map("zone_id")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
-  retired            Boolean  @default(false)
-  usageStatus        Int?     @map("usage_status")
-  percentageUse      Decimal? @map("percentage_use")
-  hasCurrentSchedule Int?     @map("has_current_schedule")
-  exemptionStatus    String   @default("NOT_EXEMPTED") @map("exemption_status")
+  forestFileId               String                     @id @map("forest_file_id") @db.VarChar(9)
+  agreementStartDate         DateTime                   @map("agreement_start_date") @db.Timestamptz(6)
+  agreementEndDate           DateTime                   @map("agreement_end_date") @db.Timestamptz(6)
+  agreementTypeId            Int                        @map("agreement_type_id")
+  zoneId                     Int                        @map("zone_id")
+  createdAt                  DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt                  DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  retired                    Boolean?                   @default(false)
+  usageStatus                Int?                       @map("usage_status")
+  percentageUse              Decimal?                   @map("percentage_use") @db.Decimal(10, 2)
+  hasCurrentSchedule         Int?                       @map("has_current_schedule")
+  exemptionStatus            String                     @default("NOT_EXEMPTED") @map("exemption_status") @db.VarChar(32)
+  agreementType              AgreementType              @relation(fields: [agreementTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agreement_agreement_type_id_foreign")
+  agreement_exemption_status agreement_exemption_status @relation(fields: [exemptionStatus], references: [code], onDelete: NoAction, onUpdate: NoAction, map: "agreement_exemption_status_fk")
+  zone                       Zone                       @relation(fields: [zoneId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agreement_zone_id_foreign")
+  clientAgreements           ClientAgreement[]
+  exemptions                 Exemption[]
+  livestockIdentifiers       LivestockIdentifier[]
+  plans                      Plan[]
+  ref_usage                  ref_usage[]
 
-  agreementType         AgreementType        @relation(fields: [agreementTypeId], references: [id])
-  zone                 Zone                 @relation(fields: [zoneId], references: [id])
-  clientAgreements     ClientAgreement[]
-  exemptions           Exemption[]
-  livestockIdentifiers LivestockIdentifier[]
-  plans               Plan[]
-
+  @@index([forestFileId], map: "agreement_forest_file_id_index")
   @@map("agreement")
 }
 
 model AgreementType {
-  id          Int    @id @default(autoincrement())
-  code        String @unique
-  name        String
-  description String?
-
-  agreements Agreement[]
+  id          Int         @id @default(autoincrement())
+  code        String
+  description String
+  active      Boolean     @default(true)
+  created_at  DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at  DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  agreements  Agreement[]
 
   @@map("ref_agreement_type")
 }
 
 model Zone {
-  id          Int    @id @default(autoincrement())
-  code        String @unique
-  districtId  Int    @map("district_id")
-  description String?
+  id           Int         @id @default(autoincrement())
+  code         String
+  description  String
+  districtId   Int         @map("district_id")
+  user_id      Int?
+  created_at   DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at   DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  agreements   Agreement[]
+  district     District    @relation(fields: [districtId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ref_zone_district_id_foreign")
+  user_account User?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ref_zone_user_id_foreign")
 
-  district   District   @relation(fields: [districtId], references: [id])
-  agreements Agreement[]
-  zoneLinks  ZoneLink[]
-
+  @@index([code], map: "ref_zone_code_index")
   @@map("ref_zone")
 }
 
 model District {
-  id   Int    @id @default(autoincrement())
-  code String @unique
-  name String
+  id           Int      @id @default(autoincrement())
+  code         String   @unique(map: "ref_district_code_unique")
+  description  String
+  created_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  user_id      Int?
+  user_account User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  zones        Zone[]
 
-  zones Zone[]
-  users User[]
-
+  @@index([code], map: "ref_district_code_index")
   @@map("ref_district")
 }
 
 model Client {
-  clientNumber String   @id @map("client_number")
-  name        String
-  locationCodes String[]
-  startDate   DateTime? @map("start_date")
-  endDate     DateTime? @map("end_date")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  clientNumber                 String             @id @map("client_number") @db.VarChar(8)
+  name                         String
+  licensee_start_date          DateTime?          @db.Timestamptz(6)
+  licensee_end_date            DateTime?          @db.Timestamptz(6)
+  createdAt                    DateTime           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt                    DateTime           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  forest_file_client_type_code String?
+  location_codes               String[]           @db.VarChar(2)
+  clientAgreements             ClientAgreement[]
+  plan_confirmation            PlanConfirmation[]
+  userClientLinks              UserClientLink[]
 
-  clientAgreements ClientAgreement[]
-  userClientLinks  UserClientLink[]
-
+  @@index([clientNumber], map: "ref_client_client_number_index")
   @@map("ref_client")
 }
 
 model ClientAgreement {
-  id           Int      @id @default(autoincrement())
-  agreementId  String   @map("agreement_id")
-  clientId     String   @map("client_id")
-  clientTypeId Int      @map("client_type_id")
-  agentId      Int?     @map("agent_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           Int        @id @default(autoincrement())
+  agreementId  String     @map("agreement_id") @db.VarChar(9)
+  clientTypeId Int        @map("client_type_id")
+  createdAt    DateTime   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  agentId      Int?       @map("agent_id")
+  clientId     String?    @map("client_id") @db.VarChar
+  user_account User?      @relation(fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  agreement    Agreement  @relation(fields: [agreementId], references: [forestFileId], onDelete: NoAction, onUpdate: NoAction, map: "client_agreement_agreement_id_foreign")
+  client       Client?    @relation(fields: [clientId], references: [clientNumber], onDelete: NoAction, onUpdate: NoAction)
+  clientType   ClientType @relation(fields: [clientTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "client_agreement_client_type_id_foreign")
 
-  agreement  Agreement   @relation(fields: [agreementId], references: [forestFileId])
-  client    Client      @relation(fields: [clientId], references: [clientNumber])
-  clientType ClientType @relation(fields: [clientTypeId], references: [id])
-
-  @@unique([agreementId, clientId])
+  @@index([agreementId], map: "client_agreement_agreement_id_index")
   @@map("client_agreement")
 }
 
 model ClientType {
-  id          Int     @id @default(autoincrement())
-  code        String  @unique
-  description String?
-  active      Boolean @default(true)
-
+  id               Int               @id @default(autoincrement())
+  code             String            @db.VarChar(1)
+  description      String
+  active           Boolean           @default(true)
+  created_at       DateTime          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at       DateTime          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
   clientAgreements ClientAgreement[]
 
   @@map("ref_client_type")
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique
-  givenName  String?   @map("given_name")
-  familyName String?   @map("family_name")
-  ssoId      String?   @unique @map("sso_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  lastLoginAt DateTime? @map("last_login_at")
-
-  districtId   Int?
-  roleId       Int?
-  district     District?   @relation(fields: [districtId], references: [id])
-  role         Role?       @relation(fields: [roleId], references: [id])
-  userClientLinks UserClientLink[]
-  zoneLinks      ZoneLink[]
-  createdPlans   Plan[]
+  id                                            Int                        @id @default(autoincrement())
+  username                                      String                     @unique(map: "user_account_username_unique")
+  givenName                                     String?                    @map("given_name")
+  familyName                                    String?                    @map("family_name")
+  email                                         String
+  phone_number                                  String?
+  pia_seen                                      Boolean                    @default(false)
+  active                                        Boolean                    @default(true)
+  lastLoginAt                                   DateTime?                  @map("last_login_at") @db.Timestamptz(6)
+  createdAt                                     DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt                                     DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  temp_backup_username_for_migration            String?
+  ssoId                                         String?                    @map("sso_id") @db.VarChar(255)
+  role_id                                       Int?
+  client_agreement                              ClientAgreement[]
+  exemption_exemption_approved_byTouser_account Exemption[]                @relation("exemption_approved_byTouser_account")
+  exemption_exemption_user_idTouser_account     Exemption[]                @relation("exemption_user_idTouser_account")
+  exemption_attachment                          exemption_attachment[]
+  exemption_status_history                      exemption_status_history[]
+  createdPlans                                  Plan[]
+  plan_confirmation                             PlanConfirmation[]
+  plan_file                                     PlanFile[]
+  plan_status_history                           PlanStatusHistory[]
+  ref_district                                  District[]
+  ref_zone                                      Zone[]
+  roles                                         roles?                     @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "role_foreign_key")
+  userClientLinks                               UserClientLink[]
+  user_districts                                user_districts[]
+  user_feedback                                 user_feedback[]
 
   @@map("user_account")
 }
 
 model UserClientLink {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  clientId  String   @map("client_id")
-  type      String   @default("owner")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int                  @id(map: "active_client_account_pkey") @default(autoincrement())
+  userId    Int                  @map("user_id")
+  type      client_account_type? @default(owner)
+  active    Boolean
+  createdAt DateTime?            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime?            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  clientId  String?              @map("client_id") @db.VarChar
+  client    Client?              @relation(fields: [clientId], references: [clientNumber], onDelete: NoAction, onUpdate: NoAction)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  user   User   @relation(fields: [userId], references: [id])
-  client Client @relation(fields: [clientId], references: [clientNumber])
-
-  @@unique([userId, clientId])
   @@map("user_client_link")
 }
 
-model ZoneLink {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  zoneId    Int      @map("zone_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-  zone Zone @relation(fields: [zoneId], references: [id])
-
-  @@unique([userId, zoneId])
-  @@map("zone_link")
-}
-
-model Role {
-  id   Int    @id @default(autoincrement())
-  code String @unique
-  name String
-
-  users User[]
-
-  @@map("ref_role")
-}
-
 model Plan {
-  id                  Int       @id @default(autoincrement())
-  agreementId         String    @map("agreement_id")
-  statusId            Int       @map("status_id")
-  amendmentTypeId     Int?      @map("amendment_type_id")
-  creatorId           Int       @map("creator_id")
-  rangeName           String?   @map("range_name")
-  altBusinessName     String?   @map("alt_business_name")
-  planStartDate       DateTime? @map("plan_start_date")
-  planEndDate         DateTime? @map("plan_end_date")
-  notes               String?
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
-  uploaded            Boolean   @default(false)
-  effectiveAt         DateTime? @map("effective_at")
-  submittedAt         DateTime? @map("submitted_at")
-  canonicalId         Int?      @unique @map("canonical_id")
-  isRestored          Boolean   @default(false) @map("is_restored")
-  conditions          String?
-  proposedConditions  String?   @map("proposed_conditions")
-  extensionStatus     Int?      @map("extension_status")
-  replacementOf       Int?      @map("replacement_of")
-  extensionRequiredVotes   Int? @map("extension_required_votes")
-  extensionReceivedVotes   Int? @map("extension_received_votes")
-  extensionDate           DateTime? @map("extension_date")
-  extensionRejectedBy     Int? @map("extension_rejected_by")
-  replacementPlanId       Int? @map("replacement_plan_id")
-  livestockDistributionDetail String? @map("livestock_distribution_detail")
-
-  agreement      Agreement       @relation(fields: [agreementId], references: [forestFileId])
-  status        PlanStatus      @relation(fields: [statusId], references: [id])
-  creator       User            @relation(fields: [creatorId], references: [id])
-  grazingSchedules GrazingSchedule[]
-  pastures       Pasture[]
-  planFiles      PlanFile[]
-  extensions     PlanExtensionRequest[]
-  confirmations  PlanConfirmation[]
+  id                          Int                        @id @default(autoincrement())
+  agreementId                 String                     @map("agreement_id") @db.VarChar(9)
+  statusId                    Int                        @map("status_id")
+  amendmentTypeId             Int?                       @map("amendment_type_id")
+  creatorId                   Int                        @map("creator_id")
+  rangeName                   String                     @map("range_name")
+  altBusinessName             String?                    @map("alt_business_name")
+  planStartDate               DateTime?                  @map("plan_start_date") @db.Timestamptz(6)
+  planEndDate                 DateTime?                  @map("plan_end_date") @db.Timestamptz(6)
+  notes                       String?
+  createdAt                   DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  uploaded                    Boolean                    @default(false)
+  effectiveAt                 DateTime?                  @map("effective_at") @db.Timestamptz(6)
+  submittedAt                 DateTime?                  @map("submitted_at") @db.Timestamptz(6)
+  canonicalId                 Int?                       @map("canonical_id")
+  isRestored                  Boolean?                   @default(false) @map("is_restored")
+  conditions                  String?
+  proposedConditions          String?                    @map("proposed_conditions")
+  extensionStatus             Int?                       @map("extension_status")
+  replacementOf               Int?                       @map("replacement_of")
+  extensionRequiredVotes      Int?                       @default(0) @map("extension_required_votes")
+  extensionReceivedVotes      Int?                       @default(0) @map("extension_received_votes")
+  extensionDate               DateTime?                  @map("extension_date") @db.Timestamp(6)
+  extensionRejectedBy         Int?                       @map("extension_rejected_by")
+  replacementPlanId           Int?                       @map("replacement_plan_id")
+  livestockDistributionDetail String?                    @map("livestock_distribution_detail")
+  additional_requirement      additional_requirement[]
+  grazingSchedules            GrazingSchedule[]
+  invasive_plant_checklist    invasive_plant_checklist?
+  management_consideration    management_consideration[]
+  minister_issue              minister_issue[]
+  pastures                    Pasture[]
+  agreement                   Agreement                  @relation(fields: [agreementId], references: [forestFileId], onDelete: NoAction, onUpdate: NoAction, map: "plan_agreement_id_foreign")
+  ref_amendment_type          ref_amendment_type?        @relation(fields: [amendmentTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_amendment_type_id_foreign")
+  creator                     User                       @relation(fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_creator_id_foreign")
+  status                      PlanStatus                 @relation(fields: [statusId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_status_id_foreign")
+  confirmations               PlanConfirmation[]
+  extensions                  PlanExtensionRequest[]
+  planFiles                   PlanFile[]
+  plan_snapshot               plan_snapshot[]
+  plan_status_history         PlanStatusHistory[]
+  plan_version                plan_version[]
 
   @@map("plan")
 }
 
 model PlanStatus {
-  id                  Int     @id @default(autoincrement())
-  code                String  @unique
-  name                String
-  active              Boolean @default(true)
-  descriptionFull     String?
-  descriptionShort    String?
+  id                                                                           Int                 @id @default(autoincrement())
+  code                                                                         String              @unique(map: "ref_plan_status_code_unique")
+  name                                                                         String
+  active                                                                       Boolean             @default(true)
+  description_full                                                             String?
+  description_short                                                            String?
+  created_at                                                                   DateTime            @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                                                                   DateTime            @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plans                                                                        Plan[]
+  plan_snapshot                                                                plan_snapshot[]
+  plan_status_history_plan_status_history_from_plan_status_idToref_plan_status PlanStatusHistory[] @relation("plan_status_history_from_plan_status_idToref_plan_status")
+  plan_status_history_plan_status_history_to_plan_status_idToref_plan_status   PlanStatusHistory[] @relation("plan_status_history_to_plan_status_idToref_plan_status")
 
-  plans Plan[]
-
+  @@index([code], map: "ref_plan_status_code_index")
   @@map("ref_plan_status")
 }
 
+model PlanStatusHistory {
+  id                                                                       Int         @id @default(autoincrement())
+  planId                                                                   Int         @map("plan_id")
+  fromPlanStatusId                                                         Int?        @map("from_plan_status_id")
+  toPlanStatusId                                                           Int         @map("to_plan_status_id")
+  userId                                                                   Int         @map("user_id")
+  note                                                                     String
+  createdAt                                                                DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updated_at                                                               DateTime    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  ref_plan_status_plan_status_history_from_plan_status_idToref_plan_status PlanStatus? @relation("plan_status_history_from_plan_status_idToref_plan_status", fields: [fromPlanStatusId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_status_history_from_plan_status_id_foreign")
+  plan                                                                     Plan        @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "plan_status_history_plan_id_foreign")
+  ref_plan_status_plan_status_history_to_plan_status_idToref_plan_status   PlanStatus  @relation("plan_status_history_to_plan_status_idToref_plan_status", fields: [toPlanStatusId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_status_history_to_plan_status_id_foreign")
+  user_account                                                             User        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_status_history_user_id_foreign")
+
+  @@map("plan_status_history")
+}
+
 model GrazingSchedule {
-  id        Int      @id @default(autoincrement())
-  planId    Int      @map("plan_id")
-  year      Int
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                        Int                         @id @default(autoincrement())
+  planId                    Int                         @map("plan_id")
+  year                      Int                         @db.SmallInt
+  narative                  String?
+  createdAt                 DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  canonical_id              Int?
+  sort_by                   String?                     @db.VarChar
+  sort_order                schedule_sort_order?
+  plan                      Plan                        @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "grazing_schedule_plan_id_foreign")
+  entries                   GrazingScheduleEntry[]
+  haycutting_schedule_entry haycutting_schedule_entry[]
 
-  plan    Plan     @relation(fields: [planId], references: [id])
-  entries GrazingScheduleEntry[]
-
-  @@unique([planId, year])
+  @@index([planId], map: "grazing_schedule_plan_id_index")
+  @@index([year], map: "grazing_schedule_year_index")
   @@map("grazing_schedule")
 }
 
 model GrazingScheduleEntry {
-  id                Int     @id @default(autoincrement())
-  grazingScheduleId Int     @map("grazing_schedule_id")
-  pastureId         Int     @map("pasture_id")
-  desc              String?
-  livestockType     String  @map("livestock_type")
-  animalUnitDays    Decimal @map("animal_unit_days")
-  layingHens        Int?
-  broilerHens       Int?
-  hogs              Int?
-  horses            Int?
-  sheep             Int?
-  cattle            Int?
-  wildlife          Int?
-  other             Int?
-  grazingDays       Int?    @map("grazing_days")
-  yield             Decimal?
+  id                Int             @id @default(autoincrement())
+  livestock_type_id Int
+  grazingScheduleId Int             @map("grazing_schedule_id")
+  pastureId         Int             @map("pasture_id")
+  date_in           DateTime?       @db.Timestamptz(6)
+  date_out          DateTime?       @db.Timestamptz(6)
+  grace_days        Int?
+  livestock_count   Int?
+  created_at        DateTime        @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at        DateTime        @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id      Int?
+  crown_au_ms       Int?            @default(0)
+  grazingSchedule   GrazingSchedule @relation(fields: [grazingScheduleId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "grazing_schedule_entry_grazing_schedule_id_foreign")
+  ref_livestock     ref_livestock   @relation(fields: [livestock_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grazing_schedule_entry_livestock_type_id_foreign")
+  pasture           Pasture         @relation(fields: [pastureId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "grazing_schedule_entry_pasture_id_foreign")
 
-  grazingSchedule GrazingSchedule @relation(fields: [grazingScheduleId], references: [id])
-  pasture        Pasture        @relation(fields: [pastureId], references: [id])
-
+  @@index([grazingScheduleId], map: "grazing_schedule_entry_grazing_schedule_id_index")
+  @@index([livestock_type_id], map: "grazing_schedule_entry_livestock_type_id_index")
+  @@index([pastureId], map: "grazing_schedule_entry_pasture_id_index")
   @@map("grazing_schedule_entry")
 }
 
 model Pasture {
-  id          Int     @id @default(autoincrement())
-  planId      Int     @map("plan_id")
-  name        String
-  description String?
-  acres       Decimal?
+  id                        Int                         @id @default(autoincrement())
+  planId                    Int                         @map("plan_id")
+  name                      String
+  allowable_aum             Int?
+  grace_days                Int?
+  pld_percent               Float?                      @db.Real
+  notes                     String?
+  created_at                DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id              Int?
+  grazingEntries            GrazingScheduleEntry[]
+  haycutting_schedule_entry haycutting_schedule_entry[]
+  minister_issue_pasture    minister_issue_pasture[]
+  plan                      Plan                        @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "pasture_plan_id_foreign")
+  plantCommunities          PlantCommunity[]
 
-  plan             Plan                   @relation(fields: [planId], references: [id])
-  grazingEntries   GrazingScheduleEntry[]
-  plantCommunities PlantCommunity[]
-
+  @@index([planId], map: "pasture_plan_id_index")
   @@map("pasture")
 }
 
 model PlantCommunity {
-  id              Int     @id @default(autoincrement())
-  pastureId       Int     @map("pasture_id")
-  name            String
-  description     String?
-  communityType   String? @map("community_type")
-  acres           Decimal?
-  shrubHerbs      Decimal?
-  nativeGrass     Decimal?
-  introducedGrass Decimal?
-  forest          Decimal?
-  browse          Decimal?
-  arthurType      String? @map("arthur_type")
-  rangeReadiness  String? @map("range_readiness")
-  condition       String?
-
-  pasture    Pasture @relation(fields: [pastureId], references: [id])
-  indicators IndicatorPlant[]
+  id                            Int                            @id @default(autoincrement())
+  community_type_id             Int
+  elevation_id                  Int?
+  pastureId                     Int                            @map("pasture_id")
+  purpose_of_action             String
+  approved                      Boolean                        @default(false)
+  name                          String?                        @default("")
+  aspect                        String?
+  url                           String?
+  notes                         String?
+  range_readiness_day           Int?
+  range_readiness_month         Int?
+  range_readiness_note          String?
+  created_at                    DateTime                       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                    DateTime                       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  shrub_use                     Float?                         @db.Real
+  canonical_id                  Int?
+  indicators                    IndicatorPlant[]
+  monitoring_area               monitoring_area[]
+  ref_plant_community_type      ref_plant_community_type       @relation(fields: [community_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plant_community_community_type_id_foreign")
+  ref_plant_community_elevation ref_plant_community_elevation? @relation(fields: [elevation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plant_community_elevation_id_foreign")
+  pasture                       Pasture                        @relation(fields: [pastureId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "plant_community_pasture_id_foreign")
+  plant_community_action        plant_community_action[]
 
   @@map("plant_community")
 }
 
 model IndicatorPlant {
-  id              Int     @id @default(autoincrement())
-  plantCommunityId Int    @map("plant_community_id")
-  name            String
-  cover           Decimal?
-  utilization     String?
-  keySpecies      Boolean @default(false) @map("key_species")
-
-  plantCommunity PlantCommunity @relation(fields: [plantCommunityId], references: [id])
+  id                Int                @id @default(autoincrement())
+  plant_species_id  Int?
+  plantCommunityId  Int                @map("plant_community_id")
+  criteria          String
+  name              String?
+  value             Float?             @db.Real
+  created_at        DateTime           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at        DateTime           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id      Int?
+  plantCommunity    PlantCommunity     @relation(fields: [plantCommunityId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "indicator_plant_plant_community_id_foreign")
+  ref_plant_species ref_plant_species? @relation(fields: [plant_species_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "indicator_plant_plant_species_id_foreign")
 
   @@map("indicator_plant")
 }
 
 model PlanFile {
-  id        Int      @id @default(autoincrement())
-  planId    Int      @map("plan_id")
-  type      String
-  name      String
-  url       String
-  createdAt DateTime @default(now()) @map("created_at")
-
-  plan Plan @relation(fields: [planId], references: [id])
+  id           Int    @id @default(autoincrement())
+  name         String @db.VarChar
+  url          String @db.VarChar
+  type         String @db.VarChar
+  access       String @default("staff_only") @db.VarChar
+  planId       Int    @map("plan_id")
+  user_id      Int
+  plan         Plan   @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_account User   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("plan_file")
 }
 
 model PlanExtensionRequest {
-  id                 Int       @id @default(autoincrement())
-  planId             Int       @map("plan_id")
-  clientId           String?   @map("client_id")
-  requestedExtension Boolean   @default(false) @map("requested_extension")
-  extensionYear      Int?      @map("extension_year")
-  userId             Int?      @map("user_id")
+  id                 Int      @id @default(autoincrement())
+  planId             Int?     @map("plan_id")
+  clientId           String?  @map("client_id") @db.VarChar
+  userId             Int?     @map("user_id")
   email              String?
-  note               String?
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
-
-  plan Plan @relation(fields: [planId], references: [id])
+  requestedExtension Boolean? @map("requested_extension")
+  createdAt          DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  plan               Plan?    @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("plan_extension_requests")
 }
 
 model PlanConfirmation {
-  id        Int      @id @default(autoincrement())
-  planId    Int      @map("plan_id")
-  clientId  String   @map("client_id")
-  confirmed Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
+  id                     Int      @id @default(autoincrement())
+  planId                 Int      @map("plan_id")
+  confirmed              Boolean  @default(false)
+  createdAt              DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updated_at             DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  user_id                Int?
+  is_own_signature       Boolean  @default(true)
+  clientId               String?  @map("client_id") @db.VarChar
+  is_manual_confirmation Boolean?
+  ref_client             Client?  @relation(fields: [clientId], references: [clientNumber], onDelete: NoAction, onUpdate: NoAction)
+  plan                   Plan     @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "plan_confirmation_plan_id_foreign")
+  user_account           User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  plan Plan @relation(fields: [planId], references: [id])
-
-  @@unique([planId, clientId])
+  @@index([planId], map: "plan_confirmation_plan_id_index")
   @@map("plan_confirmation")
 }
 
 model LivestockIdentifier {
-  id           Int      @id @default(autoincrement())
-  agreementId  String   @map("agreement_id")
-  livestockType String  @map("livestock_type")
-  count        Int
-  year         Int
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  agreement Agreement @relation(fields: [agreementId], references: [forestFileId])
+  id                                Int                               @id @default(autoincrement())
+  description                       String?
+  image_ref                         String?
+  accepted                          Boolean                           @default(false)
+  livestock_identifier_location_id  Int
+  livestock_identifier_type_id      Int
+  agreementId                       String                            @map("agreement_id") @db.VarChar(9)
+  createdAt                         DateTime                          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @map("created_at") @db.Timestamptz(6)
+  updated_at                        DateTime                          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  agreement                         Agreement                         @relation(fields: [agreementId], references: [forestFileId], onDelete: NoAction, onUpdate: NoAction, map: "livestock_identifier_agreement_id_foreign")
+  ref_livestock_identifier_location ref_livestock_identifier_location @relation(fields: [livestock_identifier_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "livestock_identifier_livestock_identifier_location_id_foreign")
+  ref_livestock_identifier_type     ref_livestock_identifier_type     @relation(fields: [livestock_identifier_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "livestock_identifier_livestock_identifier_type_id_foreign")
 
   @@map("livestock_identifier")
 }
 
 model Exemption {
-  id              Int      @id @default(autoincrement())
-  agreementId     String   @map("agreement_id")
-  type            String
-  status          String
-  year            Int
-  submittedAt     DateTime? @map("submitted_at")
-  approvedAt      DateTime? @map("approved_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  agreement Agreement @relation(fields: [agreementId], references: [forestFileId])
+  id                                               Int                        @id @default(autoincrement())
+  agreementId                                      String                     @map("agreement_id") @db.VarChar(9)
+  start_date                                       DateTime                   @db.Date
+  end_date                                         DateTime                   @db.Date
+  reason                                           String?
+  justification_text                               String?
+  status                                           String                     @default("Draft") @db.VarChar(32)
+  user_id                                          Int
+  approved_by                                      Int?
+  approval_date                                    DateTime?                  @db.Timestamptz(6)
+  createdAt                                        DateTime?                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                                        DateTime?                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  agreement                                        Agreement                  @relation(fields: [agreementId], references: [forestFileId], onDelete: Cascade, onUpdate: NoAction)
+  user_account_exemption_approved_byTouser_account User?                      @relation("exemption_approved_byTouser_account", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exemption_status_type                            exemption_status_type      @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  user_account_exemption_user_idTouser_account     User                       @relation("exemption_user_idTouser_account", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exemption_attachment                             exemption_attachment[]
+  exemption_status_history                         exemption_status_history[]
 
   @@map("exemption")
+}
+
+model additional_requirement {
+  id                                  Int                                  @id @default(autoincrement())
+  category_id                         Int?
+  plan_id                             Int
+  detail                              String?
+  url                                 String?
+  created_at                          DateTime                             @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                          DateTime                             @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id                        Int?
+  ref_additional_requirement_category ref_additional_requirement_category? @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "additional_requirement_category_id_foreign")
+  plan                                Plan                                 @relation(fields: [plan_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "additional_requirement_plan_id_foreign")
+}
+
+model agreement_exemption_status {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique @db.VarChar(32)
+  description String      @db.VarChar(255)
+  active      Boolean     @default(true)
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  agreement   Agreement[]
+}
+
+model email_template {
+  id         Int     @id(map: "email_template_pk") @default(autoincrement()) @db.SmallInt
+  name       String  @db.VarChar
+  from_email String  @db.VarChar
+  subject    String  @db.VarChar
+  body       String? @db.VarChar
+}
+
+model exemption_attachment {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar
+  url          String    @db.VarChar
+  type         String    @db.VarChar
+  access       String    @default("staff_only") @db.VarChar
+  exemption_id Int
+  user_id      Int
+  created_at   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamp(6)
+  updated_at   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamp(6)
+  exemption    Exemption @relation(fields: [exemption_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_account User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([exemption_id], map: "idx_exemption_attachment_exemption_id")
+  @@index([user_id], map: "idx_exemption_attachment_user_id")
+}
+
+model exemption_status_history {
+  id                                                                                Int                    @id @default(autoincrement())
+  exemption_id                                                                      Int?
+  from_status                                                                       String?                @db.VarChar(32)
+  to_status                                                                         String                 @db.VarChar(32)
+  note                                                                              String?
+  user_id                                                                           Int
+  created_at                                                                        DateTime               @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamp(6)
+  updated_at                                                                        DateTime               @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamp(6)
+  exemption                                                                         Exemption?             @relation(fields: [exemption_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  exemption_status_type_exemption_status_history_from_statusToexemption_status_type exemption_status_type? @relation("exemption_status_history_from_statusToexemption_status_type", fields: [from_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  exemption_status_type_exemption_status_history_to_statusToexemption_status_type   exemption_status_type  @relation("exemption_status_history_to_statusToexemption_status_type", fields: [to_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  user_account                                                                      User                   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([exemption_id], map: "idx_exemption_status_history_exemption_id")
+  @@index([to_status], map: "idx_exemption_status_history_to_status")
+}
+
+model exemption_status_type {
+  id                                                                                   Int                        @id @default(autoincrement())
+  code                                                                                 String                     @unique @db.VarChar(32)
+  description                                                                          String
+  active                                                                               Boolean                    @default(true)
+  created_at                                                                           DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at                                                                           DateTime?                  @default(now()) @db.Timestamptz(6)
+  exemption                                                                            Exemption[]
+  exemption_status_history_exemption_status_history_from_statusToexemption_status_type exemption_status_history[] @relation("exemption_status_history_from_statusToexemption_status_type")
+  exemption_status_history_exemption_status_history_to_statusToexemption_status_type   exemption_status_history[] @relation("exemption_status_history_to_statusToexemption_status_type")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model fta_license_dump_json {
+  JSON    Json?
+  version Int?
+  when    DateTime? @db.Timestamptz(2)
+
+  @@ignore
+}
+
+model haycutting_schedule_entry {
+  id                     Int             @id @default(autoincrement())
+  haycutting_schedule_id Int
+  pasture_id             Int
+  date_in                DateTime?       @db.Timestamptz(6)
+  date_out               DateTime?       @db.Timestamptz(6)
+  stubble_height         Int
+  tonnes                 Int
+  created_at             DateTime        @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at             DateTime        @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id           Int?
+  grazing_schedule       GrazingSchedule @relation(fields: [haycutting_schedule_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "haycutting_schedule_entry_haycutting_schedule_id_foreign")
+  pasture                Pasture         @relation(fields: [pasture_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "haycutting_schedule_entry_pasture_id_foreign")
+
+  @@index([haycutting_schedule_id], map: "haycutting_schedule_entry_haycutting_schedule_id_index")
+  @@index([pasture_id], map: "haycutting_schedule_entry_pasture_id_index")
+}
+
+model invasive_plant_checklist {
+  id                             Int      @id @default(autoincrement())
+  plan_id                        Int      @unique(map: "invasive_plant_checklist_plan_id_unique")
+  equipment_and_vehicles_parking Boolean? @default(false)
+  begin_in_uninfested_area       Boolean? @default(false)
+  undercarriges_inspected        Boolean? @default(false)
+  revegetate                     Boolean? @default(false)
+  other                          String?
+  created_at                     DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                     DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id                   Int?
+  plan                           Plan     @relation(fields: [plan_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invasive_plant_checklist_plan_id_foreign")
+}
+
+model management_consideration {
+  id                                Int                                @id @default(autoincrement())
+  consideration_type_id             Int?
+  plan_id                           Int
+  detail                            String?
+  url                               String?
+  created_at                        DateTime                           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                        DateTime                           @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id                      Int?
+  ref_management_consideration_type ref_management_consideration_type? @relation(fields: [consideration_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "management_consideration_consideration_type_id_foreign")
+  plan                              Plan                               @relation(fields: [plan_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "management_consideration_plan_id_foreign")
+}
+
+model migration {
+  id             Int       @id @default(autoincrement())
+  name           String?   @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime? @db.Timestamptz(6)
+}
+
+model migration_lock {
+  index     Int  @id @default(autoincrement())
+  is_locked Int?
+}
+
+model minister_issue {
+  id                      Int                      @id @default(autoincrement())
+  plan_id                 Int
+  issue_type_id           Int
+  detail                  String?
+  objective               String?
+  identified              Boolean                  @default(false)
+  created_at              DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at              DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id            Int?
+  ref_minister_issue_type ref_minister_issue_type  @relation(fields: [issue_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "minister_issue_issue_type_id_foreign")
+  plan                    Plan                     @relation(fields: [plan_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "minister_issue_plan_id_foreign")
+  minister_issue_action   minister_issue_action[]
+  minister_issue_pasture  minister_issue_pasture[]
+}
+
+model minister_issue_action {
+  id                             Int                            @id @default(autoincrement())
+  action_type_id                 Int
+  issue_id                       Int
+  other                          String?
+  detail                         String?
+  created_at                     DateTime                       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                     DateTime                       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  no_graze_start_day             Int?
+  no_graze_start_month           Int?
+  no_graze_end_day               Int?
+  no_graze_end_month             Int?
+  canonical_id                   Int?
+  ref_minister_issue_action_type ref_minister_issue_action_type @relation(fields: [action_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "minister_issue_action_action_type_id_foreign")
+  minister_issue                 minister_issue                 @relation(fields: [issue_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "minister_issue_action_issue_id_foreign")
+}
+
+model minister_issue_pasture {
+  id                Int            @id @default(autoincrement())
+  minister_issue_id Int
+  pasture_id        Int
+  created_at        DateTime       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at        DateTime       @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id      Int?
+  minister_issue    minister_issue @relation(fields: [minister_issue_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "minister_issue_pasture_minister_issue_id_foreign")
+  pasture           Pasture        @relation(fields: [pasture_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "minister_issue_pasture_pasture_id_foreign")
+
+  @@index([minister_issue_id], map: "minister_issue_pasture_minister_issue_id_index")
+  @@index([pasture_id], map: "minister_issue_pasture_pasture_id_index")
+}
+
+model monitoring_area {
+  id                         Int                         @id @default(autoincrement())
+  rangeland_health_id        Int?
+  plant_community_id         Int
+  name                       String
+  other_purpose              String?
+  location                   String?
+  transect_azimuth           Float?                      @db.Real
+  latitude                   Float?                      @db.Real
+  longitude                  Float?                      @db.Real
+  created_at                 DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                 DateTime                    @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id               Int?
+  plant_community            PlantCommunity              @relation(fields: [plant_community_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "monitoring_area_plant_community_id_foreign")
+  ref_monitoring_area_health ref_monitoring_area_health? @relation(fields: [rangeland_health_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "monitoring_area_rangeland_health_id_foreign")
+  monitoring_area_purpose    monitoring_area_purpose[]
+}
+
+model monitoring_area_purpose {
+  id                               Int                              @id @default(autoincrement())
+  purpose_type_id                  Int
+  monitoring_area_id               Int
+  created_at                       DateTime                         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                       DateTime                         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id                     Int?
+  monitoring_area                  monitoring_area                  @relation(fields: [monitoring_area_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "monitoring_area_purpose_monitoring_area_id_foreign")
+  ref_monitoring_area_purpose_type ref_monitoring_area_purpose_type @relation(fields: [purpose_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "monitoring_area_purpose_purpose_type_id_foreign")
+}
+
+model permissions {
+  id               Int                @id @default(autoincrement())
+  description      String             @unique @db.VarChar(255)
+  role_permissions role_permissions[]
+}
+
+model plan_snapshot {
+  id              Int         @id @default(autoincrement())
+  snapshot        Json        @db.Json
+  plan_id         Int
+  created_at      DateTime?   @default(now()) @db.Timestamptz(6)
+  status_id       Int?
+  version         Int         @default(autoincrement())
+  user_id         Int?
+  is_discarded    Boolean     @default(false)
+  pdf_file        Bytes?
+  plan            Plan        @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ref_plan_status PlanStatus? @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([plan_id, version], map: "version_plan_id_unique")
+}
+
+model plan_version {
+  version      Int      @default(autoincrement())
+  canonical_id Int
+  plan_id      Int?
+  created_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plan         Plan?    @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([canonical_id, version])
+}
+
+model plant_community_action {
+  id                              Int                              @id @default(autoincrement())
+  action_type_id                  Int?
+  plant_community_id              Int
+  name                            String?                          @default("")
+  details                         String?
+  no_graze_start_day              Int?
+  no_graze_start_month            Int?
+  no_graze_end_day                Int?
+  no_graze_end_month              Int?
+  created_at                      DateTime                         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at                      DateTime                         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  canonical_id                    Int?
+  ref_plant_community_action_type ref_plant_community_action_type? @relation(fields: [action_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plant_community_action_action_type_id_foreign")
+  plant_community                 PlantCommunity                   @relation(fields: [plant_community_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "plant_community_action_plant_community_id_foreign")
+}
+
+model ref_additional_requirement_category {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  active                 Boolean                  @default(true)
+  created_at             DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  additional_requirement additional_requirement[]
+}
+
+model ref_amendment_type {
+  id          Int      @id @default(autoincrement())
+  code        String   @db.VarChar(4)
+  description String
+  active      Boolean  @default(true)
+  created_at  DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at  DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plan        Plan[]
+}
+
+model ref_livestock {
+  id                     Int                    @id @default(autoincrement())
+  name                   String
+  au_factor              Float                  @default(0) @db.Real
+  active                 Boolean                @default(true)
+  created_at             DateTime               @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at             DateTime               @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  grazing_schedule_entry GrazingScheduleEntry[]
+}
+
+model ref_livestock_identifier_location {
+  id                   Int                   @id @default(autoincrement())
+  description          String
+  active               Boolean               @default(false)
+  created_at           DateTime              @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at           DateTime              @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  livestock_identifier LivestockIdentifier[]
+}
+
+model ref_livestock_identifier_type {
+  id                   Int                   @id @default(autoincrement())
+  description          String
+  active               Boolean               @default(false)
+  created_at           DateTime              @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at           DateTime              @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  livestock_identifier LivestockIdentifier[]
+}
+
+model ref_management_consideration_type {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  active                   Boolean                    @default(true)
+  created_at               DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at               DateTime                   @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  management_consideration management_consideration[]
+}
+
+model ref_minister_issue_action_type {
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  placeholder           String?
+  active                Boolean                 @default(true)
+  created_at            DateTime                @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at            DateTime                @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  minister_issue_action minister_issue_action[]
+}
+
+model ref_minister_issue_type {
+  id             Int              @id @default(autoincrement())
+  name           String
+  active         Boolean          @default(true)
+  created_at     DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at     DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  minister_issue minister_issue[]
+}
+
+model ref_monitoring_area_health {
+  id              Int               @id @default(autoincrement())
+  name            String
+  active          Boolean           @default(true)
+  created_at      DateTime          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at      DateTime          @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  monitoring_area monitoring_area[]
+}
+
+model ref_monitoring_area_purpose_type {
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  active                  Boolean                   @default(true)
+  created_at              DateTime                  @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  monitoring_area_purpose monitoring_area_purpose[]
+}
+
+model ref_plant_community_action_type {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  active                 Boolean                  @default(true)
+  created_at             DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plant_community_action plant_community_action[]
+}
+
+model ref_plant_community_elevation {
+  id              Int              @id @default(autoincrement())
+  name            String
+  active          Boolean          @default(true)
+  created_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plant_community PlantCommunity[]
+}
+
+model ref_plant_community_type {
+  id              Int              @id @default(autoincrement())
+  name            String
+  active          Boolean          @default(true)
+  created_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  plant_community PlantCommunity[]
+}
+
+model ref_plant_species {
+  id              Int              @id @default(autoincrement())
+  name            String
+  leaf_stage      Float?           @db.Real
+  stubble_height  Float?           @db.Real
+  annual_growth   Float?           @db.Real
+  is_shrub_use    Boolean          @default(false)
+  active          Boolean          @default(true)
+  created_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at      DateTime         @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  indicator_plant IndicatorPlant[]
+}
+
+model ref_usage {
+  id                 Int       @id @default(autoincrement())
+  year               Int?      @db.SmallInt
+  authorized_aum     Int?      @default(0)
+  temporary_increase Int?      @default(0)
+  total_non_use      Int?      @default(0)
+  total_annual_use   Int?      @default(0)
+  agreement_id       String    @db.VarChar(9)
+  created_at         DateTime  @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at         DateTime  @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  agreement          Agreement @relation(fields: [agreement_id], references: [forestFileId], onDelete: NoAction, onUpdate: NoAction, map: "ref_usage_agreement_id_foreign")
+
+  @@index([year], map: "ref_usage_year_index")
+}
+
+model role_permissions {
+  id            Int          @id @default(autoincrement())
+  role_id       Int?
+  permission_id Int?
+  permissions   permissions? @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "permission_id")
+  roles         roles?       @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "role_id")
+}
+
+model roles {
+  id               Int                @id @default(autoincrement())
+  description      String             @unique @db.VarChar(255)
+  role_permissions role_permissions[]
+  user_account     User[]
+}
+
+model user_districts {
+  p_id         Int      @id @default(autoincrement())
+  id           Int?
+  created_at   DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("CURRENT_TIMESTAMP(3)")) @db.Timestamptz(6)
+  user_id      Int?
+  user_account User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_districts_user_id_foreign")
+}
+
+model user_feedback {
+  id           Int      @id @default(autoincrement())
+  user_id      Int?
+  section      String
+  feedback     String
+  created_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("('now'::text)::timestamp(3) with time zone")) @db.Timestamptz(6)
+  user_account User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_feedback_user_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model version {
+  lock     String  @id(map: "pk_t1") @default("X") @db.Char(1)
+  ios      Int?
+  api      Int?
+  idp_hint String? @db.VarChar(255)
+}
+
+enum client_account_type {
+  owner
+  agent
+}
+
+enum schedule_sort_order {
+  asc
+  desc
 }

@@ -22,7 +22,7 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 
 app.use(
-  '/trpc',
+  '/api/trpc',
   createExpressMiddleware({
     router: appRouter,
     createContext,
@@ -34,15 +34,15 @@ app.use(
   }),
 );
 
-app.get('/health', (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/', (_req, res) => {
+app.get('/api', (_req, res) => {
   res.json({
     name: 'Range API v2',
     version: '2.0.0',
-    documentation: '/trpc',
+    documentation: '/api/trpc',
   });
 });
 
@@ -68,3 +68,5 @@ const gracefulShutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+export default app;

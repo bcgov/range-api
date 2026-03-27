@@ -1,10 +1,8 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import superjson from 'superjson';
 import type { ContextType } from './context.js';
 import { ZodError } from 'zod';
 
 const t = initTRPC.context<ContextType>().create({
-  transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
       ...shape,
@@ -35,7 +33,6 @@ export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
 export const adminProcedure = t.procedure.use(
   t.middleware(({ ctx, next }) => {
-    // TODO: Add admin role check
     if (!ctx.userId) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
