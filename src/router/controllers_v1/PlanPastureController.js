@@ -60,15 +60,15 @@ export default class PlanPastureController {
     const { districtId } = query;
     checkRequiredFields(['districtId'], 'query', req);
     const pastures = await db
-      .select('*')
+      .select('pasture.id', 'pasture.name', 'agreement.forest_file_id')
       .distinct('pasture.id')
       .from('pasture')
       .leftJoin('plan', 'pasture.plan_id', '=', 'plan.id')
       .leftJoin('agreement', 'plan.agreement_id', '=', 'agreement.forest_file_id')
       .leftJoin('ref_zone', 'agreement.zone_id', '=', 'ref_zone.id')
-      .where('ref_district.id', districtId)
       .leftJoin('ref_district', 'ref_zone.district_id', '=', 'ref_district.id')
-      .orderBy('name', 'asc');
+      .where('ref_district.id', districtId)
+      .orderBy('pasture.name', 'asc');
     const uniquePastures = await Promise.all(pastures.map((p) => Pasture.findById(db, p.id)));
     await Promise.all(flatten(uniquePastures.map((p) => [p.fetchPlantCommunities(db, { pasture_id: p.id })])));
     const response = pastures.map((p, index) => {
