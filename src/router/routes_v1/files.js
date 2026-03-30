@@ -62,11 +62,6 @@ router.get(
           throw errorWithCode('Unauthorized', 403);
         }
         break;
-      case 'user_only':
-        if (user.id !== file.userId) {
-          throw errorWithCode('Unauthorized', 403);
-        }
-        break;
       case 'everyone':
         break;
       default:
@@ -104,16 +99,6 @@ router.delete(
     switch (access) {
       case 'staff_only':
         if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
-          throw errorWithCode('Unauthorized', 403);
-        }
-        break;
-      case 'user_only':
-        if (
-          user.id !== planFile.userId &&
-          !user.isRangeOfficer() &&
-          !user.isAdministrator() &&
-          !user.isDecisionMaker()
-        ) {
           throw errorWithCode('Unauthorized', 403);
         }
         break;

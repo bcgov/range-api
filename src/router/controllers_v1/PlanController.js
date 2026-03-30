@@ -31,8 +31,6 @@ const filterFiles = (files, user) =>
     switch (file.access) {
       case 'staff_only':
         return user.isRangeOfficer() || user.isAdministrator() || user.isDecisionMaker();
-      case 'user_only':
-        return file.userId === user.id;
       case 'everyone':
         return true;
       default:
