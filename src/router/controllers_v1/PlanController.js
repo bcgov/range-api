@@ -21,6 +21,7 @@ import MonitoringArea from '../../libs/db2/model/monitoringarea';
 import PlantCommunityAction from '../../libs/db2/model/plantcommunityaction';
 import PlantCommunity from '../../libs/db2/model/plantcommunity';
 import MonitoringAreaPurpose from '../../libs/db2/model/monitoringareapurpose';
+import User from '../../libs/db2/model/user';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement, PlanConfirmation, PlanStatus, AdditionalRequirement, PlanFile } = dm;
@@ -331,7 +332,9 @@ export default class PlanController {
       user_id: user.id,
     });
 
-    res.json(planFile).end();
+    const userRecord = await User.findById(db, user.id);
+    const response = { ...planFile, user: userRecord };
+    res.json(response).end();
   }
 
   static async updateAttachment(req, res) {
