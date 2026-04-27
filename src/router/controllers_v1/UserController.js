@@ -203,19 +203,21 @@ export class UserController {
       type: 'owner',
     });
 
+    // Update plan_confirmation records with the user_id for this client
+    await PlanConfirmation.update(db, { client_id: clientId }, { user_id: userId });
+
+    // Update plan extension requests with the user_id for this client
     const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
+    const user = await User.findById(db, userId);
     for (const request of requestsToUpdate) {
-      if (request.userId === null) {
-        const user = await User.findById(db, userId);
-        await PlanExtensionRequests.update(
-          db,
-          { id: request.id },
-          {
-            user_id: user.id,
-            email: user.email,
-          },
-        );
-      }
+      await PlanExtensionRequests.update(
+        db,
+        { id: request.id },
+        {
+          user_id: user.id,
+          email: user.email,
+        },
+      );
     }
     res.status(200).json(result).end();
   }
@@ -234,6 +236,9 @@ export class UserController {
     if (result === 0) {
       throw errorWithCode("Client link doesn't exist for user", 404);
     }
+
+    // Clear user_id from plan_confirmation records for this client
+    await PlanConfirmation.update(db, { client_id: clientId }, { user_id: null });
 
     const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
     for (const request of requestsToUpdate) {
