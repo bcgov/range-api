@@ -1,4 +1,5 @@
-import { default as request } from 'supertest'; // eslint-disable-line
+vi.mock('passport');
+import { default as request } from 'supertest';  
 import passport from 'passport';
 import createApp from '../../src';
 import userMocks from '../../__mocks__/fixtures/user_account_mock.json';
@@ -25,10 +26,7 @@ import clientAgreementMocks from '../../__mocks__/fixtures/client_agreement_mock
 import planConfirmationMocks from '../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../src/libs/db2';
 import config from '../../src/config';
-
 const dm = new DataManager(config);
-
-jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
 const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
@@ -161,9 +159,7 @@ describe('Test Plan routes', () => {
       .post(baseUrl)
       .send({ ...body, agreementId: 'bad' })
       .expect(500)
-      .expect((res) =>
-        expect(res.body.error).toBe('Unable to find the related agreement'),
-      );
+      .expect((res) => expect(res.body.error).toBe('Unable to find the related agreement'));
   });
 
   // POST /plan - attempting to create a plan with an existing :planId should throw a 409 error
@@ -263,10 +259,7 @@ describe('Test Plan routes', () => {
       note: 'Draft -> Complete',
     };
 
-    await request(app)
-      .post(`${baseUrl}/1/status-record`)
-      .send(statusHistory)
-      .expect(200);
+    await request(app).post(`${baseUrl}/1/status-record`).send(statusHistory).expect(200);
 
     const results = await dm.db('plan_status_history').where('id', 1);
     expect(results).toHaveLength(1);

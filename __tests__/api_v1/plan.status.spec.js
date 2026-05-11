@@ -1,13 +1,12 @@
-import { default as request } from 'supertest'; // eslint-disable-line
+vi.mock('passport');
+import { default as request } from 'supertest';  
 import passport from 'passport';
 import createApp from '../../src';
-
-jest.mock('../../src/libs/db2/model/plan');
-jest.mock('../../src/libs/db2/model/agreement');
-jest.mock('../../src/libs/db2/model/planconfirmation');
-jest.mock('../../src/libs/db2/model/planstatus');
-jest.mock('../../src/libs/db2/model/planstatushistory');
-jest.mock('request-promise-native');
+vi.mock('../../src/libs/db2/model/plan');
+vi.mock('../../src/libs/db2/model/agreement');
+vi.mock('../../src/libs/db2/model/planconfirmation');
+vi.mock('../../src/libs/db2/model/planstatus');
+vi.mock('../../src/libs/db2/model/planstatushistory');
 
 describe('Test Plan routes', () => {
   //not sure how this one ever worked?  an admin can't do a PUT on plan

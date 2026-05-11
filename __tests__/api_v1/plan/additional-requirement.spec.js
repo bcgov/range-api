@@ -1,4 +1,5 @@
-import { default as request } from 'supertest'; // eslint-disable-line
+vi.mock('passport');
+import { default as request } from 'supertest';  
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -12,10 +13,7 @@ import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_m
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
 import config from '../../../src/config';
-
 const dm = new DataManager(config);
-
-jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
 const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
@@ -85,9 +83,7 @@ describe('Test Additional Requirement routes', () => {
     const requirements = await dm.db('additional_requirement');
 
     expect(requirements).toHaveLength(2);
-    expect(requirements[0].canonical_id).not.toEqual(
-      requirements[1].canonical_id,
-    );
+    expect(requirements[0].canonical_id).not.toEqual(requirements[1].canonical_id);
   });
 
   test('Updating an additional requirement', async () => {

@@ -15,11 +15,11 @@
 // Created by Jason Leach on 2019-03-01.
 //
 
-import { default as request } from 'supertest'; // eslint-disable-line
+import { default as request } from 'supertest';
 import createApp from '../../src';
 
-jest.mock('../../src/libs/db2/model/zone');
-jest.mock('request-promise-native');
+vi.mock('../../src/libs/db2/model/zone');
+vi.mock('passport');
 
 describe('Test zone routes', () => {
   test('Fetching all zones for a specific district should succeed ', async () => {

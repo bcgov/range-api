@@ -3,130 +3,71 @@
   "version": "1.0.0",
   "description": "MyRA API",
   "main": "index.js",
+  "type": "module",
   "engines": {
-    "node": "~6.11.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.5",
-    "@bcgov/nodejs-common-utils": "0.0.16",
     "axios": "^1.4.0",
-    "body-parser": "^1.18.2",
-    "chalk": "^2.3.2",
     "compression": "^1.7.2",
-    "connect-flash": "^0.1.1",
-    "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
-    "cross-env": "^5.1.4",
-    "csv": "^3.0.2",
-    "deepdash": "^4.3.1",
-    "dotenv": "^6.0.0",
-    "express": "^4.16.3",
-    "express-session": "^1.15.6",
-    "handlebars": "^4.3.0",
-    "ip": "^1.1.4",
-    "js-yaml": "^3.13.1",
-    "jsonwebtoken": "^8.2.1",
-    "jwks-rsa": "^3.0.1",
-    "knex": "^0.21.21",
-    "lodash": "^4.17.13",
-    "minio": "^7.0.16",
-    "moment": "^2.22.0",
-    "nconf": "^0.10.0",
-    "passport": "^0.4.0",
-    "passport-jwt": "^4.0.0",
-    "passport-mock-strategy": "^1.1.1",
-    "passport-oauth2": "^1.4.0",
+    "cross-env": "^10.1.0",
+    "csv": "^6.5.1",
+    "dayjs": "^1.11.20",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^4.0.1",
+    "kysely": "^0.29.0",
+    "minio": "^8.0.7",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-mock-strategy": "^2.0.0",
     "pg": "^8.0.3",
-    "request": "^2.85.0",
-    "request-promise-native": "^1.0.5",
-    "wkhtmltopdf": "^0.3.4"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.5",
-    "@babel/core": "^7.1.6",
-    "@babel/helper-plugin-utils": "^7.0.0",
-    "@babel/node": "^7.2.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
-    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
-    "@babel/plugin-transform-async-to-generator": "^7.1.0",
-    "@babel/plugin-transform-runtime": "^7.1.0",
-    "@babel/polyfill": "^7.0.0",
-    "@babel/preset-env": "^7.1.6",
-    "@babel/preset-stage-2": "^7.0.0",
-    "babel-core": "^7.0.0-bridge.0",
-    "@babel/eslint-parser": "^7.23.10",
-    "babel-jest": "^24.5.0",
-    "babel-preset-airbnb": "^3.0.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
+    "@eslint/js": "^10.0.1",
+    "@types/compression": "^1.8.1",
+    "@types/node": "^25.6.2",
+    "@types/pg": "^8.20.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.29.1",
-    "faker": "^4.1.0",
-    "gulp": "^4.0.0",
-    "gulp-babel": "^8.0.0",
-    "gulp-clean": "^0.4.0",
-    "gulp-sourcemaps": "^2.6.5",
+    "globals": "^17.6.0",
     "husky": "^9.0.11",
-    "jest": "^24.5.0",
-    "lint-staged": "^15.2.2",
-    "nodemon": "^1.18.3",
+    "lint-staged": "^17.0.4",
     "prettier": "^3.2.5",
-    "supertest": "^3.4.2"
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
   },
   "scripts": {
     "start": "node build/src/server.js",
-    "dev": "nodemon src/server.js --exec babel-node --inspect=0.0.0.0:9229 --nolazy",
-    "debug": "babel-node --inspect-brk=0.0.0.0:9229 --nolazy build/src",
-    "build": "cross-env NODE_ENV=production gulp",
+    "dev": "tsx watch src/server.ts",
+    "build": "rm -rf build && tsc",
     "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
-    "test": "cross-env NODE_ENV=unit_test jest --verbose --coverage --runInBand __tests__",
-    "test:watch": "cross-env NODE_ENV=unit_test jest --verbose __tests__ --watch --runInBand",
-    "test:security": "nsp check",
-    "test:lint": "eslint --env node --ext .js src __tests__ __testHelpers__ __mocks__",
+    "test": "cross-env NODE_ENV=unit_test vitest run --coverage",
+    "test:watch": "cross-env NODE_ENV=unit_test vitest",
+    "test:lint": "eslint src __tests__ __testHelpers__ __mocks__ scripts",
     "import": "node build/scripts/import.js",
     "plan_extension_exemption": "node build/scripts/plan_extension_exemption.js",
     "process_no_use": "node build/scripts/process_no_use.js",
-    "initialize_docker": "npm run build && ./node_modules/.bin/knex migrate:latest && ./node_modules/.bin/knex seed:run && ./node_modules/.bin/babel-node scripts/import.js true",
-    "initialize": "npm rum build && npx knex migrate:latest && npx knex seed:run && npx babel-node scripts/import.js true",
-    "prepare": "husky install"
+    "initialize_docker": "npm run build && tsx scripts/import.ts true",
+    "initialize": "npm run build && tsx scripts/import.ts true"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com:bcgov/secure-image-api.git"
   },
-  "@std/esm": {
-    "esm": "all",
-    "cjs": true
-  },
-  "jest": {
-    "verbose": false,
-    "testURL": "http://localhost/",
-    "testEnvironment": "jest-environment-node",
-    "transform": {
-      "^.+\\.js$": "babel-jest"
-    },
-    "globals": {
-      "NODE_ENV": "test"
-    },
-    "moduleFileExtensions": [
-      "js",
-      "jsx",
-      "json"
-    ],
-    "moduleDirectories": [
-      "node_modules",
-      "src/frontend",
-      "src/shared"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/__testHelpers__/setup.js"
-    ]
-  },
   "author": "Jason C. Leach <jason.leach@fullboar.ca>",
   "license": "Apache-2.0",
   "homepage": "https://github.com:bcgov/range-api#readme",
   "lint-staged": {
-    "*.js": "eslint --cache --fix",
-    "*.{js,css,md}": "prettier --write"
+    "*.{js,ts}": "eslint --cache --fix",
+    "*.{js,ts,css,md}": "prettier --write"
   }
 }
