@@ -14,12 +14,11 @@
 //
 // Created by Mike Wells on 2019-03-20.
 
+vi.mock('passport');
 import passport from 'passport';
 import request from 'supertest';
 import createApp from '../../src';
-
-jest.mock('../../src/libs/db2/model/district');
-jest.mock('request-promise-native');
+vi.mock('../../src/libs/db2/model/district');
 describe('Test district route', () => {
   test('should fetch all districts', async (done) => {
     const app = await createApp();

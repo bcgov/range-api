@@ -15,15 +15,13 @@
 // Created by Pushan Mitra on 2019-03-07.
 //
 
-import { default as request } from 'supertest'; // eslint-disable-line
+vi.mock('passport');
+import { default as request } from 'supertest';  
 import passport from 'passport';
-
 import createApp from '../../src';
-
-jest.mock('../../src/libs/db2/model/user');
-jest.mock('request-promise-native');
-jest.mock('../../src/libs/db2/model/client');
-jest.mock('../../src/libs/db2/model/userclientlink');
+vi.mock('../../src/libs/db2/model/user');
+vi.mock('../../src/libs/db2/model/client');
+vi.mock('../../src/libs/db2/model/userclientlink');
 
 describe('Test user routes happy path', () => {
   afterAll(() => {
@@ -113,10 +111,7 @@ describe('Test user routes happy path', () => {
 
     const clientId = 3;
 
-    await request(app)
-      .post('/api/v1/user/1/client')
-      .send({ clientId })
-      .expect(400);
+    await request(app).post('/api/v1/user/1/client').send({ clientId }).expect(400);
   });
 
   // TODO: Test deleting client links
@@ -170,10 +165,7 @@ describe('Test user routes failure', () => {
   // Update client id fail case: no id in param
   test('Creating a client link should fail if no user ID is provided', async (done) => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/user/client/')
-      .send({ clientId: 1 })
-      .expect(500);
+    await request(app).post('/api/v1/user/client/').send({ clientId: 1 }).expect(500);
     done();
   });
 });

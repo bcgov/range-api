@@ -14,17 +14,15 @@
 //
 // Created by Pushan Mitra on 2019-03-15.
 //
+vi.mock('passport');
 import request from 'supertest';
 import passport from 'passport';
-
 import createApp from '../../src';
-
-jest.mock('../../src/libs/db2/model/agreement');
-jest.mock('../../src/libs/db2/model/ClientAgreement');
-jest.mock('../../src/libs/db2/model/client');
-jest.mock('../../src/libs/db2/model/zone');
-jest.mock('../../src/libs/db2/model/userclientlink');
-jest.mock('request-promise-native');
+vi.mock('../../src/libs/db2/model/agreement');
+vi.mock('../../src/libs/db2/model/ClientAgreement');
+vi.mock('../../src/libs/db2/model/client');
+vi.mock('../../src/libs/db2/model/zone');
+vi.mock('../../src/libs/db2/model/userclientlink');
 
 describe('Test agreement route', () => {
   beforeAll(() => {
@@ -46,9 +44,7 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(200)
@@ -66,9 +62,7 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(200)
@@ -86,18 +80,14 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(401)
       .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
-        expect(result.error).toEqual(
-          'This endpoint is forbidden for the admin user',
-        );
+        expect(result.error).toEqual('This endpoint is forbidden for the admin user');
         expect(result.success).toEqual(false);
         done();
       });
@@ -109,9 +99,7 @@ describe('Test agreement route', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement')
       .expect(500)
@@ -132,9 +120,7 @@ describe('Test agreement route search', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement/search?term=965&page=1&limit=10')
       .expect(200)
@@ -178,9 +164,7 @@ describe('Test agreement route search', () => {
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
     passport.aUser.isDecisionMaker = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.id = 1;
     await request(app)
       .get('/api/v1/agreement/search?term=965&page=1&limit=10')
@@ -204,9 +188,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200)
@@ -228,9 +210,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200)
@@ -252,9 +232,7 @@ describe('Test agreement route search without term', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue([67896675]);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue([67896675]);
     await request(app)
       .get('/api/v1/agreement/search?page=1&limit=10')
       .expect(200)
@@ -277,9 +255,7 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(true);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
@@ -298,9 +274,7 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
       .expect(200)
@@ -318,9 +292,7 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => true;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     await request(app)
       .get('/api/v1/agreement/RAN076843')
       .expect(200)
@@ -338,9 +310,7 @@ describe('Test agreement route to get single agreement', () => {
     passport.aUser.isAgreementHolder = () => false;
     passport.aUser.isRangeOfficer = () => true;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(false);
     passport.aUser.id = 2;
     await request(app)
@@ -364,9 +334,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     const update = {
@@ -392,9 +360,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     const update = {};
@@ -418,9 +384,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(true);
     passport.aUser.id = 1;
     await request(app)
@@ -441,9 +405,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.id = 1;
     await request(app)
       .put('/api/v1/agreement/RAN999999/zone')
@@ -465,9 +427,7 @@ describe('Test agreement route update agreement', () => {
     passport.aUser.isAgreementHolder = () => true;
     passport.aUser.isRangeOfficer = () => false;
     passport.aUser.isAdministrator = () => false;
-    passport.aUser.getLinkedClientNumbers = jest
-      .fn()
-      .mockReturnValue(['00162356']);
+    passport.aUser.getLinkedClientNumbers = jest.fn().mockReturnValue(['00162356']);
     passport.aUser.canAccessAgreement.mockReturnValue(false);
     passport.aUser.id = 1;
     await request(app)
@@ -477,9 +437,7 @@ describe('Test agreement route update agreement', () => {
       .expect((res) => {
         const result = res.body;
         expect(typeof result).toBe('object');
-        expect(result.error).toEqual(
-          'zoneId must be provided in body and be numeric',
-        );
+        expect(result.error).toEqual('zoneId must be provided in body and be numeric');
         expect(result.success).toEqual(false);
         passport.aUser.id = 1;
         done();

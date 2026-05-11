@@ -1,4 +1,5 @@
-import { default as request } from 'supertest'; // eslint-disable-line
+vi.mock('passport');
+import { default as request } from 'supertest';  
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -11,10 +12,7 @@ import clientAgreementMocks from '../../../__mocks__/fixtures/client_agreement_m
 import planConfirmationMocks from '../../../__mocks__/fixtures/plan_confirmation_mock.json';
 import DataManager from '../../../src/libs/db2';
 import config from '../../../src/config';
-
 const dm = new DataManager(config);
-
-jest.mock('request-promise-native');
 
 const { canAccessAgreement } = passport.aUser;
 const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
@@ -98,10 +96,7 @@ describe('Test Invasive Plant routes', () => {
 
   test('Creating an invasive plant checklist for a nonexistant plan throws a 500 error', async () => {
     const app = await createApp();
-    await request(app)
-      .post('/api/v1/plan/3/invasive-plant-checklist')
-      .send(body)
-      .expect(500);
+    await request(app).post('/api/v1/plan/3/invasive-plant-checklist').send(body).expect(500);
   });
 
   test('Updating an existing invasive plant checklist', async () => {
