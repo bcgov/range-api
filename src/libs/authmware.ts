@@ -96,18 +96,39 @@ export default async function initPassport(app) {
           }
         }
 
+        let ssoId = null;
+        if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
+          ssoId = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
+        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
+          ssoId = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
+        }
+
+        if (!user) {
+          // try matching by email before creating a new user
+          if (jwtPayload.email) {
+            user = await User.findOne(db, { email: jwtPayload.email });
+            if (user) {
+              logger.debug(
+                `user found by email ${jwtPayload.email}, updating username to ${jwtPayload.preferred_username}`,
+              );
+              await User.update(
+                db,
+                { id: user.id },
+                {
+                  username: jwtPayload.preferred_username,
+                  ssoId: ssoId,
+                },
+              );
+            }
+          }
+        }
+
         if (!user) {
           // always create with the guid, if it exists
           user = await User.create(db, {
             username: jwtPayload.preferred_username,
             email: jwtPayload.email,
           });
-        }
-        let ssoId = null;
-        if (jwtPayload?.identity_provider.toLowerCase().includes('idir')) {
-          ssoId = `idir\\${jwtPayload.idir_username.toLowerCase()}`;
-        } else if (jwtPayload?.identity_provider.toLowerCase().includes('bceid')) {
-          ssoId = `bceid\\${jwtPayload.bceid_username.toLowerCase()}`;
         }
         await User.update(
           db,
