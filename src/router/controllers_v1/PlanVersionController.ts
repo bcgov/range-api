@@ -96,7 +96,9 @@ export default class PlanVersionController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      await Plan.restoreVersion(db, planId, version);
+      await db.transaction().execute(async (trx) => {
+        await Plan.restoreVersion(trx, planId, version);
+      });
 
       res.status(200).end();
     } catch (error) {

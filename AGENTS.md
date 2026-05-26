@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## PII Policy
+
+Never include anyone's real name, email address, phone number, or other personally identifiable information (PII) in GitHub issues, tasks, or PR descriptions. Use placeholders like "[Name]", "[Email]", or generic descriptions instead.
+
 ## Setup
 
 Source env before running commands:

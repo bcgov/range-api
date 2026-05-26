@@ -54,12 +54,11 @@ export default class PlanMinisterIssueController {
    */
   static sanitizeDataForMinisterIssue(body) {
     assert(body, 'sanitizeDataForMinisterIssue: require body');
-     
+
     // Use the planId from the URL so that we know exactly what plan
     // is being updated and to ensure its not reassigned.
     delete body.planId;
     delete body.plan_id;
-     
 
     return body;
   }
@@ -92,19 +91,22 @@ export default class PlanMinisterIssueController {
 
     try {
       const data = await PlanMinisterIssueController.validate(user, planId, body);
-      const issue = await MinisterIssue.create(db, {
-        ...data,
-        ...{ plan_id: planId },
-      });
-      const promises =
-        pastures &&
-        pastures.map(async (id) => {
-          await MinisterIssuePasture.create(db, {
-            pasture_id: id,
-            minister_issue_id: issue.id,
-          });
+      const issue = await db.transaction().execute(async (trx) => {
+        const issue = await MinisterIssue.create(trx, {
+          ...data,
+          ...{ plan_id: planId },
         });
-      if (promises) await Promise.all(promises);
+        const promises =
+          pastures &&
+          pastures.map(async (id) => {
+            await MinisterIssuePasture.create(trx, {
+              pasture_id: id,
+              minister_issue_id: issue.id,
+            });
+          });
+        if (promises) await Promise.all(promises);
+        return issue;
+      });
 
       return res
         .status(200)
@@ -132,37 +134,41 @@ export default class PlanMinisterIssueController {
       // Validating data
       const data = await PlanMinisterIssueController.validate(user, planId, body);
 
-      // update the existing issue.
-      const issue = await MinisterIssue.update(db, { id: issueId }, data);
+      const issue = await db.transaction().execute(async (trx) => {
+        // update the existing issue.
+        const issue = await MinisterIssue.update(trx, { id: issueId }, data);
 
-      // Get existing pastures for minister issue
-      const issuePastures = await Promise.all(
-        (
-          await MinisterIssuePasture.find(db, {
-            minister_issue_id: issue.id,
-          })
-        ).map(async (issuePasture) => ({
-          ...issuePasture,
-          pasture: await Pasture.findById(db, issuePasture.pastureId),
-        })),
-      );
-      const flatIssuePastures = issuePastures.flat();
+        // Get existing pastures for minister issue
+        const issuePastures = await Promise.all(
+          (
+            await MinisterIssuePasture.find(trx, {
+              minister_issue_id: issue.id,
+            })
+          ).map(async (issuePasture) => ({
+            ...issuePasture,
+            pasture: await Pasture.findById(trx, issuePasture.pastureId),
+          })),
+        );
+        const flatIssuePastures = issuePastures.flat();
 
-      const removedPastures = flatIssuePastures.filter((p) => !pastures.includes(p.pasture.id));
-      const newPastures = pastures.filter((pId) => !flatIssuePastures.find((p) => p.pasture.id === pId));
+        const removedPastures = flatIssuePastures.filter((p) => !pastures.includes(p.pasture.id));
+        const newPastures = pastures.filter((pId) => !flatIssuePastures.find((p) => p.pasture.id === pId));
 
-      // Remove pastures not present in updated pastures array
-      await Promise.all(removedPastures.map((item) => MinisterIssuePasture.removeById(db, item.id)));
+        // Remove pastures not present in updated pastures array
+        await Promise.all(removedPastures.map((item) => MinisterIssuePasture.removeById(trx, item.id)));
 
-      // Add new pastures provided in request body
-      await Promise.all(
-        newPastures.map(async (id) =>
-          MinisterIssuePasture.create(db, {
-            pasture_id: id,
-            minister_issue_id: issue.id,
-          }),
-        ),
-      );
+        // Add new pastures provided in request body
+        await Promise.all(
+          newPastures.map(async (id) =>
+            MinisterIssuePasture.create(trx, {
+              pasture_id: id,
+              minister_issue_id: issue.id,
+            }),
+          ),
+        );
+
+        return issue;
+      });
 
       return res
         .status(200)

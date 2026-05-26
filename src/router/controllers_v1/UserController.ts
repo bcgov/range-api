@@ -101,20 +101,22 @@ export class UserController {
         throw errorWithCode('Invalid accountId supplied', 400);
       }
     }
-    for (const sourceUserId of sourceAccountIds) {
-      UserFeedback.update(db, { user_id: sourceUserId }, { user_id: userId });
-      UserClientLink.update(db, { user_id: sourceUserId }, { user_id: userId });
-      UserDistricts.update(db, { user_id: sourceUserId }, { user_id: userId });
-      ClientAgreement.update(db, { agent_id: sourceUserId }, { agent_id: userId });
-      PlanStatusHistory.update(db, { user_id: sourceUserId }, { user_id: userId });
-      PlanConfirmation.update(db, { user_id: sourceUserId }, { user_id: userId });
-      PlanExtensionRequests.update(db, { user_id: sourceUserId }, { user_id: userId });
-      PlanSnapshot.update(db, { user_id: sourceUserId }, { user_id: userId });
-      District.update(db, { user_id: sourceUserId }, { user_id: userId });
-      Zone.update(db, { user_id: sourceUserId }, { user_id: userId });
-      Plan.update(db, { creator_id: sourceUserId }, { creator_id: userId });
-      PlanFile.update(db, { user_id: sourceUserId }, { user_id: userId });
-    }
+    await db.transaction().execute(async (trx) => {
+      for (const sourceUserId of sourceAccountIds) {
+        await UserFeedback.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await UserClientLink.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await UserDistricts.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await ClientAgreement.update(trx, { agent_id: sourceUserId }, { agent_id: userId });
+        await PlanStatusHistory.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await PlanConfirmation.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await PlanExtensionRequests.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await PlanSnapshot.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await District.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await Zone.update(trx, { user_id: sourceUserId }, { user_id: userId });
+        await Plan.update(trx, { creator_id: sourceUserId }, { creator_id: userId });
+        await PlanFile.update(trx, { user_id: sourceUserId }, { user_id: userId });
+      }
+    });
     res.status(200).json().end();
   }
 
@@ -181,10 +183,9 @@ export class UserController {
     const newLinkedAgreementIds = newLinkedAgreements.map((clientAgreement) => clientAgreement.agreementId);
 
     // TODO: Remove this check after implementing agency agreements
-     
+
     for (const clientAgreement of currentLinkedAgreements) {
       if (newLinkedAgreementIds.includes(clientAgreement.agreementId)) {
-         
         const existingClient = await Client.findById(db, clientAgreement.clientId);
 
         logger.error(
@@ -197,29 +198,36 @@ export class UserController {
       }
     }
 
-    const result = await UserClientLink.create(db, {
-      client_id: clientId,
-      user_id: userId,
-      active: true,
-      type: 'owner',
+    const result = await db.transaction().execute(async (trx) => {
+      const link = await UserClientLink.create(trx, {
+        client_id: clientId,
+        user_id: userId,
+        active: true,
+        type: 'owner',
+      });
+
+      // Update plan_confirmation records with the user_id for this client
+      await PlanConfirmation.update(trx, { client_id: clientId }, { user_id: userId });
+
+      // Update plan extension requests with the user_id for this client
+      const requestsToUpdate = await PlanExtensionRequests.find(trx, {
+        client_id: clientId,
+        requested_extension: null,
+      });
+      const user = await User.findById(trx, userId);
+      for (const request of requestsToUpdate) {
+        await PlanExtensionRequests.update(
+          trx,
+          { id: request.id },
+          {
+            user_id: user.id,
+            email: user.email,
+          },
+        );
+      }
+
+      return link;
     });
-
-    // Update plan_confirmation records with the user_id for this client
-    await PlanConfirmation.update(db, { client_id: clientId }, { user_id: userId });
-
-    // Update plan extension requests with the user_id for this client
-    const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
-    const user = await User.findById(db, userId);
-    for (const request of requestsToUpdate) {
-      await PlanExtensionRequests.update(
-        db,
-        { id: request.id },
-        {
-          user_id: user.id,
-          email: user.email,
-        },
-      );
-    }
     res.status(200).json(result).end();
   }
 
@@ -229,29 +237,36 @@ export class UserController {
 
     checkRequiredFields(['clientNumber', 'userId'], 'params', req);
 
-    const result = await UserClientLink.remove(db, {
-      client_id: clientId,
-      user_id: userId,
+    const result = await db.transaction().execute(async (trx) => {
+      const deleteResult = await UserClientLink.remove(trx, {
+        client_id: clientId,
+        user_id: userId,
+      });
+
+      if (deleteResult === 0) {
+        throw errorWithCode("Client link doesn't exist for user", 404);
+      }
+
+      // Clear user_id from plan_confirmation records for this client
+      await PlanConfirmation.update(trx, { client_id: clientId }, { user_id: null });
+
+      const requestsToUpdate = await PlanExtensionRequests.find(trx, {
+        client_id: clientId,
+        requested_extension: null,
+      });
+      for (const request of requestsToUpdate) {
+        await PlanExtensionRequests.update(
+          trx,
+          { id: request.id },
+          {
+            user_id: null,
+            email: null,
+          },
+        );
+      }
+
+      return deleteResult;
     });
-
-    if (result === 0) {
-      throw errorWithCode("Client link doesn't exist for user", 404);
-    }
-
-    // Clear user_id from plan_confirmation records for this client
-    await PlanConfirmation.update(db, { client_id: clientId }, { user_id: null });
-
-    const requestsToUpdate = await PlanExtensionRequests.find(db, { client_id: clientId, requested_extension: null });
-    for (const request of requestsToUpdate) {
-      await PlanExtensionRequests.update(
-        db,
-        { id: request.id },
-        {
-          user_id: null,
-          email: null,
-        },
-      );
-    }
     res.status(200).json(result).end();
   }
 
@@ -295,12 +310,14 @@ export class UserController {
     if (userToFind.roleId === 4 && districts.length > 0) throw 'Cannot assign districts to Range Agreement Holders.';
 
     // empty districts
-    await UserDistricts.removeDistricts(db, { user_id: userId });
-    const updated = await UserDistricts.createOneOrMany(db, {
-      user_id: userId,
-      districts: districts.map((d) => {
-        return { id: d.id };
-      }),
+    const updated = await db.transaction().execute(async (trx) => {
+      await UserDistricts.removeDistricts(trx, { user_id: userId });
+      return await UserDistricts.createOneOrMany(trx, {
+        user_id: userId,
+        districts: districts.map((d) => {
+          return { id: d.id };
+        }),
+      });
     });
 
     res.status(200).json(updated).end();

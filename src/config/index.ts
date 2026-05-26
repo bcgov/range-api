@@ -62,7 +62,10 @@ const config: Config = {
   db: {
     user: process.env.POSTGRESQL_USER || '',
     password: process.env.POSTGRESQL_PASSWORD || '',
-    database: process.env.POSTGRESQL_DATABASE || '',
+    database:
+      env === 'test' && process.env.POSTGRESQL_DATABASE_TEST
+        ? process.env.POSTGRESQL_DATABASE_TEST
+        : process.env.POSTGRESQL_DATABASE || '',
     host: process.env.POSTGRESQL_HOST || '',
     port: parseInt(process.env.POSTGRESQL_PORT || '5432', 10),
   },

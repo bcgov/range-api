@@ -480,20 +480,26 @@ export default class PlanPastureController {
         throw errorWithCode(`No plant community found with id: ${communityId}`);
       }
 
-      const monitoringArea = await MonitoringArea.create(db, {
-        ...body,
-        plantCommunityId: communityId,
-      });
+      const monitoringArea = await db.transaction().execute(async (trx) => {
+        const ma = await MonitoringArea.create(trx, {
+          ...body,
+          plantCommunityId: communityId,
+        });
 
-      const promises = purposeTypeIds.map((pId) =>
-        MonitoringAreaPurpose.create(db, {
-          monitoringAreaId: monitoringArea.id,
-          purposeTypeId: pId,
-        }),
-      );
-      await Promise.all(promises);
-      await monitoringArea.fetchMonitoringAreaPurposes(db, {
-        monitoring_area_id: monitoringArea.id,
+        await Promise.all(
+          purposeTypeIds.map((pId) =>
+            MonitoringAreaPurpose.create(trx, {
+              monitoringAreaId: ma.id,
+              purposeTypeId: pId,
+            }),
+          ),
+        );
+
+        await ma.fetchMonitoringAreaPurposes(trx, {
+          monitoring_area_id: ma.id,
+        });
+
+        return ma;
       });
 
       return res.status(200).json(monitoringArea).end();
@@ -533,41 +539,44 @@ export default class PlanPastureController {
         monitoring_area_id: monitoringArea.id,
       });
 
-      // Delete purposes not included in updated purposeTypeIds array
-      await Promise.all(
-        monitoringArea.purposes.map((purpose) => {
-          if (!purposeTypeIds.includes(purpose.purposeTypeId)) {
-            return MonitoringAreaPurpose.remove(db, {
-              monitoring_area_id: monitoringArea.id,
-              id: purpose.id,
-            });
-          }
+      const { purposes, updatedMonitoringArea } = await db.transaction().execute(async (trx) => {
+        // Delete purposes not included in updated purposeTypeIds array
+        await Promise.all(
+          monitoringArea.purposes.map((purpose) => {
+            if (!purposeTypeIds.includes(purpose.purposeTypeId)) {
+              return MonitoringAreaPurpose.remove(trx, {
+                monitoring_area_id: monitoringArea.id,
+                id: purpose.id,
+              });
+            }
 
-          return Promise.resolve();
-        }),
-      );
+            return Promise.resolve();
+          }),
+        );
 
-      // Create any purposes that don't exist yet
-      const promises = purposeTypeIds.map((pId) => {
-        const existingPurpose = monitoringArea.purposes.find((p) => p.purposeTypeId === pId);
+        // Create any purposes that don't exist yet
+        const purposeResults = await Promise.all(
+          purposeTypeIds.map((pId) => {
+            const existingPurpose = monitoringArea.purposes.find((p) => p.purposeTypeId === pId);
 
-        if (!existingPurpose) {
-          return MonitoringAreaPurpose.create(db, {
-            monitoringAreaId: monitoringArea.id,
-            purposeTypeId: pId,
-          });
-        }
-        return existingPurpose;
+            if (!existingPurpose) {
+              return MonitoringAreaPurpose.create(trx, {
+                monitoringAreaId: monitoringArea.id,
+                purposeTypeId: pId,
+              });
+            }
+            return existingPurpose;
+          }),
+        );
+
+        // Skip update if the body is empty
+        const updated =
+          Object.entries(bodyData).length !== 0
+            ? await MonitoringArea.update(trx, { id: monitoringArea.id }, bodyData)
+            : monitoringArea;
+
+        return { purposes: purposeResults, updatedMonitoringArea: updated };
       });
-
-      // Format the purposes for the client
-      const purposes = await Promise.all(promises);
-
-      // Skip update if the body is empty
-      const updatedMonitoringArea =
-        Object.entries(bodyData).length !== 0
-          ? await MonitoringArea.update(db, { id: monitoringArea.id }, bodyData)
-          : monitoringArea;
 
       return res
         .status(200)
@@ -608,17 +617,19 @@ export default class PlanPastureController {
         monitoring_area_id: areaId,
       });
 
-      // Remove monitoring area purposes
-      await Promise.all(
-        monitoringArea.purposes.map((purpose) =>
-          MonitoringAreaPurpose.remove(db, {
-            monitoring_area_id: monitoringArea.id,
-            id: purpose.id,
-          }),
-        ),
-      );
+      await db.transaction().execute(async (trx) => {
+        // Remove monitoring area purposes
+        await Promise.all(
+          monitoringArea.purposes.map((purpose) =>
+            MonitoringAreaPurpose.remove(trx, {
+              monitoring_area_id: monitoringArea.id,
+              id: purpose.id,
+            }),
+          ),
+        );
 
-      await MonitoringArea.remove(db, { id: monitoringArea.id });
+        await MonitoringArea.remove(trx, { id: monitoringArea.id });
+      });
 
       return res.status(204).end();
     } catch (error) {

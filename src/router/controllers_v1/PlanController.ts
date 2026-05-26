@@ -118,20 +118,25 @@ export default class PlanController {
       }
     }
 
-    // delete the old plan whose status is 'Staff Draft'
     const staffDraftStatus = await PlanStatus.findOne(db, {
       code: 'SD',
     });
-    await Plan.remove(db, {
-      agreement_id: agreement.id,
-      status_id: staffDraftStatus.id,
-    });
-    const plan = await Plan.create(db, {
-      ...body,
-      creator_id: user.id,
-    });
 
-    await PlanConfirmation.createConfirmations(db, agreementId, plan.id);
+    const plan = await db.transaction().execute(async (trx) => {
+      await Plan.remove(trx, {
+        agreement_id: agreement.id,
+        status_id: staffDraftStatus.id,
+      });
+
+      const newPlan = await Plan.create(trx, {
+        ...body,
+        creator_id: user.id,
+      });
+
+      await PlanConfirmation.createConfirmations(trx, agreementId, newPlan.id);
+
+      return newPlan;
+    });
 
     return res.status(200).json(plan).end();
   }
@@ -290,18 +295,22 @@ export default class PlanController {
 
     logger.info(`Restoring snapshot ID ${prevLegalVersion.id} for plan ${planId}`);
 
-    await Plan.restoreVersion(db, planId, prevLegalVersion.version);
+    await db.transaction().execute(async (trx) => {
+      await Plan.restoreVersion(trx, planId, prevLegalVersion.version);
 
-    const versionsToDiscard = await db
-      .selectFrom('plan_snapshot')
-      .select('id')
-      .where('plan_id', '=', planId)
-      .where('id', '>', prevLegalVersion.id)
-      .execute();
+      const versionsToDiscard = await trx
+        .selectFrom('plan_snapshot')
+        .select('id')
+        .where('plan_id', '=', planId)
+        .where('id', '>', prevLegalVersion.id)
+        .execute();
 
-    const versionIdsToDiscard = versionsToDiscard.map((v) => v.id);
-    logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
-    await db.deleteFrom('plan_snapshot').where('id', 'in', versionIdsToDiscard).execute();
+      const versionIdsToDiscard = versionsToDiscard.map((v) => v.id);
+      logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
+      if (versionIdsToDiscard.length > 0) {
+        await trx.deleteFrom('plan_snapshot').where('id', 'in', versionIdsToDiscard).execute();
+      }
+    });
     res.json().end();
   }
 
