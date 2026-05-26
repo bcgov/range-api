@@ -8,7 +8,7 @@ export const generatePlanPDF = async (plan) => {
     ? './planTemplate_GrazingSchedule.docx'
     : './planTemplate_HaycuttingSchedule.docx';
   const dogs = new Cdogs();
-  dogs.init(templateFile);
+  await dogs.init(templateFile);
   const adg = new AdditionalDetailsGenerator();
   adg.setStatusText(plan);
   adg.setDocumentGenerationDate(plan);
@@ -24,7 +24,7 @@ export const generatePlanPDF = async (plan) => {
 
 export const generateExemptionPDF = async (exemption) => {
   const dogs = new Cdogs();
-  dogs.init('exemptionTemplate.docx');
+  await dogs.init('exemptionTemplate.docx');
 
   const response = await dogs.generatePDF(exemption, `${exemption.agreementId}_exemption.pdf`);
   return response;

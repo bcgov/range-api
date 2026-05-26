@@ -643,6 +643,12 @@ export default class PlanController {
       };
     plan.amendmentSubmissions = amendmentSubmissions;
     const response = await generatePlanPDF(plan);
-    res.json(response.data).end();
+    if (!response.data) {
+      logger.error('Plan PDF generation returned empty data — CDOGS may be disabled or template missing');
+      throw errorWithCode('Failed to generate PDF', 500);
+    }
+    res.setHeader('Content-disposition', `attachment; filename=${plan.agreementId}.pdf`);
+    res.setHeader('Content-type', 'application/pdf');
+    res.send(response.data);
   }
 }

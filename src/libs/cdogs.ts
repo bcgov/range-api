@@ -50,7 +50,10 @@ export default class Cdogs {
   }
 
   async generatePDF(data, pdfFileName = `${data.agreementId}.pdf`) {
-    if (this.enabled?.toLowerCase() !== 'true') return {};
+    if (this.enabled?.toLowerCase() !== 'true') {
+      logger.warn('CDOGS not enabled — PDF generation skipped');
+      return {};
+    }
     const serviceURL = `${this.serviceURL}/api/v2/template/render`;
     try {
       const token = await this.getBearerToken();
