@@ -49,6 +49,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "rm -rf build && tsc",
     "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
+    "db:migrate": "tsx src/libs/db2/migrate.ts",
     "test": "cross-env NODE_ENV=unit_test vitest run --coverage",
     "test:watch": "cross-env NODE_ENV=unit_test vitest",
     "test:lint": "eslint src __tests__ __testHelpers__ __mocks__ scripts",
