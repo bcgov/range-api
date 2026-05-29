@@ -139,8 +139,9 @@ router.get('/export/livestock', async (req, res) => {
   }
 
   const filterSettings = query.filterSettings ? JSON.parse(query.filterSettings) : {};
+  const exportSettings = { ...filterSettings, page: null, limit: null };
 
-  let agreements = await getAgreements(user, filterSettings);
+  let agreements = await getAgreements(user, exportSettings);
   // Filter out test agreements
   agreements = agreements.filter((agreement) => !agreement.forestFileId.startsWith(AGREEMENT_EXPORT.TEST_RAN_PREFIX));
   agreements.map((agreement) => agreement.transformToV1());
@@ -190,8 +191,9 @@ router.get('/export', async (req, res) => {
   }
 
   const filterSettings = query.filterSettings ? JSON.parse(query.filterSettings) : {};
+  const exportSettings = { ...filterSettings, page: null, limit: null };
 
-  let agreements = await getAgreements(user, filterSettings);
+  let agreements = await getAgreements(user, exportSettings);
   // Filter out test agreements
   agreements = agreements.filter((agreement) => !agreement.forestFileId.startsWith(AGREEMENT_EXPORT.TEST_RAN_PREFIX));
   agreements.map((agreement) => agreement.transformToV1());
