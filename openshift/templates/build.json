@@ -32,21 +32,22 @@
             "ref": "${GIT_REF}",
             "uri": "${GIT_REPO_URL}"
           },
-          "contextDir": "${SOURCE_CONTEXT_DIR}"
+          "contextDir": "${SOURCE_CONTEXT_DIR}",
+          "configMaps": [{
+            "configMap": {
+              "name": "${CA_CONFIG_MAP_NAME}"
+            },
+            "destinationDir": "ca-cert"
+          }]
         },
         "strategy": {
-          "type": "Source",
-          "sourceStrategy": {
-            "from": {
-              "kind": "ImageStreamTag",
-              "namespace": "${BUILD_PROJECT}",
-              "name": "${SOURCE_IMAGE_NAME}:${SOURCE_IMAGE_TAG}"
-            },
+          "type": "Docker",
+          "dockerStrategy": {
+            "dockerfilePath": "${DOCKERFILE_PATH}",
             "env": [{
               "name": "BUILD_LOGLEVEL",
               "value": "5"
-            }],
-            "incremental": false
+            }]
           }
         },
         "output": {
@@ -154,18 +155,18 @@
       "value": "latest"
     },
     {
-      "name": "SOURCE_IMAGE_NAME",
-      "displayName": "Source Image Name",
-      "description": "The name of the source image.",
+      "name": "DOCKERFILE_PATH",
+      "displayName": "Dockerfile Path",
+      "description": "Path to the Dockerfile relative to contextDir.",
       "required": true,
-      "value": "nodejs-6-rhel7"
+      "value": "prod.Dockerfile"
     },
     {
-      "name": "SOURCE_IMAGE_TAG",
-      "displayName": "Source Image Tag",
-      "description": "The tag of the source image.",
-      "required": true,
-      "value": "latest"
+      "name": "CA_CONFIG_MAP_NAME",
+      "displayName": "CA ConfigMap Name",
+      "description": "The name of the ConfigMap containing the cluster TLS CA certificate.",
+      "required": false,
+      "value": ""
     },
     {
       "name": "CPU_LIMIT",
