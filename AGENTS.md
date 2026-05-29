@@ -96,6 +96,17 @@ Use Node 25 via nvm for compatibility:
 source ~/.nvm/nvm.sh && nvm use 25 && node build/scripts/plan_extension_exemption.js
 ```
 
+## Bug Workflow
+
+When user reports a bug, follow this exact sequence:
+
+1. **Create GitHub issue** on correct repo (range-web for frontend, range-api for backend) with title, description, root cause, and impact
+2. **Assign** to the user (brijesh-amin)
+3. **Implement fix** on `dev` branch
+4. **Commit** using commit style `#issue-number - description`
+5. **Push** to `origin:dev`
+6. **Close** the issue with a comment pointing to the commit
+
 ## Gotchas
 
 - `POSTGRESQL_DATABASE_TEST` defaults to `myra_test` — must exist for tests
