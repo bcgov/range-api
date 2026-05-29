@@ -473,7 +473,8 @@ export default class Agreement extends KyselyModel {
     query = query.orderBy(
       sql.raw(
         `${orderByField} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}` +
-          `${filterSettings.orderBy === 'extension_status' ? ', CASE WHEN extension_received_votes = extension_required_votes THEN 1 ELSE 0 END desc, extension_required_votes desc' : ''}`,
+          `${filterSettings.orderBy === 'extension_status' ? ', CASE WHEN extension_received_votes = extension_required_votes THEN 1 ELSE 0 END desc, extension_required_votes desc' : ''}` +
+          `, agreement.forest_file_id asc`,
       ),
     );
 
