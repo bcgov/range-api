@@ -285,7 +285,12 @@ export default class Agreement extends KyselyModel {
       .leftJoin('ref_zone', 'agreement.zone_id', 'ref_zone.id')
       .leftJoin('ref_district', 'ref_zone.district_id', 'ref_district.id')
       .leftJoin('user_account', 'ref_zone.user_id', 'user_account.id')
-      .leftJoin('ref_agreement_type', 'agreement.agreement_type_id', 'ref_agreement_type.id');
+      .leftJoin('ref_agreement_type', 'agreement.agreement_type_id', 'ref_agreement_type.id')
+      .leftJoin(
+        sql`(SELECT ca.agreement_id, rc.name FROM client_agreement ca INNER JOIN ref_client rc ON ca.client_id = rc.client_number INNER JOIN ref_client_type rct ON ca.client_type_id = rct.id WHERE rct.code = 'A') as primary_ah`,
+        'primary_ah.agreement_id',
+        'agreement.forest_file_id',
+      );
 
     Object.entries(where).forEach(([k, v]) => {
       if (Array.isArray(v)) {
@@ -395,6 +400,8 @@ export default class Agreement extends KyselyModel {
             const condition = parseCondition(filterValue);
             query = applyCondition(query, condition);
           }
+        } else if (key === 'agreement_holder.name') {
+          query = query.where('primary_ah.name', 'ilike', `%${columnFilters[key]}%`);
         } else {
           query = query.where(key, 'ilike', `%${columnFilters[key]}%`);
         }
@@ -453,9 +460,13 @@ export default class Agreement extends KyselyModel {
       );
     }
 
+    let orderByField = filterSettings.orderBy;
+    if (orderByField === 'agreement_holder.name') {
+      orderByField = 'primary_ah.name';
+    }
     query = query.orderBy(
       sql.raw(
-        `${filterSettings.orderBy} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}` +
+        `${orderByField} ${filterSettings.order === 'asc' ? 'asc nulls last' : 'desc nulls first'}` +
           `${filterSettings.orderBy === 'extension_status' ? ', CASE WHEN extension_received_votes = extension_required_votes THEN 1 ELSE 0 END desc, extension_required_votes desc' : ''}`,
       ),
     );
