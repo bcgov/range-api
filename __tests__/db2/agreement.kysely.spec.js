@@ -165,4 +165,83 @@ describe('Agreement model with Kysely', () => {
       }
     }
   });
+
+  test('findWithTypeZoneDistrictExemption with page:null, limit:null returns all matching agreements (export behavior)', async () => {
+    const where = { 'ref_zone.id': testZoneId };
+    const baseSettings = { orderBy: 'agreement.forest_file_id', order: 'asc', columnFilters: {} };
+
+    const total = await Agreement.findWithTypeZoneDistrictExemption(db, where, { ...baseSettings, countOnly: true });
+
+    const withPagination = await Agreement.findWithTypeZoneDistrictExemption(db, where, {
+      ...baseSettings,
+      page: 1,
+      limit: 1,
+    });
+    expect(withPagination.length).toBe(1);
+
+    const withoutPagination = await Agreement.findWithTypeZoneDistrictExemption(db, where, {
+      ...baseSettings,
+      page: null,
+      limit: null,
+    });
+    expect(withoutPagination.length).toBe(total);
+  });
+
+  describe('stable ordering', () => {
+    const shortId = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const agreementId1 = `TIE${shortId}A`;
+    const agreementId2 = `TIE${shortId}B`;
+
+    beforeAll(async () => {
+      await db
+        .insertInto('agreement')
+        .values({
+          forest_file_id: agreementId1,
+          agreement_start_date: new Date(),
+          agreement_end_date: new Date(Date.now() + 365 * 86400000),
+          agreement_type_id: 1,
+          zone_id: testZoneId,
+          exemption_status: 'NOT_EXEMPTED',
+        })
+        .execute();
+      await db
+        .insertInto('agreement')
+        .values({
+          forest_file_id: agreementId2,
+          agreement_start_date: new Date(),
+          agreement_end_date: new Date(Date.now() + 365 * 86400000),
+          agreement_type_id: 1,
+          zone_id: testZoneId,
+          exemption_status: 'NOT_EXEMPTED',
+        })
+        .execute();
+    });
+
+    afterAll(async () => {
+      await db.deleteFrom('agreement').where('forest_file_id', 'in', [agreementId1, agreementId2]).execute();
+    });
+
+    test('returns deterministic order via forest_file_id tiebreaker when primary sort column has duplicate values', async () => {
+      const where = { 'ref_zone.id': testZoneId };
+      const filterSettings = { orderBy: 'agreement.agreement_type_id', order: 'asc', columnFilters: {} };
+
+      const firstCall = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+      const secondCall = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+
+      const firstIds = firstCall.map((a) => a.forestFileId);
+      const secondIds = secondCall.map((a) => a.forestFileId);
+
+      expect(firstIds).toEqual(secondIds);
+    });
+
+    test('agreements with same sort value are ordered by forest_file_id ascending', async () => {
+      const where = { forest_file_id: [agreementId1, agreementId2] };
+      const filterSettings = { orderBy: 'agreement.agreement_type_id', order: 'asc', columnFilters: {} };
+
+      const results = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+      const ids = results.map((a) => a.forestFileId);
+
+      expect(ids).toEqual([agreementId1, agreementId2]);
+    });
+  });
 });
