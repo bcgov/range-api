@@ -48,21 +48,13 @@ const getAgreeementsForAH = async (user, filterSettings) => {
 const getAgreements = async (user, filterSettings) => {
   let agreements = [];
   if (user.isAgreementHolder()) {
-    agreements = await getAgreeementsForAH(user, {
-      ...filterSettings,
-      limit: null,
-      page: null,
-    });
+    agreements = await getAgreeementsForAH(user, filterSettings);
   } else if (user.isAdministrator() || user.canReadAll() || user.isRangeOfficer()) {
     if (!(filterSettings?.zoneInfo?.selectedZones?.length === 0)) {
       agreements = await Agreement.findWithAllRelations(
         db,
         { 'ref_zone.id': filterSettings.zoneInfo?.selectedZones },
-        {
-          ...filterSettings,
-          limit: null,
-          page: null,
-        },
+        filterSettings,
         true,
       );
     }
@@ -71,21 +63,47 @@ const getAgreements = async (user, filterSettings) => {
     const zones = await Zone.find(db, {
       district_id: districts.map((d) => d.id),
     });
-    agreements = await Agreement.findWithAllRelations(
-      db,
-      { zone_id: zones.map((z) => z.id) },
-      {
-        ...filterSettings,
-        limit: null,
-        page: null,
-      },
-      false,
-    );
+    agreements = await Agreement.findWithAllRelations(db, { zone_id: zones.map((z) => z.id) }, filterSettings, false);
   } else {
     throw errorWithCode('Unable to determine user role', 500);
   }
 
   return agreements;
+};
+
+const countAgreements = async (user, filterSettings) => {
+  const countSettings = { ...filterSettings, countOnly: true };
+  if (user.isAgreementHolder()) {
+    const clientIds = await user.getLinkedClientNumbers(db);
+    const clientAgreements = await ClientAgreement.find(db, {
+      client_id: clientIds,
+    });
+    const agentClientAgreements = await ClientAgreement.find(db, {
+      agent_id: user.id,
+    });
+    const agreementIds = [...clientAgreements, ...agentClientAgreements].map(
+      (clientAgreement) => clientAgreement.agreementId,
+    );
+    return Agreement.findWithTypeZoneDistrictExemption(db, { forest_file_id: agreementIds }, countSettings);
+  }
+  if (user.isAdministrator() || user.canReadAll() || user.isRangeOfficer()) {
+    if (filterSettings?.zoneInfo?.selectedZones?.length === 0) {
+      return 0;
+    }
+    return Agreement.findWithTypeZoneDistrictExemption(
+      db,
+      { 'ref_zone.id': filterSettings.zoneInfo?.selectedZones },
+      countSettings,
+    );
+  }
+  if (user.isDecisionMaker() || user.canReadDistrict()) {
+    const districts = await UserDistricts.find(db, { user_id: user.id });
+    const zones = await Zone.find(db, {
+      district_id: districts.map((d) => d.id),
+    });
+    return Agreement.findWithTypeZoneDistrictExemption(db, { zone_id: zones.map((z) => z.id) }, countSettings);
+  }
+  throw errorWithCode('Unable to determine user role', 500);
 };
 
 // Search agreements by RAN, contact name, and client name. This is only used by Web
@@ -95,11 +113,9 @@ router.get('/search', async (req, res) => {
   const page = Number(filterSettings.page || 0);
   const limit = Number(filterSettings.limit || 10);
 
-  const agreementsAll = await getAgreements(user, filterSettings);
-  const totalItems = agreementsAll.length;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const agreements = agreementsAll.slice(startIndex, endIndex);
+  const totalItems = await countAgreements(user, filterSettings);
+
+  const agreements = await getAgreements(user, filterSettings);
 
   agreements.map((agreement) => agreement.transformToV1());
   const totalPages = Math.ceil(totalItems / limit);

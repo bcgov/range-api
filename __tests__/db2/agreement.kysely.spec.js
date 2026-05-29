@@ -115,4 +115,54 @@ describe('Agreement model with Kysely', () => {
     expect(Agreement.getExemptionStatusText(AGREEMENT_EXEMPTION_STATUS.SCHEDULED)).toBe('Scheduled');
     expect(Agreement.getExemptionStatusText('UNKNOWN')).toBe('Unknown');
   });
+
+  test('findWithTypeZoneDistrictExemption with countOnly returns integer matching filtered agreement count', async () => {
+    const where = { 'ref_zone.id': testZoneId };
+    const filterSettings = { countOnly: true, orderBy: 'plan.agreement_id', order: 'asc', columnFilters: {} };
+
+    const count = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+
+    expect(typeof count).toBe('number');
+    expect(count).toBeGreaterThanOrEqual(1);
+
+    const rows = await Agreement.findWithTypeZoneDistrictExemption(db, where, {
+      ...filterSettings,
+      countOnly: false,
+    });
+    expect(Array.isArray(rows)).toBe(true);
+    expect(rows.length).toBe(count);
+  });
+
+  test('findWithTypeZoneDistrictExemption with page and limit returns only that page of agreements', async () => {
+    const where = { 'ref_zone.id': testZoneId };
+    const baseSettings = { orderBy: 'agreement.forest_file_id', order: 'asc', columnFilters: {} };
+
+    const total = await Agreement.findWithTypeZoneDistrictExemption(db, where, { ...baseSettings, countOnly: true });
+    expect(total).toBeGreaterThanOrEqual(1);
+
+    const page1 = await Agreement.findWithTypeZoneDistrictExemption(db, where, {
+      ...baseSettings,
+      page: 1,
+      limit: 5,
+    });
+    expect(Array.isArray(page1)).toBe(true);
+    expect(page1.length).toBeLessThanOrEqual(5);
+    expect(page1.length).toBeGreaterThan(0);
+
+    if (total > 5) {
+      const page2 = await Agreement.findWithTypeZoneDistrictExemption(db, where, {
+        ...baseSettings,
+        page: 2,
+        limit: 5,
+      });
+      expect(Array.isArray(page2)).toBe(true);
+      expect(page2.length).toBeLessThanOrEqual(5);
+
+      const firstIds = page1.map((a) => a.forestFileId);
+      const secondIds = page2.map((a) => a.forestFileId);
+      for (const id of secondIds) {
+        expect(firstIds).not.toContain(id);
+      }
+    }
+  });
 });

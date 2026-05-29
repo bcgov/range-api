@@ -460,6 +460,12 @@ export default class Agreement extends KyselyModel {
       );
     }
 
+    if (filterSettings.countOnly === true) {
+      const countQuery = (kyselyDb as any).selectFrom(query.as('inner')).select(sql`count(*)::int as total`);
+      const result = await countQuery.executeTakeFirst();
+      return Number(result?.total ?? 0);
+    }
+
     let orderByField = filterSettings.orderBy;
     if (orderByField === 'agreement_holder.name') {
       orderByField = 'primary_ah.name';
