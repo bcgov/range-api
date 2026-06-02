@@ -103,9 +103,10 @@ When user reports a bug, follow this exact sequence:
 1. **Create GitHub issue** on correct repo (range-web for frontend, range-api for backend) with title, description, root cause, and impact
 2. **Assign** to the user (brijesh-amin)
 3. **Implement fix** on `dev` branch
-4. **Commit** using commit style `#issue-number - description`
-5. **Push** to `origin:dev`
-6. **Close** the issue with a comment pointing to the commit
+4. **Add/update tests** to prevent regression (existing test patterns in `__tests__/`)
+5. **Commit** using commit style `#issue-number - description`
+6. **Push** to `origin:dev`
+7. **Close** the issue with a comment pointing to the commit
 
 ## Gotchas
 
