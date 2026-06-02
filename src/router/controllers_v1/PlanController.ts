@@ -12,7 +12,7 @@ import MinisterIssueAction from '../../libs/db2/model/ministerissueaction.js';
 import MinisterIssuePasture from '../../libs/db2/model/ministerissuepasture.js';
 import Pasture from '../../libs/db2/model/pasture.js';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot.js';
-import { checkRequiredFields, isNumeric, objPathToCamelCase, removeCommonFields } from '../../libs/utils.js';
+import { checkRequiredFields, objPathToCamelCase, removeCommonFields } from '../../libs/utils.js';
 import { PlanRouteHelper } from '../helpers/index.js';
 import { generatePlanPDF } from './PDFGeneration.js';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests.js';
@@ -53,9 +53,6 @@ export default class PlanController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-    if (!isNumeric(planId)) {
-      throw errorWithCode(`Invalid planId: ${planId}`, 400);
-    }
     const response = await PlanController.fetchPlan(planId, user);
     return res.status(200).json(response).end();
   }
@@ -154,9 +151,6 @@ export default class PlanController {
     const { planId } = params;
 
     checkRequiredFields(['planId'], 'params', req);
-    if (!isNumeric(planId)) {
-      throw errorWithCode(`Invalid planId: ${planId}`, 400);
-    }
 
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
