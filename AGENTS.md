@@ -112,3 +112,5 @@ When user reports a bug, follow this exact sequence:
 
 - `POSTGRESQL_DATABASE_TEST` defaults to `myra_test` — must exist for tests
 - `build/` must exist and be populated before `npm start` or `npm run initialize_docker` will work
+- **Never run `npm test` directly** — it connects to the `.env` database (`$POSTGRESQL_DATABASE`, not the test database) and will clear local data. Always use `make local-test` (Docker) for integration tests; it uses `$POSTGRESQL_DATABASE_TEST`. Unit tests that don't touch the DB are fine.
+- **Always use `$POSTGRESQL_DATABASE_TEST` for test-related database queries** — never `$POSTGRESQL_DATABASE`. The local dev database has real data.
