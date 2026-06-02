@@ -23,3 +23,23 @@ describe('prod.Dockerfile', () => {
     expect(dockerfile).toContain('COPY --from=builder /app/*.docx ./');
   });
 });
+
+describe('PlanController planId validation', () => {
+  const controller = fs.readFileSync(path.join(projectRoot, 'src/router/controllers_v1/PlanController.ts'), 'utf8');
+
+  it('validates planId is numeric in show()', () => {
+    const showMethod = controller.match(/static async show[\s\S]*?return res\.status\(200\)\.json/m);
+    expect(showMethod).not.toBeNull();
+    expect(showMethod[0]).toContain('isNumeric(planId)');
+    expect(showMethod[0]).toContain('throw errorWithCode');
+    expect(showMethod[0]).toContain('400');
+  });
+
+  it('validates planId is numeric in update()', () => {
+    const updateMethod = controller.match(/static async update[\s\S]*?agreementIdForPlanId/m);
+    expect(updateMethod).not.toBeNull();
+    expect(updateMethod[0]).toContain('isNumeric(planId)');
+    expect(updateMethod[0]).toContain('throw errorWithCode');
+    expect(updateMethod[0]).toContain('400');
+  });
+});
