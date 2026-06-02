@@ -24,6 +24,20 @@ describe('prod.Dockerfile', () => {
   });
 });
 
+describe('Agreement model replacement plan fields', () => {
+  const agreement = fs.readFileSync(path.join(projectRoot, 'src/libs/db2/model/agreement.ts'), 'utf8');
+
+  it('selects plan.replacement_of and plan.replacement_plan_id in SQL query', () => {
+    expect(agreement).toContain('plan.replacement_of as plan_replacement_of');
+    expect(agreement).toContain('plan.replacement_plan_id as plan_replacement_plan_id');
+  });
+
+  it('includes replacementOf and replacementPlanId in plan constructor', () => {
+    expect(agreement).toContain('replacementOf: data.plan_replacement_of');
+    expect(agreement).toContain('replacementPlanId: data.plan_replacement_plan_id');
+  });
+});
+
 describe('PlanController planId validation', () => {
   const controller = fs.readFileSync(path.join(projectRoot, 'src/router/controllers_v1/PlanController.ts'), 'utf8');
 

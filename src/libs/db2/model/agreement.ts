@@ -106,6 +106,8 @@ export default class Agreement extends KyselyModel {
         extensionStatus: data.plan_extension_status,
         extensionRequiredVotes: data.plan_extension_required_votes,
         extensionReceivedVotes: data.plan_extension_received_votes,
+        replacementOf: data.plan_replacement_of,
+        replacementPlanId: data.plan_replacement_plan_id,
       };
     } else {
       this.plan = null;
@@ -274,6 +276,8 @@ export default class Agreement extends KyselyModel {
         'plan.extension_status as plan_extension_status',
         'plan.extension_required_votes as plan_extension_required_votes',
         'plan.extension_received_votes as plan_extension_received_votes',
+        'plan.replacement_of as plan_replacement_of',
+        'plan.replacement_plan_id as plan_replacement_plan_id',
         'ref_plan_status.id as ref_plan_status_id',
         'ref_plan_status.code as ref_plan_status_code',
         'ref_plan_status.name as ref_plan_status_name',
