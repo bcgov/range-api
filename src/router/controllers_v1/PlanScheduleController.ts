@@ -10,6 +10,16 @@ const dm = new DataManager(config);
 const { db, Agreement, Plan, Schedule, GrazingScheduleEntry, HayCuttingScheduleEntry } = dm;
 
 export default class PlanScheduleController {
+  static validateEntryDates(scheduleEntries, scheduleYear) {
+    scheduleEntries.forEach((entry) => {
+      if (entry.dateIn) {
+        const entryYear = new Date(entry.dateIn).getFullYear();
+        if (entryYear !== scheduleYear) {
+          throw errorWithCode('Schedule entry date(s) must be within the schedule year.', 400);
+        }
+      }
+    });
+  }
   /**
    * Create a schedule for existing plan
    * @param {*} req : express req
@@ -45,6 +55,8 @@ export default class PlanScheduleController {
             }
           });
         }
+
+        PlanScheduleController.validateEntryDates(scheduleEntries, rest.year);
 
         delete rest.id;
         schedule = await Schedule.create(trx, {
@@ -136,6 +148,9 @@ export default class PlanScheduleController {
             sort_by: sortBy && objPathToSnakeCase(sortBy),
           },
         );
+
+        PlanScheduleController.validateEntryDates(scheduleEntries, schedule.year);
+
         const ops = scheduleEntries.map((entry) => {
           const baseData = {
             ...entry,
