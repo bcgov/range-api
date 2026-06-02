@@ -14,6 +14,7 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/*.docx ./
 USER nodejs
 EXPOSE 8080
 CMD ["node", "build/src/server.js"]
