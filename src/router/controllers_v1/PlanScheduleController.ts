@@ -58,6 +58,10 @@ export default class PlanScheduleController {
             ...entry,
             pasture_id: entry.pastureId,
           };
+          delete baseEntry.grazingScheduleId;
+          delete baseEntry.grazing_schedule_id;
+          delete baseEntry.haycuttingScheduleId;
+          delete baseEntry.haycutting_schedule_id;
 
           if (isGrazing) {
             return GrazingScheduleEntry.create(trx, {
@@ -139,6 +143,10 @@ export default class PlanScheduleController {
             ...entry,
             pasture_id: entry.pastureId,
           };
+          delete baseData.grazingScheduleId;
+          delete baseData.grazing_schedule_id;
+          delete baseData.haycuttingScheduleId;
+          delete baseData.haycutting_schedule_id;
 
           if (isGrazing) {
             const data = {
