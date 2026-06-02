@@ -31,7 +31,7 @@ const filterFiles = (files, user) =>
   files.filter((file) => {
     switch (file.access) {
       case 'staff_only':
-        return user.isRangeOfficer() || user.isAdministrator() || user.isDecisionMaker();
+        return user.isRangeOfficer() || user.isAdministrator() || user.isDecisionMaker() || file.userId === user.id;
       case 'everyone':
         return true;
       default:
@@ -318,12 +318,11 @@ export default class PlanController {
     const { params, user, body } = req;
     const { planId } = params;
 
-    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
+    if (!user) {
       throw errorWithCode('Unauthorized', 403);
     }
 
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
-
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
     const planFile = await PlanFile.create(db, {
@@ -343,12 +342,11 @@ export default class PlanController {
   static async updateAttachment(req, res) {
     const { params, user, body } = req;
     const { planId, attachmentId } = params;
-    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
+    if (!user) {
       throw errorWithCode('Unauthorized', 403);
     }
 
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
-
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
     const planFile = await PlanFile.findById(db, attachmentId);
     if (!planFile) {
@@ -370,7 +368,7 @@ export default class PlanController {
     const { params, user } = req;
     const { planId, attachmentId } = params;
 
-    if (!user || (!user.isRangeOfficer() && !user.isAdministrator())) {
+    if (!user) {
       throw errorWithCode('Unauthorized', 403);
     }
 

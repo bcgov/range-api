@@ -54,7 +54,7 @@ router.get('/download-url', async (req, res) => {
 
   switch (access) {
     case 'staff_only':
-      if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
+      if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker() && user.id !== file.userId) {
         throw errorWithCode('Unauthorized', 403);
       }
       break;
@@ -91,7 +91,7 @@ router.delete('/delete', async (req, res) => {
   // Check authorization - only staff or the file owner can delete files
   switch (access) {
     case 'staff_only':
-      if (!user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
+      if (user.id !== planFile.userId && !user.isRangeOfficer() && !user.isAdministrator() && !user.isDecisionMaker()) {
         throw errorWithCode('Unauthorized', 403);
       }
       break;
