@@ -61,17 +61,17 @@ export default class PlanExtensionController {
       if (planEntry.extensionReceivedVotes >= planEntry.extensionRequiredVotes) {
         throw errorWithCode('All requests already received', 400);
       }
-      await Plan.update(
-        trx,
-        { id: planId },
-        { extension_received_votes: planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length },
+      const newReceivedVotes = Math.min(
+        planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length,
+        planEntry.extensionRequiredVotes,
       );
+      await Plan.update(trx, { id: planId }, { extension_received_votes: newReceivedVotes });
       const agreement = (
         await Agreement.findWithTypeZoneDistrictExemption(trx, {
           forest_file_id: planEntry.agreementId,
         })
       )[0];
-      if (planEntry.extensionReceivedVotes === planEntry.extensionRequiredVotes + 1) {
+      if (newReceivedVotes === planEntry.extensionRequiredVotes) {
         await NotificationHelper.sendEmail(db, [agreement.zone.user.email], 'Plan Pending Extension', {
           '{agreementId}': planEntry.agreementId,
         });
@@ -251,7 +251,10 @@ export default class PlanExtensionController {
           await PlanExtensionRequests.update(trx, { id: req.id }, { requestedExtension: false });
         }
         updatedValues.extension_status = PLAN_EXTENSION_STATUS.AGREEMENT_HOLDER_REJECTED;
-        updatedValues.extension_received_votes = planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length;
+        updatedValues.extension_received_votes = Math.min(
+          planEntry.extensionReceivedVotes + requestsToActuallyUpdate.length,
+          planEntry.extensionRequiredVotes,
+        );
       }
       if (
         planEntry.extensionStatus !== PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
