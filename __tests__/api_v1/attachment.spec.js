@@ -185,6 +185,54 @@ describe('PlanController attachment endpoints — agreement holder access', () =
     });
   });
 
+  describe('PUT /plan/:planId with files including UUID-id unsaved attachments', () => {
+    let existingFileId;
+
+    beforeEach(async () => {
+      await db.schema.raw(truncate('plan_file'));
+      await db.schema.raw(
+        `INSERT INTO plan_file (name, url, type, access, plan_id, user_id) VALUES ('existing.pdf', 'uploads/existing.pdf', 'otherAttachments', 'staff_only', 1, 1)`,
+      );
+      const rows = await db('plan_file').where('plan_id', 1);
+      existingFileId = rows[0].id;
+    });
+
+    test('plan update succeeds when body.files contains both numeric and UUID ids', async () => {
+      const app = await createApp();
+
+      await request(app)
+        .put(`${baseUrl}/1`)
+        .send({
+          id: 1,
+          rangeName: 'Updated Range',
+          planStartDate: '2019-01-21T08:00:00.000Z',
+          planEndDate: '2022-12-30T08:00:00.000Z',
+          agreementId: 'RAN076843',
+          statusId: 1,
+          files: [
+            { id: existingFileId, access: 'everyone' },
+            {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              name: 'new.pdf',
+              type: 'otherAttachments',
+              access: 'staff_only',
+            },
+          ],
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.id).toBe(1);
+          expect(res.body.rangeName).toBe('Updated Range');
+        });
+
+      const updatedFile = await db('plan_file').where('id', existingFileId).first();
+      expect(updatedFile.access).toBe('everyone');
+
+      const allFiles = await db('plan_file').where('plan_id', 1);
+      expect(allFiles).toHaveLength(1);
+    });
+  });
+
   describe('DELETE /plan/:planId/attachment/:attachmentId', () => {
     let attachmentId;
 

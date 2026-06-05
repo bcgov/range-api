@@ -166,7 +166,7 @@ export default class PlanController {
 
         // Update each file's access property
         for (const file of files) {
-          if (file.id && file.access) {
+          if (file.id && !Number.isNaN(Number(file.id)) && file.access) {
             await PlanFile.update(trx, { id: file.id }, { access: file.access });
           }
         }
