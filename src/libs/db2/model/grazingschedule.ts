@@ -45,24 +45,19 @@ export default class Schedule extends KyselyModel {
     }
     const where = { haycutting_schedule_id: this.id };
     this.scheduleEntries = await HayCuttingScheduleEntry.findWithOrder(db, where, order, orderRaw);
-    this.scheduleEntries = this.scheduleEntries.map(
-      (entry: any) =>
-        new HayCuttingScheduleEntry(
-          {
-            ...entry,
-            dateIn: entry.dateIn ? new Date(entry.dateIn).toISOString().split('T')[0] : null,
-            dateOut: entry.dateOut ? new Date(entry.dateOut).toISOString().split('T')[0] : null,
-          },
-          db,
-        ),
-    );
+    this.scheduleEntries = this.scheduleEntries.map((entry: any) => {
+      const formatted = { ...entry };
+      formatted.date_in = formatted.date_in ? new Date(formatted.date_in).toISOString().split('T')[0] : null;
+      formatted.date_out = formatted.date_out ? new Date(formatted.date_out).toISOString().split('T')[0] : null;
+      return new HayCuttingScheduleEntry(formatted, db);
+    });
   }
 
   async fetchGrazingSchedulesEntries(_db?: any) {
     const db = _db || kyselyDb;
     let order: any;
     let orderRaw = false;
-    if (this.sortBy !== 'pld_au_ms' && this.sortBy !== 'crown_au_ms') {
+    if (this.sortBy !== 'pld_aums' && this.sortBy !== 'crown_aums') {
       if (this.sortBy === 'days') {
         order = `date_out - date_in ${this.sortOrder ? this.sortOrder : 'asc'}`;
         orderRaw = true;
@@ -75,7 +70,7 @@ export default class Schedule extends KyselyModel {
     }
     const where = { grazing_schedule_id: this.id };
     let entries = await GrazingScheduleEntry.findWithLivestockType(db, where, order, orderRaw);
-    if (this.sortBy === 'pld_au_ms' || this.sortBy === 'crown_au_ms') {
+    if (this.sortBy === 'pld_aums' || this.sortBy === 'crown_aums') {
       entries = entries.map((row: any) => {
         const days = calcDateDiff(row.date_out, row.date_in, false);
         const pldPercent = row.pasture_pld_percent;
@@ -85,11 +80,9 @@ export default class Schedule extends KyselyModel {
         row.pldAUMs = round(calcPldAUMs(totalAUMs, pldPercent), 0);
         const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, row.pldAUMs);
         row.crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
-        row.dateIn = row.dateIn ? new Date(row.dateIn).toISOString().split('T')[0] : null;
-        row.dateOut = row.dateOut ? new Date(row.dateOut).toISOString().split('T')[0] : null;
         return row;
       });
-      if (this.sortBy === 'pld_au_ms') {
+      if (this.sortBy === 'pld_aums') {
         if (this.sortOrder === 'asc') entries.sort((a: any, b: any) => a.pldAUMs - b.pldAUMs);
         else entries.sort((a: any, b: any) => b.pldAUMs - a.pldAUMs);
       } else {
@@ -97,6 +90,11 @@ export default class Schedule extends KyselyModel {
         else entries.sort((a: any, b: any) => b.crownAUMs - a.crownAUMs);
       }
     }
-    this.scheduleEntries = entries.map((entry: any) => new GrazingScheduleEntry(entry, db));
+    this.scheduleEntries = entries.map((entry: any) => {
+      const formatted = { ...entry };
+      formatted.date_in = formatted.date_in ? new Date(formatted.date_in).toISOString().split('T')[0] : null;
+      formatted.date_out = formatted.date_out ? new Date(formatted.date_out).toISOString().split('T')[0] : null;
+      return new GrazingScheduleEntry(formatted, db);
+    });
   }
 }

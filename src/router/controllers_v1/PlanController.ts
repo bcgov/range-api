@@ -76,8 +76,8 @@ export default class PlanController {
           let sanitizedSortBy = schedule.sortBy && objPathToCamelCase(schedule.sortBy);
           sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pastureName', 'pasture.name');
           sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('refLivestockName', 'livestockType.name');
-          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pldAuMs', 'pldAUMs');
-          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('crownAuMs', 'crownAUMs');
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('pldAums', 'pldAUMs');
+          sanitizedSortBy = sanitizedSortBy && sanitizedSortBy.replace('crownAums', 'crownAUMs');
           return {
             ...schedule,
             sortBy: sanitizedSortBy,

@@ -51,12 +51,12 @@ describe('utility helpers', () => {
     expect(isNumeric(isAnumber)).toBe(true);
   });
 
-  test('snakeCase converts pldAUMs to pld_au_ms', async () => {
-    expect(snakeCase('pldAUMs')).toBe('pld_au_ms');
+  test('snakeCase converts pldAUMs to pld_aums', async () => {
+    expect(snakeCase('pldAUMs')).toBe('pld_aums');
   });
 
-  test('snakeCase converts crownAUMs to crown_au_ms', async () => {
-    expect(snakeCase('crownAUMs')).toBe('crown_au_ms');
+  test('snakeCase converts crownAUMs to crown_aums', async () => {
+    expect(snakeCase('crownAUMs')).toBe('crown_aums');
   });
 
   test('snakeCase converts standard camelCase correctly', async () => {
@@ -78,8 +78,8 @@ describe('utility helpers', () => {
 
   test('objPathToSnakeCase converts dotted paths', async () => {
     expect(objPathToSnakeCase('ref_livestock.name')).toBe('ref_livestock.name');
-    expect(objPathToSnakeCase('pldAUMs')).toBe('pld_au_ms');
-    expect(objPathToSnakeCase('crownAUMs')).toBe('crown_au_ms');
+    expect(objPathToSnakeCase('pldAUMs')).toBe('pld_aums');
+    expect(objPathToSnakeCase('crownAUMs')).toBe('crown_aums');
   });
 
   test('objPathToCamelCase converts snake paths to camelCase', async () => {

@@ -62,7 +62,12 @@ export default class PlanScheduleController {
         schedule = await Schedule.create(trx, {
           ...rest,
           plan_id: planId,
-          sort_by: sortBy && objPathToSnakeCase(sortBy),
+          sort_by:
+            sortBy &&
+            objPathToSnakeCase(sortBy.replace('AUMs', 'Aums').replace('livestockType', 'ref_livestock')).replace(
+              '.',
+              '_',
+            ),
         });
 
         const entryCreates = scheduleEntries.map((entry) => {
@@ -145,7 +150,12 @@ export default class PlanScheduleController {
           {
             ...rest,
             plan_id: planId,
-            sort_by: sortBy && objPathToSnakeCase(sortBy),
+            sort_by:
+              sortBy &&
+              objPathToSnakeCase(sortBy.replace('AUMs', 'Aums').replace('livestockType', 'ref_livestock')).replace(
+                '.',
+                '_',
+              ),
           },
         );
 
@@ -314,7 +324,10 @@ export default class PlanScheduleController {
         await PlanRouteHelper.canUserAccessThisAgreement(trx, Agreement, user, agreementId);
 
         if (sortBy) {
-          sortBy = objPathToSnakeCase(sortBy.replace('livestockType', 'ref_livestock')).replace('.', '_');
+          sortBy = objPathToSnakeCase(sortBy.replace('AUMs', 'Aums').replace('livestockType', 'ref_livestock')).replace(
+            '.',
+            '_',
+          );
         }
 
         const result = await trx
