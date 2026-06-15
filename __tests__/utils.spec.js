@@ -20,7 +20,7 @@
 
 'use strict';
 
-import { isNumeric, isValid } from '../src/libs/utils';
+import { isNumeric, isValid, snakeCase, objPathToSnakeCase, objPathToCamelCase } from '../src/libs/utils';
 
 describe('utility helpers', () => {
   beforeEach(() => {
@@ -49,5 +49,41 @@ describe('utility helpers', () => {
 
     expect(isNumeric(notAnumber)).toBe(false);
     expect(isNumeric(isAnumber)).toBe(true);
+  });
+
+  test('snakeCase converts pldAUMs to pld_au_ms', async () => {
+    expect(snakeCase('pldAUMs')).toBe('pld_au_ms');
+  });
+
+  test('snakeCase converts crownAUMs to crown_au_ms', async () => {
+    expect(snakeCase('crownAUMs')).toBe('crown_au_ms');
+  });
+
+  test('snakeCase converts standard camelCase correctly', async () => {
+    expect(snakeCase('pastureName')).toBe('pasture_name');
+    expect(snakeCase('livestockCount')).toBe('livestock_count');
+    expect(snakeCase('dateIn')).toBe('date_in');
+    expect(snakeCase('dateOut')).toBe('date_out');
+    expect(snakeCase('graceDays')).toBe('grace_days');
+  });
+
+  test('snakeCase handles string with no uppercase', async () => {
+    expect(snakeCase('already_snake')).toBe('already_snake');
+    expect(snakeCase('simple')).toBe('simple');
+  });
+
+  test('snakeCase handles livestockTypeName', async () => {
+    expect(snakeCase('livestockTypeName')).toBe('livestock_type_name');
+  });
+
+  test('objPathToSnakeCase converts dotted paths', async () => {
+    expect(objPathToSnakeCase('ref_livestock.name')).toBe('ref_livestock.name');
+    expect(objPathToSnakeCase('pldAUMs')).toBe('pld_au_ms');
+    expect(objPathToSnakeCase('crownAUMs')).toBe('crown_au_ms');
+  });
+
+  test('objPathToCamelCase converts snake paths to camelCase', async () => {
+    expect(objPathToCamelCase('pasture_name')).toBe('pastureName');
+    expect(objPathToCamelCase('livestock_type_name')).toBe('livestockTypeName');
   });
 });
