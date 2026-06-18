@@ -12,7 +12,7 @@ import PlanStatusController from './PlanStatusController.js';
 import NotificationHelper from '../helpers/NotificationHelper.js';
 
 const dm = new DataManager(config);
-const { db, Plan, PlanExtensionRequests } = dm;
+const { db, Plan, PlanExtensionRequests, PlanStatusHistory } = dm;
 
 export default class PlanExtensionController {
   /**
@@ -354,6 +354,13 @@ export default class PlanExtensionController {
     }
     await db.transaction().execute(async (trx) => {
       const extensionDate = new Date();
+      await PlanStatusHistory.create(trx, {
+        fromPlanStatusId: planRow.statusId,
+        toPlanStatusId: 9,
+        note: ' ',
+        planId,
+        userId: user.id,
+      });
       await Plan.update(
         trx,
         { id: planId },

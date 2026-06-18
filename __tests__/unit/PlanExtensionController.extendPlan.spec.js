@@ -1,17 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockPlan, mockDb } = vi.hoisted(() => {
+const { mockPlan, mockDb, mockPlanStatusHistory } = vi.hoisted(() => {
   const plan = {
     findOne: vi.fn(),
     update: vi.fn(),
     createSnapshot: vi.fn(),
+  };
+  const planStatusHistory = {
+    create: vi.fn(),
   };
   const db = {
     transaction: vi.fn(() => ({
       execute: async (callback) => callback({}),
     })),
   };
-  return { mockPlan: plan, mockDb: db };
+  return { mockPlan: plan, mockDb: db, mockPlanStatusHistory: planStatusHistory };
 });
 
 vi.mock('../../src/config/index.js', () => ({
@@ -33,6 +36,7 @@ vi.mock('../../src/libs/db2/index.js', () => ({
         db: mockDb,
         Plan: mockPlan,
         PlanExtensionRequests: {},
+        PlanStatusHistory: mockPlanStatusHistory,
       };
     }
   },
@@ -49,12 +53,14 @@ describe('PlanExtensionController.extendPlan', () => {
 
     mockPlan.findOne.mockResolvedValue({
       id: 1199,
+      statusId: 8,
       extensionStatus: 3,
       extensionReceivedVotes: 1,
       extensionRequiredVotes: 1,
       replacementOf: null,
       planEndDate: new Date('2030-12-31T00:00:00.000Z'),
     });
+    mockPlanStatusHistory.create.mockResolvedValue({});
     mockPlan.update.mockResolvedValue({});
     mockPlan.createSnapshot.mockResolvedValue({});
 
@@ -87,6 +93,13 @@ describe('PlanExtensionController.extendPlan', () => {
       }),
     );
     expect(mockPlan.createSnapshot).toHaveBeenCalledWith(expect.anything(), '1199', req.user);
+    expect(mockPlanStatusHistory.create).toHaveBeenCalledWith(expect.anything(), {
+      fromPlanStatusId: 8,
+      toPlanStatusId: 9,
+      note: ' ',
+      planId: '1199',
+      userId: 11,
+    });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });
