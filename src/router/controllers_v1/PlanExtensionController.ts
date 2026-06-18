@@ -353,11 +353,13 @@ export default class PlanExtensionController {
       throw errorWithCode('End date must be in future of current end date', 400);
     }
     await db.transaction().execute(async (trx) => {
+      const extensionDate = new Date();
       await Plan.update(
         trx,
         { id: planId },
         {
           planEndDate: endDate,
+          extensionDate,
           statusId: 9, //Stands
           amendmentTypeId: 4,
           extensionStatus: PLAN_EXTENSION_STATUS.EXTENDED,

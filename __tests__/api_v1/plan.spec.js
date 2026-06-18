@@ -1,5 +1,5 @@
 vi.mock('passport');
-import { default as request } from 'supertest';  
+import { default as request } from 'supertest';
 import passport from 'passport';
 import createApp from '../../src';
 import userMocks from '../../__mocks__/fixtures/user_account_mock.json';
@@ -226,6 +226,26 @@ describe('Test Plan routes', () => {
     const status = { statusId: 100 };
 
     await request(app).put(`${baseUrl}/1/status`).send(status).expect(403);
+  });
+
+  // PUT /plan/:planId/extension/extend
+  test('Extending a plan sets the extension date', async () => {
+    const app = await createApp();
+    const extendedEndDate = '2025-12-31';
+
+    await dm
+      .db('plan')
+      .where('id', 1)
+      .update({ extension_status: 3, extension_required_votes: 1, extension_received_votes: 1 });
+
+    await request(app).put(`${baseUrl}/1/extension/extend?endDate=${extendedEndDate}`).expect(200);
+
+    const results = await dm.db('plan').where('id', 1);
+    expect(results).toHaveLength(1);
+    expect(results[0].extension_status).toEqual(4);
+    expect(results[0].amendment_type_id).toEqual(4);
+    expect(results[0].plan_end_date).toBeDefined();
+    expect(results[0].extension_date).toBeTruthy();
   });
 
   // PUT /plan/:planId/confirmation/:confirmationId - update existing amendment confirmation

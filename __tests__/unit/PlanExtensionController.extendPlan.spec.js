@@ -1,0 +1,92 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { mockPlan, mockDb } = vi.hoisted(() => {
+  const plan = {
+    findOne: vi.fn(),
+    update: vi.fn(),
+    createSnapshot: vi.fn(),
+  };
+  const db = {
+    transaction: vi.fn(() => ({
+      execute: async (callback) => callback({}),
+    })),
+  };
+  return { mockPlan: plan, mockDb: db };
+});
+
+vi.mock('../../src/config/index.js', () => ({
+  default: {
+    db: {
+      host: 'localhost',
+      port: 5432,
+      database: 'test',
+      user: 'test',
+      password: 'test',
+    },
+  },
+}));
+
+vi.mock('../../src/libs/db2/index.js', () => ({
+  default: class DataManagerMock {
+    constructor() {
+      return {
+        db: mockDb,
+        Plan: mockPlan,
+        PlanExtensionRequests: {},
+      };
+    }
+  },
+}));
+
+describe('PlanExtensionController.extendPlan', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sets extensionDate when extending a plan', async () => {
+    const { default: PlanExtensionController } =
+      await import('../../src/router/controllers_v1/PlanExtensionController.ts');
+
+    mockPlan.findOne.mockResolvedValue({
+      id: 1199,
+      extensionStatus: 3,
+      extensionReceivedVotes: 1,
+      extensionRequiredVotes: 1,
+      replacementOf: null,
+      planEndDate: new Date('2030-12-31T00:00:00.000Z'),
+    });
+    mockPlan.update.mockResolvedValue({});
+    mockPlan.createSnapshot.mockResolvedValue({});
+
+    const req = {
+      params: { planId: '1199' },
+      query: { endDate: '2031-12-31' },
+      user: {
+        id: 11,
+        isDecisionMaker: () => false,
+        isAdministrator: () => true,
+      },
+    };
+    const res = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+      end: vi.fn(),
+    };
+
+    await PlanExtensionController.extendPlan(req, res);
+
+    expect(mockPlan.update).toHaveBeenCalledWith(
+      expect.anything(),
+      { id: '1199' },
+      expect.objectContaining({
+        planEndDate: '2031-12-31',
+        statusId: 9,
+        amendmentTypeId: 4,
+        extensionStatus: 4,
+        extensionDate: expect.any(Date),
+      }),
+    );
+    expect(mockPlan.createSnapshot).toHaveBeenCalledWith(expect.anything(), '1199', req.user);
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+});
