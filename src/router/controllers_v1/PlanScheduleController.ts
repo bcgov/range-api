@@ -10,10 +10,21 @@ const dm = new DataManager(config);
 const { db, Agreement, Plan, Schedule, GrazingScheduleEntry, HayCuttingScheduleEntry } = dm;
 
 export default class PlanScheduleController {
+  static extractYearFromScheduleDate(dateValue) {
+    if (typeof dateValue === 'string') {
+      const datePrefixMatch = dateValue.match(/^(\d{4})-\d{2}-\d{2}/);
+      if (datePrefixMatch) {
+        return Number(datePrefixMatch[1]);
+      }
+    }
+
+    return new Date(dateValue).getUTCFullYear();
+  }
+
   static validateEntryDates(scheduleEntries, scheduleYear) {
     scheduleEntries.forEach((entry) => {
       if (entry.dateIn) {
-        const entryYear = new Date(entry.dateIn).getFullYear();
+        const entryYear = PlanScheduleController.extractYearFromScheduleDate(entry.dateIn);
         if (entryYear !== scheduleYear) {
           throw errorWithCode('Schedule entry date(s) must be within the schedule year.', 400);
         }

@@ -1,9 +1,20 @@
 import { describe, it, expect } from 'vitest';
 
 function validateEntryDates(scheduleEntries, scheduleYear) {
+  const extractYearFromScheduleDate = (dateValue) => {
+    if (typeof dateValue === 'string') {
+      const datePrefixMatch = dateValue.match(/^(\d{4})-\d{2}-\d{2}/);
+      if (datePrefixMatch) {
+        return Number(datePrefixMatch[1]);
+      }
+    }
+
+    return new Date(dateValue).getUTCFullYear();
+  };
+
   scheduleEntries.forEach((entry) => {
     if (entry.dateIn) {
-      const entryYear = new Date(entry.dateIn).getFullYear();
+      const entryYear = extractYearFromScheduleDate(entry.dateIn);
       if (entryYear !== scheduleYear) {
         const err = new Error('Schedule entry date(s) must be within the schedule year.');
         err.code = 400;
@@ -46,6 +57,11 @@ describe('validateEntryDates', () => {
   it('should work with date-only strings (no time component)', () => {
     const entries = [{ dateIn: '2025-06-01' }];
     expect(() => validateEntryDates(entries, 2025)).not.toThrow();
+  });
+
+  it('should accept Jan 1 date-only values in the same schedule year', () => {
+    const entries = [{ dateIn: '2026-01-01' }];
+    expect(() => validateEntryDates(entries, 2026)).not.toThrow();
   });
 
   it('should throw with error code 400', () => {
