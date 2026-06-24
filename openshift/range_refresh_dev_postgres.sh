@@ -1,66 +1,62 @@
 #!/bin/bash
+set -euo pipefail
 
-# Set variables for projects and deployment
-DEV_PROJECT="3187b2-dev"
-PROD_PROJECT="3187b2-prod"
-DEPLOYMENT_PATTERN="range-postgresql"
+# Refreshes target Crunchy DB from prod Crunchy DB.
+# Usage:
+#   ./openshift/range_refresh_dev_postgres.sh
+#   TARGET_PROJECT=3187b2-test TARGET_CLUSTER=range-pg17-test ./openshift/range_refresh_dev_postgres.sh
 
-# Get pod names using grep pattern for deployment
-DEV_POD=$(oc -n ${DEV_PROJECT} get pods | grep ${DEPLOYMENT_PATTERN} | grep -v deploy | head -n 1 | awk '{print $1}')
-PROD_POD=$(oc -n ${PROD_PROJECT} get pods | grep ${DEPLOYMENT_PATTERN} | grep -v deploy | head -n 1 | awk '{print $1}')
+SOURCE_PROJECT="${SOURCE_PROJECT:-3187b2-prod}"
+SOURCE_CLUSTER="${SOURCE_CLUSTER:-range-pg17-prod}"
+TARGET_PROJECT="${TARGET_PROJECT:-3187b2-dev}"
+TARGET_CLUSTER="${TARGET_CLUSTER:-range-pg17-dev}"
+DB_NAME="${DB_NAME:-myra}"
 
-# Check if pods were found
-if [ -z "$DEV_POD" ]; then
-  echo "Error: Could not find PostgreSQL pod in ${DEV_PROJECT} project"
+SOURCE_PRIMARY_POD=$(oc -n "${SOURCE_PROJECT}" get pod \
+  -l "postgres-operator.crunchydata.com/cluster=${SOURCE_CLUSTER},postgres-operator.crunchydata.com/role=master" \
+  -o jsonpath='{.items[0].metadata.name}')
+
+TARGET_PRIMARY_POD=$(oc -n "${TARGET_PROJECT}" get pod \
+  -l "postgres-operator.crunchydata.com/cluster=${TARGET_CLUSTER},postgres-operator.crunchydata.com/role=master" \
+  -o jsonpath='{.items[0].metadata.name}')
+
+if [ -z "${SOURCE_PRIMARY_POD}" ]; then
+  echo "Error: could not find source primary pod in ${SOURCE_PROJECT} for cluster ${SOURCE_CLUSTER}"
   exit 1
 fi
 
-if [ -z "$PROD_POD" ]; then
-  echo "Error: Could not find PostgreSQL pod in ${PROD_PROJECT} project"
+if [ -z "${TARGET_PRIMARY_POD}" ]; then
+  echo "Error: could not find target primary pod in ${TARGET_PROJECT} for cluster ${TARGET_CLUSTER}"
   exit 1
 fi
 
-echo "Development pod: ${DEV_POD}"
-echo "Production pod: ${PROD_POD}"
+echo "Source primary pod: ${SOURCE_PRIMARY_POD}"
+echo "Target primary pod: ${TARGET_PRIMARY_POD}"
+echo "Database: ${DB_NAME}"
 
-# Get database names and credentials from environment variables for both environments
-DEV_DB_NAME=$(oc -n ${DEV_PROJECT} exec ${DEV_POD} -- printenv POSTGRESQL_DATABASE)
-DEV_DB_USER=$(oc -n ${DEV_PROJECT} exec ${DEV_POD} -- printenv POSTGRESQL_USER)
-DEV_DB_PASSWORD=$(oc -n ${DEV_PROJECT} exec ${DEV_POD} -- printenv POSTGRESQL_PASSWORD)
+LOCAL_DUMP_FILE="$(mktemp /tmp/${DB_NAME}.dump.XXXXXX)"
+SOURCE_DUMP_FILE="/tmp/${DB_NAME}.dump"
+TARGET_DUMP_FILE="/tmp/${DB_NAME}.dump"
 
-PROD_DB_NAME=$(oc -n ${PROD_PROJECT} exec ${PROD_POD} -- printenv POSTGRESQL_DATABASE)
-PROD_DB_USER=$(oc -n ${PROD_PROJECT} exec ${PROD_POD} -- printenv POSTGRESQL_USER)
-PROD_DB_PASSWORD=$(oc -n ${PROD_PROJECT} exec ${PROD_POD} -- printenv POSTGRESQL_PASSWORD)
+cleanup() {
+  oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c database -- rm -f "${SOURCE_DUMP_FILE}" >/dev/null 2>&1 || true
+  oc -n "${TARGET_PROJECT}" exec "${TARGET_PRIMARY_POD}" -c database -- rm -f "${TARGET_DUMP_FILE}" >/dev/null 2>&1 || true
+  rm -f "${LOCAL_DUMP_FILE}" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
 
-echo "Using development database: ${DEV_DB_NAME}"
-echo "Using production database: ${PROD_DB_NAME}"
+echo "Dumping ${DB_NAME} from ${SOURCE_PROJECT}/${SOURCE_CLUSTER}..."
+oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c database -- \
+  pg_dump -U postgres -d "${DB_NAME}" --format=custom --no-owner --no-privileges --file "${SOURCE_DUMP_FILE}"
 
-# Step 1: Drop and recreate public schema in dev database
-echo "Dropping and recreating public schema in development database..."
-oc -n ${DEV_PROJECT} exec ${DEV_POD} -- bash -c "PGPASSWORD=${DEV_DB_PASSWORD} psql -U ${DEV_DB_USER} ${DEV_DB_NAME} -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'"
+echo "Copying dump to local..."
+oc -n "${SOURCE_PROJECT}" cp "${SOURCE_PRIMARY_POD}:${SOURCE_DUMP_FILE}" "${LOCAL_DUMP_FILE}" -c database
 
-# Step 2: Export data from production database
-echo "Exporting data from production database..."
-TIMESTAMP=$(date +%Y%m%d%H%M%S)
+echo "Copying dump to target..."
+oc -n "${TARGET_PROJECT}" cp "${LOCAL_DUMP_FILE}" "${TARGET_PRIMARY_POD}:${TARGET_DUMP_FILE}" -c database
 
-oc -n ${PROD_PROJECT} exec ${PROD_POD} -- bash -c "PGPASSWORD=${PROD_DB_PASSWORD} pg_dump -U ${PROD_DB_USER} -d ${PROD_DB_NAME} -n public -f /tmp/dump.sql"
+echo "Restoring ${DB_NAME} into ${TARGET_PROJECT}/${TARGET_CLUSTER}..."
+oc -n "${TARGET_PROJECT}" exec "${TARGET_PRIMARY_POD}" -c database -- \
+  pg_restore -U postgres -d "${DB_NAME}" --clean --if-exists --no-owner --no-privileges "${TARGET_DUMP_FILE}"
 
-# Step 3: Copy dumps from production to local machine
-echo "Copying database dumps from production pod..."
-oc -n ${PROD_PROJECT} cp ${PROD_POD}:/tmp/dump.sql /tmp/dump.sql
-
-# Step 4: Copy dumps to development pod
-echo "Copying database dumps to development pod..."
-oc -n ${DEV_PROJECT} cp /tmp/dump.sql ${DEV_POD}:/tmp/dump.sql
-
-# Step 5: Import data into development database
-echo "Importing schema into development database..."
-oc -n ${DEV_PROJECT} exec ${DEV_POD} -- bash -c "PGPASSWORD=${DEV_DB_PASSWORD} psql -U ${DEV_DB_USER} ${DEV_DB_NAME} -f /tmp/dump.sql"
-
-# Step 6: Cleanup
-echo "Cleaning up temporary files..."
-oc -n ${PROD_PROJECT} exec ${PROD_POD} -- rm /tmp/dump.sql
-oc -n ${DEV_PROJECT} exec ${DEV_POD} -- rm /tmp/dump.sql
-rm /tmp/dump.sql
-
-echo "Database refresh completed successfully!"
+echo "Database refresh completed successfully."
