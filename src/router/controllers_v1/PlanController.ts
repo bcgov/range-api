@@ -541,8 +541,8 @@ export default class PlanController {
           ? [
               GrazingScheduleEntry.create(trx, {
                 ...entry,
-                grazing_schedule_id: newSchedule.id,
-                pasture_id: newPastureId,
+                grazingScheduleId: newSchedule.id,
+                pastureId: newPastureId,
               }),
             ]
           : [];
@@ -555,8 +555,8 @@ export default class PlanController {
           ? [
               HayCuttingScheduleEntry.create(trx, {
                 ...entry,
-                haycutting_schedule_id: newSchedule.id,
-                pasture_id: newPastureId,
+                haycuttingScheduleId: newSchedule.id,
+                pastureId: newPastureId,
               }),
             ]
           : [];

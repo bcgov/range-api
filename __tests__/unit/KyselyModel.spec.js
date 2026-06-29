@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Unit test for KyselyModel.create field precedence behavior.
-// Regresses #488: when both camelCase and snake_case keys exist
+// Regresses #501: when both camelCase and snake_case keys exist
 // in the values object, the camelCase key was incorrectly taking
 // precedence, causing grazing_schedule_id to be set to the
 // source schedule id instead of the target.
@@ -21,7 +21,7 @@ const mockDb = {
 
 // Import after mocks are set up
 class TestModel {
-  static fields = ['id', 'grazing_schedule_id', 'haycutting_schedule_id', 'name'];
+  static fields = ['id', 'grazing_schedule_id', 'haycutting_schedule_id', 'pasture_id', 'name'];
 
   static table = 'test_table';
 
@@ -101,5 +101,18 @@ describe('KyselyModel field precedence', () => {
 
     // Same bug applies to haycutting schedules
     expect(result.haycutting_schedule_id).toBe(100);
+  });
+
+  it('should persist replacement-plan remapped ids when payload uses camelCase overrides', async () => {
+    const result = await TestModel.create(mockDb, {
+      grazingScheduleId: 777,
+      grazing_schedule_id: 111,
+      pastureId: 888,
+      pasture_id: 222,
+      name: 'test',
+    });
+
+    expect(result.grazing_schedule_id).toBe(777);
+    expect(result.pasture_id).toBe(888);
   });
 });
