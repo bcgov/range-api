@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { errorWithCode, logger } from '../../libs/bcgov-shim.js';
+import { errorWithCode } from '../../libs/bcgov-shim.js';
 import config from '../../config/index.js';
 import { PLAN_EXTENSION_STATUS, SSO_ROLE_MAP } from '../../constants.js';
 import DataManager from '../../libs/db2/index.js';
@@ -10,6 +10,7 @@ import { checkRequiredFields } from '../../libs/utils.js';
 import PlanController from './PlanController.js';
 import PlanStatusController from './PlanStatusController.js';
 import NotificationHelper from '../helpers/NotificationHelper.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanExtensionRequests, PlanStatusHistory } = dm;
@@ -76,6 +77,25 @@ export default class PlanExtensionController {
           '{agreementId}': planEntry.agreementId,
         });
       }
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.extension.approved_vote',
+        entityType: 'plan',
+        entityId: planId,
+        agreementId: planEntry.agreementId,
+        metadata: {
+          extensionRequestId,
+          updatedVotes: requestsToActuallyUpdate.length,
+          extensionReceivedVotes: newReceivedVotes,
+          extensionRequiredVotes: planEntry.extensionRequiredVotes,
+        },
+      });
     });
     return res.status(200).end();
   }
@@ -270,6 +290,23 @@ export default class PlanExtensionController {
       }
       const response = await Plan.update(trx, { id: planId }, updatedValues);
       extensionStatus = response.extensionStatus;
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.extension.rejected',
+        entityType: 'plan',
+        entityId: planId,
+        agreementId: planEntry.agreementId,
+        metadata: {
+          extensionRequestId,
+          extensionStatus,
+        },
+      });
     });
     return res.status(200).json({ extensionStatus }).end();
   }
@@ -319,6 +356,20 @@ export default class PlanExtensionController {
         '{agreementId}': planRow.agreementId,
       };
       await NotificationHelper.sendEmail(trx, decisionMakerEmails, 'Response Required', emailFields);
+
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.extension.requested',
+        entityType: 'plan',
+        entityId: planId,
+        agreementId: planRow.agreementId,
+      });
     });
     return res.status(200).end();
   }
@@ -373,6 +424,23 @@ export default class PlanExtensionController {
         },
       );
       await Plan.createSnapshot(trx, planId, user);
+
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.extension.extended',
+        entityType: 'plan',
+        entityId: planId,
+        agreementId: planRow.agreementId,
+        metadata: {
+          endDate,
+        },
+      });
     });
     return res.status(200).json({ planId }).end();
   }

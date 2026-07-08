@@ -16,6 +16,7 @@ import config from '../../config/index.js';
 import AdditionalRequirement from './model/additionalrequirement.js';
 import AdditionalRequirementCategory from './model/additionalrequirementcategory.js';
 import Agreement from './model/agreement.js';
+import AuditLog from './model/auditlog.js';
 import ExemptionStatusType from './model/exemptionstatustype.js';
 import AgreementType from './model/agreementtype.js';
 import AmendmentType from './model/amendmenttype.js';
@@ -120,6 +121,7 @@ export default class DataManager {
     });
     this.config = config;
     this.Agreement = Agreement;
+    this.AuditLog = AuditLog;
     this.ExemptionStatusType = ExemptionStatusType;
     this.AgreementType = AgreementType;
     this.Client = Client;
