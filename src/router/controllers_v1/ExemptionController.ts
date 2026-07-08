@@ -14,6 +14,7 @@ import NotificationHelper from '../helpers/NotificationHelper.js';
 import Zone from '../../libs/db2/model/zone.js';
 import User from '../../libs/db2/model/user.js';
 import { updateAgreementExemptions } from '../helpers/AgreementExemptionHelper.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const { db, Agreement } = dm;
@@ -268,6 +269,24 @@ export default class ExemptionController {
           '{note}': 'Created' || ' ',
         };
         await NotificationHelper.sendEmail(trx, emails, 'Response Required', emailFields);
+
+        await writeDomainAudit(trx, {
+          requestId: req.auditRequestId || null,
+          correlationId: req.auditCorrelationId || null,
+          userId: user.id,
+          roleId: user.roleId || null,
+          method: req.method,
+          path: req.originalUrl,
+          route: req.route?.path || null,
+          action: 'exemption.created',
+          entityType: 'exemption',
+          entityId: newExemption.id,
+          agreementId,
+          metadata: {
+            status: newExemption.status,
+            hasAttachments: attachments.length > 0,
+          },
+        });
       });
       res.status(201).json(newExemption);
     } catch (error) {
@@ -464,6 +483,24 @@ export default class ExemptionController {
         }
 
         await updateAgreementExemptions(trx, user, agreementId);
+
+        await writeDomainAudit(trx, {
+          requestId: req.auditRequestId || null,
+          correlationId: req.auditCorrelationId || null,
+          userId: user.id,
+          roleId: user.roleId || null,
+          method: req.method,
+          path: req.originalUrl,
+          route: req.route?.path || null,
+          action: 'exemption.updated',
+          entityType: 'exemption',
+          entityId: exemptionId,
+          agreementId,
+          metadata: {
+            action: action || 'edit',
+            status: newStatus,
+          },
+        });
       });
 
       res.status(200).json(updated);
@@ -518,6 +555,23 @@ export default class ExemptionController {
           user_id: user.id,
         });
         await updateAgreementExemptions(trx, user, agreementId);
+
+        await writeDomainAudit(trx, {
+          requestId: req.auditRequestId || null,
+          correlationId: req.auditCorrelationId || null,
+          userId: user.id,
+          roleId: user.roleId || null,
+          method: req.method,
+          path: req.originalUrl,
+          route: req.route?.path || null,
+          action: 'exemption.deleted',
+          entityType: 'exemption',
+          entityId: exemptionId,
+          agreementId,
+          metadata: {
+            fromStatus: existing.status,
+          },
+        });
       });
       res.status(204).send();
     } catch (error) {

@@ -26,6 +26,8 @@
    */
 import cors from 'cors';
 import passport from 'passport';
+import DataManager from '../libs/db2/index.js';
+import { requestAuditMiddleware } from '../libs/audit.js';
 import agreement from './routes_v1/agreement.js';
 import client from './routes_v1/client.js';
 import district from './routes_v1/district.js';
@@ -47,8 +49,11 @@ const corsOptions = {
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
+const dm = new DataManager();
+
 export default (app) => {
   app.use(cors(corsOptions));
+  app.use(requestAuditMiddleware(dm.db));
   app.use('/api/v1/ehlo', ehlo); // probes
   app.use('/api/v1/version', version); // app versions
   // authentication middleware for routes.

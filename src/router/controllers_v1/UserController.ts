@@ -6,6 +6,7 @@ import config from '../../config/index.js';
 import UserDistricts from '../../libs/db2/model/userDistricts.js';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests.js';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const {
@@ -116,6 +117,22 @@ export class UserController {
         await Plan.update(trx, { creator_id: sourceUserId }, { creator_id: userId });
         await PlanFile.update(trx, { user_id: sourceUserId }, { user_id: userId });
       }
+
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: req.user?.id || null,
+        roleId: req.user?.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'user.accounts.merged',
+        entityType: 'user_account',
+        entityId: userId,
+        metadata: {
+          sourceAccountIds,
+        },
+      });
     });
     res.status(200).json().end();
   }
@@ -226,6 +243,23 @@ export class UserController {
         );
       }
 
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: req.user?.id || null,
+        roleId: req.user?.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'user.client_link.added',
+        entityType: 'user_account',
+        entityId: userId,
+        agreementId: null,
+        metadata: {
+          clientId,
+        },
+      });
+
       return link;
     });
     res.status(200).json(result).end();
@@ -264,6 +298,22 @@ export class UserController {
           },
         );
       }
+
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: req.user?.id || null,
+        roleId: req.user?.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'user.client_link.removed',
+        entityType: 'user_account',
+        entityId: userId,
+        metadata: {
+          clientId,
+        },
+      });
 
       return deleteResult;
     });

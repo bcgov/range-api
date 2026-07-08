@@ -12,6 +12,7 @@ import NotificationHelper from '../helpers/NotificationHelper.js';
 import Zone from '../../libs/db2/model/zone.js';
 import User from '../../libs/db2/model/user.js';
 import ExemptionStatusController from './ExemptionStatusController.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const { db, Plan, PlanConfirmation, PlanStatusHistory, PlanStatus, Agreement, Exemption } = dm;
@@ -212,6 +213,24 @@ export default class PlanStatusController {
           userId: user.id,
         });
         await PlanStatusController.updatePlanStatus(trx, planId, status, user);
+        await writeDomainAudit(trx, {
+          requestId: req.auditRequestId || null,
+          correlationId: req.auditCorrelationId || null,
+          userId: user.id,
+          roleId: user.roleId || null,
+          method: req.method,
+          path: req.originalUrl,
+          route: req.route?.path || null,
+          action: 'plan.status.changed',
+          entityType: 'plan',
+          entityId: planId,
+          agreementId,
+          metadata: {
+            fromStatusId: prevStatusId,
+            toStatusId: statusId,
+            note: note || null,
+          },
+        });
 
         const [agreement] = await Agreement.find(trx, { forest_file_id: agreementId });
         const zone = await Zone.findById(trx, agreement.zoneId);
@@ -302,6 +321,24 @@ export default class PlanStatusController {
             userId: user.id,
           });
           const updatedPlan = await PlanStatusController.updatePlanStatus(trx, planId, status, user);
+          await writeDomainAudit(trx, {
+            requestId: req.auditRequestId || null,
+            correlationId: req.auditCorrelationId || null,
+            userId: user.id,
+            roleId: user.roleId || null,
+            method: req.method,
+            path: req.originalUrl,
+            route: req.route?.path || null,
+            action: 'plan.amendment.submitted',
+            entityType: 'plan',
+            entityId: planId,
+            agreementId,
+            metadata: {
+              confirmationId,
+              isMinorAmendment: isMinorAmendment === 'true',
+              resultingStatusId: status.id,
+            },
+          });
           updatedPlan.status = status;
           responseJson = { allConfirmed, updatedPlan, confirmation };
         }

@@ -12,6 +12,7 @@ import ExemptionController from './ExemptionController.js';
 import Zone from '../../libs/db2/model/zone.js';
 import User from '../../libs/db2/model/user.js';
 import { updateAgreementExemptions } from '../helpers/AgreementExemptionHelper.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const { db, Agreement } = dm;
@@ -167,6 +168,25 @@ export default class ExemptionStatusController {
           exemption,
           emailExclusions,
         );
+
+        await writeDomainAudit(trx, {
+          requestId: req.auditRequestId || null,
+          correlationId: req.auditCorrelationId || null,
+          userId: user.id,
+          roleId: user.roleId || null,
+          method: req.method,
+          path: req.originalUrl,
+          route: req.route?.path || null,
+          action: 'exemption.status.changed',
+          entityType: 'exemption',
+          entityId: exemptionId,
+          agreementId,
+          metadata: {
+            action,
+            toStatus: newStatus,
+            comment: comment || null,
+          },
+        });
       });
       res.status(200).json({ id: updatedExemption.id, status: updatedExemption.status });
     } catch (error) {

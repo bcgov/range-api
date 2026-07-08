@@ -16,6 +16,27 @@ export interface UserAccountTable {
   updated_at: ColumnType<Date, string | undefined, Date>;
 }
 
+export interface AuditLogTable {
+  id: ColumnType<number, number, never>;
+  request_id: string | null;
+  correlation_id: string | null;
+  user_id: number | null;
+  role_id: number | null;
+  method: string;
+  path: string;
+  route: string | null;
+  status_code: number;
+  duration_ms: number | null;
+  success: boolean;
+  auth_reason_code: string | null;
+  action: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  agreement_id: string | null;
+  metadata: unknown | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
 export interface UserClientLinkTable {
   id: ColumnType<number, number, never>;
   user_id: number;
@@ -647,6 +668,7 @@ export interface RefAmendmentTypeTable {
 }
 
 export interface DB {
+  audit_log: AuditLogTable;
   user_account: UserAccountTable;
   user_client_link: UserClientLinkTable;
   user_districts: UserDistrictsTable;
