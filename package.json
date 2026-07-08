@@ -55,6 +55,7 @@
     "test:lint": "eslint src __tests__ __testHelpers__ __mocks__ scripts",
     "import": "node build/scripts/import.js",
     "plan_extension_exemption": "node build/scripts/plan_extension_exemption.js",
+    "audit_retention_cleanup": "node build/scripts/audit_retention_cleanup.js",
     "process_no_use": "node build/scripts/process_no_use.js",
     "initialize_docker": "npm run build && tsx scripts/import.ts true",
     "initialize": "npm run build && tsx scripts/import.ts true"

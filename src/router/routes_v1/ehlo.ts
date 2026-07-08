@@ -22,9 +22,16 @@
 'use strict';
 
 import { Router } from 'express';
+import { getAuditHealthSnapshot } from '../../libs/audit.js';
 
 const router = new Router();
 
-router.get('/', async (req, res) => res.status(200).end());
+router.get('/', async (req, res) => {
+  const isInternal = req.headers['x-internal-health'] === 'true';
+  res.status(200).json({
+    status: 'ok',
+    audit: getAuditHealthSnapshot({ includeErrors: isInternal }),
+  });
+});
 
 export default router;
