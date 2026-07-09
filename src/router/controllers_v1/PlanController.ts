@@ -23,6 +23,7 @@ import PlantCommunityAction from '../../libs/db2/model/plantcommunityaction.js';
 import PlantCommunity from '../../libs/db2/model/plantcommunity.js';
 import MonitoringAreaPurpose from '../../libs/db2/model/monitoringareapurpose.js';
 import User from '../../libs/db2/model/user.js';
+import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
 const { db, Plan, Agreement, PlanConfirmation, PlanStatus, AdditionalRequirement, PlanFile } = dm;
@@ -295,6 +296,7 @@ export default class PlanController {
 
     logger.info(`Restoring snapshot ID ${prevLegalVersion.id} for plan ${planId}`);
 
+    let discardedSnapshotIds = [];
     await db.transaction().execute(async (trx) => {
       await Plan.restoreVersion(trx, planId, prevLegalVersion.version);
 
@@ -306,11 +308,31 @@ export default class PlanController {
         .execute();
 
       const versionIdsToDiscard = versionsToDiscard.map((v) => v.id);
+      discardedSnapshotIds = versionIdsToDiscard;
       logger.info(`Marking as discarded: ${JSON.stringify(versionIdsToDiscard)}`);
       if (versionIdsToDiscard.length > 0) {
         await trx.deleteFrom('plan_snapshot').where('id', 'in', versionIdsToDiscard).execute();
       }
     });
+
+    await writeDomainAudit(db, {
+      requestId: req.auditRequestId || null,
+      correlationId: req.auditCorrelationId || null,
+      userId: user.id,
+      roleId: user.roleId || null,
+      method: req.method,
+      path: req.originalUrl,
+      route: req.route?.path || null,
+      action: 'plan.amendment.discarded',
+      entityType: 'plan',
+      entityId: planId,
+      agreementId,
+      metadata: {
+        restoredVersion: prevLegalVersion.version,
+        discardedSnapshotCount: discardedSnapshotIds.length,
+      },
+    });
+
     res.json().end();
   }
 
