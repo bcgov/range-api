@@ -85,7 +85,7 @@ export default class PlanExtensionController {
         method: req.method,
         path: req.originalUrl,
         route: req.route?.path || null,
-        action: 'plan.extension.approved_vote',
+        action: 'plan.updated',
         entityType: 'plan',
         entityId: planId,
         agreementId: planEntry.agreementId,
@@ -298,7 +298,7 @@ export default class PlanExtensionController {
         method: req.method,
         path: req.originalUrl,
         route: req.route?.path || null,
-        action: 'plan.extension.rejected',
+        action: 'plan.updated',
         entityType: 'plan',
         entityId: planId,
         agreementId: planEntry.agreementId,
@@ -365,10 +365,14 @@ export default class PlanExtensionController {
         method: req.method,
         path: req.originalUrl,
         route: req.route?.path || null,
-        action: 'plan.extension.requested',
+        action: 'plan.updated',
         entityType: 'plan',
         entityId: planId,
         agreementId: planRow.agreementId,
+        metadata: {
+          field: 'extensionStatus',
+          to: PLAN_EXTENSION_STATUS.AWAITING_EXTENSION,
+        },
       });
     });
     return res.status(200).end();
@@ -433,11 +437,13 @@ export default class PlanExtensionController {
         method: req.method,
         path: req.originalUrl,
         route: req.route?.path || null,
-        action: 'plan.extension.extended',
+        action: 'plan.status.changed',
         entityType: 'plan',
         entityId: planId,
         agreementId: planRow.agreementId,
         metadata: {
+          fromStatusId: planRow.statusId,
+          toStatusId: 9,
           endDate,
         },
       });
@@ -499,9 +505,23 @@ export default class PlanExtensionController {
       if (destinationPlan) {
         if (createReplacementPlan) {
           if (destinationPlan.replacementPlanId) {
-            //Found existing replacement plan so need to delete it
             await PlanController.removeAllWithRelations(trx, destinationPlan.replacementPlanId);
+            await writeDomainAudit(trx, {
+              userId: user.id,
+              roleId: user.roleId || null,
+              method: req.method,
+              path: req.originalUrl,
+              route: req.route?.path || null,
+              action: 'plan.deleted',
+              entityType: 'plan',
+              entityId: destinationPlan.replacementPlanId,
+              agreementId: destinationPlan.agreementId,
+              metadata: {
+                reason: 'replacement_plan_replaced',
+              },
+            });
           }
+
           await Plan.update(
             trx,
             { id: destinationPlan.id },
@@ -520,12 +540,44 @@ export default class PlanExtensionController {
           );
         } else {
           await PlanController.removeAllWithRelations(trx, destinationPlan.id);
+          await writeDomainAudit(trx, {
+            userId: user.id,
+            roleId: user.roleId || null,
+            method: req.method,
+            path: req.originalUrl,
+            route: req.route?.path || null,
+            action: 'plan.deleted',
+            entityType: 'plan',
+            entityId: destinationPlan.id,
+            agreementId: destinationPlan.agreementId,
+            metadata: {
+              reason: 'copy_plan_replace_destination',
+            },
+          });
         }
-      } else {
-        if (createReplacementPlan) {
-          throw errorWithCode('Invalid request. Cannot create replacement plan without the original plan.', 400);
-        }
+      } else if (createReplacementPlan) {
+        throw errorWithCode('Invalid request. Cannot create replacement plan without the original plan.', 400);
       }
+
+      await writeDomainAudit(trx, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.created',
+        entityType: 'plan',
+        entityId: newPlan.id,
+        agreementId,
+        metadata: {
+          sourcePlanId: planId,
+          copiedPlanId: newPlan.id,
+          destinationPlanId: destinationPlan ? destinationPlan.id : null,
+          createReplacementPlan: Boolean(createReplacementPlan),
+        },
+      });
     });
     return res.status(200).json({ planId: newPlan.id }).end();
   }

@@ -125,7 +125,7 @@ describe('PlanController.discardAmendment semantic audit', () => {
       expect.objectContaining({
         requestId: 'req-plan-1',
         correlationId: 'cid-plan-1',
-        action: 'plan.amendment.discarded',
+        action: 'plan.updated',
         entityType: 'plan',
         entityId: '1199',
         agreementId: 'RAN076843',
@@ -134,6 +134,7 @@ describe('PlanController.discardAmendment semantic audit', () => {
 
     const [, payload] = mockWriteDomainAudit.mock.calls[0];
     expect(payload.metadata).toEqual({
+      reason: 'amendment_discarded',
       restoredVersion: 2,
       discardedSnapshotCount: 2,
     });

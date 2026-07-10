@@ -136,6 +136,18 @@ export default class PlanController {
 
       await PlanConfirmation.createConfirmations(trx, agreementId, newPlan.id);
 
+      await writeDomainAudit(trx, {
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+        action: 'plan.created',
+        entityType: 'plan',
+        entityId: newPlan.id,
+        agreementId,
+      });
+
       return newPlan;
     });
 
@@ -158,6 +170,8 @@ export default class PlanController {
 
     // Don't allow the agreement relation to be updated.
     delete body.agreementId;
+    const hasFileAccessUpdates = Array.isArray(body.files) && body.files.length > 0;
+    const updatedFields = Object.keys(body).filter((field) => field !== 'files');
 
     await db.transaction().execute(async (trx) => {
       // Handle file updates if present
@@ -174,6 +188,22 @@ export default class PlanController {
       }
 
       await Plan.update(trx, { id: planId }, body);
+    });
+
+    await writeDomainAudit(db, {
+      userId: user.id,
+      roleId: user.roleId || null,
+      method: req.method,
+      path: req.originalUrl,
+      route: req.route?.path || null,
+      action: 'plan.updated',
+      entityType: 'plan',
+      entityId: planId,
+      agreementId,
+      metadata: {
+        fields: updatedFields,
+        hasFileAccessUpdates,
+      },
     });
 
     const [plan] = await Plan.findWithStatusExtension(db, { 'plan.id': planId }, ['id', 'desc']);
@@ -323,11 +353,12 @@ export default class PlanController {
       method: req.method,
       path: req.originalUrl,
       route: req.route?.path || null,
-      action: 'plan.amendment.discarded',
+      action: 'plan.updated',
       entityType: 'plan',
       entityId: planId,
       agreementId,
       metadata: {
+        reason: 'amendment_discarded',
         restoredVersion: prevLegalVersion.version,
         discardedSnapshotCount: discardedSnapshotIds.length,
       },

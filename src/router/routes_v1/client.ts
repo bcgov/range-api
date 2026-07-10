@@ -27,6 +27,8 @@ import config from '../../config/index.js';
 import DataManager from '../../libs/db2/index.js';
 import Plan from '../../libs/db2/model/plan.js';
 import { PlanRouteHelper } from '../helpers/index.js';
+import { writeDomainAudit } from '../../libs/audit.js';
+import { SYSTEM_USER_ID } from '../../constants.js';
 
 const dm = new DataManager(config);
 const { db, Client, ClientAgreement, Agreement, User } = dm;
@@ -117,6 +119,24 @@ router.put('/agreements/:planId/:clientAgreementId', async (req, res) => {
   await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, req.user, agreementId);
 
   const clientAgreement = await ClientAgreement.update(db, { id: clientAgreementId }, body);
+
+  await writeDomainAudit(db, {
+    requestId: req.auditRequestId || null,
+    correlationId: req.auditCorrelationId || null,
+    userId: user?.id || SYSTEM_USER_ID,
+    roleId: user?.roleId || null,
+    method: req.method,
+    path: req.originalUrl,
+    route: req.route?.path || null,
+    action: 'agreement.updated',
+    entityType: 'agreement',
+    entityId: agreementId,
+    agreementId,
+    metadata: {
+      clientAgreementId,
+      fields: Object.keys(body || {}),
+    },
+  });
 
   res.json(clientAgreement).end();
 });
