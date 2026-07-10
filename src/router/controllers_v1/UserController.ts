@@ -7,6 +7,7 @@ import UserDistricts from '../../libs/db2/model/userDistricts.js';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests.js';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot.js';
 import { writeDomainAudit } from '../../libs/audit.js';
+import { SYSTEM_USER_ID } from '../../constants.js';
 
 const dm = new DataManager(config);
 const {
@@ -79,6 +80,22 @@ export class UserController {
         phoneNumber,
       },
     );
+
+    await writeDomainAudit(db, {
+      requestId: req.auditRequestId || null,
+      correlationId: req.auditCorrelationId || null,
+      userId: user.id,
+      roleId: user.roleId || null,
+      method: req.method,
+      path: req.originalUrl,
+      route: req.route?.path || null,
+      action: 'user.updated',
+      entityType: 'user_account',
+      entityId: userId,
+      metadata: {
+        fields: ['givenName', 'familyName', 'phoneNumber'],
+      },
+    });
 
     res.status(200).json(updated).end();
   }
@@ -332,6 +349,23 @@ export class UserController {
         roleId,
       },
     );
+
+    await writeDomainAudit(db, {
+      requestId: req.auditRequestId || null,
+      correlationId: req.auditCorrelationId || null,
+      userId: req.user?.id || SYSTEM_USER_ID,
+      roleId: req.user?.roleId || null,
+      method: req.method,
+      path: req.originalUrl,
+      route: req.route?.path || null,
+      action: 'user.updated',
+      entityType: 'user_account',
+      entityId: userId,
+      metadata: {
+        fields: ['roleId'],
+        roleId,
+      },
+    });
 
     res.status(200).json(updated).end();
   }

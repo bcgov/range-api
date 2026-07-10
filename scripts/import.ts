@@ -1,4 +1,7 @@
 import DataManager from '../src/libs/db2/index.js';
+import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
+import { SYSTEM_USER_ID } from '../src/constants.js';
+import { fileURLToPath } from 'url';
 
 const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeLicensees`;
 const USAGE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeUsages`;
@@ -236,11 +239,35 @@ const updateAgreement = async (data: any[]) => {
       };
       if (agreement) {
         await Agreement.update(db, { forest_file_id: agreementId }, record);
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'agreement.updated',
+          entityType: 'agreement',
+          entityId: agreementId,
+          agreementId,
+          metadata: {
+            fields: ['agreementStartDate', 'agreementEndDate', 'zoneId', 'agreementTypeId', 'retired'],
+          },
+        });
         updated += 1;
       } else {
         await Agreement.create(db, {
           forestFileId: agreementId,
           ...record,
+        });
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'agreement.created',
+          entityType: 'agreement',
+          entityId: agreementId,
+          agreementId,
+          metadata: {
+            fields: ['agreementStartDate', 'agreementEndDate', 'zoneId', 'agreementTypeId', 'retired'],
+          },
         });
         created += 1;
       }
@@ -256,6 +283,40 @@ const updateAgreement = async (data: any[]) => {
   const unretiredAgreementIds = await Agreement.unretireAgreements(db, activeFTAAgreementIds);
   const retiredAgreementIds = await Agreement.retireAgreements(db, activeFTAAgreementIds);
   await Agreement.unretirePlans(db, activeFTAAgreementIds);
+
+  for (const unretiredAgreementId of unretiredAgreementIds) {
+    await writeDomainAudit(db, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.import',
+      action: 'agreement.updated',
+      entityType: 'agreement',
+      entityId: unretiredAgreementId,
+      agreementId: unretiredAgreementId,
+      metadata: {
+        field: 'retired',
+        to: false,
+        source: 'unretireAgreements',
+      },
+    });
+  }
+
+  for (const retiredAgreementId of retiredAgreementIds) {
+    await writeDomainAudit(db, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.import',
+      action: 'agreement.updated',
+      entityType: 'agreement',
+      entityId: retiredAgreementId,
+      agreementId: retiredAgreementId,
+      metadata: {
+        field: 'retired',
+        to: true,
+        source: 'retireAgreements',
+      },
+    });
+  }
 
   console.log(`Unretired Agreements: ${unretiredAgreementIds}`);
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
@@ -385,6 +446,18 @@ const updateClient = async (data: any[]) => {
             endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
           },
         );
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'client.updated',
+          entityType: 'client',
+          entityId: clientNumber,
+          agreementId,
+          metadata: {
+            fields: ['name', 'locationCodes', 'startDate', 'endDate'],
+          },
+        });
         updated += 1;
       } else {
         client = await Client.create(db, {
@@ -392,6 +465,18 @@ const updateClient = async (data: any[]) => {
           name: clientName || 'Unknown Name',
           locationCodes: [clientLocationCode],
           startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+        });
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'client.created',
+          entityType: 'client',
+          entityId: clientNumber,
+          agreementId,
+          metadata: {
+            fields: ['name', 'locationCodes', 'startDate'],
+          },
         });
         created += 1;
       }
@@ -584,7 +669,9 @@ const loadFTADataFromAPI = async () => {
 
 const main = async () => {
   try {
-    await loadFTADataFromAPI();
+    await runAuditedBackgroundJob(db, 'import', async () => {
+      await loadFTADataFromAPI();
+    });
   } catch (err: any) {
     console.log(`Error importing data, message = ${err.message}`);
 
@@ -594,4 +681,9 @@ const main = async () => {
   process.exit(0);
 };
 
-main();
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
+  main();
+}
+
+export { main };

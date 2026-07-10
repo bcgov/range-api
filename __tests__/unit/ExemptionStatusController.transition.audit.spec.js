@@ -133,7 +133,7 @@ describe('ExemptionStatusController.transition semantic audit', () => {
     mockWriteDomainAudit.mockResolvedValue(undefined);
   });
 
-  it('writes semantic event after successful transition', async () => {
+  it('writes exemption semantic event after successful transition', async () => {
     const { default: ExemptionStatusController } =
       await import('../../src/router/controllers_v1/ExemptionStatusController.ts');
 

@@ -1,6 +1,8 @@
 import { logger } from '../src/libs/bcgov-shim.js';
 import DataManager from '../src/libs/db2/index.js';
 import config from '../src/config/index.js';
+import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
+import { SYSTEM_USER_ID } from '../src/constants.js';
 import {
   calcTotalAUMs,
   calcPldAUMs,
@@ -173,6 +175,22 @@ const processAgreementUsageStatus = async (
 
     await dbConnection.updateTable('agreement').set(updateData).where('forest_file_id', '=', forestFileId).execute();
 
+    await writeDomainAudit(dbConnection, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.process_no_use',
+      action: 'agreement.updated',
+      entityType: 'agreement',
+      entityId: forestFileId,
+      agreementId: forestFileId,
+      metadata: {
+        fields: ['usage_status', 'percentage_use', 'has_current_schedule'],
+        usageStatus,
+        percentageUse,
+        hasCurrentSchedule: scheduleExists ? 1 : 0,
+      },
+    });
+
     logger.info(`Successfully updated usage status for agreement ${forestFileId}`);
     return { forestFileId, usageStatus, percentageUse, scheduleExists };
   } catch (error: any) {
@@ -208,7 +226,9 @@ const processNoUseStatus = async () => {
 
 const main = async () => {
   try {
-    await processNoUseStatus();
+    await runAuditedBackgroundJob(db, 'process_no_use', async () => {
+      await processNoUseStatus();
+    });
     process.exit(0);
   } catch (error: any) {
     logger.error(`Fatal error: ${error.message}`);

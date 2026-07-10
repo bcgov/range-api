@@ -1,6 +1,7 @@
 import config from '../src/config/index.js';
 import { PLAN_EXTENSION_STATUS, SYSTEM_USER_ID } from '../src/constants.js';
 import DataManager from '../src/libs/db2/index.js';
+import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
 import {
   updateAgreementExemptions,
   sendAgreementExemptionStatusEmails,
@@ -26,6 +27,20 @@ const activateReplacementPlans = async (trx: any) => {
         extension_status: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
       },
     );
+    await writeDomainAudit(trx, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.plan_extension_exemption',
+      action: 'plan.updated',
+      entityType: 'plan',
+      entityId: result.id,
+      agreementId: result.agreement_id,
+      metadata: {
+        field: 'extension_status',
+        to: PLAN_EXTENSION_STATUS.ACTIVE_REPLACEMENT_PLAN,
+      },
+    });
+
     await Plan.update(
       trx,
       { id: result.replacement_of },
@@ -33,6 +48,19 @@ const activateReplacementPlans = async (trx: any) => {
         extension_status: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
       },
     );
+    await writeDomainAudit(trx, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.plan_extension_exemption',
+      action: 'plan.updated',
+      entityType: 'plan',
+      entityId: result.replacement_of,
+      agreementId: result.agreement_id,
+      metadata: {
+        field: 'extension_status',
+        to: PLAN_EXTENSION_STATUS.REPLACED_WITH_REPLACEMENT_PLAN,
+      },
+    });
   }
 };
 
@@ -53,58 +81,104 @@ const processExpiredPlans = async (trx: any) => {
         status_id: 26,
       },
     );
+    await writeDomainAudit(trx, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.plan_extension_exemption',
+      action: 'plan.updated',
+      entityType: 'plan',
+      entityId: result.id,
+      agreementId: result.agreement_id,
+      metadata: {
+        field: 'status_id',
+        to: 26,
+      },
+    });
   }
 };
 
 const main = async () => {
   try {
-    await db.transaction().execute(async (trx: any) => {
-      const systemUser = await User.findById(trx, SYSTEM_USER_ID);
-      if (!systemUser) {
-        throw new Error('System user not found. Please ensure a user with SYSTEM_USER_ID exists.');
-      }
-
-      const currentDate = new Date();
-      const oneYearLater = new Date();
-      oneYearLater.setMonth(currentDate.getMonth() + 12);
-      const expiringPlans = await Plan.fetchExpiringPlans(trx, currentDate, oneYearLater, 'plan.id');
-      const requiredVotes: Record<string, number> = {};
-      for (const expiringPlan of expiringPlans) {
-        console.log(`Processing ${expiringPlan.planId}`);
-        try {
-          await PlanExtensionRequests.create(trx, {
-            planId: expiringPlan.planId,
-            clientId: expiringPlan.clientId,
-            userId: expiringPlan.userId,
-            email: expiringPlan.email,
-          });
-          if (requiredVotes[expiringPlan.planId] === undefined) requiredVotes[expiringPlan.planId] = 1;
-          else requiredVotes[expiringPlan.planId] = requiredVotes[expiringPlan.planId] + 1;
-          if (expiringPlan.email) {
-            await NotificationHelper.sendEmail(db, [expiringPlan.email], 'Request Plan Extension Votes', {
-              '{agreementId}': expiringPlan.agreementId,
-            });
-          }
-        } catch (error) {
-          console.error(error);
+    await runAuditedBackgroundJob(db, 'plan_extension_exemption', async () => {
+      await db.transaction().execute(async (trx: any) => {
+        const systemUser = await User.findById(trx, SYSTEM_USER_ID);
+        if (!systemUser) {
+          throw new Error('System user not found. Please ensure a user with SYSTEM_USER_ID exists.');
         }
-      }
-      for (const planId of Object.keys(requiredVotes)) {
-        await Plan.update(
-          trx,
-          { id: planId },
-          {
-            extensionRequiredVotes: requiredVotes[planId],
-            extensionReceivedVotes: 0,
-            extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
-            extensionDate: null,
-          },
-        );
-      }
-      await processExpiredPlans(trx);
-      await activateReplacementPlans(trx);
-      const updates = await updateAgreementExemptions(trx, systemUser);
-      await sendAgreementExemptionStatusEmails(trx, updates);
+
+        const currentDate = new Date();
+        const oneYearLater = new Date();
+        oneYearLater.setMonth(currentDate.getMonth() + 12);
+        const expiringPlans = await Plan.fetchExpiringPlans(trx, currentDate, oneYearLater, 'plan.id');
+        const requiredVotes: Record<string, number> = {};
+        for (const expiringPlan of expiringPlans) {
+          console.log(`Processing ${expiringPlan.planId}`);
+          try {
+            await PlanExtensionRequests.create(trx, {
+              planId: expiringPlan.planId,
+              clientId: expiringPlan.clientId,
+              userId: expiringPlan.userId,
+              email: expiringPlan.email,
+            });
+            if (requiredVotes[expiringPlan.planId] === undefined) requiredVotes[expiringPlan.planId] = 1;
+            else requiredVotes[expiringPlan.planId] = requiredVotes[expiringPlan.planId] + 1;
+            if (expiringPlan.email) {
+              await NotificationHelper.sendEmail(db, [expiringPlan.email], 'Request Plan Extension Votes', {
+                '{agreementId}': expiringPlan.agreementId,
+              });
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        }
+        for (const planId of Object.keys(requiredVotes)) {
+          await Plan.update(
+            trx,
+            { id: planId },
+            {
+              extensionRequiredVotes: requiredVotes[planId],
+              extensionReceivedVotes: 0,
+              extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+              extensionDate: null,
+            },
+          );
+          const currentPlan = await Plan.findById(trx, planId);
+          await writeDomainAudit(trx, {
+            userId: SYSTEM_USER_ID,
+            method: 'SYSTEM',
+            path: 'background_job.plan_extension_exemption',
+            action: 'plan.updated',
+            entityType: 'plan',
+            entityId: planId,
+            agreementId: currentPlan?.agreementId || null,
+            metadata: {
+              fields: ['extensionRequiredVotes', 'extensionReceivedVotes', 'extensionStatus', 'extensionDate'],
+              extensionRequiredVotes: requiredVotes[planId],
+              extensionReceivedVotes: 0,
+              extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+            },
+          });
+        }
+        await processExpiredPlans(trx);
+        await activateReplacementPlans(trx);
+        const updates = await updateAgreementExemptions(trx, systemUser);
+        for (const update of updates) {
+          await writeDomainAudit(trx, {
+            userId: SYSTEM_USER_ID,
+            method: 'SYSTEM',
+            path: 'background_job.plan_extension_exemption',
+            action: 'agreement.updated',
+            entityType: 'agreement',
+            entityId: update.agreementId,
+            agreementId: update.agreementId,
+            metadata: {
+              field: 'exemption_status',
+              to: update.status,
+            },
+          });
+        }
+        await sendAgreementExemptionStatusEmails(trx, updates);
+      });
     });
     console.log('Script completed successfully.');
   } catch (err) {

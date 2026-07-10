@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { NextFunction, Request, Response } from 'express';
+import type { Request } from 'express';
 import { logger } from './bcgov-shim.js';
 import AuditLog from './db2/model/auditlog.js';
 
@@ -15,8 +15,6 @@ interface RouteContext {
 type AuditedRequest = Request & {
   user?: AuditUserContext;
   route?: RouteContext;
-  auditRequestId?: string;
-  auditCorrelationId?: string;
 };
 
 const MAX_METADATA_LENGTH = 12 * 1024;
@@ -29,37 +27,6 @@ const DEFAULT_RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const REDACTED = '[REDACTED]';
 const sensitiveKeyPatterns = [/authorization/i, /cookie/i, /token/i, /password/i, /secret/i, /api[_-]?key/i];
 
-const highRiskPathPatterns = [/\/attachment/i, /\/files/i, /\/emailtemplate/i, /\/exemption/i];
-const highRiskAllowedKeys = new Set([
-  'planId',
-  'agreementId',
-  'userId',
-  'clientId',
-  'exemptionId',
-  'extensionRequestId',
-]);
-
-export type AuditReasonCode = 'missing_bearer_token' | 'invalid_or_rejected_token';
-
-export interface RequestAuditPayload {
-  requestId: string;
-  correlationId: string;
-  userId: number | null;
-  roleId: number | null;
-  method: string;
-  path: string;
-  route: string | null;
-  statusCode: number;
-  durationMs: number;
-  success: boolean;
-  authReasonCode: AuditReasonCode | null;
-  action?: string | null;
-  entityType?: string | null;
-  entityId?: string | null;
-  agreementId?: string | null;
-  metadata?: unknown;
-}
-
 export interface DomainAuditPayload {
   requestId?: string | null;
   correlationId?: string | null;
@@ -71,7 +38,6 @@ export interface DomainAuditPayload {
   statusCode?: number;
   durationMs?: number | null;
   success?: boolean;
-  authReasonCode?: AuditReasonCode | null;
   action: string;
   entityType: string;
   entityId: string | number;
@@ -87,6 +53,10 @@ export interface AuditHealthSnapshot {
   lastRetentionRunAt: string | null;
   lastRetentionDeletedCount: number;
   lastRetentionError: string | null;
+}
+
+export interface BackgroundJobAuditOptions {
+  metadata?: unknown;
 }
 
 interface DeleteResultRow {
@@ -221,16 +191,34 @@ export function startAuditRetentionScheduler(db: RetentionDb, options: Retention
 
   const intervalMs = options.intervalMs || DEFAULT_RETENTION_INTERVAL_MS;
   const retentionDays = options.retentionDays || parseRetentionDays(process.env.AUDIT_RETENTION_DAYS);
-  void runAuditRetentionCleanup(db, retentionDays);
-
-  const timer = setInterval(() => {
-    void runAuditRetentionCleanup(db, retentionDays);
-  }, intervalMs);
-
-  retentionSchedulerStopper = () => {
+  const stopWithReset = () => {
     clearInterval(timer);
     retentionSchedulerStopper = null;
   };
+
+  void runAuditRetentionCleanup(db, retentionDays).then(() => {
+    if (
+      auditHealth.lastRetentionError &&
+      auditHealth.lastRetentionError.includes('relation "audit_log" does not exist')
+    ) {
+      logger.warn('audit retention cleanup disabled: audit_log table is missing');
+      stopWithReset();
+    }
+  });
+
+  const timer = setInterval(() => {
+    void runAuditRetentionCleanup(db, retentionDays).then(() => {
+      if (
+        auditHealth.lastRetentionError &&
+        auditHealth.lastRetentionError.includes('relation "audit_log" does not exist')
+      ) {
+        logger.warn('audit retention cleanup disabled: audit_log table is missing');
+        stopWithReset();
+      }
+    });
+  }, intervalMs);
+
+  retentionSchedulerStopper = stopWithReset;
 
   return retentionSchedulerStopper;
 }
@@ -293,73 +281,6 @@ export function capMetadata(metadata: unknown): unknown {
   };
 }
 
-function isHighRiskPath(pathname: string): boolean {
-  return highRiskPathPatterns.some((pattern) => pattern.test(pathname));
-}
-
-function pickAllowed(data: Record<string, unknown>): Record<string, unknown> {
-  const filtered: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (highRiskAllowedKeys.has(key)) {
-      filtered[key] = value;
-    }
-  }
-  return filtered;
-}
-
-function deriveAuthReasonCode(req: Request, res: Response): AuditReasonCode | null {
-  const auditedReq = req as AuditedRequest;
-  if (auditedReq.user) return null;
-  if (![401, 403].includes(res.statusCode)) return null;
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return 'missing_bearer_token';
-  return 'invalid_or_rejected_token';
-}
-
-function routeValue(req: Request): string | null {
-  const auditedReq = req as AuditedRequest;
-  if (auditedReq.route && auditedReq.route.path) {
-    return `${req.baseUrl || ''}${auditedReq.route.path}`;
-  }
-  return null;
-}
-
-function buildRequestMetadata(req: Request): unknown {
-  const highRisk = isHighRiskPath(req.path);
-  const params = highRisk ? pickAllowed(req.params as Record<string, unknown>) : req.params;
-  const query = highRisk ? pickAllowed(req.query as Record<string, unknown>) : req.query;
-
-  return {
-    params,
-    query,
-    highRisk,
-    ip: req.ip,
-  };
-}
-
-export async function writeRequestAudit(db: unknown, payload: RequestAuditPayload): Promise<void> {
-  if (!isAuditEnabled()) return;
-
-  await AuditLog.create(db, {
-    requestId: payload.requestId,
-    correlationId: payload.correlationId,
-    userId: payload.userId,
-    roleId: payload.roleId,
-    method: payload.method,
-    path: payload.path,
-    route: payload.route,
-    statusCode: payload.statusCode,
-    durationMs: payload.durationMs,
-    success: payload.success,
-    authReasonCode: payload.authReasonCode,
-    action: payload.action || null,
-    entityType: payload.entityType || null,
-    entityId: payload.entityId || null,
-    agreementId: payload.agreementId || null,
-    metadata: capMetadata(payload.metadata || {}),
-  });
-}
-
 export async function writeDomainAudit(db: unknown, payload: DomainAuditPayload): Promise<void> {
   if (!isAuditEnabled()) return;
 
@@ -375,7 +296,7 @@ export async function writeDomainAudit(db: unknown, payload: DomainAuditPayload)
       statusCode: payload.statusCode || 200,
       durationMs: payload.durationMs ?? null,
       success: payload.success !== false,
-      authReasonCode: payload.authReasonCode || null,
+      authReasonCode: null,
       action: payload.action,
       entityType: payload.entityType,
       entityId: String(payload.entityId),
@@ -389,40 +310,47 @@ export async function writeDomainAudit(db: unknown, payload: DomainAuditPayload)
   }
 }
 
-export function requestAuditMiddleware(db: unknown) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const auditedReq = req as AuditedRequest;
-    const startedAt = Date.now();
-    const requestId = randomUUID();
-    const correlationId = getCorrelationId(req.headers);
+export async function runAuditedBackgroundJob<T>(
+  db: unknown,
+  jobName: string,
+  runner: () => Promise<T>,
+  options: BackgroundJobAuditOptions = {},
+): Promise<T> {
+  await writeDomainAudit(db, {
+    userId: null,
+    method: 'SYSTEM',
+    path: `background_job.${jobName}`,
+    action: 'background_job.started',
+    entityType: 'background_job',
+    entityId: jobName,
+    metadata: options.metadata,
+  });
 
-    auditedReq.auditRequestId = requestId;
-    auditedReq.auditCorrelationId = correlationId;
-
-    res.on('finish', () => {
-      const durationMs = Date.now() - startedAt;
-      const user = auditedReq.user;
-      const payload: RequestAuditPayload = {
-        requestId,
-        correlationId,
-        userId: user?.id || null,
-        roleId: user?.roleId || null,
-        method: req.method,
-        path: req.originalUrl || req.path,
-        route: routeValue(req),
-        statusCode: res.statusCode,
-        durationMs,
-        success: res.statusCode < 400,
-        authReasonCode: deriveAuthReasonCode(req, res),
-        metadata: buildRequestMetadata(req),
-      };
-
-      void writeRequestAudit(db, payload).catch((err: Error) => {
-        auditHealth.requestWriteFailures += 1;
-        logger.error(`audit write failed: ${err.message}`);
-      });
+  try {
+    const result = await runner();
+    await writeDomainAudit(db, {
+      userId: null,
+      method: 'SYSTEM',
+      path: `background_job.${jobName}`,
+      action: 'background_job.completed',
+      entityType: 'background_job',
+      entityId: jobName,
+      metadata: options.metadata,
     });
-
-    next();
-  };
+    return result;
+  } catch (err) {
+    await writeDomainAudit(db, {
+      userId: null,
+      method: 'SYSTEM',
+      path: `background_job.${jobName}`,
+      action: 'background_job.failed',
+      entityType: 'background_job',
+      entityId: jobName,
+      metadata: {
+        ...((options.metadata as Record<string, unknown>) || {}),
+        error: err instanceof Error ? err.message : String(err),
+      },
+    });
+    throw err;
+  }
 }

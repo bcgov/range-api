@@ -329,13 +329,14 @@ export default class PlanStatusController {
             method: req.method,
             path: req.originalUrl,
             route: req.route?.path || null,
-            action: 'plan.amendment.submitted',
+            action: 'plan.status.changed',
             entityType: 'plan',
             entityId: planId,
             agreementId,
             metadata: {
               confirmationId,
               isMinorAmendment: isMinorAmendment === 'true',
+              trigger: 'amendment_confirmation_completed',
               resultingStatusId: status.id,
             },
           });

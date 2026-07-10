@@ -120,7 +120,7 @@ describe('PlanExtensionController.extendPlan', () => {
     expect(mockWriteDomainAudit).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        action: 'plan.extension.extended',
+        action: 'plan.status.changed',
         entityType: 'plan',
         entityId: '1199',
         requestId: 'req-1',

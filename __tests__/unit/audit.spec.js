@@ -1,5 +1,3 @@
-import express from 'express';
-import request from 'supertest';
 import AuditLog from '../../src/libs/db2/model/auditlog.js';
 import {
   capMetadata,
@@ -12,7 +10,6 @@ import {
   resetAuditHealthSnapshot,
   stopAuditRetentionSchedulerForTests,
   startAuditRetentionScheduler,
-  requestAuditMiddleware,
   writeDomainAudit,
 } from '../../src/libs/audit.js';
 
@@ -59,69 +56,6 @@ describe('audit utilities', () => {
 
     const result = capMetadata(payload);
     expect(result.text.endsWith('...[TRUNCATED]')).toBe(true);
-  });
-});
-
-describe('audit middleware', () => {
-  const prevEnableAudit = process.env.ENABLE_AUDIT_LOG;
-
-  beforeAll(() => {
-    process.env.ENABLE_AUDIT_LOG = 'true';
-  });
-
-  afterAll(() => {
-    if (prevEnableAudit === undefined) {
-      delete process.env.ENABLE_AUDIT_LOG;
-      return;
-    }
-    process.env.ENABLE_AUDIT_LOG = prevEnableAudit;
-  });
-
-  beforeEach(() => {
-    resetAuditHealthSnapshot();
-    expect(isAuditEnabled()).toBe(true);
-    AuditLog.create = vi.fn().mockResolvedValue({ id: 1 });
-  });
-
-  test('writes request audit for authenticated request', async () => {
-    const app = express();
-    app.use(requestAuditMiddleware({}));
-    app.use((req, _res, next) => {
-      req.user = { id: 77, roleId: 3 };
-      next();
-    });
-    app.get('/api/v1/plan/:planId', (req, res) => {
-      res.status(200).json({ ok: true });
-    });
-
-    await request(app).get('/api/v1/plan/123?token=abc').set('x-correlation-id', 'cid-test').expect(200);
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(AuditLog.create).toHaveBeenCalledTimes(1);
-    const [, payload] = AuditLog.create.mock.calls[0];
-    expect(payload.userId).toBe(77);
-    expect(payload.method).toBe('GET');
-    expect(payload.success).toBe(true);
-    expect(payload.correlationId).toBe('cid-test');
-    expect(payload.authReasonCode).toBe(null);
-  });
-
-  test('writes request audit for failed auth with coarse reason', async () => {
-    const app = express();
-    app.use(requestAuditMiddleware({}));
-    app.get('/api/v1/exemption/:exemptionId', (req, res) => {
-      res.status(401).json({ error: 'Unauthorized' });
-    });
-
-    await request(app).get('/api/v1/exemption/9').expect(401);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(AuditLog.create).toHaveBeenCalledTimes(1);
-    const [, payload] = AuditLog.create.mock.calls[0];
-    expect(payload.userId).toBe(null);
-    expect(payload.authReasonCode).toBe('missing_bearer_token');
-    expect(payload.metadata.highRisk).toBe(true);
   });
 });
 
@@ -220,6 +154,33 @@ describe('audit retention', () => {
       expect(snapshot.retentionRuns).toBeGreaterThan(0);
       expect(snapshot.retentionFailures).toBe(0);
       expect(snapshot.lastRetentionDeletedCount).toBe(3);
+    } finally {
+      if (prevRetention === undefined) {
+        delete process.env.ENABLE_AUDIT_RETENTION_CLEANUP;
+      } else {
+        process.env.ENABLE_AUDIT_RETENTION_CLEANUP = prevRetention;
+      }
+    }
+  });
+
+  test('scheduler disables itself when audit_log table is missing', async () => {
+    resetAuditHealthSnapshot();
+    const prevRetention = process.env.ENABLE_AUDIT_RETENTION_CLEANUP;
+    process.env.ENABLE_AUDIT_RETENTION_CLEANUP = 'true';
+
+    try {
+      const executeTakeFirst = vi.fn().mockRejectedValue(new Error('relation "audit_log" does not exist'));
+      const where = vi.fn().mockReturnValue({ executeTakeFirst });
+      const deleteFrom = vi.fn().mockReturnValue({ where });
+
+      const stop = startAuditRetentionScheduler({ deleteFrom }, { intervalMs: 60, retentionDays: 365 });
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      stop();
+
+      expect(deleteFrom).toHaveBeenCalledTimes(1);
+      const snapshot = getAuditHealthSnapshot({ includeErrors: true });
+      expect(snapshot.retentionFailures).toBeGreaterThan(0);
+      expect(snapshot.lastRetentionError).toContain('relation "audit_log" does not exist');
     } finally {
       if (prevRetention === undefined) {
         delete process.env.ENABLE_AUDIT_RETENTION_CLEANUP;
