@@ -3,20 +3,6 @@ import type { Request } from 'express';
 import { logger } from './bcgov-shim.js';
 import AuditLog from './db2/model/auditlog.js';
 
-interface AuditUserContext {
-  id?: number;
-  roleId?: number;
-}
-
-interface RouteContext {
-  path?: string;
-}
-
-type AuditedRequest = Request & {
-  user?: AuditUserContext;
-  route?: RouteContext;
-};
-
 const MAX_METADATA_LENGTH = 12 * 1024;
 const MAX_STRING_LENGTH = 300;
 const MAX_ARRAY_ITEMS = 25;
