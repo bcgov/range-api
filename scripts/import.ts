@@ -61,6 +61,18 @@ const updateDistrict = async (data: any[]) => {
         code: districtCode,
         description: 'No description available',
       });
+      await writeDomainAudit(db, {
+        userId: SYSTEM_USER_ID,
+        method: 'SYSTEM',
+        path: 'background_job.import',
+        action: 'district.created',
+        entityType: 'district',
+        entityId: districtCode,
+        agreementId,
+        metadata: {
+          fields: ['code', 'description'],
+        },
+      });
       created += 1;
     } catch (error: any) {
       console.log(`Error with message = ${error.message}, District Code ${districtCode} row: ${index + 2}`);
@@ -371,6 +383,18 @@ const updateUsage = async (data: any[]) => {
             agreementId: agreement.forestFileId,
           },
         );
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'usage.updated',
+          entityType: 'usage',
+          entityId: `${agreementId}:${calendar_year}`,
+          agreementId,
+          metadata: {
+            fields: ['year', 'authorizedAum', 'temporaryIncrease', 'totalNonUse', 'totalAnnualUse'],
+          },
+        });
         updated += 1;
       } else {
         await Usage.create(db, {
@@ -380,6 +404,18 @@ const updateUsage = async (data: any[]) => {
           totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
           totalAnnualUse: Number(total_annual_use) || 0,
           agreementId: agreement.forestFileId,
+        });
+        await writeDomainAudit(db, {
+          userId: SYSTEM_USER_ID,
+          method: 'SYSTEM',
+          path: 'background_job.import',
+          action: 'usage.created',
+          entityType: 'usage',
+          entityId: `${agreementId}:${calendar_year}`,
+          agreementId,
+          metadata: {
+            fields: ['year', 'authorizedAum', 'temporaryIncrease', 'totalNonUse', 'totalAnnualUse'],
+          },
         });
         created += 1;
       }
@@ -686,4 +722,4 @@ if (process.argv[1] === __filename) {
   main();
 }
 
-export { main };
+export { main, updateUsage, updateDistrict };
