@@ -79,6 +79,10 @@ describe('import background job semantic audit', () => {
         entityId: 'D01',
         agreementId: 'RAN000001',
         method: 'SYSTEM',
+        metadata: expect.objectContaining({
+          code: 'D01',
+          description: 'No description available',
+        }),
       }),
     );
   });
@@ -108,6 +112,13 @@ describe('import background job semantic audit', () => {
         entityId: 'RAN000001:2026',
         agreementId: 'RAN000001',
         method: 'SYSTEM',
+        metadata: expect.objectContaining({
+          year: 2026,
+          authorizedAum: 100,
+          temporaryIncrease: 0,
+          totalNonUse: 3,
+          totalAnnualUse: 97,
+        }),
       }),
     );
   });
@@ -137,6 +148,13 @@ describe('import background job semantic audit', () => {
         entityId: 'RAN000001:2026',
         agreementId: 'RAN000001',
         method: 'SYSTEM',
+        metadata: expect.objectContaining({
+          year: 2026,
+          authorizedAum: 100,
+          temporaryIncrease: 0,
+          totalNonUse: 3,
+          totalAnnualUse: 97,
+        }),
       }),
     );
   });

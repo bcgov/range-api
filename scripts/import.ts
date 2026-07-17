@@ -71,6 +71,8 @@ const updateDistrict = async (data: any[]) => {
         agreementId,
         metadata: {
           fields: ['code', 'description'],
+          code: districtCode,
+          description: 'No description available',
         },
       });
       created += 1;
@@ -261,6 +263,11 @@ const updateAgreement = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['agreementStartDate', 'agreementEndDate', 'zoneId', 'agreementTypeId', 'retired'],
+            agreementStartDate: record.agreementStartDate,
+            agreementEndDate: record.agreementEndDate,
+            zoneId: record.zoneId,
+            agreementTypeId: record.agreementTypeId,
+            retired: record.retired,
           },
         });
         updated += 1;
@@ -279,6 +286,11 @@ const updateAgreement = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['agreementStartDate', 'agreementEndDate', 'zoneId', 'agreementTypeId', 'retired'],
+            agreementStartDate: record.agreementStartDate,
+            agreementEndDate: record.agreementEndDate,
+            zoneId: record.zoneId,
+            agreementTypeId: record.agreementTypeId,
+            retired: record.retired,
           },
         });
         created += 1;
@@ -371,15 +383,21 @@ const updateUsage = async (data: any[]) => {
       });
 
       if (usage) {
+        const usageYear = Number(calendar_year);
+        const authorizedAum = Number(authorized_use) || 0;
+        const temporaryIncrease = Number(temp_increase) || 0;
+        const totalNonUse = Number(non_use_nonbillable) + Number(non_use_billable) || 0;
+        const totalAnnualUse = Number(total_annual_use) || 0;
+
         await Usage.update(
           db,
           { id: usage.id },
           {
-            year: Number(calendar_year),
-            authorizedAum: Number(authorized_use) || 0,
-            temporaryIncrease: Number(temp_increase) || 0,
-            totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
-            totalAnnualUse: Number(total_annual_use) || 0,
+            year: usageYear,
+            authorizedAum,
+            temporaryIncrease,
+            totalNonUse,
+            totalAnnualUse,
             agreementId: agreement.forestFileId,
           },
         );
@@ -393,16 +411,27 @@ const updateUsage = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['year', 'authorizedAum', 'temporaryIncrease', 'totalNonUse', 'totalAnnualUse'],
+            year: usageYear,
+            authorizedAum,
+            temporaryIncrease,
+            totalNonUse,
+            totalAnnualUse,
           },
         });
         updated += 1;
       } else {
+        const usageYear = Number(calendar_year);
+        const authorizedAum = Number(authorized_use) || 0;
+        const temporaryIncrease = Number(temp_increase) || 0;
+        const totalNonUse = Number(non_use_nonbillable) + Number(non_use_billable) || 0;
+        const totalAnnualUse = Number(total_annual_use) || 0;
+
         await Usage.create(db, {
-          year: Number(calendar_year),
-          authorizedAum: Number(authorized_use) || 0,
-          temporaryIncrease: Number(temp_increase) || 0,
-          totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
-          totalAnnualUse: Number(total_annual_use) || 0,
+          year: usageYear,
+          authorizedAum,
+          temporaryIncrease,
+          totalNonUse,
+          totalAnnualUse,
           agreementId: agreement.forestFileId,
         });
         await writeDomainAudit(db, {
@@ -415,6 +444,11 @@ const updateUsage = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['year', 'authorizedAum', 'temporaryIncrease', 'totalNonUse', 'totalAnnualUse'],
+            year: usageYear,
+            authorizedAum,
+            temporaryIncrease,
+            totalNonUse,
+            totalAnnualUse,
           },
         });
         created += 1;
@@ -492,6 +526,10 @@ const updateClient = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['name', 'locationCodes', 'startDate', 'endDate'],
+            name: clientName || 'Unknown Name',
+            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
+            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+            endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
           },
         });
         updated += 1;
@@ -512,6 +550,9 @@ const updateClient = async (data: any[]) => {
           agreementId,
           metadata: {
             fields: ['name', 'locationCodes', 'startDate'],
+            name: clientName || 'Unknown Name',
+            locationCodes: [clientLocationCode],
+            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
           },
         });
         created += 1;
