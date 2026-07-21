@@ -17,4 +17,5 @@ createApp()
   .catch((err: Error) => {
     logger.error('There was a problem creating the server.');
     logger.error(`Error: ${err.message}`);
+    process.exitCode = 1;
   });

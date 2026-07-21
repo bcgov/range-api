@@ -26,21 +26,20 @@ async function createApp(): Promise<Application> {
 
   initRouter(app);
 
-  const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-    logger.error(err.message);
+  const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    logger.error(err instanceof Error ? err.message : 'Unhandled application error');
     let code = 500;
-    if (typeof err.code === 'number' && err.code >= 100 && err.code <= 511) {
+    if (typeof err?.code === 'number' && err.code >= 100 && err.code <= 511) {
       ({ code } = err);
     }
 
-    const message = err.message ? err.message : 'Internal Server Error';
+    const message = err instanceof Error && err.message ? err.message : 'Internal Server Error';
 
     res.status(code).json({ error: message, success: false });
-
-    const env = process.env.NODE_ENV || '';
-    if (!['test', 'unit_test'].includes(env)) {
-      throw err;
-    }
   };
 
   app.use(errorHandler);
