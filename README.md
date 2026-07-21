@@ -148,11 +148,11 @@ In general, there are two separate docker-compose projects that allow for isolat
 
 3. Run tests:
    ```
-   docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
+   make local-test
    ```
-   (or `npm run test:watch`)
+   (or run `npm run test:watch` locally for fast feedback on non-DB unit tests)
 
-This way, tests run inside of a docker container, allowing for reproducability, but also still let you interact with Jest's watch mode.
+This way, tests run inside Docker for reproducibility, while local watch mode remains useful for quick non-DB unit test iteration.
 
 ## How to Contribute
 
