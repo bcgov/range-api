@@ -187,6 +187,28 @@ describe('Agreement model with Kysely', () => {
     expect(withoutPagination.length).toBe(total);
   });
 
+  test('findWithTypeZoneDistrictExemption with empty where array returns empty results', async () => {
+    const where = { forest_file_id: [] };
+    const filterSettings = { orderBy: 'agreement.forest_file_id', order: 'asc', columnFilters: {} };
+
+    const rows = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+    expect(Array.isArray(rows)).toBe(true);
+    expect(rows).toHaveLength(0);
+  });
+
+  test('findWithTypeZoneDistrictExemption with empty where array and countOnly returns zero', async () => {
+    const where = { forest_file_id: [] };
+    const filterSettings = {
+      countOnly: true,
+      orderBy: 'agreement.forest_file_id',
+      order: 'asc',
+      columnFilters: {},
+    };
+
+    const count = await Agreement.findWithTypeZoneDistrictExemption(db, where, filterSettings);
+    expect(count).toBe(0);
+  });
+
   describe('stable ordering', () => {
     const shortId = Math.random().toString(36).substring(2, 7).toUpperCase();
     const agreementId1 = `TIE${shortId}A`;

@@ -232,6 +232,11 @@ export default class Agreement extends KyselyModel {
       return [];
     }
 
+    const hasEmptyIn = Object.values(where).some((v) => Array.isArray(v) && v.length === 0);
+    if (hasEmptyIn) {
+      return filterSettings.countOnly === true ? 0 : [];
+    }
+
     const agreementSelect = [
       'agreement.forest_file_id',
       'agreement.agreement_start_date',

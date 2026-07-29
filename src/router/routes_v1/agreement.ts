@@ -30,6 +30,9 @@ const getAgreeementsForAH = async (user, filterSettings) => {
   const agreementIds = [...clientAgreements, ...agentClientAgreements].map(
     (clientAgreement) => clientAgreement.agreementId,
   );
+  if (agreementIds.length === 0) {
+    return [];
+  }
   const agreements = await Agreement.findWithAllRelations(
     db,
     {
@@ -84,6 +87,9 @@ const countAgreements = async (user, filterSettings) => {
     const agreementIds = [...clientAgreements, ...agentClientAgreements].map(
       (clientAgreement) => clientAgreement.agreementId,
     );
+    if (agreementIds.length === 0) {
+      return 0;
+    }
     return Agreement.findWithTypeZoneDistrictExemption(db, { forest_file_id: agreementIds }, countSettings);
   }
   if (user.isAdministrator() || user.canReadAll() || user.isRangeOfficer()) {
