@@ -482,12 +482,12 @@ export default class PlanController {
         removeCommonFields(plantCommunity);
         const newPlantCommunity = await PlantCommunity.create(trx, {
           ...plantCommunity,
-          pasture_id: newPasture.id,
+          pastureId: newPasture.id,
         });
         newPlantCommunity.indicatorPlants = await Promise.all(
           plantCommunity.indicatorPlants.map((indicatorPlant) => {
             removeCommonFields(indicatorPlant);
-            return IndicatorPlant.create(trx, { ...indicatorPlant, plant_community_id: newPlantCommunity.id });
+            return IndicatorPlant.create(trx, { ...indicatorPlant, plantCommunityId: newPlantCommunity.id });
           }),
         );
         newPlantCommunity.plantCommunityActions = await Promise.all(
@@ -495,7 +495,7 @@ export default class PlanController {
             removeCommonFields(plantCommunityAction);
             return PlantCommunityAction.create(trx, {
               ...plantCommunityAction,
-              plant_community_id: newPlantCommunity.id,
+              plantCommunityId: newPlantCommunity.id,
             });
           }),
         );
@@ -505,14 +505,14 @@ export default class PlanController {
             removeCommonFields(monitoringArea);
             const newMonitoringArea = await MonitoringArea.create(trx, {
               ...monitoringArea,
-              plant_community_id: newPlantCommunity.id,
+              plantCommunityId: newPlantCommunity.id,
             });
             const monitoringAreaPurposes = await MonitoringAreaPurpose.find(trx, {
               monitoring_area_id: oldMonitoringAreaId,
             });
             for (const purpose of monitoringAreaPurposes) {
               removeCommonFields(purpose);
-              await MonitoringAreaPurpose.create(trx, { ...purpose, monitoring_area_id: newMonitoringArea.id });
+              await MonitoringAreaPurpose.create(trx, { ...purpose, monitoringAreaId: newMonitoringArea.id });
             }
             return newMonitoringArea;
           }),
