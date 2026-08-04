@@ -12,6 +12,7 @@ const dialect = new PostgresDialect({
     database: config.db.database,
     user: config.db.user,
     password: config.db.password,
+    ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : undefined,
     max: 10,
   }),
 });
