@@ -75,7 +75,8 @@ function createDb(): Kysely<unknown> {
       host: process.env.POSTGRESQL_HOST,
       port: parseInt(process.env.POSTGRESQL_PORT || '5432', 10),
       database:
-        process.env.NODE_ENV === 'test' && process.env.POSTGRESQL_DATABASE_TEST
+        (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'unit_test') &&
+        process.env.POSTGRESQL_DATABASE_TEST
           ? process.env.POSTGRESQL_DATABASE_TEST
           : process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,

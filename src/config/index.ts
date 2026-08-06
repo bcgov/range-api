@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const env = process.env.NODE_ENV || 'development';
+const isTestEnvironment = env === 'test' || env === 'unit_test';
 
 if (env === 'development') {
   dotenv.config();
@@ -14,6 +15,10 @@ if (env === 'development') {
 
 if (!process.env.SSO_URL) {
   throw new Error('SSO_URL is not set');
+}
+
+if (isTestEnvironment && !process.env.POSTGRESQL_DATABASE_TEST) {
+  throw new Error('POSTGRESQL_DATABASE_TEST must be set when running tests');
 }
 
 interface DBConfig {
@@ -63,7 +68,7 @@ const config: Config = {
     user: process.env.POSTGRESQL_USER || '',
     password: process.env.POSTGRESQL_PASSWORD || '',
     database:
-      env === 'test' && process.env.POSTGRESQL_DATABASE_TEST
+      isTestEnvironment && process.env.POSTGRESQL_DATABASE_TEST
         ? process.env.POSTGRESQL_DATABASE_TEST
         : process.env.POSTGRESQL_DATABASE || '',
     host: process.env.POSTGRESQL_HOST || '',
