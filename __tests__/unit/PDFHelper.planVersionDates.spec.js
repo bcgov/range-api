@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { formatPlanVersionDates } from '../../src/router/helpers/PDFHelper.ts';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../src/libs/db2/model/agreement.js', () => ({ default: {} }));
 
 describe('formatPlanVersionDates', () => {
-  it('uses the BC timezone for dates near UTC midnight', () => {
+  it('uses the BC timezone for dates near UTC midnight', async () => {
+    const { formatPlanVersionDates } = await import('../../src/router/helpers/PDFHelper.ts');
+
     const plan = {
       originalApproval: { date: '2024-03-16T06:30:00.000Z' },
       amendmentSubmissions: [
