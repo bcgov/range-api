@@ -7,14 +7,22 @@ describe('dayjs', () => {
     dayjs = (await import('dayjs')).default;
     const isBetween = (await import('dayjs/plugin/isBetween.js')).default;
     const advancedFormat = (await import('dayjs/plugin/advancedFormat.js')).default;
+    const utc = (await import('dayjs/plugin/utc.js')).default;
+    const timezone = (await import('dayjs/plugin/timezone.js')).default;
     dayjs.extend(isBetween);
     dayjs.extend(advancedFormat);
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
   });
 
   it('formats dates', () => {
     const d = dayjs('2024-03-15');
     expect(d.format('MMM DD, YYYY')).toBe('Mar 15, 2024');
     expect(d.format('MMMM D')).toBe('March 15');
+  });
+
+  it('formats plan version dates in the BC timezone', () => {
+    expect(dayjs.utc('2024-03-16T06:30:00.000Z').tz('America/Vancouver').format('YYYY-MM-DD')).toBe('2024-03-15');
   });
 
   it('formats with ordinal Do', () => {

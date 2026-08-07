@@ -2,9 +2,13 @@ import pino from 'pino';
 import _dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween.js';
 import advancedFormat from 'dayjs/plugin/advancedFormat.js';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
 
 _dayjs.extend(isBetween);
 _dayjs.extend(advancedFormat);
+_dayjs.extend(utc);
+_dayjs.extend(timezone);
 
 export const dayjs = _dayjs;
 

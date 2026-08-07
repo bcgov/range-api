@@ -3,6 +3,24 @@ import { dayjs as moment } from '../../libs/bcgov-shim.js';
 import { DAYS_ON_THE_AVERAGE, NOT_PROVIDED } from '../../constants.js';
 import Agreement from '../../libs/db2/model/agreement.js';
 
+export const formatPlanVersionDate = (date) =>
+  date ? moment.utc(date).tz('America/Vancouver').format('YYYY-MM-DD') : date;
+
+export const formatPlanVersionDates = (plan) => {
+  if (plan.originalApproval) {
+    plan.originalApproval.date = formatPlanVersionDate(plan.originalApproval.date);
+  }
+
+  if (plan.amendmentSubmissions) {
+    plan.amendmentSubmissions.forEach((submission) => {
+      submission.createdAt = formatPlanVersionDate(submission.createdAt);
+      submission.approvedAt = formatPlanVersionDate(submission.approvedAt);
+    });
+  }
+
+  return plan;
+};
+
 const shift = (number, precision) => {
   const numArray = `${number}`.split('e');
   return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
