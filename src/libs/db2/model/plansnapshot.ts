@@ -94,7 +94,7 @@ export default class PlanSnapshot extends KyselyModel {
         'user_account.given_name',
       ])
       .where('plan_snapshot.plan_id', '=', planId)
-      .orderBy('plan_snapshot.created_at', 'desc');
+      .orderBy('plan_snapshot.created_at', 'asc');
     if (startDate) query = query.where('plan_snapshot.created_at', '<=', startDate);
     const results = await query.execute();
     const response: any[] = [];
@@ -102,7 +102,7 @@ export default class PlanSnapshot extends KyselyModel {
     let lastMinorAmendment: number | null = null;
     for (let index = 0; index < results.length; index++) {
       const row: any = results[index];
-      const nextRow: any = results[index + 1];
+      const previousRow: any = results[index - 1];
       row.isCurrentLegalVersion = false;
       if (row.snapshot?.amendmentTypeId === 4) {
         response.push({
@@ -130,7 +130,7 @@ export default class PlanSnapshot extends KyselyModel {
           amendmentType: amendmentTypeArray[1],
           snapshot: row.snapshot,
         });
-      } else if (row.status_id === 22 || (row.status_id === 23 && nextRow?.status_id !== 21)) {
+      } else if (row.status_id === 22 || (row.status_id === 23 && previousRow?.status_id !== 21)) {
         lastMandatoryAmendment = response.length;
         response.push({
           id: row.id,
@@ -175,10 +175,10 @@ export default class PlanSnapshot extends KyselyModel {
         }
       }
     }
-    const responseSorted = response.reverse();
-    const currentLegalVersion = responseSorted.find(
-      (resp: any) => Plan.legalStatuses.indexOf(resp.snapshot.statusId) !== -1,
-    );
+    const responseSorted = response;
+    const currentLegalVersion = [...responseSorted]
+      .reverse()
+      .find((resp: any) => Plan.legalStatuses.indexOf(resp.snapshot.statusId) !== -1);
     if (currentLegalVersion) currentLegalVersion.isCurrentLegalVersion = true;
     return responseSorted;
   }
