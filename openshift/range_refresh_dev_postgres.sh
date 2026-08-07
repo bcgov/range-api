@@ -140,6 +140,9 @@ spec:
   pipelineRef:
     name: ${MIGRATE_PIPELINE_NAME}
   serviceAccountName: ${MIGRATE_PIPELINE_SERVICE_ACCOUNT}
+  workspaces:
+  - name: openshift-pineline
+    emptyDir: {}
 PIPELINE_EOF
       fi
 
