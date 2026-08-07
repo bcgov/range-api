@@ -5,6 +5,7 @@ describe('config', () => {
     process.env.POSTGRESQL_USER = 'test_user';
     process.env.POSTGRESQL_PASSWORD = 'test_pass';
     process.env.POSTGRESQL_DATABASE = 'test_db';
+    process.env.POSTGRESQL_DATABASE_TEST = 'test_db';
     process.env.POSTGRESQL_HOST = 'test_host';
     process.env.POSTGRESQL_PORT = '5432';
     process.env.SSO_URL = 'https://sso.example.com';

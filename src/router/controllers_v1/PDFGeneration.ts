@@ -1,9 +1,10 @@
 // @ts-nocheck
 import Cdogs from '../../libs/cdogs.js';
 import Agreement from '../../libs/db2/model/agreement.js';
-import { AdditionalDetailsGenerator } from '../helpers/PDFHelper.js';
+import { AdditionalDetailsGenerator, formatPlanVersionDates } from '../helpers/PDFHelper.js';
 
 export const generatePlanPDF = async (plan) => {
+  formatPlanVersionDates(plan);
   const templateFile = Agreement.isGrazingSchedule(plan.agreement)
     ? './planTemplate_GrazingSchedule.docx'
     : './planTemplate_HaycuttingSchedule.docx';
