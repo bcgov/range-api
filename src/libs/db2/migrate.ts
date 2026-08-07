@@ -69,16 +69,17 @@ function parseUpSql(content: string): string {
 
 const { Pool } = pg;
 
-function createDb(): Kysely<unknown> {
+export function createDb(): Kysely<unknown> {
+  const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'unit_test';
+  if (isTestEnvironment && !process.env.POSTGRESQL_DATABASE_TEST) {
+    throw new Error('POSTGRESQL_DATABASE_TEST must be set when running migrations in a test environment');
+  }
+
   const dialect = new PostgresDialect({
     pool: new Pool({
       host: process.env.POSTGRESQL_HOST,
       port: parseInt(process.env.POSTGRESQL_PORT || '5432', 10),
-      database:
-        (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'unit_test') &&
-        process.env.POSTGRESQL_DATABASE_TEST
-          ? process.env.POSTGRESQL_DATABASE_TEST
-          : process.env.POSTGRESQL_DATABASE,
+      database: isTestEnvironment ? process.env.POSTGRESQL_DATABASE_TEST : process.env.POSTGRESQL_DATABASE,
       user: process.env.POSTGRESQL_USER,
       password: process.env.POSTGRESQL_PASSWORD,
       max: 10,
