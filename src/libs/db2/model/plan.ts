@@ -384,6 +384,12 @@ export default class Plan extends KyselyModel {
               if (!scheduleEntryCreator) return null;
               const originalPastureId = entry.pastureId ?? entry.pasture_id;
               const newPasture = newPastures.find((pasture) => pasture.original.id === originalPastureId);
+              if (!newPasture) {
+                throw errorWithCode(
+                  `Could not find restored pasture for schedule entry pasture ID ${originalPastureId}.`,
+                  400,
+                );
+              }
               const entryWithScheduleId =
                 scheduleEntryCreator === GrazingScheduleEntry
                   ? { ...entry, grazingScheduleId: newSchedule.id, pastureId: newPasture.id }

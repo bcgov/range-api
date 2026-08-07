@@ -47,6 +47,10 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
     await db.schema.raw(truncate('plan_file'));
     await db.schema.raw(truncate('plan_status_history'));
     await db.schema.raw(truncate('plan_confirmation'));
+    await db.schema.raw(truncate('grazing_schedule_entry'));
+    await db.schema.raw(truncate('haycutting_schedule_entry'));
+    await db.schema.raw(truncate('grazing_schedule'));
+    await db.schema.raw(truncate('ref_livestock'));
     await db.schema.raw(truncate('plan_snapshot'));
     await db.schema.raw(truncate('plan'));
     await db.schema.raw(truncate('agreement'));
@@ -57,6 +61,7 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
     await db('user_account').insert([seed.user]);
     await db('ref_district').insert([seed.district]);
     await db('ref_zone').insert([seed.zone]);
+    await db('ref_livestock').insert([{ id: 1, name: 'Test Livestock', au_factor: 1, active: true }]);
     await db('agreement').insert([seed.agreement]);
   });
 
@@ -142,6 +147,7 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
       uploaded: true,
       pastures: [
         {
+          id: 10,
           name: 'Restored Pasture',
           allowable_aum: 100,
           plan_id: 999,
@@ -164,7 +170,24 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
           ],
         },
       ],
-      schedules: [],
+      schedules: [
+        {
+          id: 10,
+          year: 2026,
+          plan_id: 999,
+          scheduleEntries: [
+            {
+              id: 20,
+              pastureId: 10,
+              livestockTypeId: 1,
+              dateIn: '2026-06-01',
+              dateOut: '2026-06-10',
+              livestockCount: 10,
+              graceDays: 0,
+            },
+          ],
+        },
+      ],
       additionalRequirements: [],
       ministerIssues: [],
       managementConsiderations: [],
@@ -212,6 +235,16 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
       .selectAll()
       .where('plant_community_id', '=', community.id)
       .executeTakeFirstOrThrow();
+    const schedule = await db
+      .selectFrom('grazing_schedule')
+      .selectAll()
+      .where('plan_id', '=', 1)
+      .executeTakeFirstOrThrow();
+    const scheduleEntry = await db
+      .selectFrom('grazing_schedule_entry')
+      .selectAll()
+      .where('grazing_schedule_id', '=', schedule.id)
+      .executeTakeFirstOrThrow();
 
     expect(pasture.plan_id).toBe(1);
     expect(community.pasture_id).toBe(pasture.id);
@@ -219,6 +252,8 @@ describe('PlanVersionController.restoreVersion() transaction', () => {
     expect(area.plant_community_id).toBe(community.id);
     expect(purpose.monitoring_area_id).toBe(area.id);
     expect(action.plant_community_id).toBe(community.id);
+    expect(scheduleEntry.grazing_schedule_id).toBe(schedule.id);
+    expect(scheduleEntry.pasture_id).toBe(pasture.id);
   });
 
   test('rolls back all writes when restoreVersion fails', async () => {
