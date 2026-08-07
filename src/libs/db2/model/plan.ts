@@ -318,21 +318,33 @@ export default class Plan extends KyselyModel {
     await Plan.update(db, { id: planId }, { ...snapshot, isRestored: true });
     await Pasture.remove(db, { plan_id: planId });
     const pasturePromises = snapshot.pastures.map(async (pasture: any) => {
-      const newPasture = await Pasture.create(db, pasture);
+      const newPasture = await Pasture.create(db, { ...pasture, planId });
       await PlantCommunity.remove(db, { pasture_id: pasture.id });
       const plantCommunityPromises = pasture.plantCommunities.map(async (plantCommunity: any) => {
-        const newPlantCommunity = await PlantCommunity.create(db, plantCommunity);
+        const newPlantCommunity = await PlantCommunity.create(db, {
+          ...plantCommunity,
+          pastureId: newPasture.id,
+        });
         await IndicatorPlant.remove(db, { plant_community_id: plantCommunity.id });
         const indicatorPlantPromises = plantCommunity.indicatorPlants.map(async (indicatorPlant: any) => {
-          return IndicatorPlant.create(db, indicatorPlant);
+          return IndicatorPlant.create(db, {
+            ...indicatorPlant,
+            plantCommunityId: newPlantCommunity.id,
+          });
         });
         const newIndicatorPlants = await Promise.all(indicatorPlantPromises);
         await MonitoringArea.remove(db, { plant_community_id: plantCommunity.id });
         const monitoringAreaPromises = plantCommunity.monitoringAreas.map(async (monitoringArea: any) => {
-          const newMonitoringArea = await MonitoringArea.create(db, monitoringArea);
+          const newMonitoringArea = await MonitoringArea.create(db, {
+            ...monitoringArea,
+            plantCommunityId: newPlantCommunity.id,
+          });
           await MonitoringAreaPurpose.remove(db, { monitoring_area_id: monitoringArea.id });
           const purposePromises = monitoringArea.purposes.map(async (purpose: any) => {
-            return MonitoringAreaPurpose.create(db, purpose);
+            return MonitoringAreaPurpose.create(db, {
+              ...purpose,
+              monitoringAreaId: newMonitoringArea.id,
+            });
           });
           const newPurposes = await Promise.all(purposePromises);
           return { ...newMonitoringArea, monitoringAreaPurposes: newPurposes };
@@ -340,7 +352,10 @@ export default class Plan extends KyselyModel {
         const newMonitoringAreas = await Promise.all(monitoringAreaPromises);
         await PlantCommunityAction.remove(db, { plant_community_id: plantCommunity.id });
         const actionPromises = plantCommunity.plantCommunityActions.map(async ({ ...action }: any) => {
-          return PlantCommunityAction.create(db, action);
+          return PlantCommunityAction.create(db, {
+            ...action,
+            plantCommunityId: newPlantCommunity.id,
+          });
         });
         const newActions = await Promise.all(actionPromises);
         return {
@@ -357,7 +372,7 @@ export default class Plan extends KyselyModel {
     await Schedule.remove(db, { plan_id: planId });
     await Promise.all(
       snapshot.schedules.map(async (schedule: any) => {
-        const newSchedule = await Schedule.create(db, schedule);
+        const newSchedule = await Schedule.create(db, { ...schedule, planId });
         await Promise.all([
           GrazingScheduleEntry.remove(db, { grazing_schedule_id: schedule.id }),
           HayCuttingScheduleEntry.remove(db, { haycutting_schedule_id: schedule.id }),
@@ -367,10 +382,18 @@ export default class Plan extends KyselyModel {
           (schedule.scheduleEntries || [])
             .map((entry: any) => {
               if (!scheduleEntryCreator) return null;
+              const originalPastureId = entry.pastureId ?? entry.pasture_id;
+              const newPasture = newPastures.find((pasture) => pasture.original.id === originalPastureId);
+              if (!newPasture) {
+                throw errorWithCode(
+                  `Could not find restored pasture for schedule entry pasture ID ${originalPastureId}.`,
+                  400,
+                );
+              }
               const entryWithScheduleId =
                 scheduleEntryCreator === GrazingScheduleEntry
-                  ? { ...entry, grazing_schedule_id: newSchedule.id }
-                  : { ...entry, haycutting_schedule_id: newSchedule.id };
+                  ? { ...entry, grazingScheduleId: newSchedule.id, pastureId: newPasture.id }
+                  : { ...entry, haycuttingScheduleId: newSchedule.id, pastureId: newPasture.id };
               return scheduleEntryCreator.create(db, entryWithScheduleId);
             })
             .filter(Boolean),
@@ -380,15 +403,15 @@ export default class Plan extends KyselyModel {
     );
     await AdditionalRequirement.remove(db, { plan_id: planId });
     const additionalRequirementPromises = snapshot.additionalRequirements.map(async (requirement: any) => {
-      return AdditionalRequirement.create(db, requirement);
+      return AdditionalRequirement.create(db, { ...requirement, planId });
     });
     await Promise.all(additionalRequirementPromises);
     await MinisterIssue.remove(db, { plan_id: planId });
     const ministerIssuePromises = snapshot.ministerIssues.map(async (issue: any) => {
-      const newIssue = await MinisterIssue.create(db, issue);
+      const newIssue = await MinisterIssue.create(db, { ...issue, planId });
       await MinisterIssueAction.remove(db, { issue_id: issue.id });
       const actionPromises = issue.ministerIssueActions.map(async (action: any) => {
-        return MinisterIssueAction.create(db, action);
+        return MinisterIssueAction.create(db, { ...action, issueId: newIssue.id });
       });
       const newActions = await Promise.all(actionPromises);
       await MinisterIssuePasture.remove(db, { minister_issue_id: issue.id });
@@ -402,28 +425,28 @@ export default class Plan extends KyselyModel {
     await Promise.all(ministerIssuePromises);
     await ManagementConsideration.remove(db, { plan_id: planId });
     const managementConsiderationPromises = snapshot.managementConsiderations.map(async (consideration: any) => {
-      return ManagementConsideration.create(db, consideration);
+      return ManagementConsideration.create(db, { ...consideration, planId });
     });
     await Promise.all(managementConsiderationPromises);
     await PlanConfirmation.remove(db, { plan_id: planId });
     const confirmationPromises = snapshot.confirmations.map(async (confirmation: any) => {
-      return PlanConfirmation.create(db, confirmation);
+      return PlanConfirmation.create(db, { ...confirmation, planId });
     });
     await Promise.all(confirmationPromises);
     if (snapshot.invasivePlantChecklist && snapshot.invasivePlantChecklist.planId) {
       await InvasivePlantChecklist.remove(db, { plan_id: planId });
-      await InvasivePlantChecklist.create(db, snapshot.invasivePlantChecklist);
+      await InvasivePlantChecklist.create(db, { ...snapshot.invasivePlantChecklist, planId });
     }
     if (!preserverHistory) {
       await PlanStatusHistory.remove(db, { plan_id: planId });
       const newStatusHistoryPromises = snapshot.planStatusHistory.map(async ({ ...history }: any) => {
-        return PlanStatusHistory.create(db, history);
+        return PlanStatusHistory.create(db, { ...history, planId });
       });
       await Promise.all(newStatusHistoryPromises);
     }
     await PlanFile.remove(db, { plan_id: planId });
     const filePromises = snapshot.files.map(async (file: any) => {
-      return PlanFile.create(db, file);
+      return PlanFile.create(db, { ...file, planId });
     });
     await Promise.all(filePromises);
   }
