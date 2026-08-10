@@ -1,5 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeAll } from 'vitest';
 
+beforeAll(() => {
+  process.env.SSO_URL = process.env.SSO_URL || 'https://sso.example.com';
+});
 vi.mock('../../src/libs/db2/model/amendmenttype.js', () => ({
   default: {
     find: vi.fn().mockResolvedValue([
