@@ -36,6 +36,11 @@ Do NOT run migrations or seeds unless explicitly asked — they may overwrite ex
 
 ## Docker Workflow
 
+**Container runtime: `podman` locally, `docker` on OpenShift (dev / test / prod).** The
+`make` targets and compose files invoke `docker` / `docker-compose` by name, so locally
+either alias them to `podman` / `podman-compose` or run the equivalent `podman` command
+directly. Everything that ships to OpenShift must remain Docker-compatible.
+
 Two separate docker-compose projects coexist (dev = default, test = `myra-project`):
 
 | Task            | Command                                                         |

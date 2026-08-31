@@ -178,6 +178,9 @@ router.put('{/:planId}/schedule{/:scheduleId}', PlanScheduleController.update);
 // Update an existing Schedule sort order
 router.put('{/:planId}/schedule{/:scheduleId}/sortOrder', PlanScheduleController.updateSortOrder);
 
+// Export an existing Schedule (and related Schedule Entries) as CSV
+router.get('{/:planId}/schedule{/:scheduleId}/csv', PlanScheduleController.exportCsv);
+
 // Remove a Schedule (and related Grazing Schedule Entries) from an existing Plan
 router.delete('{/:planId}/schedule{/:scheduleId}', PlanScheduleController.destroy);
 

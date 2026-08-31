@@ -4,6 +4,9 @@ import { checkRequiredFields, objPathToSnakeCase } from '../../libs/utils.js';
 import DataManager from '../../libs/db2/index.js';
 import config from '../../config/index.js';
 import { PlanRouteHelper } from '../helpers/index.js';
+import { buildScheduleCsv, buildScheduleCsvFilename } from '../helpers/scheduleCsv.js';
+import { SCHEDULE_EXPORT } from '../../constants.js';
+import { stringify } from 'csv';
 import { processAgreementUsageStatus } from '../../../scripts/process_no_use.js';
 
 const dm = new DataManager(config);
@@ -317,6 +320,62 @@ export default class PlanScheduleController {
       logger.error(
         `PlanScheduleController: destroyScheduleEntry: fail for id => ${params.grazingScheduleEntryId}, with error = ${error.message}`,
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Export a Schedule (and its entries) as CSV.
+   *
+   * Entries are serialized in the schedule's persisted sort order so the export
+   * matches the on-screen ordering exactly.
+   * @param {*} req : express req
+   * @param {*} res : express res
+   */
+  static async exportCsv(req, res) {
+    const { params, user } = req;
+    const { planId, scheduleId } = params;
+
+    checkRequiredFields(['planId', 'scheduleId'], 'params', req);
+
+    try {
+      const agreementId = await Plan.agreementIdForPlanId(db, planId);
+      await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
+
+      const schedule = await Schedule.findById(db, scheduleId);
+      if (!schedule || Number(schedule.planId) !== Number(planId)) {
+        throw errorWithCode('No such schedule exists', 404);
+      }
+
+      const [agreementData] = await Agreement.findWithTypeZoneDistrictExemption(db, {
+        'agreement.forest_file_id': agreementId,
+      });
+      const isHayCutting = Agreement.isHayCuttingSchedule(agreementData);
+
+      if (isHayCutting) {
+        await schedule.fetchHayCuttingScheduleEntries(db);
+      } else {
+        await schedule.fetchGrazingSchedulesEntries(db);
+      }
+
+      const { columns, rows } = buildScheduleCsv({ agreementId, schedule, isHayCutting });
+
+      const output = await new Promise((resolve, reject) => {
+        stringify(rows, { header: true, columns }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        });
+      });
+
+      res.setHeader('Content-Type', SCHEDULE_EXPORT.CONTENT_TYPE);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${buildScheduleCsvFilename(agreementId, schedule.year)}"`,
+      );
+      return res.status(200).send(output);
+    } catch (error) {
+      const message = `PlanScheduleController: exportCsv: fail for schedule id => ${scheduleId}`;
+      logger.error(`${message}, with error = ${error.message}`);
       throw error;
     }
   }
