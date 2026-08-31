@@ -46,6 +46,9 @@ import emailTemplate from './routes_v1/emailTemplate.js';
 const corsOptions = {
   // origin: config.get('appUrl'),
   credentials: true,
+  // Browsers hide non-simple response headers from JS unless they are exposed,
+  // which the frontend needs to name downloaded files (CSV/PDF exports).
+  exposedHeaders: ['Content-Disposition'],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 

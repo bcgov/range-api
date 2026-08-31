@@ -167,6 +167,30 @@ export const AGREEMENT_EXPORT_COLUMNS = {
   EXEMPTION_STATUS: 'Exemption Status',
 };
 
+export const SCHEDULE_EXPORT_COLUMNS = {
+  RAN: 'RAN',
+  YEAR: 'Year',
+  PASTURE: 'Pasture',
+  LIVESTOCK_TYPE: 'Livestock Type',
+  NUM_OF_ANIMALS: 'Number of Animals',
+  DATE_IN: 'Date In',
+  DATE_OUT: 'Date Out',
+  DAYS: 'Days',
+  GRACE_DAYS: 'Grace Days',
+  PLD_AUMS: 'PLD AUMs',
+  CROWN_AUMS: 'Crown AUMs',
+  AREA: 'Area',
+  AVERAGE_HEIGHT: 'Average Height (cm)',
+  PERIOD_START: 'Period Start',
+  PERIOD_END: 'Period End',
+  TONNES: 'Tonnes',
+};
+
+export const SCHEDULE_EXPORT = {
+  CONTENT_TYPE: 'text/csv',
+  FILENAME_PREFIX: 'schedule',
+};
+
 export const AGREEMENT_EXPORT = {
   FILENAME: 'agreements.csv',
   CONTENT_TYPE: 'text/csv',
