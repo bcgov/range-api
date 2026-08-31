@@ -14,8 +14,11 @@ const { canAccessAgreement } = passport.aUser;
 const truncate = (table) => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`;
 
 const AGREEMENT_ID = 'RAN076843';
+const HAY_AGREEMENT_ID = 'RAN076844';
 const GRAZING_SCHEDULE_ID = 1;
 const OTHER_PLAN_SCHEDULE_ID = 2;
+const HAY_CUTTING_SCHEDULE_ID = 3;
+const HAY_PLAN_ID = 3;
 
 const csvUrl = (planId, scheduleId) => `/api/v1/plan/${planId}/schedule/${scheduleId}/csv`;
 
@@ -31,6 +34,17 @@ const agreement = {
   zone_id: 2,
   // agreement_type_id 1 => grazing schedule
   agreement_type_id: 1,
+  exemption_status: 'NOT_EXEMPTED',
+  ...timestamps,
+};
+
+const hayAgreement = {
+  forest_file_id: HAY_AGREEMENT_ID,
+  agreement_start_date: '2017-01-01T08:00:00.000Z',
+  agreement_end_date: '2041-12-31T08:00:00.000Z',
+  zone_id: 2,
+  // agreement_type_id 3 => hay cutting schedule
+  agreement_type_id: 3,
   exemption_status: 'NOT_EXEMPTED',
   ...timestamps,
 };
@@ -56,16 +70,52 @@ const plans = [
     uploaded: true,
     ...timestamps,
   },
+  {
+    id: HAY_PLAN_ID,
+    canonical_id: 3,
+    range_name: "XYZ's Hay Range",
+    agreement_id: HAY_AGREEMENT_ID,
+    status_id: 1,
+    creator_id: 1,
+    uploaded: true,
+    ...timestamps,
+  },
 ];
 
 const pastures = [
   { id: 1, plan_id: 1, name: 'Alpha Pasture', allowable_aum: 100, grace_days: 10, pld_percent: 0.5, ...timestamps },
   { id: 2, plan_id: 1, name: 'Bravo Pasture', allowable_aum: 100, grace_days: 10, pld_percent: 0.5, ...timestamps },
+  {
+    id: 3,
+    plan_id: HAY_PLAN_ID,
+    name: 'Hay Field One',
+    allowable_aum: 100,
+    grace_days: 10,
+    pld_percent: 0.5,
+    ...timestamps,
+  },
+  {
+    id: 4,
+    plan_id: HAY_PLAN_ID,
+    name: 'Hay Field Two',
+    allowable_aum: 100,
+    grace_days: 10,
+    pld_percent: 0.5,
+    ...timestamps,
+  },
 ];
 
 const schedules = [
   { id: GRAZING_SCHEDULE_ID, canonical_id: 1, plan_id: 1, year: 2024, narative: 'Schedule details', ...timestamps },
   { id: OTHER_PLAN_SCHEDULE_ID, canonical_id: 2, plan_id: 2, year: 2024, narative: 'Other plan', ...timestamps },
+  {
+    id: HAY_CUTTING_SCHEDULE_ID,
+    canonical_id: 3,
+    plan_id: HAY_PLAN_ID,
+    year: 2025,
+    narative: 'Hay schedule',
+    ...timestamps,
+  },
 ];
 
 // Deliberately inserted so that insertion (id) order differs from every column
@@ -106,6 +156,41 @@ const scheduleEntries = [
   },
 ];
 
+// Hay cutting entries live in their own table but hang off the same
+// grazing_schedule row. Insertion order again differs from every column order.
+const hayCuttingScheduleEntries = [
+  {
+    id: 1,
+    haycutting_schedule_id: HAY_CUTTING_SCHEDULE_ID,
+    pasture_id: 4,
+    stubble_height: 15,
+    tonnes: 30,
+    date_in: '2025-05-01T00:00:00.000Z',
+    date_out: '2025-05-10T00:00:00.000Z',
+    ...timestamps,
+  },
+  {
+    id: 2,
+    haycutting_schedule_id: HAY_CUTTING_SCHEDULE_ID,
+    pasture_id: 3,
+    stubble_height: 5,
+    tonnes: 10,
+    date_in: '2025-06-01T00:00:00.000Z',
+    date_out: '2025-06-10T00:00:00.000Z',
+    ...timestamps,
+  },
+  {
+    id: 3,
+    haycutting_schedule_id: HAY_CUTTING_SCHEDULE_ID,
+    pasture_id: 3,
+    stubble_height: 10,
+    tonnes: 20,
+    date_in: '2025-07-01T00:00:00.000Z',
+    date_out: '2025-07-10T00:00:00.000Z',
+    ...timestamps,
+  },
+];
+
 const truncateTables = async () => {
   await dm.db.schema.raw(truncate('user_account'));
   await dm.db.schema.raw(truncate('ref_district'));
@@ -115,11 +200,12 @@ const truncateTables = async () => {
   await dm.db.schema.raw(truncate('pasture'));
   await dm.db.schema.raw(truncate('grazing_schedule'));
   await dm.db.schema.raw(truncate('grazing_schedule_entry'));
+  await dm.db.schema.raw(truncate('haycutting_schedule_entry'));
 };
 
-const setScheduleSort = (sortBy, sortOrder) =>
+const setScheduleSort = (sortBy, sortOrder, scheduleId = GRAZING_SCHEDULE_ID) =>
   dm.db.schema.raw(
-    `UPDATE grazing_schedule SET sort_by = '${sortBy}', sort_order = '${sortOrder}' WHERE id = ${GRAZING_SCHEDULE_ID}`,
+    `UPDATE grazing_schedule SET sort_by = '${sortBy}', sort_order = '${sortOrder}' WHERE id = ${scheduleId}`,
   );
 
 const parseCsv = (text) =>
@@ -145,11 +231,12 @@ describe('Test Schedule CSV export route', () => {
     await dm.db('user_account').insert([userMocks[0]]);
     await dm.db('ref_district').insert(districtMocks);
     await dm.db('ref_zone').insert([zoneMocks[0]]);
-    await dm.db('agreement').insert([agreement]);
+    await dm.db('agreement').insert([agreement, hayAgreement]);
     await dm.db('plan').insert(plans);
     await dm.db('pasture').insert(pastures);
     await dm.db('grazing_schedule').insert(schedules);
     await dm.db('grazing_schedule_entry').insert(scheduleEntries);
+    await dm.db('haycutting_schedule_entry').insert(hayCuttingScheduleEntries);
   });
 
   afterEach(async () => {
@@ -293,5 +380,65 @@ describe('Test Schedule CSV export route', () => {
 
     const app = await createApp();
     await request(app).get(csvUrl(1, GRAZING_SCHEDULE_ID)).expect(403);
+  });
+
+  test('Exports a hay cutting schedule using the hay cutting column set', async () => {
+    const app = await createApp();
+
+    await request(app)
+      .get(csvUrl(HAY_PLAN_ID, HAY_CUTTING_SCHEDULE_ID))
+      .expect(200)
+      .expect('Content-Type', /text\/csv/)
+      .expect('Content-Disposition', `attachment; filename="${HAY_AGREEMENT_ID}_2025_schedule.csv"`)
+      .expect((res) => {
+        const rows = parseCsv(res.text);
+        expect(rows[0]).toEqual(['RAN', 'Year', 'Area', 'Average Height (cm)', 'Period Start', 'Period End', 'Tonnes']);
+        expect(rows).toHaveLength(hayCuttingScheduleEntries.length + 1);
+      });
+  });
+
+  test('Includes the hay cutting entry values on every row', async () => {
+    const app = await createApp();
+
+    await request(app)
+      .get(csvUrl(HAY_PLAN_ID, HAY_CUTTING_SCHEDULE_ID))
+      .expect(200)
+      .expect((res) => {
+        const rows = parseCsv(res.text);
+
+        rows.slice(1).forEach((row) => {
+          expect(row[0]).toBe(HAY_AGREEMENT_ID);
+          expect(row[1]).toBe('2025');
+        });
+
+        expect(rows[1]).toEqual([HAY_AGREEMENT_ID, '2025', 'Hay Field Two', '15', '2025-05-01', '2025-05-10', '30']);
+        expect(columnValues(rows, 6)).toEqual(['30', '10', '20']);
+      });
+  });
+
+  test('Preserves the persisted sort order of a hay cutting schedule', async () => {
+    await setScheduleSort('tonnes', 'desc', HAY_CUTTING_SCHEDULE_ID);
+
+    const app = await createApp();
+
+    await request(app)
+      .get(csvUrl(HAY_PLAN_ID, HAY_CUTTING_SCHEDULE_ID))
+      .expect(200)
+      .expect((res) => {
+        expect(columnValues(parseCsv(res.text), 6)).toEqual(['30', '20', '10']);
+      });
+  });
+
+  test('Preserves a persisted sort on a joined pasture column for hay cutting', async () => {
+    await setScheduleSort('pasture.name', 'desc', HAY_CUTTING_SCHEDULE_ID);
+
+    const app = await createApp();
+
+    await request(app)
+      .get(csvUrl(HAY_PLAN_ID, HAY_CUTTING_SCHEDULE_ID))
+      .expect(200)
+      .expect((res) => {
+        expect(columnValues(parseCsv(res.text), 2)).toEqual(['Hay Field Two', 'Hay Field One', 'Hay Field One']);
+      });
   });
 });
