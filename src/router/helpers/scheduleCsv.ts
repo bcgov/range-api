@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { SCHEDULE_EXPORT, SCHEDULE_EXPORT_COLUMNS } from '../../constants.js';
-import { calcCrownAUMs, calcDateDiff, calcPldAUMs, calcTotalAUMs, round } from './PDFHelper.js';
+import { calculateEntryAUMs } from '../../libs/aumCalculation.js';
+
+export { calculateEntryAUMs };
 
 const C = SCHEDULE_EXPORT_COLUMNS;
 
@@ -24,24 +26,6 @@ const numericCell = (value) => {
 const pastureName = (entry) => entry.pastureName ?? entry.pasture?.name ?? '';
 
 const livestockTypeName = (entry) => entry.refLivestockName ?? entry.livestockType?.name ?? '';
-
-const auFactor = (entry) => entry.refLivestockAuFactor ?? entry.livestockType?.auFactor ?? 0;
-
-const pldPercent = (entry) => entry.pasturePldPercent ?? entry.pasture?.pldPercent ?? 0;
-
-/**
- * Mirrors the AUM maths used by the schedule table and the PDF renderer so an
- * exported row always matches what the user sees on screen.
- */
-export const calculateEntryAUMs = (entry) => {
-  const days = Number(calcDateDiff(entry.dateOut, entry.dateIn, false));
-  const totalAUMs = calcTotalAUMs(Number(entry.livestockCount) || 0, days, Number(auFactor(entry)) || 0);
-  const pldAUMs = round(calcPldAUMs(totalAUMs, Number(pldPercent(entry)) || 0), 0);
-  const crownAUMsWithDecimal = calcCrownAUMs(totalAUMs, pldAUMs);
-  const crownAUMs = crownAUMsWithDecimal > 0 && crownAUMsWithDecimal < 1 ? 1 : round(crownAUMsWithDecimal, 0);
-
-  return { days, pldAUMs, crownAUMs };
-};
 
 export const GRAZING_SCHEDULE_CSV_COLUMNS = [
   C.RAN,

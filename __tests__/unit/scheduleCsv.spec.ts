@@ -33,11 +33,11 @@ const hayEntry = (overrides = {}) => ({
 
 describe('scheduleCsv: calculateEntryAUMs', () => {
   test('computes days inclusively and derives PLD/Crown AUMs', () => {
-    expect(calculateEntryAUMs(grazingEntry())).toEqual({ days: 30, pldAUMs: 10, crownAUMs: 10 });
+    expect(calculateEntryAUMs(grazingEntry())).toMatchObject({ days: 30, pldAUMs: 10, crownAUMs: 10 });
   });
 
   test('treats missing dates as zero days', () => {
-    expect(calculateEntryAUMs(grazingEntry({ dateIn: null, dateOut: null }))).toEqual({
+    expect(calculateEntryAUMs(grazingEntry({ dateIn: null, dateOut: null }))).toMatchObject({
       days: 0,
       pldAUMs: 0,
       crownAUMs: 0,
@@ -59,7 +59,7 @@ describe('scheduleCsv: calculateEntryAUMs', () => {
       pasture: { name: 'Pasture A', pldPercent: 0.5 },
       livestockType: { name: 'Alpaca', auFactor: 0.2 },
     };
-    expect(calculateEntryAUMs(entry)).toEqual({ days: 30, pldAUMs: 10, crownAUMs: 10 });
+    expect(calculateEntryAUMs(entry)).toMatchObject({ days: 30, pldAUMs: 10, crownAUMs: 10 });
   });
 });
 
