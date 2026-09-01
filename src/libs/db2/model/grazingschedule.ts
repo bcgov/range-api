@@ -1,4 +1,4 @@
-import { calcCrownAUMs, calcDateDiff, calcPldAUMs, calcTotalAUMs, round } from '../../../router/helpers/PDFHelper.js';
+import { calculateEntryAUMs } from '../../aumCalculation.js';
 import { db as kyselyDb } from '../kysely.js';
 import KyselyModel from './KyselyModel.js';
 import GrazingScheduleEntry from './grazingscheduleentry.js';
@@ -72,14 +72,9 @@ export default class Schedule extends KyselyModel {
     let entries = await GrazingScheduleEntry.findWithLivestockType(db, where, order, orderRaw);
     if (this.sortBy === 'pld_aums' || this.sortBy === 'crown_aums') {
       entries = entries.map((row: any) => {
-        const days = calcDateDiff(row.date_out, row.date_in, false);
-        const pldPercent = row.pasture_pld_percent;
-        const auFactor = row.ref_livestock_au_factor;
-        const livestockCount = row.livestock_count;
-        const totalAUMs = calcTotalAUMs(livestockCount, Number(days), Number(auFactor));
-        row.pldAUMs = round(calcPldAUMs(totalAUMs, pldPercent), 0);
-        const crownAUMWithDecimal = calcCrownAUMs(totalAUMs, row.pldAUMs);
-        row.crownAUMs = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
+        const { pldAUMs, crownAUMs } = calculateEntryAUMs(row);
+        row.pldAUMs = pldAUMs;
+        row.crownAUMs = crownAUMs;
         return row;
       });
       if (this.sortBy === 'pld_aums') {

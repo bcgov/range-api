@@ -1,7 +1,25 @@
 // @ts-nocheck
 import { dayjs as moment } from '../../libs/bcgov-shim.js';
-import { DAYS_ON_THE_AVERAGE, NOT_PROVIDED } from '../../constants.js';
+import { NOT_PROVIDED } from '../../constants.js';
 import Agreement from '../../libs/db2/model/agreement.js';
+import { computeAUMs } from '../../libs/aumCalculation.js';
+
+/**
+ * The AUM maths lives in src/libs/aumCalculation.ts. It is re-exported here
+ * because a number of modules (and tests) have imported it from this file
+ * historically, and because it reads naturally alongside the PDF generation
+ * that consumes it.
+ */
+export {
+  round,
+  calcTotalAUMs,
+  calcDateDiff,
+  calcPldAUMs,
+  calcCrownAUMs,
+  calcCrownTotalAUMs,
+} from '../../libs/aumCalculation.js';
+
+import { round } from '../../libs/aumCalculation.js';
 
 export const formatPlanVersionDate = (date) =>
   date ? moment.utc(date).tz('America/Vancouver').format('YYYY-MM-DD') : date;
@@ -21,11 +39,6 @@ export const formatPlanVersionDates = (plan) => {
   return plan;
 };
 
-const shift = (number, precision) => {
-  const numArray = `${number}`.split('e');
-  return +`${numArray[0]}e${numArray[1] ? +numArray[1] + precision : precision}`;
-};
-
 // Format percent use - round up with no decimal places
 // If value is between 0 and 1 (exclusive), set to 1
 // Otherwise, round up to nearest integer
@@ -38,65 +51,6 @@ export const roundUpPercentUse = (percentUse) => {
     return 1;
   }
   return Math.ceil(value);
-};
-
-export const round = (number, precision) => shift(Math.round(shift(number, +precision)), -precision);
-
-/**
- *
- * @param {number} numberOfAnimals
- * @param {number} totalDays
- * @param {number} auFactor parameter provided from the livestock type
- * @returns {float} the total AUMs
- */
-export const calcTotalAUMs = (numberOfAnimals = 0, totalDays, auFactor = 0) =>
-  (numberOfAnimals * totalDays * auFactor) / DAYS_ON_THE_AVERAGE;
-
-/**
- * Present user friendly string when getting null or undefined value
- *
- * @param {string | Date} first the string in the class Date form
- * @param {string | Date} second the string in the class Date form
- * @param {bool} isUserFriendly
- * @returns {number | string} the number of days or 'N/P'
- */
-export const calcDateDiff = (first, second, isUserFriendly) => {
-  if (first && second) {
-    return moment(first).diff(moment(second), 'days') + 1;
-  }
-  return isUserFriendly ? 'N/P' : 0;
-};
-
-/**
- * Calculate Private Land Deduction Animal Unit Month
- *
- * @param {number} totalAUMs
- * @param {float} pasturePldPercent
- * @returns {float} the pld AUMs
- */
-export const calcPldAUMs = (totalAUMs, pasturePldPercent = 0) => totalAUMs * pasturePldPercent;
-
-/**
- * Calculate Crown Animal Unit Month
- *
- * @param {number} totalAUMs
- * @param {number} pldAUMs
- * @returns {float} the crown AUMs
- */
-export const calcCrownAUMs = (totalAUMs, pldAUMs) => totalAUMs - pldAUMs;
-
-/**
- * Calculate the total Crown Animal Unit Month
- *
- * @param {Array} entries grazing schedule entries
- * @returns {float} the total crown AUMs
- */
-export const calcCrownTotalAUMs = (entries = []) => {
-  const reducer = (accumulator, currentValue) => accumulator + currentValue;
-  if (entries.length === 0) {
-    return 0;
-  }
-  return entries.map((entry) => entry.crownAUMs).reduce(reducer);
 };
 
 export class AdditionalDetailsGenerator {
@@ -209,13 +163,28 @@ export class AdditionalDetailsGenerator {
               schedule.crownTotalAUM += entry.crownAUM;
               entry.crownAUM = round(entry.crownAUM, 1);
             } else {
-              // Process grazing schedule entries (existing logic)
-              entry.days = calcDateDiff(entry.dateOut, entry.dateIn, false);
+              // Process grazing schedule entries.
+              //
+              // `pasture.pldPercent` is read without a guard, matching the
+              // long-standing behaviour: an entry pointing at a pasture the
+              // plan does not contain throws here rather than falling back.
+              // See PDFHelper.setScheduleDetails.spec.ts.
               entry.auFactor = entry.livestockType?.auFactor;
-              entry.totalAUM = calcTotalAUMs(entry.livestockCount, entry.days, entry.auFactor);
-              entry.pldAUM = round(calcPldAUMs(entry.totalAUM, pasture.pldPercent), 0);
-              const crownAUMWithDecimal = calcCrownAUMs(entry.totalAUM, entry.pldAUM);
-              entry.crownAUM = crownAUMWithDecimal > 0 && crownAUMWithDecimal < 1 ? 1 : round(crownAUMWithDecimal, 0);
+
+              const { days, totalAUMs, pldAUMs, crownAUMs } = computeAUMs({
+                dateIn: entry.dateIn,
+                dateOut: entry.dateOut,
+                livestockCount: entry.livestockCount,
+                auFactor: entry.auFactor,
+                pldPercent: pasture.pldPercent,
+              });
+
+              // The docx template binds the SINGULAR names, unlike the DB model
+              // and the CSV export which use the plural forms. Do not rename.
+              entry.days = days;
+              entry.totalAUM = totalAUMs;
+              entry.pldAUM = pldAUMs;
+              entry.crownAUM = crownAUMs;
               schedule.crownTotalAUM += entry.crownAUM;
             }
           }
