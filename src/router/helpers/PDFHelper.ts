@@ -164,11 +164,6 @@ export class AdditionalDetailsGenerator {
               entry.crownAUM = round(entry.crownAUM, 1);
             } else {
               // Process grazing schedule entries.
-              //
-              // `pasture.pldPercent` is read without a guard, matching the
-              // long-standing behaviour: an entry pointing at a pasture the
-              // plan does not contain throws here rather than falling back.
-              // See PDFHelper.setScheduleDetails.spec.ts.
               entry.auFactor = entry.livestockType?.auFactor;
 
               const { days, totalAUMs, pldAUMs, crownAUMs } = computeAUMs({
@@ -176,7 +171,7 @@ export class AdditionalDetailsGenerator {
                 dateOut: entry.dateOut,
                 livestockCount: entry.livestockCount,
                 auFactor: entry.auFactor,
-                pldPercent: pasture.pldPercent,
+                pldPercent: pasture?.pldPercent,
               });
 
               // The docx template binds the SINGULAR names, unlike the DB model
