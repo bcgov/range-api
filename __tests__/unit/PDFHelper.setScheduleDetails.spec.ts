@@ -260,19 +260,7 @@ describe('AdditionalDetailsGenerator.setScheduleDetails', () => {
       expect(plan.schedules[0].scheduleEntries[1].graceDays).toBe(2);
     });
 
-    /**
-     * Latent bug, pinned deliberately rather than fixed.
-     *
-     * The code immediately above sets `entry.pasture = 'N/A'` and only reads
-     * `pasture.name` inside an `if (pasture)`, so the author clearly considered
-     * a missing pasture possible. But `pasture.pldPercent` on the grazing
-     * branch is NOT guarded, so the method throws instead.
-     *
-     * Fixing it here would make this refactor a behaviour change, which is
-     * exactly what it must not be. Reported separately; this test locks in
-     * today's behaviour so the refactor neither fixes nor worsens it.
-     */
-    it('currently throws when the entry points at a pasture the plan does not have', () => {
+    it('uses the N/A pasture label and zero PLD when the pasture is missing', () => {
       const plan = buildPlan({
         agreementType: GRAZING,
         pastures: [{ id: 10, name: 'North', pldPercent: 0.5, graceDays: 0 }],
@@ -292,7 +280,15 @@ describe('AdditionalDetailsGenerator.setScheduleDetails', () => {
         ],
       });
 
-      expect(() => generator.setScheduleDetails(plan)).toThrow(TypeError);
+      generator.setScheduleDetails(plan);
+
+      expect(plan.schedules[0].scheduleEntries[0]).toMatchObject({
+        pasture: 'N/A',
+        totalAUM: (100 * 30 * 0.6) / 30.44,
+        pldAUM: 0,
+        crownAUM: 59,
+      });
+      expect(plan.schedules[0].crownTotalAUM).toBe(59);
     });
   });
 
