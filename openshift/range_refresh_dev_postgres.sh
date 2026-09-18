@@ -11,6 +11,8 @@ SOURCE_CLUSTER="${SOURCE_CLUSTER:-range-pg17-prod}"
 TARGET_PROJECT="${TARGET_PROJECT:-3187b2-dev}"
 TARGET_CLUSTER="${TARGET_CLUSTER:-range-pg17-dev}"
 DB_NAME="${DB_NAME:-myra}"
+DUMP_RETRIES="${DUMP_RETRIES:-3}"
+DUMP_RETRY_WAIT_SECONDS="${DUMP_RETRY_WAIT_SECONDS:-60}"
 RESTORE_RETRIES="${RESTORE_RETRIES:-2}"
 RESTORE_RETRY_WAIT_SECONDS="${RESTORE_RETRY_WAIT_SECONDS:-20}"
 READY_TIMEOUT_SECONDS="${READY_TIMEOUT_SECONDS:-180}"
@@ -50,7 +52,7 @@ wait_for_database_container() {
   return 1
 }
 
-print_target_pod_diagnostics() {
+print_pod_diagnostics() {
   local project="$1"
   local pod="$2"
 
@@ -68,7 +70,25 @@ print_target_pod_diagnostics() {
   waiting_reason=$(oc -n "${project}" get pod "${pod}" \
     -o jsonpath="{range .status.containerStatuses[?(@.name==\"${DB_CONTAINER_NAME}\")]}{.state.waiting.reason}{end}" 2>/dev/null || true)
 
-  echo "Target pod diagnostics: restartCount=${restart_count:-none}, lastTerminatedReason=${terminated_reason:-none}, lastTerminatedExitCode=${terminated_exit_code:-none}, waitingReason=${waiting_reason:-none}"
+  echo "Pod diagnostics for ${project}/${pod}: restartCount=${restart_count:-none}, lastTerminatedReason=${terminated_reason:-none}, lastTerminatedExitCode=${terminated_exit_code:-none}, waitingReason=${waiting_reason:-none}"
+}
+
+get_pod_restart_count() {
+  local project="$1"
+  local pod="$2"
+
+  oc -n "${project}" get pod "${pod}" \
+    -o jsonpath="{.status.containerStatuses[?(@.name==\"${DB_CONTAINER_NAME}\")].restartCount}" 2>/dev/null || echo "unknown"
+}
+
+is_pod_primary() {
+  local project="$1"
+  local pod="$2"
+
+  local in_recovery
+  in_recovery=$(oc -n "${project}" exec "${pod}" -c "${DB_CONTAINER_NAME}" -- \
+    psql -U postgres -d "${DB_NAME}" -tAc "SELECT pg_is_in_recovery();" 2>/dev/null || echo "unknown")
+  [ "${in_recovery}" = "f" ]
 }
 
 SOURCE_PRIMARY_POD="$(get_primary_pod "${SOURCE_PROJECT}" "${SOURCE_CLUSTER}")"
@@ -104,8 +124,45 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Dumping ${DB_NAME} from ${SOURCE_PROJECT}/${SOURCE_CLUSTER}..."
-oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- \
-  pg_dump -U postgres -d "${DB_NAME}" --format=custom --no-owner --no-privileges --file "${SOURCE_DUMP_FILE}"
+dump_attempt=1
+while [ "${dump_attempt}" -le "${DUMP_RETRIES}" ]; do
+  SOURCE_PRIMARY_POD="$(get_primary_pod "${SOURCE_PROJECT}" "${SOURCE_CLUSTER}")"
+  if [ -z "${SOURCE_PRIMARY_POD}" ]; then
+    echo "Dump attempt ${dump_attempt}/${DUMP_RETRIES} failed: source primary pod not found."
+  else
+    echo "Dump attempt ${dump_attempt}/${DUMP_RETRIES} from source primary pod: ${SOURCE_PRIMARY_POD}"
+
+    if ! is_pod_primary "${SOURCE_PROJECT}" "${SOURCE_PRIMARY_POD}"; then
+      echo "Warning: ${SOURCE_PRIMARY_POD} does not report as primary (label lag or failover in progress); re-resolving next attempt."
+    else
+      source_restarts_before="$(get_pod_restart_count "${SOURCE_PROJECT}" "${SOURCE_PRIMARY_POD}")"
+      if PGOPTIONS="-c statement_timeout=0" oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- \
+        pg_dump -U postgres -d "${DB_NAME}" --format=custom --no-owner --no-privileges --verbose --file "${SOURCE_DUMP_FILE}" 2>&1 | tail -5; then
+        echo "Dump completed successfully."
+        break
+      fi
+
+      echo "Dump attempt ${dump_attempt} failed."
+      print_pod_diagnostics "${SOURCE_PROJECT}" "${SOURCE_PRIMARY_POD}"
+      source_restarts_after="$(get_pod_restart_count "${SOURCE_PROJECT}" "${SOURCE_PRIMARY_POD}")"
+      if [ "${source_restarts_before}" != "${source_restarts_after}" ]; then
+        echo "Source database container restarted during the dump (restartCount ${source_restarts_before} -> ${source_restarts_after}); likely OOM or failover."
+      fi
+    fi
+  fi
+
+  if [ "${dump_attempt}" -lt "${DUMP_RETRIES}" ]; then
+    echo "Waiting ${DUMP_RETRY_WAIT_SECONDS}s before next dump attempt..."
+    sleep "${DUMP_RETRY_WAIT_SECONDS}"
+  fi
+
+  dump_attempt=$((dump_attempt + 1))
+done
+
+if [ "${dump_attempt}" -gt "${DUMP_RETRIES}" ]; then
+  echo "Database dump failed after ${DUMP_RETRIES} attempts."
+  exit 1
+fi
 
 echo "Copying dump to local..."
 oc -n "${SOURCE_PROJECT}" cp "${SOURCE_PRIMARY_POD}:${SOURCE_DUMP_FILE}" "${LOCAL_DUMP_FILE}" -c "${DB_CONTAINER_NAME}"
@@ -151,7 +208,7 @@ PIPELINE_EOF
     fi
 
     echo "Restore attempt ${attempt} failed."
-    print_target_pod_diagnostics "${TARGET_PROJECT}" "${TARGET_PRIMARY_POD}"
+    print_pod_diagnostics "${TARGET_PROJECT}" "${TARGET_PRIMARY_POD}"
   fi
 
   if [ "${attempt}" -lt "${RESTORE_RETRIES}" ]; then
