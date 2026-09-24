@@ -47,9 +47,10 @@
   "scripts": {
     "start": "node build/src/server.js",
     "dev": "tsx watch src/server.ts",
-    "build": "rm -rf build && tsc",
+    "build": "rm -rf build && tsc && cp -r src/libs/db2/migrations build/src/libs/db2/migrations",
     "build:doc": "./node_modules/.bin/apidoc -i src/ -o doc/api",
     "db:migrate": "tsx src/libs/db2/migrate.ts",
+    "db:migrate:prod": "node build/src/libs/db2/migrate.js",
     "test": "cross-env NODE_ENV=unit_test vitest run --coverage",
     "test:watch": "cross-env NODE_ENV=unit_test vitest",
     "test:lint": "eslint src __tests__ __testHelpers__ __mocks__ scripts",
