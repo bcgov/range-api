@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { errorWithCode, logger } from '../../libs/bcgov-shim.js';
+import { validateEntryDates } from '../../libs/scheduleEntryValidation.js';
 import config from '../../config/index.js';
 import DataManager from '../../libs/db2/index.js';
 import Schedule from '../../libs/db2/model/grazingschedule.js';
@@ -527,6 +528,8 @@ export default class PlanController {
         HayCuttingScheduleEntry.find(trx, { haycutting_schedule_id: schedule.id }),
       ]);
       removeCommonFields(schedule);
+      validateEntryDates(grazingEntries, schedule.year);
+      validateEntryDates(hayCuttingEntries, schedule.year);
       const newSchedule = await Schedule.create(trx, {
         ...schedule,
         planId: newPlan.id,

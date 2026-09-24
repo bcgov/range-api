@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { errorWithCode, logger } from '../../libs/bcgov-shim.js';
 import { checkRequiredFields, objPathToSnakeCase } from '../../libs/utils.js';
+import { extractYearFromScheduleDate, validateEntryDates } from '../../libs/scheduleEntryValidation.js';
 import DataManager from '../../libs/db2/index.js';
 import config from '../../config/index.js';
 import { PlanRouteHelper } from '../helpers/index.js';
@@ -11,25 +12,11 @@ const { db, Agreement, Plan, Schedule, GrazingScheduleEntry, HayCuttingScheduleE
 
 export default class PlanScheduleController {
   static extractYearFromScheduleDate(dateValue) {
-    if (typeof dateValue === 'string') {
-      const datePrefixMatch = dateValue.match(/^(\d{4})-\d{2}-\d{2}/);
-      if (datePrefixMatch) {
-        return Number(datePrefixMatch[1]);
-      }
-    }
-
-    return new Date(dateValue).getUTCFullYear();
+    return extractYearFromScheduleDate(dateValue);
   }
 
   static validateEntryDates(scheduleEntries, scheduleYear) {
-    scheduleEntries.forEach((entry) => {
-      if (entry.dateIn) {
-        const entryYear = PlanScheduleController.extractYearFromScheduleDate(entry.dateIn);
-        if (entryYear !== scheduleYear) {
-          throw errorWithCode('Schedule entry date(s) must be within the schedule year.', 400);
-        }
-      }
-    });
+    validateEntryDates(scheduleEntries, scheduleYear);
   }
   /**
    * Create a schedule for existing plan

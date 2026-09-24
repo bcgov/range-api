@@ -2,6 +2,7 @@ import { sql } from 'kysely';
 import { db as kyselyDb } from '../kysely.js';
 import KyselyModel from './KyselyModel.js';
 import { errorWithCode } from '../../../libs/bcgov-shim.js';
+import { validateEntryDates } from '../../../libs/scheduleEntryValidation.js';
 import { PLAN_EXTENSION_STATUS } from '../../../constants.js';
 import Schedule from './grazingschedule.js';
 import Pasture from './pasture.js';
@@ -315,6 +316,9 @@ export default class Plan extends KyselyModel {
       throw errorWithCode(`Snapshot for plan ${planId}, version: ${snapshotVersion} does not exist.`, 404);
     }
     const { snapshot } = planSnapshot;
+    snapshot.schedules.forEach((schedule: any) => {
+      validateEntryDates(schedule.scheduleEntries, schedule.year);
+    });
     await Plan.update(db, { id: planId }, { ...snapshot, isRestored: true });
     await Pasture.remove(db, { plan_id: planId });
     const pasturePromises = snapshot.pastures.map(async (pasture: any) => {
