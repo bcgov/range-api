@@ -100,7 +100,7 @@ close-db-test: ## -- Target : Runs the local development containers.
 
 run-db-test: ## -- Target : Runs the local development containers.
 	@echo "+\n++ Make: Running db for test locally...\n+"
-	@docker-compose -f test.docker-compose.yml -p myra-test up -d db minio minio-nginx
+	@docker-compose -f test.docker-compose.yml -p myra-test up -d db
 
 close-local: ## -- Target : Closes the local development containers.
 	@echo "+\n++ Make: Closing local container ...\n+"
@@ -125,7 +125,7 @@ test-local-d: ## -- .
 
 test-local: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
-	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test -- --forceExit
+	@docker-compose -f test.docker-compose.yml -p myra-test run --rm range_api npm run test
 
 test-local-watch: ## -- .
 	@echo "+\n++ Make: Running unit test ...\n+"
