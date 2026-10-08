@@ -19,6 +19,27 @@ const {
   MonitoringAreaPurpose,
 } = dm;
 
+/**
+ * Load a row by id and verify it belongs to the expected parent. Payloads can
+ * carry ids from another plan (e.g. an imported pasture whose nested rows kept
+ * their source ids, see #550), so every nested write must prove the chain
+ * plan -> pasture -> plant community -> child instead of trusting the ids.
+ * Mismatches return 404 to avoid leaking other plans' existence.
+ */
+const ensureOwnedBy = async (db, Model, id, parentField, parentId, message, code = 404) => {
+  const row = await Model.findById(db, id);
+  if (!row || Number(row[parentField]) !== Number(parentId)) {
+    throw errorWithCode(message, code);
+  }
+  return row;
+};
+
+const ensurePastureInPlan = (db, PastureModel, planId, pastureId) =>
+  ensureOwnedBy(db, PastureModel, pastureId, 'planId', planId, "Pasture doesn't exist", 404);
+
+const ensurePlantCommunityInPasture = (db, PlantCommunityModel, pastureId, communityId) =>
+  ensureOwnedBy(db, PlantCommunityModel, communityId, 'pastureId', pastureId, "Plant community doesn't exist", 404);
+
 export default class PlanPastureController {
   /**
    * Create Pasture for a given plan
@@ -102,6 +123,7 @@ export default class PlanPastureController {
       delete body.planId;
       delete body.plan_id;
 
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
       const pasture = await Pasture.update(db, { id: pastureId }, { ...body, plan_id: planId });
 
       return res.status(200).json(pasture).end();
@@ -126,6 +148,7 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
       const result = await Pasture.remove(db, { id: pastureId });
 
       if (result === 0) {
@@ -156,10 +179,7 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findOne(db, { id: pastureId });
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
 
       const { purposeOfAction } = body;
       if (!PURPOSE_OF_ACTION.includes(purposeOfAction)) {
@@ -193,17 +213,8 @@ export default class PlanPastureController {
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-    const pasture = await Pasture.findOne(db, { id: pastureId });
-
-    if (!pasture) {
-      throw errorWithCode("Pasture doesn't exist", 404);
-    }
-
-    const plantCommunity = await PlantCommunity.findById(db, communityId);
-
-    if (!plantCommunity) {
-      throw errorWithCode("Plant community doesn't exist", 404);
-    }
+    const pasture = await ensurePastureInPlan(db, Pasture, planId, pastureId);
+    await ensurePlantCommunityInPasture(db, PlantCommunity, pasture.id, communityId);
 
     const updatedPlantCommunity = await PlantCommunity.update(
       db,
@@ -223,11 +234,8 @@ export default class PlanPastureController {
     const agreementId = await Plan.agreementIdForPlanId(db, planId);
     await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-    const pasture = await Pasture.findById(db, pastureId);
-
-    if (!pasture) {
-      throw errorWithCode("Pasture doesn't exist", 404);
-    }
+    await ensurePastureInPlan(db, Pasture, planId, pastureId);
+    await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
     const result = await PlantCommunity.remove(db, {
       id: communityId,
@@ -257,14 +265,8 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
       const plantCommunityAction = await PlantCommunityAction.create(db, {
         ...body,
         plantCommunityId: communityId,
@@ -286,20 +288,17 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
-
-      const action = await PlantCommunityAction.findById(db, actionId);
-
-      if (!action) {
-        throw errorWithCode('Could not find plant community action', 404);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
+      await ensureOwnedBy(
+        db,
+        PlantCommunityAction,
+        actionId,
+        'plantCommunityId',
+        communityId,
+        'Could not find plant community action',
+        404,
+      );
 
       const updatedAction = await PlantCommunityAction.update(db, { id: actionId }, body);
       return res.status(200).json(updatedAction).end();
@@ -319,14 +318,17 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
+      await ensureOwnedBy(
+        db,
+        PlantCommunityAction,
+        actionId,
+        'plantCommunityId',
+        communityId,
+        'Could not find plant community action',
+        404,
+      );
 
       const result = await PlantCommunityAction.removeById(db, actionId);
 
@@ -363,18 +365,12 @@ export default class PlanPastureController {
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
       const indicatorPlant = await IndicatorPlant.create(db, {
         ...body,
-        plantCommunityId: plantCommunity.id,
+        plantCommunityId: communityId,
       });
       return res.status(200).json(indicatorPlant).end();
     } catch (error) {
@@ -398,20 +394,18 @@ export default class PlanPastureController {
         throw errorWithCode(`Unacceptable plant community criteria with "${criteria}"`);
       }
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
-      const indicatorPlant = await IndicatorPlant.findById(db, plantId);
-
-      if (!indicatorPlant) {
-        throw errorWithCode('Could not find indicator plant', 404);
-      }
+      await ensureOwnedBy(
+        db,
+        IndicatorPlant,
+        plantId,
+        'plantCommunityId',
+        communityId,
+        'Could not find indicator plant',
+        404,
+      );
 
       const updatedIndicatorPlant = await IndicatorPlant.update(db, { id: plantId }, body);
       return res.status(200).json(updatedIndicatorPlant).end();
@@ -431,14 +425,17 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
+      await ensureOwnedBy(
+        db,
+        IndicatorPlant,
+        plantId,
+        'plantCommunityId',
+        communityId,
+        'Could not find indicator plant',
+        404,
+      );
 
       const result = await IndicatorPlant.removeById(db, plantId);
 
@@ -471,14 +468,8 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
       const monitoringArea = await db.transaction().execute(async (trx) => {
         const ma = await MonitoringArea.create(trx, {
@@ -520,20 +511,18 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
-      const monitoringArea = await MonitoringArea.findById(db, areaId);
-
-      if (!monitoringArea) {
-        throw errorWithCode('Monitoring area not found', 404);
-      }
+      const monitoringArea = await ensureOwnedBy(
+        db,
+        MonitoringArea,
+        areaId,
+        'plantCommunityId',
+        communityId,
+        'Monitoring area not found',
+        404,
+      );
 
       await monitoringArea.fetchMonitoringAreaPurposes(db, {
         monitoring_area_id: monitoringArea.id,
@@ -598,20 +587,18 @@ export default class PlanPastureController {
       const agreementId = await Plan.agreementIdForPlanId(db, planId);
       await PlanRouteHelper.canUserAccessThisAgreement(db, Agreement, user, agreementId);
 
-      const pasture = await Pasture.findById(db, pastureId);
-      if (!pasture) {
-        throw errorWithCode(`No pasture found with id: ${pastureId}`);
-      }
-      const plantCommunity = await PlantCommunity.findById(db, communityId);
-      if (!plantCommunity) {
-        throw errorWithCode(`No plant community found with id: ${communityId}`);
-      }
+      await ensurePastureInPlan(db, Pasture, planId, pastureId);
+      await ensurePlantCommunityInPasture(db, PlantCommunity, pastureId, communityId);
 
-      const monitoringArea = await MonitoringArea.findById(db, areaId);
-
-      if (!monitoringArea) {
-        throw errorWithCode('Monitoring area not found', 400);
-      }
+      const monitoringArea = await ensureOwnedBy(
+        db,
+        MonitoringArea,
+        areaId,
+        'plantCommunityId',
+        communityId,
+        'Monitoring area not found',
+        404,
+      );
 
       await monitoringArea.fetchMonitoringAreaPurposes(db, {
         monitoring_area_id: areaId,

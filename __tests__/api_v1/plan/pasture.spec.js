@@ -1,5 +1,5 @@
 vi.mock('passport');
-import { default as request } from 'supertest';  
+import { default as request } from 'supertest';
 import passport from 'passport';
 import createApp from '../../../src';
 import userMocks from '../../../__mocks__/fixtures/user_account_mock.json';
@@ -215,9 +215,9 @@ describe('Test Pasture routes', () => {
       });
   });
 
-  test('Creating a plant community on a nonexistant pasture should throw a 500 error', async () => {
+  test('Creating a plant community on a nonexistant pasture should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/4/plant-community`).send(plantCommunityBody).expect(500);
+    await request(app).post(`${baseUrl}/4/plant-community`).send(plantCommunityBody).expect(404);
   });
 
   test('Creating a plant community with an incorrenct purpose of action should error', async () => {
@@ -283,21 +283,21 @@ describe('Test Pasture routes', () => {
     expect(await dm.db('plant_community')).toHaveLength(0);
   });
 
-  test('Deleting a nonexistant plant community throws a 400 error', async () => {
+  test('Deleting a nonexistant plant community throws a 404 error', async () => {
     const app = await createApp();
-    await request(app).delete(`${baseUrl}/1/plant-community/2`).expect(400);
+    await request(app).delete(`${baseUrl}/1/plant-community/2`).expect(404);
 
     expect(await dm.db('plant_community')).toHaveLength(1);
   });
 
-  test('Creating a plant community action on a nonexistant pasture should throw a 500 error', async () => {
+  test('Creating a plant community action on a nonexistant pasture should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/12/plant-community/1/action`).send(plantCommunityActionBody).expect(500);
+    await request(app).post(`${baseUrl}/12/plant-community/1/action`).send(plantCommunityActionBody).expect(404);
   });
 
-  test('Creating a plant community action on a nonexistant plant community should throw a 500 error', async () => {
+  test('Creating a plant community action on a nonexistant plant community should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/1/plant-community/10/action`).send(plantCommunityActionBody).expect(500);
+    await request(app).post(`${baseUrl}/1/plant-community/10/action`).send(plantCommunityActionBody).expect(404);
   });
 
   test('Updating a plant community action', async () => {
@@ -334,9 +334,9 @@ describe('Test Pasture routes', () => {
     expect(await dm.db('plant_community_action')).toHaveLength(0);
   });
 
-  test('Deleting a nonexistant plant community action throws a 400 error', async () => {
+  test('Deleting a nonexistant plant community action throws a 404 error', async () => {
     const app = await createApp();
-    await request(app).delete(`${baseUrl}/1/plant-community/1/action/10`).expect(400);
+    await request(app).delete(`${baseUrl}/1/plant-community/1/action/10`).expect(404);
 
     expect(await dm.db('plant_community_action')).toHaveLength(1);
   });
@@ -357,14 +357,14 @@ describe('Test Pasture routes', () => {
       });
   });
 
-  test('Creating an indicator plant on a nonexistant pasture should throw a 500 error', async () => {
+  test('Creating an indicator plant on a nonexistant pasture should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/10/plant-community/1/indicator-plant`).send(indicatorPlantBody).expect(500);
+    await request(app).post(`${baseUrl}/10/plant-community/1/indicator-plant`).send(indicatorPlantBody).expect(404);
   });
 
-  test('Creating an indicator plant on a nonexistant plant community should throw a 500 error', async () => {
+  test('Creating an indicator plant on a nonexistant plant community should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/1/plant-community/10/indicator-plant`).send(indicatorPlantBody).expect(500);
+    await request(app).post(`${baseUrl}/1/plant-community/10/indicator-plant`).send(indicatorPlantBody).expect(404);
   });
 
   test('Creating an indicator plant with an incorrect criteria should throw a 500 error', async () => {
@@ -403,11 +403,11 @@ describe('Test Pasture routes', () => {
     expect(plants[0].value).not.toEqual(value);
   });
 
-  test('Updating an indicator plant on a non-existant plant community throws a 500 error', async () => {
+  test('Updating an indicator plant on a non-existant plant community throws a 404 error', async () => {
     const app = await createApp();
     const value = 100.4;
 
-    await request(app).put(`${baseUrl}/1/plant-community/10/indicator-plant/1`).send({ value }).expect(500);
+    await request(app).put(`${baseUrl}/1/plant-community/10/indicator-plant/1`).send({ value }).expect(404);
 
     const plants = await dm.db('indicator_plant');
     expect(plants).toHaveLength(1);
@@ -422,9 +422,9 @@ describe('Test Pasture routes', () => {
     expect(plants).toHaveLength(0);
   });
 
-  test('Deleting a nonexistant indicator plant throws a 400 error', async () => {
+  test('Deleting a nonexistant indicator plant throws a 404 error', async () => {
     const app = await createApp();
-    await request(app).delete(`${baseUrl}/1/plant-community/1/indicator-plant/2`).expect(400);
+    await request(app).delete(`${baseUrl}/1/plant-community/1/indicator-plant/2`).expect(404);
 
     const plants = await dm.db('indicator_plant');
     expect(plants).toHaveLength(1);
@@ -472,14 +472,14 @@ describe('Test Pasture routes', () => {
       });
   });
 
-  test('Creating a monitoring area on a nonexistant pasture should throw a 500 error', async () => {
+  test('Creating a monitoring area on a nonexistant pasture should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/10/plant-community/1/monitoring-area`).send(monitoringAreaBody).expect(500);
+    await request(app).post(`${baseUrl}/10/plant-community/1/monitoring-area`).send(monitoringAreaBody).expect(404);
   });
 
-  test('Creating a monitoring area on a nonexistant plant community should throw a 500 error', async () => {
+  test('Creating a monitoring area on a nonexistant plant community should throw a 404 error', async () => {
     const app = await createApp();
-    await request(app).post(`${baseUrl}/1/plant-community/10/monitoring-area`).send(monitoringAreaBody).expect(500);
+    await request(app).post(`${baseUrl}/1/plant-community/10/monitoring-area`).send(monitoringAreaBody).expect(404);
   });
 
   test('Creating a monitoring area with an incorrect purpose type should throw a 500 error', async () => {
@@ -565,13 +565,13 @@ describe('Test Pasture routes', () => {
     expect(await dm.db('monitoring_area_purpose')).toHaveLength(0);
   });
 
-  test('Deleting a nonexistant monitoring area throws a 400 error', async () => {
+  test('Deleting a nonexistant monitoring area throws a 404 error', async () => {
     const app = await createApp();
 
     expect(await dm.db('monitoring_area')).toHaveLength(1);
     expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
 
-    await request(app).delete(`${baseUrl}/1/plant-community/1/monitoring-area/2`).expect(400);
+    await request(app).delete(`${baseUrl}/1/plant-community/1/monitoring-area/2`).expect(404);
 
     expect(await dm.db('monitoring_area')).toHaveLength(1);
     expect(await dm.db('monitoring_area_purpose')).toHaveLength(1);
