@@ -20,6 +20,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
+      - name: Shim docker-compose to docker compose
+        # ubuntu-latest runners no longer ship the docker-compose v1 binary;
+        # the Makefile still invokes it by name. Forward to the preinstalled
+        # Compose v2 plugin instead of rewriting every make target.
+        run: |
+          printf '#!/bin/sh\nexec docker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose > /dev/null
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
       - name: npm install, build, and test
         env:
           POSTGRESQL_DATABASE: myra
