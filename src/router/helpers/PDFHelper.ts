@@ -39,6 +39,26 @@ export const formatPlanVersionDates = (plan) => {
   return plan;
 };
 
+/**
+ * The amendment history is oldest-first. The front-page "Originally Approved"
+ * line must come from the earliest entry that actually has an approval, not
+ * the newest entry (which may be a still-unapproved amendment with a null
+ * approval date, e.g. RAN077582 V11).
+ */
+export const selectOriginalApproval = (amendmentSubmissions) =>
+  (amendmentSubmissions || []).find((submission) => submission && submission.approvedAt) || null;
+
+/**
+ * Rows for the amendment table on the PDF front page. The original approval
+ * (amendmentType null) is shown in its own "Originally Approved" line, so it
+ * must not also render as a phantom amendment row with blank submission
+ * columns.
+ */
+export const selectAmendmentTableRows = (amendmentSubmissions) =>
+  (amendmentSubmissions || []).filter(
+    (submission) => submission && submission.amendmentType !== null && submission.amendmentType !== undefined,
+  );
+
 // Format percent use - round up with no decimal places
 // If value is between 0 and 1 (exclusive), set to 1
 // Otherwise, round up to nearest integer

@@ -15,6 +15,7 @@ import Pasture from '../../libs/db2/model/pasture.js';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot.js';
 import { checkRequiredFields, objPathToCamelCase, removeCommonFields } from '../../libs/utils.js';
 import { PlanRouteHelper } from '../helpers/index.js';
+import { selectAmendmentTableRows, selectOriginalApproval } from '../helpers/PDFHelper.js';
 import { generatePlanPDF } from './PDFGeneration.js';
 import PlanExtensionRequests from '../../libs/db2/model/planextensionrequests.js';
 import PlanStatusController from './PlanStatusController.js';
@@ -690,12 +691,13 @@ export default class PlanController {
     const { planId } = params;
     const plan = await PlanController.fetchPlan(planId, user);
     const amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(db, planId);
-    if (amendmentSubmissions.length > 0)
+    const originalApproval = selectOriginalApproval(amendmentSubmissions);
+    if (originalApproval)
       plan.originalApproval = {
-        approver: amendmentSubmissions[amendmentSubmissions.length - 1].approvedBy,
-        date: amendmentSubmissions[amendmentSubmissions.length - 1].approvedAt,
+        approver: originalApproval.approvedBy,
+        date: originalApproval.approvedAt,
       };
-    plan.amendmentSubmissions = amendmentSubmissions;
+    plan.amendmentSubmissions = selectAmendmentTableRows(amendmentSubmissions);
     const response = await generatePlanPDF(plan);
     if (!response.data) {
       logger.error('Plan PDF generation returned empty data — CDOGS may be disabled or template missing');

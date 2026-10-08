@@ -5,6 +5,7 @@ import DataManager from '../../libs/db2/index.js';
 import config from '../../config/index.js';
 import { PlanRouteHelper } from '../helpers/index.js';
 import PlanSnapshot from '../../libs/db2/model/plansnapshot.js';
+import { selectAmendmentTableRows, selectOriginalApproval } from '../helpers/PDFHelper.js';
 import { generatePlanPDF } from './PDFGeneration.js';
 
 const dm = new DataManager(config);
@@ -125,17 +126,17 @@ export default class PlanVersionController {
       if (!versionData) throw errorWithCode('Could not find version for plan', 404);
       res.setHeader('Content-disposition', `attachment; filename=${agreementId}.pdf`);
       res.setHeader('Content-type', 'application/pdf');
-      versionData.snapshot.amendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(
+      const versionAmendmentSubmissions = await PlanSnapshot.fetchAmendmentSubmissions(
         db,
         planId,
         versionData.createdAt,
       );
-      if (versionData.snapshot.amendmentSubmissions.length > 0)
+      versionData.snapshot.amendmentSubmissions = selectAmendmentTableRows(versionAmendmentSubmissions);
+      const versionOriginalApproval = selectOriginalApproval(versionAmendmentSubmissions);
+      if (versionOriginalApproval)
         versionData.snapshot.originalApproval = {
-          approver:
-            versionData.snapshot.amendmentSubmissions[versionData.snapshot.amendmentSubmissions.length - 1].approvedBy,
-          date: versionData.snapshot.amendmentSubmissions[versionData.snapshot.amendmentSubmissions.length - 1]
-            .approvedAt,
+          approver: versionOriginalApproval.approvedBy,
+          date: versionOriginalApproval.approvedAt,
         };
       versionData.snapshot.schedules = versionData.snapshot.schedules.map((schedule) => ({
         ...schedule,
