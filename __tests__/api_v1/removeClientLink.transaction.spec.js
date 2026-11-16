@@ -53,4 +53,47 @@ describe('UserController.removeClientLink() transaction', () => {
 
     await request(app).delete(`${baseUrl}/1/client/NONEXISTENT`).expect(200);
   });
+
+  test('clears only pending extension requests when unlinking a client', async () => {
+    await db('user_account').insert([
+      { id: 1, username: 'admin', email: 'admin@test.ca', active: true, pia_seen: false },
+    ]);
+    await db('user_client_link').insert([{ user_id: 1, client_id: '00003055', active: true, type: 'owner' }]);
+    await db('plan_extension_requests').insert([
+      {
+        plan_id: null,
+        client_id: '00003055',
+        user_id: 1,
+        email: 'admin@test.ca',
+        requested_extension: null,
+      },
+      {
+        plan_id: null,
+        client_id: '00003055',
+        user_id: 1,
+        email: 'admin@test.ca',
+        requested_extension: false,
+      },
+    ]);
+
+    const app = await createApp();
+
+    await request(app).delete(`${baseUrl}/1/client/00003055`).expect(200);
+
+    const requests = await db
+      .selectFrom('plan_extension_requests')
+      .selectAll()
+      .where('client_id', '=', '00003055')
+      .execute();
+
+    expect(requests).toHaveLength(2);
+
+    const pending = requests.find((request) => request.requested_extension === null);
+    expect(pending.user_id).toBeNull();
+    expect(pending.email).toBeNull();
+
+    const rejected = requests.find((request) => request.requested_extension === false);
+    expect(rejected.user_id).toBe(1);
+    expect(rejected.email).toBe('admin@test.ca');
+  });
 });

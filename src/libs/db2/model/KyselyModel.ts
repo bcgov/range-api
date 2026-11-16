@@ -40,6 +40,30 @@ export default class KyselyModel {
     return obj;
   }
 
+  /**
+   * Apply a where object to a Kysely query.
+   *
+   * SQL equality against NULL never matches, so scalar null values must use `is null`.
+   * Empty arrays are skipped by default (fail-closed callers such as `find` return early);
+   * pass `emptyArray: 'equals'` to preserve legacy callers that bind the array directly.
+   */
+  static applyWhere(query: any, where: Record<string, any>, options: { emptyArray?: 'skip' | 'equals' } = {}) {
+    Object.entries(where).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        if (v.length > 0) {
+          query = query.where(k, 'in', v);
+        } else if (options.emptyArray === 'equals') {
+          query = query.where(k, '=', v);
+        }
+      } else if (v === null) {
+        query = query.where(k, 'is', null);
+      } else {
+        query = query.where(k, '=', v);
+      }
+    });
+    return query;
+  }
+
   static async find(_db: any, where: Record<string, any>, order?: [string, string]) {
     const hasEmptyIn = Object.values(where).some((v) => Array.isArray(v) && v.length === 0);
     if (hasEmptyIn) {
@@ -48,13 +72,7 @@ export default class KyselyModel {
 
     const db = _db || kyselyDb;
     let query = db.selectFrom(this.table).selectAll();
-    Object.entries(where).forEach(([k, v]) => {
-      if (Array.isArray(v)) {
-        if (v.length > 0) query = query.where(k, 'in', v);
-      } else {
-        query = query.where(k, '=', v);
-      }
-    });
+    query = this.applyWhere(query, where);
     if (order && order.length > 0) {
       query = query.orderBy(order[0], order[1] || 'asc');
     }
@@ -105,9 +123,7 @@ export default class KyselyModel {
     });
     if (Object.keys(obj).length === 0) return this.findOne(_db, where);
     let query = db.updateTable(this.table).set(obj);
-    Object.entries(where).forEach(([k, v]) => {
-      query = (query as any).where(k, '=', v);
-    });
+    query = this.applyWhere(query, where, { emptyArray: 'equals' });
     const results = await (query as any).returning(this.primaryKey).execute();
     if (results.length > 0)
       return this.findById(_db, typeof results[0] === 'number' ? results[0] : results[0][this.primaryKey]);
@@ -117,9 +133,7 @@ export default class KyselyModel {
   static async remove(_db: any, where: Record<string, any>) {
     const db = _db || kyselyDb;
     let query = db.deleteFrom(this.table);
-    Object.entries(where).forEach(([k, v]) => {
-      query = (query as any).where(k, '=', v);
-    });
+    query = this.applyWhere(query, where, { emptyArray: 'equals' });
     const results = await (query as any).execute();
     return results.length;
   }
@@ -133,13 +147,7 @@ export default class KyselyModel {
   static async count(_db: any, where: Record<string, any> = {}) {
     const db = _db || kyselyDb;
     let query = db.selectFrom(this.table).select(db.fn.countAll().as('count'));
-    Object.entries(where).forEach(([k, v]) => {
-      if (Array.isArray(v)) {
-        if (v.length > 0) query = query.where(k, 'in', v);
-      } else {
-        query = query.where(k, '=', v);
-      }
-    });
+    query = this.applyWhere(query, where);
     const results = await query.execute();
     if (results.length === 0) return 0;
     const count = parseInt((results[0] as Record<string, string>).count, 10);

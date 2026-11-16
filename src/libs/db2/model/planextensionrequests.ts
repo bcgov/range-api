@@ -33,12 +33,14 @@ export default class PlanExtensionRequests extends KyselyModel {
     Object.entries(where).forEach(([k, v]) => {
       if (Array.isArray(v)) {
         if (v.length > 0) query = query.where(k, 'in', v);
+      } else if (v === null) {
+        query = query.where(k, 'is', null);
       } else {
         query = query.where(k, '=', v);
       }
     });
     if (exclude) {
-      query = query.where(exclude[0], '!=', exclude[1]);
+      query = exclude[1] === null ? query.where(exclude[0], 'is not', null) : query.where(exclude[0], '!=', exclude[1]);
     }
     const results = await query.execute();
     return results.map(PlanExtensionRequests.mapRow);
