@@ -6,6 +6,7 @@ import {
   updateAgreementExemptions,
   sendAgreementExemptionStatusEmails,
 } from '../src/router/helpers/AgreementExemptionHelper.js';
+import { reconcilePlanExtensionVoters } from '../src/router/helpers/PlanExtensionHelper.js';
 import NotificationHelper from '../src/router/helpers/NotificationHelper.js';
 
 const dm = new (DataManager as any)(config);
@@ -110,38 +111,48 @@ const main = async () => {
         const oneYearLater = new Date();
         oneYearLater.setMonth(currentDate.getMonth() + 12);
         const expiringPlans = await Plan.fetchExpiringPlans(trx, currentDate, oneYearLater, 'plan.id');
-        const requiredVotes: Record<string, number> = {};
+        const planClientIds: Record<string, Set<string>> = {};
         for (const expiringPlan of expiringPlans) {
+          if (!expiringPlan.clientId) continue;
           console.log(`Processing ${expiringPlan.planId}`);
           try {
-            await PlanExtensionRequests.create(trx, {
-              planId: expiringPlan.planId,
-              clientId: expiringPlan.clientId,
-              userId: expiringPlan.userId,
-              email: expiringPlan.email,
+            const existingRequest = await PlanExtensionRequests.findOne(trx, {
+              plan_id: expiringPlan.planId,
+              client_id: expiringPlan.clientId,
             });
-            if (requiredVotes[expiringPlan.planId] === undefined) requiredVotes[expiringPlan.planId] = 1;
-            else requiredVotes[expiringPlan.planId] = requiredVotes[expiringPlan.planId] + 1;
-            if (expiringPlan.email) {
-              await NotificationHelper.sendEmail(db, [expiringPlan.email], 'Request Plan Extension Votes', {
-                '{agreementId}': expiringPlan.agreementId,
+            if (!existingRequest) {
+              await PlanExtensionRequests.create(trx, {
+                planId: expiringPlan.planId,
+                clientId: expiringPlan.clientId,
+                userId: expiringPlan.userId,
+                email: expiringPlan.email,
               });
+              if (expiringPlan.email) {
+                await NotificationHelper.sendEmail(db, [expiringPlan.email], 'Request Plan Extension Votes', {
+                  '{agreementId}': expiringPlan.agreementId,
+                });
+              }
             }
+            if (!planClientIds[expiringPlan.planId]) planClientIds[expiringPlan.planId] = new Set();
+            planClientIds[expiringPlan.planId].add(expiringPlan.clientId);
           } catch (error) {
             console.error(error);
           }
         }
-        for (const planId of Object.keys(requiredVotes)) {
+        for (const planId of Object.keys(planClientIds)) {
           await Plan.update(
             trx,
             { id: planId },
             {
-              extensionRequiredVotes: requiredVotes[planId],
-              extensionReceivedVotes: 0,
               extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
               extensionDate: null,
             },
           );
+          const reconciliation = await reconcilePlanExtensionVoters(trx, planId, {
+            userId: SYSTEM_USER_ID,
+            method: 'SYSTEM',
+            path: 'background_job.plan_extension_exemption',
+          });
           const currentPlan = await Plan.findById(trx, planId);
           await writeDomainAudit(trx, {
             userId: SYSTEM_USER_ID,
@@ -153,9 +164,11 @@ const main = async () => {
             agreementId: currentPlan?.agreementId || null,
             metadata: {
               fields: ['extensionRequiredVotes', 'extensionReceivedVotes', 'extensionStatus', 'extensionDate'],
-              extensionRequiredVotes: requiredVotes[planId],
-              extensionReceivedVotes: 0,
+              extensionRequiredVotes: currentPlan?.extensionRequiredVotes ?? null,
+              extensionReceivedVotes: currentPlan?.extensionReceivedVotes ?? null,
               extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+              clientCount: planClientIds[planId].size,
+              reconciliationStatus: reconciliation.status,
             },
           });
         }

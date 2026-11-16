@@ -579,7 +579,12 @@ export default class Plan extends KyselyModel {
       .selectFrom('plan')
       .leftJoin('agreement', 'plan.agreement_id', 'agreement.forest_file_id')
       .leftJoin('client_agreement', 'plan.agreement_id', 'client_agreement.agreement_id')
-      .leftJoin('user_client_link', 'user_client_link.client_id', 'client_agreement.client_id')
+      .leftJoin('user_client_link', (join: any) =>
+        join
+          .onRef('user_client_link.client_id', '=', 'client_agreement.client_id')
+          .on('user_client_link.active', '=', true)
+          .on('user_client_link.type', '=', 'owner'),
+      )
       .leftJoin('user_account', 'user_account.id', 'user_client_link.user_id')
       .select([
         sql`plan.id`.as('planId'),

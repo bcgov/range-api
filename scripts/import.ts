@@ -1,6 +1,7 @@
 import DataManager from '../src/libs/db2/index.js';
 import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
 import { SYSTEM_USER_ID } from '../src/constants.js';
+import { reconcileAwaitingExtensionVoterRosters } from '../src/router/helpers/PlanExtensionHelper.js';
 import { fileURLToPath } from 'url';
 
 const LICENSEE_URL = `${process.env.FTA_BASE_URL}/ords-myra/v1/fta/FTA/GetAllRangeLicensees`;
@@ -723,6 +724,16 @@ const updateFTAData = async (licensee: any[], client: any[], usage: any[]) => {
   msg = msg + (await updateZone(licensee)) + '\n';
   if (usage) msg = msg + (await updateUsage(usage));
   else console.log('***** No usage data available to update *****');
+
+  // Agreement holder membership may have changed during the import. Reconcile any
+  // in-flight extension votes so obsolete voters cannot block completion.
+  await db.transaction().execute(async (trx: any) => {
+    await reconcileAwaitingExtensionVoterRosters(trx, {
+      userId: SYSTEM_USER_ID,
+      method: 'SYSTEM',
+      path: 'background_job.import',
+    });
+  });
 
   console.log(msg);
 };

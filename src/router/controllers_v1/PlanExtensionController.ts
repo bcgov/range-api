@@ -10,6 +10,7 @@ import { checkRequiredFields } from '../../libs/utils.js';
 import PlanController from './PlanController.js';
 import PlanStatusController from './PlanStatusController.js';
 import NotificationHelper from '../helpers/NotificationHelper.js';
+import { reconcilePlanExtensionVoters } from '../helpers/PlanExtensionHelper.js';
 import { writeDomainAudit } from '../../libs/audit.js';
 
 const dm = new DataManager(config);
@@ -27,6 +28,16 @@ export default class PlanExtensionController {
     const { extensionRequestId } = body;
     checkRequiredFields(['planId'], 'params', req);
     await db.transaction().execute(async (trx) => {
+      // Keep the voter roster aligned with the current agreement holders before voting.
+      await reconcilePlanExtensionVoters(trx, planId, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+      });
       const extensionRequest = await PlanExtensionRequests.findOne(trx, {
         id: extensionRequestId,
         plan_id: planId,
@@ -244,6 +255,16 @@ export default class PlanExtensionController {
     };
     let extensionStatus;
     await db.transaction().execute(async (trx) => {
+      // Keep the voter roster aligned with the current agreement holders before voting.
+      await reconcilePlanExtensionVoters(trx, planId, {
+        requestId: req.auditRequestId || null,
+        correlationId: req.auditCorrelationId || null,
+        userId: user.id,
+        roleId: user.roleId || null,
+        method: req.method,
+        path: req.originalUrl,
+        route: req.route?.path || null,
+      });
       const planEntry = await Plan.findOne(trx, { id: planId });
       if (user.isAgreementHolder()) {
         if (!planEntry || planEntry.extensionStatus != PLAN_EXTENSION_STATUS.AWAITING_VOTES) {
