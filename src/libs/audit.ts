@@ -234,7 +234,7 @@ export function redactValue(value: unknown, depth: number = 0): unknown {
     return value.length > MAX_STRING_LENGTH ? `${value.slice(0, MAX_STRING_LENGTH)}...[TRUNCATED]` : value;
   }
   if (typeof value === 'number' || typeof value === 'boolean') return value;
-  if (value instanceof Date) return value.toISOString();
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString();
   if (Array.isArray(value)) {
     return value.slice(0, MAX_ARRAY_ITEMS).map((item) => redactValue(item, depth + 1));
   }

@@ -4,20 +4,30 @@ const {
   mockWriteDomainAudit,
   mockDb,
   mockAgreementFindOne,
+  mockAgreementFindById,
   mockUsageFindOne,
   mockUsageUpdate,
   mockUsageCreate,
   mockDistrictFindOne,
   mockDistrictCreate,
+  mockClientFindOne,
+  mockClientUpdate,
+  mockClientCreate,
+  mockClientTypeFind,
 } = vi.hoisted(() => ({
   mockWriteDomainAudit: vi.fn().mockResolvedValue(undefined),
   mockDb: {},
   mockAgreementFindOne: vi.fn(),
+  mockAgreementFindById: vi.fn().mockResolvedValue(null),
   mockUsageFindOne: vi.fn(),
   mockUsageUpdate: vi.fn().mockResolvedValue(undefined),
   mockUsageCreate: vi.fn().mockResolvedValue(undefined),
   mockDistrictFindOne: vi.fn(),
   mockDistrictCreate: vi.fn().mockResolvedValue(undefined),
+  mockClientFindOne: vi.fn(),
+  mockClientUpdate: vi.fn().mockResolvedValue(undefined),
+  mockClientCreate: vi.fn(),
+  mockClientTypeFind: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../../src/libs/audit.js', () => ({
@@ -32,11 +42,20 @@ vi.mock('../../src/libs/db2/index.js', () => ({
         db: mockDb,
         Agreement: {
           findOne: mockAgreementFindOne,
+          findById: mockAgreementFindById,
         },
         AgreementType: {},
-        Client: {},
-        ClientType: {},
-        ClientAgreement: {},
+        Client: {
+          findOne: mockClientFindOne,
+          update: mockClientUpdate,
+          create: mockClientCreate,
+        },
+        ClientType: {
+          find: mockClientTypeFind,
+        },
+        ClientAgreement: {
+          findOne: vi.fn().mockResolvedValue(null),
+        },
         District: {
           findOne: mockDistrictFindOne,
           create: mockDistrictCreate,
@@ -155,6 +174,90 @@ describe('import background job semantic audit', () => {
           totalNonUse: 3,
           totalAnnualUse: 97,
         }),
+      }),
+    );
+  });
+
+  it('parses FTA ISO timestamps and returns null for empty or invalid dates', async () => {
+    const { parseDate } = await import('../../scripts/import.ts');
+
+    expect(parseDate('2009-02-06T08:00:00Z').toISOString()).toBe('2009-02-06T08:00:00.000Z');
+    expect(parseDate('2019-10-16T22:27:13Z').toISOString()).toBe('2019-10-16T22:27:13.000Z');
+    expect(parseDate('2009-02-06').getTime()).toBe(new Date(2009, 1, 6).getTime());
+    expect(parseDate(null)).toBeNull();
+    expect(parseDate('')).toBeNull();
+    expect(parseDate('not-a-date')).toBeNull();
+  });
+
+  it('stores licensee dates and writes client.updated audit with valid dates', async () => {
+    mockClientFindOne.mockResolvedValue({ id: 'C0000001', locationCodes: ['00'] });
+    const { updateClient } = await import('../../scripts/import.ts');
+
+    await updateClient([
+      {
+        forest_file_id: 'RAN000001',
+        client_locn_code: '01',
+        forest_file_client_type_code: 'A',
+        client_number: 'C0000001',
+        client_name: 'Test Client',
+        licensee_start_date: '2008-05-22T07:00:00Z',
+        licensee_end_date: '2019-10-16T22:27:13Z',
+      },
+    ]);
+
+    const expectedDates = {
+      licenseeStartDate: new Date('2008-05-22T07:00:00Z'),
+      licenseeEndDate: new Date('2019-10-16T22:27:13Z'),
+    };
+    expect(mockClientUpdate).toHaveBeenCalledWith(
+      mockDb,
+      { client_number: 'C0000001' },
+      expect.objectContaining(expectedDates),
+    );
+    expect(mockWriteDomainAudit).toHaveBeenCalledWith(
+      mockDb,
+      expect.objectContaining({
+        action: 'client.updated',
+        entityType: 'client',
+        entityId: 'C0000001',
+        agreementId: 'RAN000001',
+        metadata: expect.objectContaining({
+          fields: ['name', 'locationCodes', 'licenseeStartDate', 'licenseeEndDate'],
+          ...expectedDates,
+        }),
+      }),
+    );
+  });
+
+  it('stores licensee dates and writes client.created audit for a new client', async () => {
+    mockClientFindOne.mockResolvedValue(null);
+    mockClientCreate.mockResolvedValue({ id: 'C0000002', locationCodes: ['01'] });
+    const { updateClient } = await import('../../scripts/import.ts');
+
+    await updateClient([
+      {
+        forest_file_id: 'RAN000001',
+        client_locn_code: '01',
+        forest_file_client_type_code: 'A',
+        client_number: 'C0000002',
+        client_name: 'New Client',
+        licensee_start_date: '2009-02-06T08:00:00Z',
+        licensee_end_date: null,
+      },
+    ]);
+
+    const expectedDates = {
+      licenseeStartDate: new Date('2009-02-06T08:00:00Z'),
+      licenseeEndDate: null,
+    };
+    expect(mockClientCreate).toHaveBeenCalledWith(mockDb, expect.objectContaining(expectedDates));
+    expect(mockWriteDomainAudit).toHaveBeenCalledWith(
+      mockDb,
+      expect.objectContaining({
+        action: 'client.created',
+        entityType: 'client',
+        entityId: 'C0000002',
+        metadata: expect.objectContaining(expectedDates),
       }),
     );
   });

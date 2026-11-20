@@ -57,6 +57,18 @@ describe('audit utilities', () => {
     const result = capMetadata(payload);
     expect(result.text.endsWith('...[TRUNCATED]')).toBe(true);
   });
+
+  test('serializes valid dates and records invalid dates as null instead of throwing', () => {
+    expect(
+      redactValue({
+        valid: new Date('2009-02-06T08:00:00Z'),
+        invalid: new Date('2009/02/06T08:00:00Z'),
+      }),
+    ).toEqual({
+      valid: '2009-02-06T08:00:00.000Z',
+      invalid: null,
+    });
+  });
 });
 
 describe('domain audit writes', () => {

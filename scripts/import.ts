@@ -34,7 +34,13 @@ const isValidRecord = (record: Record<string, any>) => {
   return true;
 };
 
-const parseDate = (dateAsString: string) => new Date(dateAsString.replace(/-/g, '/'));
+// FTA returns ISO 8601 timestamps (e.g. 2009-02-06T08:00:00Z), which must be parsed as-is.
+// Other strings keep the legacy dash-to-slash parsing (local time). Unparseable values become null.
+const parseDate = (dateAsString: string | null | undefined): Date | null => {
+  if (!dateAsString) return null;
+  const date = dateAsString.includes('T') ? new Date(dateAsString) : new Date(dateAsString.replace(/-/g, '/'));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const skipping = (action: string, agreementId: string, index: number) => {
   if (agreementId.indexOf('RB') >= 0 || agreementId.indexOf('DL') >= 0) return;
@@ -493,6 +499,11 @@ const updateClient = async (data: any[]) => {
         client_number: clientNumber,
       });
 
+      const licenseeDates = {
+        licenseeStartDate: parseDate(licenseeStartDate),
+        licenseeEndDate: parseDate(licenseeEndDate),
+      };
+
       if (client) {
         if (clientTypeCode === 'P' || clientTypeCode === 'C') {
           const plans = await Plan.find(db, { agreement_id: agreementId });
@@ -513,8 +524,7 @@ const updateClient = async (data: any[]) => {
           {
             name: clientName || 'Unknown Name',
             locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
-            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
-            endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
+            ...licenseeDates,
           },
         );
         await writeDomainAudit(db, {
@@ -526,11 +536,10 @@ const updateClient = async (data: any[]) => {
           entityId: clientNumber,
           agreementId,
           metadata: {
-            fields: ['name', 'locationCodes', 'startDate', 'endDate'],
+            fields: ['name', 'locationCodes', 'licenseeStartDate', 'licenseeEndDate'],
             name: clientName || 'Unknown Name',
             locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
-            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
-            endDate: licenseeEndDate ? parseDate(licenseeEndDate) : null,
+            ...licenseeDates,
           },
         });
         updated += 1;
@@ -539,7 +548,7 @@ const updateClient = async (data: any[]) => {
           clientNumber: clientNumber,
           name: clientName || 'Unknown Name',
           locationCodes: [clientLocationCode],
-          startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+          ...licenseeDates,
         });
         await writeDomainAudit(db, {
           userId: SYSTEM_USER_ID,
@@ -550,10 +559,10 @@ const updateClient = async (data: any[]) => {
           entityId: clientNumber,
           agreementId,
           metadata: {
-            fields: ['name', 'locationCodes', 'startDate'],
+            fields: ['name', 'locationCodes', 'licenseeStartDate', 'licenseeEndDate'],
             name: clientName || 'Unknown Name',
             locationCodes: [clientLocationCode],
-            startDate: licenseeStartDate ? parseDate(licenseeStartDate) : null,
+            ...licenseeDates,
           },
         });
         created += 1;
@@ -774,4 +783,4 @@ if (process.argv[1] === __filename) {
   main();
 }
 
-export { main, updateUsage, updateDistrict };
+export { main, updateUsage, updateDistrict, updateClient, parseDate };
