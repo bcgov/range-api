@@ -2,6 +2,11 @@
 set -euo pipefail
 
 # Refreshes target Crunchy DB from prod Crunchy DB.
+#
+# Crunchy DB pods mount /tmp as an emptyDir limited to 16Mi; writing a dump there
+# gets the pod evicted (and fails over prod). The dump is streamed to this job's
+# container instead and staged on the target primary's data volume.
+#
 # Usage:
 #   ./openshift/range_refresh_dev_postgres.sh
 #   TARGET_PROJECT=3187b2-test TARGET_CLUSTER=range-pg17-test ./openshift/range_refresh_dev_postgres.sh
@@ -20,6 +25,8 @@ DB_CONTAINER_NAME="${DB_CONTAINER_NAME:-database}"
 TRIGGER_MIGRATE_PIPELINE="${TRIGGER_MIGRATE_PIPELINE:-true}"
 MIGRATE_PIPELINE_NAME="${MIGRATE_PIPELINE_NAME:-migrate-data-up}"
 MIGRATE_PIPELINE_SERVICE_ACCOUNT="${MIGRATE_PIPELINE_SERVICE_ACCOUNT:-pipeline}"
+TARGET_DUMP_DIR="${TARGET_DUMP_DIR:-/pgdata}"
+REPLICA_SYNC_TIMEOUT_SECONDS="${REPLICA_SYNC_TIMEOUT_SECONDS:-900}"
 
 get_primary_pod() {
   local project="$1"
@@ -91,6 +98,79 @@ is_pod_primary() {
   [ "${in_recovery}" = "f" ]
 }
 
+# Prints "<patroni cluster> <member>" for each replica that is not streaming with zero replay lag.
+get_unhealthy_replicas() {
+  local project="$1"
+  local pod="$2"
+  local tsv
+
+  tsv="$(oc -n "${project}" exec "${pod}" -c "${DB_CONTAINER_NAME}" -- patronictl list -f tsv 2>/dev/null || true)"
+  if [ -z "${tsv}" ]; then
+    echo "? ?"
+    return 0
+  fi
+
+  while IFS=$'\t' read -r cluster member _host role state _tl _receive_lsn _receive_lag _replay_lsn replay_lag; do
+    if [ "${role}" = "Replica" ] || [ "${role}" = "Sync Standby" ]; then
+      if [ "${state}" != "streaming" ] || [ "${replay_lag}" != "0" ]; then
+        echo "${cluster} ${member}"
+      fi
+    fi
+  done <<<"${tsv}"
+}
+
+wait_for_replicas() {
+  local project="$1"
+  local pod="$2"
+  local timeout_seconds="$3"
+  local deadline=$((SECONDS + timeout_seconds))
+  local unhealthy
+
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    unhealthy="$(get_unhealthy_replicas "${project}" "${pod}")"
+    if [ -z "${unhealthy}" ]; then
+      return 0
+    fi
+    sleep 15
+  done
+
+  echo "Replicas not caught up after ${timeout_seconds}s:"
+  echo "${unhealthy}"
+  return 1
+}
+
+# A large restore can outrun WAL retention on the replicas; rebuild any that fall behind.
+ensure_replicas_healthy() {
+  local project="$1"
+  local cluster="$2"
+
+  local pod
+  pod="$(get_primary_pod "${project}" "${cluster}")"
+  echo "Waiting for replicas of ${project}/${cluster} to catch up..."
+  if wait_for_replicas "${project}" "${pod}" "${REPLICA_SYNC_TIMEOUT_SECONDS}"; then
+    echo "All replicas are streaming."
+    return 0
+  fi
+
+  local patroni_cluster member
+  while read -r patroni_cluster member; do
+    if [ -z "${member}" ] || [ "${member}" = "?" ]; then
+      continue
+    fi
+    echo "Reinitializing replica ${member}..."
+    oc -n "${project}" exec "${pod}" -c "${DB_CONTAINER_NAME}" -- \
+      patronictl reinit "${patroni_cluster}" "${member}" --force || echo "Warning: reinit of ${member} failed."
+  done <<<"$(get_unhealthy_replicas "${project}" "${pod}")"
+
+  if wait_for_replicas "${project}" "${pod}" "${REPLICA_SYNC_TIMEOUT_SECONDS}"; then
+    echo "All replicas are streaming after reinit."
+    return 0
+  fi
+
+  echo "Error: replicas of ${project}/${cluster} are still unhealthy after reinit."
+  return 1
+}
+
 SOURCE_PRIMARY_POD="$(get_primary_pod "${SOURCE_PROJECT}" "${SOURCE_CLUSTER}")"
 TARGET_PRIMARY_POD="$(get_primary_pod "${TARGET_PROJECT}" "${TARGET_CLUSTER}")"
 
@@ -109,19 +189,24 @@ echo "Target primary pod: ${TARGET_PRIMARY_POD}"
 echo "Database: ${DB_NAME}"
 
 LOCAL_DUMP_FILE="$(mktemp /tmp/${DB_NAME}.dump.XXXXXX)"
-SOURCE_DUMP_FILE="/tmp/${DB_NAME}.dump"
-TARGET_DUMP_FILE="/tmp/${DB_NAME}.dump"
+TARGET_DUMP_FILE="${TARGET_DUMP_DIR}/${DB_NAME}.refresh.dump"
 
 cleanup() {
-  oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- rm -f "${SOURCE_DUMP_FILE}" >/dev/null 2>&1 || true
-  local cleanup_target_pod
-  cleanup_target_pod="$(get_primary_pod "${TARGET_PROJECT}" "${TARGET_CLUSTER}" || true)"
-  if [ -n "${cleanup_target_pod}" ]; then
-    oc -n "${TARGET_PROJECT}" exec "${cleanup_target_pod}" -c "${DB_CONTAINER_NAME}" -- rm -f "${TARGET_DUMP_FILE}" >/dev/null 2>&1 || true
-  fi
+  # The primary may have changed during the restore, so clean every target instance.
+  local target_pods
+  target_pods="$(oc -n "${TARGET_PROJECT}" get pod \
+    -l "postgres-operator.crunchydata.com/cluster=${TARGET_CLUSTER},postgres-operator.crunchydata.com/role" \
+    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)"
+  for pod in ${target_pods}; do
+    oc -n "${TARGET_PROJECT}" exec "${pod}" -c "${DB_CONTAINER_NAME}" -- rm -f "${TARGET_DUMP_FILE}" >/dev/null 2>&1 || true
+  done
   rm -f "${LOCAL_DUMP_FILE}" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+
+is_valid_dump() {
+  [ -s "${LOCAL_DUMP_FILE}" ] && [ "$(head -c 5 "${LOCAL_DUMP_FILE}")" = "PGDMP" ]
+}
 
 echo "Dumping ${DB_NAME} from ${SOURCE_PROJECT}/${SOURCE_CLUSTER}..."
 dump_attempt=1
@@ -136,9 +221,12 @@ while [ "${dump_attempt}" -le "${DUMP_RETRIES}" ]; do
       echo "Warning: ${SOURCE_PRIMARY_POD} does not report as primary (label lag or failover in progress); re-resolving next attempt."
     else
       source_restarts_before="$(get_pod_restart_count "${SOURCE_PROJECT}" "${SOURCE_PRIMARY_POD}")"
-      if PGOPTIONS="-c statement_timeout=0" oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- \
-        pg_dump -U postgres -d "${DB_NAME}" --format=custom --no-owner --no-privileges --verbose --file "${SOURCE_DUMP_FILE}" 2>&1 | tail -5; then
-        echo "Dump completed successfully."
+      # Stream to stdout: nothing is written inside the source pod.
+      if oc -n "${SOURCE_PROJECT}" exec "${SOURCE_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- \
+        env PGOPTIONS="-c statement_timeout=0" \
+        pg_dump -U postgres -d "${DB_NAME}" --format=custom --no-owner --no-privileges >"${LOCAL_DUMP_FILE}" &&
+        is_valid_dump; then
+        echo "Dump completed successfully ($(wc -c <"${LOCAL_DUMP_FILE}") bytes)."
         break
       fi
 
@@ -164,9 +252,6 @@ if [ "${dump_attempt}" -gt "${DUMP_RETRIES}" ]; then
   exit 1
 fi
 
-echo "Copying dump to local..."
-oc -n "${SOURCE_PROJECT}" cp "${SOURCE_PRIMARY_POD}:${SOURCE_DUMP_FILE}" "${LOCAL_DUMP_FILE}" -c "${DB_CONTAINER_NAME}"
-
 echo "Restoring ${DB_NAME} into ${TARGET_PROJECT}/${TARGET_CLUSTER}..."
 attempt=1
 while [ "${attempt}" -le "${RESTORE_RETRIES}" ]; do
@@ -182,7 +267,7 @@ while [ "${attempt}" -le "${RESTORE_RETRIES}" ]; do
       echo "Warning: PostgreSQL in ${TARGET_PROJECT}/${TARGET_CLUSTER} did not become ready within ${READY_TIMEOUT_SECONDS}s."
     fi
 
-    echo "Copying dump to target..."
+    echo "Copying dump to target ${TARGET_DUMP_FILE}..."
     if oc -n "${TARGET_PROJECT}" cp "${LOCAL_DUMP_FILE}" "${TARGET_PRIMARY_POD}:${TARGET_DUMP_FILE}" -c "${DB_CONTAINER_NAME}" && \
       oc -n "${TARGET_PROJECT}" exec "${TARGET_PRIMARY_POD}" -c "${DB_CONTAINER_NAME}" -- \
         pg_restore -U postgres -d "${DB_NAME}" --clean --if-exists --no-owner --no-privileges "${TARGET_DUMP_FILE}"; then
@@ -201,6 +286,11 @@ spec:
   - name: openshift-pineline
     emptyDir: {}
 PIPELINE_EOF
+      fi
+
+      if ! ensure_replicas_healthy "${TARGET_PROJECT}" "${TARGET_CLUSTER}"; then
+        echo "Database data was refreshed, but ${TARGET_PROJECT}/${TARGET_CLUSTER} replicas need attention."
+        exit 1
       fi
 
       echo "Database refresh completed successfully."
