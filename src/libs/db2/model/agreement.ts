@@ -539,19 +539,22 @@ export default class Agreement extends KyselyModel {
   }
 
   static async retireAgreements(_db: any, activeFTAAgreementIds: any) {
-    await sql`
+    const results: any = await sql`
       UPDATE agreement SET retired = true
       WHERE forest_file_id NOT IN (${sql.join(activeFTAAgreementIds)})
       AND forest_file_id NOT LIKE 'RAN099%'
+      AND retired IS DISTINCT FROM true
+      RETURNING forest_file_id
     `.execute(kyselyDb);
 
     await sql`
       UPDATE plan SET status_id = 25
       WHERE agreement_id NOT IN (${sql.join(activeFTAAgreementIds)})
       AND agreement_id NOT LIKE 'RAN099%'
+      AND status_id IS DISTINCT FROM 25
     `.execute(kyselyDb);
 
-    return [];
+    return results.rows.map((row: any) => row.forest_file_id);
   }
 
   static async unretireAgreements(_db: any, activeFTAAgreementIds: any) {

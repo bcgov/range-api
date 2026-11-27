@@ -2,12 +2,14 @@ import config from '../src/config/index.js';
 import { PLAN_EXTENSION_STATUS, SYSTEM_USER_ID } from '../src/constants.js';
 import DataManager from '../src/libs/db2/index.js';
 import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
+import { changeAuditMetadata, changedValues, diffFields, hasChanges } from '../src/libs/fieldChanges.js';
 import {
   updateAgreementExemptions,
   sendAgreementExemptionStatusEmails,
 } from '../src/router/helpers/AgreementExemptionHelper.js';
 import { reconcilePlanExtensionVoters } from '../src/router/helpers/PlanExtensionHelper.js';
 import NotificationHelper from '../src/router/helpers/NotificationHelper.js';
+import { fileURLToPath } from 'url';
 
 const dm = new (DataManager as any)(config);
 
@@ -65,11 +67,17 @@ const activateReplacementPlans = async (trx: any) => {
   }
 };
 
+const RETIRED_PLAN_STATUS_ID = 25;
+const EXPIRED_PLAN_STATUS_ID = 26;
+
 const processExpiredPlans = async (trx: any) => {
   const results = await trx.selectFrom(Plan.table).selectAll().where('plan_end_date', '<', new Date()).execute();
   for (const result of results) {
     if (
-      result.status_id === 26 ||
+      result.status_id === EXPIRED_PLAN_STATUS_ID ||
+      // The import job retires plans whose agreement is no longer in FTA; keep them retired
+      // rather than flipping them to expired on every run.
+      result.status_id === RETIRED_PLAN_STATUS_ID ||
       result.extension_status === PLAN_EXTENSION_STATUS.AWAITING_EXTENSION ||
       (result.extension_status === PLAN_EXTENSION_STATUS.AWAITING_VOTES &&
         result.extension_received_votes === result.extension_required_votes)
@@ -79,7 +87,7 @@ const processExpiredPlans = async (trx: any) => {
       trx,
       { id: result.id },
       {
-        status_id: 26,
+        status_id: EXPIRED_PLAN_STATUS_ID,
       },
     );
     await writeDomainAudit(trx, {
@@ -92,7 +100,8 @@ const processExpiredPlans = async (trx: any) => {
       agreementId: result.agreement_id,
       metadata: {
         field: 'status_id',
-        to: 26,
+        from: result.status_id,
+        to: EXPIRED_PLAN_STATUS_ID,
       },
     });
   }
@@ -140,19 +149,21 @@ const main = async () => {
           }
         }
         for (const planId of Object.keys(planClientIds)) {
-          await Plan.update(
-            trx,
-            { id: planId },
-            {
-              extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
-              extensionDate: null,
-            },
-          );
+          const plan = await Plan.findById(trx, planId);
+          const changes = diffFields(plan || {}, {
+            extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
+            extensionDate: null,
+          });
+          if (hasChanges(changes)) {
+            await Plan.update(trx, { id: planId }, changedValues(changes));
+          }
           const reconciliation = await reconcilePlanExtensionVoters(trx, planId, {
             userId: SYSTEM_USER_ID,
             method: 'SYSTEM',
             path: 'background_job.plan_extension_exemption',
           });
+          if (!hasChanges(changes)) continue;
+
           const currentPlan = await Plan.findById(trx, planId);
           await writeDomainAudit(trx, {
             userId: SYSTEM_USER_ID,
@@ -163,10 +174,9 @@ const main = async () => {
             entityId: planId,
             agreementId: currentPlan?.agreementId || null,
             metadata: {
-              fields: ['extensionRequiredVotes', 'extensionReceivedVotes', 'extensionStatus', 'extensionDate'],
+              ...changeAuditMetadata(changes),
               extensionRequiredVotes: currentPlan?.extensionRequiredVotes ?? null,
               extensionReceivedVotes: currentPlan?.extensionReceivedVotes ?? null,
-              extensionStatus: PLAN_EXTENSION_STATUS.AWAITING_VOTES,
               clientCount: planClientIds[planId].size,
               reconciliationStatus: reconciliation.status,
             },
@@ -201,4 +211,9 @@ const main = async () => {
   process.exit(0);
 };
 
-main();
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
+  main();
+}
+
+export { processExpiredPlans };

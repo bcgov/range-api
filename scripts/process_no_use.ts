@@ -2,6 +2,7 @@ import { logger } from '../src/libs/bcgov-shim.js';
 import DataManager from '../src/libs/db2/index.js';
 import config from '../src/config/index.js';
 import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
+import { changeAuditMetadata, changedValues, diffFields, hasChanges } from '../src/libs/fieldChanges.js';
 import { SYSTEM_USER_ID } from '../src/constants.js';
 import {
   calcTotalAUMs,
@@ -173,7 +174,23 @@ const processAgreementUsageStatus = async (
     updateData.percentage_use = percentageUse;
     updateData.has_current_schedule = scheduleExists ? 1 : 0;
 
-    await dbConnection.updateTable('agreement').set(updateData).where('forest_file_id', '=', forestFileId).execute();
+    const currentAgreement = await dbConnection
+      .selectFrom('agreement')
+      .select(['usage_status', 'percentage_use', 'has_current_schedule'])
+      .where('forest_file_id', '=', forestFileId)
+      .executeTakeFirst();
+    const changes = diffFields(currentAgreement || {}, updateData);
+
+    if (!hasChanges(changes)) {
+      logger.info(`Usage status unchanged for agreement ${forestFileId}`);
+      return { forestFileId, usageStatus, percentageUse, scheduleExists, changed: false };
+    }
+
+    await dbConnection
+      .updateTable('agreement')
+      .set(changedValues(changes))
+      .where('forest_file_id', '=', forestFileId)
+      .execute();
 
     await writeDomainAudit(dbConnection, {
       userId: SYSTEM_USER_ID,
@@ -183,16 +200,11 @@ const processAgreementUsageStatus = async (
       entityType: 'agreement',
       entityId: forestFileId,
       agreementId: forestFileId,
-      metadata: {
-        fields: ['usage_status', 'percentage_use', 'has_current_schedule'],
-        usageStatus,
-        percentageUse,
-        hasCurrentSchedule: scheduleExists ? 1 : 0,
-      },
+      metadata: changeAuditMetadata(changes),
     });
 
     logger.info(`Successfully updated usage status for agreement ${forestFileId}`);
-    return { forestFileId, usageStatus, percentageUse, scheduleExists };
+    return { forestFileId, usageStatus, percentageUse, scheduleExists, changed: true };
   } catch (error: any) {
     logger.error(`Error processing agreement ${forestFileId}: ${error.message}`);
     throw error;

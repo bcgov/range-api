@@ -1,5 +1,6 @@
 import DataManager from '../src/libs/db2/index.js';
 import { runAuditedBackgroundJob, writeDomainAudit } from '../src/libs/audit.js';
+import { changeAuditMetadata, changedValues, diffFields, hasChanges } from '../src/libs/fieldChanges.js';
 import { SYSTEM_USER_ID } from '../src/constants.js';
 import { reconcileAwaitingExtensionVoterRosters } from '../src/router/helpers/PlanExtensionHelper.js';
 import { fileURLToPath } from 'url';
@@ -99,7 +100,20 @@ const updateZone = async (data: any[]) => {
     districtCodesMap[d.code] = d;
   });
   let created = 0;
+  let updated = 0;
+  let unchanged = 0;
   console.log('Start updating Zones');
+
+  // A zone appears on many licensee rows. Resolve its final values first (last row wins, as
+  // before) so each zone is written at most once per run instead of once per row.
+  const staffByEmail: Record<string, any> = {};
+  const findStaff = async (staffEmail: string) => {
+    if (!(staffEmail in staffByEmail)) {
+      staffByEmail[staffEmail] = (await User.find(db, { email: staffEmail }, ['last_login_at', 'asc'])).pop() || null;
+    }
+    return staffByEmail[staffEmail];
+  };
+  const zoneTargets = new Map<string, Record<string, any>>();
 
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
@@ -123,50 +137,73 @@ const updateZone = async (data: any[]) => {
 
     try {
       const staffEmail = contact_email_address && contact_email_address.toLowerCase().trim();
-      const staff = staffEmail ? (await User.find(db, { email: staffEmail }, ['last_login_at', 'asc'])).pop() : null;
-      const zone = await Zone.findOne(db, {
-        code: zoneCode,
-        district_id: district.id,
-      });
-
-      if (!zone) {
-        console.log(`Adding Zone with Code ${zoneCode} District Code: ${districtCode}`);
-        await Zone.create(db, {
-          code: zoneCode,
-          description: zoneDescription || 'No description available',
-          district_id: district.id,
-          user_id: staff && staff.id,
-        });
-        created += 1;
-      } else {
-        const data: Record<string, any> = {
-          description: zoneDescription || 'No description available',
-        };
-        if (staff) data.user_id = staff.id;
-
-        await Zone.update(
-          db,
-          {
-            code: zoneCode,
-            district_id: district.id,
-          },
-          data,
-        );
-      }
+      const staff = staffEmail ? await findStaff(staffEmail) : null;
+      const key = `${district.id}:${zoneCode}`;
+      const target = zoneTargets.get(key) || { code: zoneCode, districtId: district.id };
+      target.description = zoneDescription || 'No description available';
+      if (staff) target.userId = staff.id;
+      zoneTargets.set(key, target);
     } catch (error: any) {
       console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} row: ${index + 2}`);
       throw error;
     }
   }
 
-  return `${created} zones were created`;
+  for (const target of zoneTargets.values()) {
+    const { code: zoneCode, districtId, description, userId } = target;
+    try {
+      const zone = await Zone.findOne(db, {
+        code: zoneCode,
+        district_id: districtId,
+      });
+
+      if (!zone) {
+        console.log(`Adding Zone with Code ${zoneCode} District Id: ${districtId}`);
+        await Zone.create(db, {
+          code: zoneCode,
+          description,
+          district_id: districtId,
+          user_id: userId,
+        });
+        created += 1;
+        continue;
+      }
+
+      const next: Record<string, any> = { description };
+      if (userId !== undefined) next.userId = userId;
+      const changes = diffFields(zone, next);
+      if (!hasChanges(changes)) {
+        unchanged += 1;
+        continue;
+      }
+
+      await Zone.update(
+        db,
+        {
+          code: zoneCode,
+          district_id: districtId,
+        },
+        changedValues(changes),
+      );
+      updated += 1;
+    } catch (error: any) {
+      console.log(`Error with message = ${error.message}, Zone Code ${zoneCode} District Id: ${districtId}`);
+      throw error;
+    }
+  }
+
+  return `${created} zones were created, ${updated} zones were updated, ${unchanged} zones were unchanged`;
 };
 
 const updateUser = async (data: any[]) => {
   let updated = 0;
+  let unchanged = 0;
 
   console.log('Start updating Users');
   console.log('records to process:  ' + data.length);
+
+  // The same staff contact appears on many licensee rows; keep the last phone number per email.
+  const phoneByEmail = new Map<string, string>();
   for (let index = 0; index < data.length; index++) {
     const record = data[index];
     const { contact_phone_number, contact_email_address } = record;
@@ -175,28 +212,30 @@ const updateUser = async (data: any[]) => {
     const phoneNumber = contact_phone_number === null ? '' : contact_phone_number.trim();
 
     if (email !== '' && phoneNumber !== '') {
-      try {
-        const user = await User.findOne(db, {
-          email,
-        });
-
-        if (user) {
-          await User.update(
-            db,
-            { email },
-            {
-              phoneNumber,
-            },
-          );
-          updated += 1;
-        }
-      } catch (error: any) {
-        throw error;
-      }
+      phoneByEmail.set(email, phoneNumber);
     }
   }
 
-  return `${updated} users were updated`;
+  for (const [email, phoneNumber] of phoneByEmail) {
+    const users = await User.find(db, { email });
+    if (users.length === 0) continue;
+
+    if (users.every((user: any) => !hasChanges(diffFields(user, { phoneNumber })))) {
+      unchanged += 1;
+      continue;
+    }
+
+    await User.update(
+      db,
+      { email },
+      {
+        phoneNumber,
+      },
+    );
+    updated += 1;
+  }
+
+  return `${updated} users were updated, ${unchanged} users were unchanged`;
 };
 
 const updateAgreement = async (data: any[]) => {
@@ -216,6 +255,7 @@ const updateAgreement = async (data: any[]) => {
 
   let created = 0;
   let updated = 0;
+  let unchanged = 0;
   let skipped = 0;
   const activeFTAAgreementIds: string[] = [];
   for (let index = 0; index < data.length; index++) {
@@ -259,7 +299,13 @@ const updateAgreement = async (data: any[]) => {
         retired: false,
       };
       if (agreement) {
-        await Agreement.update(db, { forest_file_id: agreementId }, record);
+        const changes = diffFields(agreement, record);
+        if (!hasChanges(changes)) {
+          unchanged += 1;
+          continue;
+        }
+
+        await Agreement.update(db, { forest_file_id: agreementId }, changedValues(changes));
         await writeDomainAudit(db, {
           userId: SYSTEM_USER_ID,
           method: 'SYSTEM',
@@ -268,14 +314,7 @@ const updateAgreement = async (data: any[]) => {
           entityType: 'agreement',
           entityId: agreementId,
           agreementId,
-          metadata: {
-            fields: ['agreementStartDate', 'agreementEndDate', 'zoneId', 'agreementTypeId', 'retired'],
-            agreementStartDate: record.agreementStartDate,
-            agreementEndDate: record.agreementEndDate,
-            zoneId: record.zoneId,
-            agreementTypeId: record.agreementTypeId,
-            retired: record.retired,
-          },
+          metadata: changeAuditMetadata(changes),
         });
         updated += 1;
       } else {
@@ -351,12 +390,13 @@ const updateAgreement = async (data: any[]) => {
 
   console.log(`Unretired Agreements: ${unretiredAgreementIds}`);
   console.log(`Retired Agreements: ${retiredAgreementIds}`);
-  return `${created} agreements were created. ${updated} agreements were updated. ${skipped} agreements were skipped.`;
+  return `${created} agreements were created. ${updated} agreements were updated. ${unchanged} agreements were unchanged. ${skipped} agreements were skipped.`;
 };
 
 const updateUsage = async (data: any[]) => {
   let created = 0;
   let updated = 0;
+  let unchanged = 0;
   console.log('Start updating Usage');
 
   for (let index = 0; index < data.length; index++) {
@@ -390,24 +430,18 @@ const updateUsage = async (data: any[]) => {
       });
 
       if (usage) {
-        const usageYear = Number(calendar_year);
-        const authorizedAum = Number(authorized_use) || 0;
-        const temporaryIncrease = Number(temp_increase) || 0;
-        const totalNonUse = Number(non_use_nonbillable) + Number(non_use_billable) || 0;
-        const totalAnnualUse = Number(total_annual_use) || 0;
+        const changes = diffFields(usage, {
+          authorizedAum: Number(authorized_use) || 0,
+          temporaryIncrease: Number(temp_increase) || 0,
+          totalNonUse: Number(non_use_nonbillable) + Number(non_use_billable) || 0,
+          totalAnnualUse: Number(total_annual_use) || 0,
+        });
+        if (!hasChanges(changes)) {
+          unchanged += 1;
+          continue;
+        }
 
-        await Usage.update(
-          db,
-          { id: usage.id },
-          {
-            year: usageYear,
-            authorizedAum,
-            temporaryIncrease,
-            totalNonUse,
-            totalAnnualUse,
-            agreementId: agreement.forestFileId,
-          },
-        );
+        await Usage.update(db, { id: usage.id }, changedValues(changes));
         await writeDomainAudit(db, {
           userId: SYSTEM_USER_ID,
           method: 'SYSTEM',
@@ -416,14 +450,7 @@ const updateUsage = async (data: any[]) => {
           entityType: 'usage',
           entityId: `${agreementId}:${calendar_year}`,
           agreementId,
-          metadata: {
-            fields: ['year', 'authorizedAum', 'temporaryIncrease', 'totalNonUse', 'totalAnnualUse'],
-            year: usageYear,
-            authorizedAum,
-            temporaryIncrease,
-            totalNonUse,
-            totalAnnualUse,
-          },
+          metadata: changeAuditMetadata(changes),
         });
         updated += 1;
       } else {
@@ -466,14 +493,33 @@ const updateUsage = async (data: any[]) => {
     }
   }
 
-  return `${created} usage were created, ${updated} usage were updated`;
+  return `${created} usage were created, ${updated} usage were updated, ${unchanged} usage were unchanged`;
 };
 
-const updateClient = async (data: any[]) => {
+const getLicenseeDates = (record: Record<string, any>) => ({
+  licenseeStartDate: parseDate(record.licensee_start_date),
+  licenseeEndDate: parseDate(record.licensee_end_date),
+});
+
+// ref_client holds a single pair of licensee dates, but FTA sends them per agreement, so a
+// client holding several agreements receives several pairs in one run. Resolve the final pair
+// up front (last row wins, matching the previous end state) so the client is not rewritten
+// back and forth for every row.
+const getLicenseeDatesByClient = (data: any[]) => {
+  const datesByClient: Record<string, ReturnType<typeof getLicenseeDates>> = {};
+  data.forEach((record: any) => {
+    if (!isValidRecord(record) || !record.client_locn_code) return;
+    datesByClient[record.client_number] = getLicenseeDates(record);
+  });
+  return datesByClient;
+};
+
+const updateClient = async (data: any[], licenseeDatesByClient = getLicenseeDatesByClient(data)) => {
   console.log('records to process:  ' + data.length);
   const clientTypes = await ClientType.find(db, {});
   let created = 0;
   let updated = 0;
+  let unchanged = 0;
 
   console.log('Start updating Clients');
   for (let index = 0; index < data.length; index++) {
@@ -484,8 +530,6 @@ const updateClient = async (data: any[]) => {
       forest_file_client_type_code: clientTypeCode,
       client_number: clientNumber,
       client_name: clientName,
-      licensee_start_date: licenseeStartDate,
-      licensee_end_date: licenseeEndDate,
     } = record;
 
     if (!isValidRecord(record) || !clientLocationCode) {
@@ -499,50 +543,43 @@ const updateClient = async (data: any[]) => {
         client_number: clientNumber,
       });
 
-      const licenseeDates = {
-        licenseeStartDate: parseDate(licenseeStartDate),
-        licenseeEndDate: parseDate(licenseeEndDate),
-      };
+      const licenseeDates = licenseeDatesByClient[clientNumber] || getLicenseeDates(record);
 
       if (client) {
         if (clientTypeCode === 'P' || clientTypeCode === 'C') {
           const plans = await Plan.find(db, { agreement_id: agreementId });
-          plans.forEach(async (plan: any) => {
+          for (const plan of plans) {
             await PlanConfirmation.remove(db, {
               client_id: client.id,
               plan_id: plan.id,
             });
-          });
+          }
           await ClientAgreement.remove(db, {
             client_id: client.id,
             agreement_id: agreementId,
           });
         }
-        await Client.update(
-          db,
-          { client_number: clientNumber },
-          {
-            name: clientName || 'Unknown Name',
-            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
-            ...licenseeDates,
-          },
-        );
-        await writeDomainAudit(db, {
-          userId: SYSTEM_USER_ID,
-          method: 'SYSTEM',
-          path: 'background_job.import',
-          action: 'client.updated',
-          entityType: 'client',
-          entityId: clientNumber,
-          agreementId,
-          metadata: {
-            fields: ['name', 'locationCodes', 'licenseeStartDate', 'licenseeEndDate'],
-            name: clientName || 'Unknown Name',
-            locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
-            ...licenseeDates,
-          },
+        const changes = diffFields(client, {
+          name: clientName || 'Unknown Name',
+          locationCodes: Array.from(new Set(client.locationCodes.concat(clientLocationCode))),
+          ...licenseeDates,
         });
-        updated += 1;
+        if (hasChanges(changes)) {
+          await Client.update(db, { client_number: clientNumber }, changedValues(changes));
+          await writeDomainAudit(db, {
+            userId: SYSTEM_USER_ID,
+            method: 'SYSTEM',
+            path: 'background_job.import',
+            action: 'client.updated',
+            entityType: 'client',
+            entityId: clientNumber,
+            agreementId,
+            metadata: changeAuditMetadata(changes),
+          });
+          updated += 1;
+        } else {
+          unchanged += 1;
+        }
       } else {
         client = await Client.create(db, {
           clientNumber: clientNumber,
@@ -595,9 +632,8 @@ const updateClient = async (data: any[]) => {
         }
       }
       if (agreement && clientAgreement && clientType) {
-        // update if different
-        if (clientAgreement.client_type_id !== clientType.id) {
-          ClientAgreement.update(
+        if (clientAgreement.clientTypeId !== clientType.id) {
+          await ClientAgreement.update(
             db,
             { id: clientAgreement.id },
             {
@@ -605,20 +641,20 @@ const updateClient = async (data: any[]) => {
               client_type_id: clientType.id,
             },
           );
-          // When client type changes, ensure plan_confirmations exist for this client
-          const plan = await Plan.findOne(db, { agreement_id: agreementId });
-          if (plan) {
-            const existingConfirmation = await PlanConfirmation.findOne(db, {
+        }
+        // Ensure plan_confirmations exist for this client
+        const plan = await Plan.findOne(db, { agreement_id: agreementId });
+        if (plan) {
+          const existingConfirmation = await PlanConfirmation.findOne(db, {
+            plan_id: plan.id,
+            client_id: clientNumber,
+          });
+          if (!existingConfirmation) {
+            await PlanConfirmation.create(db, {
               plan_id: plan.id,
+              confirmed: false,
               client_id: clientNumber,
             });
-            if (!existingConfirmation) {
-              await PlanConfirmation.create(db, {
-                plan_id: plan.id,
-                confirmed: false,
-                client_id: clientNumber,
-              });
-            }
           }
         }
       }
@@ -628,7 +664,7 @@ const updateClient = async (data: any[]) => {
     }
   }
 
-  return `${created} clients were created, ${updated} clients were updated`;
+  return `${created} clients were created, ${updated} clients were updated, ${unchanged} clients were unchanged`;
 };
 
 const pruneConfirmations = async () => {
@@ -728,8 +764,9 @@ const updateFTAData = async (licensee: any[], client: any[], usage: any[]) => {
       return !foundAB;
     });
   //create where missing, dispositions with signed plans will get client_id updated in plan_conf
-  msg = msg + (await updateClient(filteredClientsAB)) + '\n';
-  msg = msg + (await updateClient(filteredClientsPC)) + '\n';
+  const licenseeDatesByClient = getLicenseeDatesByClient([...filteredClientsAB, ...filteredClientsPC]);
+  msg = msg + (await updateClient(filteredClientsAB, licenseeDatesByClient)) + '\n';
+  msg = msg + (await updateClient(filteredClientsPC, licenseeDatesByClient)) + '\n';
   msg = msg + (await updateZone(licensee)) + '\n';
   if (usage) msg = msg + (await updateUsage(usage));
   else console.log('***** No usage data available to update *****');
@@ -783,4 +820,14 @@ if (process.argv[1] === __filename) {
   main();
 }
 
-export { main, updateUsage, updateDistrict, updateClient, parseDate };
+export {
+  main,
+  updateAgreement,
+  updateUsage,
+  updateDistrict,
+  updateClient,
+  updateUser,
+  updateZone,
+  getLicenseeDatesByClient,
+  parseDate,
+};
