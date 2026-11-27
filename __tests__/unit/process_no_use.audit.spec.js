@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { mockWriteDomainAudit, createDbMock } = vi.hoisted(() => {
   const writeDomainAudit = vi.fn().mockResolvedValue(undefined);
 
-  const createDb = () => {
+  const createDb = (currentAgreement = { usage_status: 1, percentage_use: '0', has_current_schedule: 0 }) => {
     const updateExecute = vi.fn().mockResolvedValue(undefined);
     const updateWhere = vi.fn().mockReturnValue({ execute: updateExecute });
     const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
@@ -35,10 +35,17 @@ const { mockWriteDomainAudit, createDbMock } = vi.hoisted(() => {
       executeTakeFirst: vi.fn().mockResolvedValue(null),
     };
 
+    const agreementQuery = {
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      executeTakeFirst: vi.fn().mockResolvedValue(currentAgreement),
+    };
+
     const selectFrom = vi.fn((table) => {
       if (table === 'ref_usage') return refUsageQuery;
       if (table === 'plan') return planQuery;
       if (table === 'grazing_schedule') return scheduleQuery;
+      if (table === 'agreement') return agreementQuery;
       throw new Error(`Unexpected selectFrom table: ${table}`);
     });
 
@@ -115,5 +122,36 @@ describe('process_no_use agreement mutation audit', () => {
         entityId: 'RAN000001',
       }),
     );
+  });
+
+  it('updates and audits only the changed usage fields', async () => {
+    const trxInstance = createDbMock({ usage_status: 1, percentage_use: '25', has_current_schedule: 0 });
+    const { processAgreementUsageStatus } = await import('../../scripts/process_no_use.ts');
+
+    const result = await processAgreementUsageStatus(trxInstance.db, 'RAN000001', 1, 2026);
+
+    expect(result.changed).toBe(true);
+    expect(trxInstance.fns.updateSet).toHaveBeenCalledWith({ usage_status: null, percentage_use: null });
+    expect(mockWriteDomainAudit).toHaveBeenCalledWith(
+      trxInstance.db,
+      expect.objectContaining({
+        metadata: {
+          fields: ['usage_status', 'percentage_use'],
+          usage_status: { from: 1, to: null },
+          percentage_use: { from: '25', to: null },
+        },
+      }),
+    );
+  });
+
+  it('skips the update and audit when usage status is unchanged', async () => {
+    const trxInstance = createDbMock({ usage_status: null, percentage_use: null, has_current_schedule: 0 });
+    const { processAgreementUsageStatus } = await import('../../scripts/process_no_use.ts');
+
+    const result = await processAgreementUsageStatus(trxInstance.db, 'RAN000001', 1, 2026);
+
+    expect(result.changed).toBe(false);
+    expect(trxInstance.fns.updateTable).not.toHaveBeenCalled();
+    expect(mockWriteDomainAudit).not.toHaveBeenCalled();
   });
 });
